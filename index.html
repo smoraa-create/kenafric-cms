@@ -261,7 +261,7 @@ async function callAI(prompt, wantJson) {
         return '';
     }
 }
-const APP_LINK = 'https://kenafric-cms.kenafric.workers.dev';
+const APP_LINK = 'https://cms.kenafricgroup.com';
 if (window.emailjs && EMAILJS_PUBLIC_KEY.indexOf('PASTE') !== 0) { emailjs.init({ publicKey: EMAILJS_PUBLIC_KEY }); }
 var APP = { user: null, currentRole: 'employee', currentPage: '', competencies: [], experiences: [] };
 function sendCMSemail(toEmail, subject, message) {
