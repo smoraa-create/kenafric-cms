@@ -235,31 +235,32 @@ const _supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const EMAILJS_SERVICE_ID = 'service_n25h19m';
 const EMAILJS_TEMPLATE_ID = 'template_498ij59';
 const EMAILJS_PUBLIC_KEY = 'JVdzezQg3OrI58-fT';
-const GEMINI_KEY = 'AQ.Ab8RN6J22xUuw-7AHMebayB3RkHNEeDRsLtAL8HEOrH_w8CvSg';
+const GEMINI_KEY = 'AQ.Ab8RN6KegDFeNLTfMt7yAYHXKYAuVjJAsZtyPuBW0CVg-QQwzw';
+var GROQ_KEY = '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';
+async function callGroq(prompt, wantJson) {
+if (!GROQ_KEY || GROQ_KEY.indexOf('PASTE') === 0) return '';
+try {
+var body = { model: 'llama-3.3-70b-versatile', messages: [{ role: 'user', content: prompt }], temperature: 0.4 };
+if (wantJson) body.response_format = { type: 'json_object' };
+var res = await fetch('https://api.groq.com/openai/v1/chat/completions', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + GROQ_KEY }, body: JSON.stringify(body) });
+var j = await res.json();
+var t = (j.choices && j.choices[0] && j.choices[0].message) ? (j.choices[0].message.content || '') : '';
+return t.replace(/```json/gi, '').replace(/```/g, '').trim();
+} catch (e) { return ''; }
+}
+async function callGemini(prompt, wantJson) {
+try {
+var body = { contents: [{ parts: [{ text: prompt }] }], generationConfig: { temperature: 0.4 } };
+if (wantJson) body.generationConfig.responseMimeType = 'application/json';
+var clean = await callAI(prompt, true);
+if (!clean) return;
+} catch (e) { return ''; }
+}
 async function callAI(prompt, wantJson) {
-    try {
-        var url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=' + GEMINI_KEY;
-        var body = {
-            contents: [{ parts: [{ text: prompt }] }],
-            generationConfig: { temperature: 0.4 }
-        };
-        if (wantJson) body.generationConfig.responseMimeType = "application/json"; // Forces perfect JSON
-
-        var res = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
-        var j = await res.json();
-        var txt = '';
-        if (j.candidates && j.candidates[0] && j.candidates[0].content && j.candidates[0].content.parts) {
-            txt = j.candidates[0].content.parts.map(function(p){ return p.text || ''; }).join('');
-        }
-        if (!txt) {
-            showToast('AI error: ' + (j.error ? j.error.message : 'no response'));
-            return '';
-        }
-        return txt.replace(/```json/gi, '').replace(/```/g, '').trim();
-    } catch (err) {
-        showToast('AI failed: ' + err.message);
-        return '';
-    }
+var t = await callGroq(prompt, wantJson);
+if (!t) t = await callGemini(prompt, wantJson);
+if (!t) showToast('AI error: no response — check Groq/Gemini keys');
+return t;
 }
 const APP_LINK = 'https://cms.kenafricgroup.com';
 if (window.emailjs && EMAILJS_PUBLIC_KEY.indexOf('PASTE') !== 0) { emailjs.init({ publicKey: EMAILJS_PUBLIC_KEY }); }
@@ -365,6 +366,9 @@ else { inp.type = 'password'; btn.textContent = '👁️'; }
 function showLoginScreen(){
 document.querySelector('.header').style.display='none';
 document.querySelector('.nav-bar').style.display='none';
+document.body.classList.remove('sb-mode');
+var sb = document.getElementById('sideNav');
+if (sb) { sb.style.display = 'none'; sb.innerHTML = ''; }
 document.getElementById('mainContent').innerHTML='<div style="min-height:80vh;display:flex;align-items:center;justify-content:center"><div style="width:100%;max-width:380px"><div style="text-align:center;margin-bottom:32px"><div style="width:56px;height:56px;background:linear-gradient(135deg,var(--primary-dark),var(--primary));border-radius:14px;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;box-shadow:0 4px 12px rgba(67,56,202,0.3)"><span style="color:white;font-size:22px;font-weight:800">K</span></div><h1 style="font-size:20px;font-weight:700;color:var(--gray-900)">Kenafric <span class="brand-accent">CMS</span></h1><p style="font-size:13px;color:var(--gray-500)">Competency Management System</p></div><div class="card" style="padding:28px"><div class="form-group"><label>Email Address</label><input type="email" id="loginEmail" placeholder="you@kenafricind.com"></div><div class="form-group"><label>Password</label><div style="position:relative"><input type="password" id="loginPass" placeholder="Enter your password" style="padding-right:40px"><button type="button" onclick="togglePassword()" id="eyeBtn" title="Show / hide password" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:16px;line-height:1">👁️</button></div></div><button class="btn btn-primary" onclick="doLogin()" style="width:100%;padding:12px;margin-top:8px">Sign In</button><p id="loginError" style="color:var(--red);font-size:12px;margin-top:10px;text-align:center;display:none"></p></div></div></div>';
 }
 async function changePassword() {
@@ -713,11 +717,26 @@ html += '<div><div class="card-title" style="margin-bottom:2px">Competency Score
 if (readiness) { var rc = mgrScore >= 81 ? 'success' : mgrScore >= 71 ? 'info' : mgrScore >= 61 ? 'warning' : 'danger'; html += '<span class="badge badge-' + rc + '">' + escapeHtml(readiness.label) + '</span>'; }
 else html += '<span class="badge badge-warning">Not Yet Assessed</span>';
 html += '</div>';
+var hasAvg = hasSelf && hasMgr;
+var avgScore = hasAvg ? Math.round((selfScore + mgrScore) / 2) : 0;
+var mgrRowsRaw = (allResults || []).filter(function(r){ return r.type === 'Manager'; });
+var hrReviewed = mgrRowsRaw.length > 0 && mgrRowsRaw.some(function(r){ return r.hr_status === 'Approved'; }) && !mgrRowsRaw.some(function(r){ return r.ticked && (r.hr_status === '' || r.hr_status === 'Pending'); });
+var passedCurrent = hasMgr && hrReviewed && mgrScore >= 81;
+var hasAvg = hasSelf && hasMgr;
+var avgScore = hasAvg ? Math.round((selfScore + mgrScore) / 2) : 0;
+var hasPS = formattedResults.some(r => r['Type'] === 'Prospective Self');
+var psScore = hasPS ? calculateOverallScore(emp.employee_id, 'Prospective Self', formattedResults) : 0;
 html += '<div class="score-rings" style="margin:24px 0 8px">';
 html += bigRing(selfScore, '#2563eb', 'Self Assessment', 'Your own rating', hasSelf);
 html += bigRing(mgrScore, '#059669', 'Manager (Current)', escapeHtml(emp.manager || 'Manager') + '&#39;s rating', hasMgr);
-html += bigRing(prospScore, '#7c3aed', 'Prospective Role', 'Requires 81%+ current', hasProsp);
+html += bigRing(avgScore, '#ea580c', 'Final Average', 'Self + Manager ÷ 2', hasAvg);
+html += bigRing(psScore, '#0ea5e9', 'Prospective (Self)', 'Unlocked at 80%+ average', hasPS);
+html += bigRing(prospScore, '#7c3aed', 'Prospective (Manager)', 'Manager-rated', hasProsp);
 html += '</div>';
+if (hasAvg) html += '<div style="text-align:center;margin:6px 0"><span class="badge badge-' + (avgScore >= 80 ? 'success' : 'warning') + '">Final Average: ' + avgScore + '% — ' + (avgScore >= 80 ? 'meets the 80%+ prospective door' : 'below the 80%+ prospective door') + '</span></div>';
+if (hasProsp && prospScore > 0) html += '<div style="text-align:center;margin:6px 0"><span class="badge badge-purple">' + escapeHtml(getProspectiveReadiness(prospScore).label) + '</span></div>';
+if (passedCurrent && !hasProsp) html += '<div style="text-align:center;margin:6px 0"><span class="badge badge-info">🎉 You passed your current role (' + mgrScore + '%) — your prospective assessment is now open</span></div>';
+if (!passedCurrent && hasMgr) html += '<div style="text-align:center;margin:6px 0"><span class="badge badge-warning">Prospective unlocks after you pass your current role (81%+ after HR approval)</span></div>';
 if (hasProsp && prospScore > 0) html += '<div style="text-align:center;margin:6px 0"><span class="badge badge-purple">' + escapeHtml(getProspectiveReadiness(prospScore).label) + '</span></div>';
 html += '</div>';
 html += '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px">';
@@ -811,7 +830,7 @@ async function loadSelfAssessment() {
 setContent('<div class="loading"><div class="spinner"></div>Loading...</div>');
 const { data: emp } = await _supabase.from('employees').select('*').eq('email', APP.user.email).single();
 if (!emp) { setContent('<div class="card"><p>Employee not found</p></div>'); return; }
-const { data: done } = await _supabase.from('assessments').select('id').eq('employee_id', emp.employee_id).eq('type', 'Self').limit(1);
+const { data: done } = await _supabase.from('assessments').select('id, ticked, hr_status').eq('employee_id', emp.employee_id).eq('type', 'Self');
 var hasRounds = done && done.length > 0;
 var approved = false, pending = false, rejected = '';
 if (hasRounds) {
@@ -822,6 +841,8 @@ else if (rq && rq.status === 'Pending') pending = true;
 else if (rq && rq.status === 'Rejected') rejected = rq.hr_comment || '';
 }
 if (hasRounds && !approved) {
+const { data: allRes } = await _supabase.from('assessments').select('*').eq('employee_id', emp.employee_id);
+var pss = prospectiveSelfStatus(allRes || [], emp.employee_id);
 var gate = '<div class="card"><div class="card-title">Self Assessment</div><p style="color:var(--green);font-weight:600">You have completed your self-assessment.</p>';
 if (pending) gate += '<p style="margin-top:10px"><span class="badge badge-warning">Reassessment request pending manager approval</span></p>';
 else {
@@ -829,6 +850,7 @@ if (rejected) gate += '<p style="margin-top:10px"><span class="badge badge-dange
 gate += '<p style="font-size:12px;color:var(--gray-500);margin-top:10px">To do a reassessment, you need your line manager\'s approval.</p>' + redoBox('Self', emp.employee_id, emp.employee_name);
 }
 gate += '</div>';
+gate += prospectiveSelfCard(emp, pss);
 setContent(gate);
 return;
 }
@@ -855,7 +877,7 @@ html += '<div class="competency-block"><div class="competency-header"><span clas
 comp.experiences.forEach(function(exp, ei) {
 html += '<div class="exp-item" data-classification="' + escapeHtml(exp.classification || '') + '" data-text="' + escapeHtml(exp.text) + '" id="exp-' + ci + '-' + ei + '"><label style="display:flex;align-items:flex-start;gap:8px;cursor:pointer"><input type="checkbox" onchange="toggleEvidence(' + ci + ',' + ei + ')" style="width:auto;margin-top:2px"><span class="exp-text">' + escapeHtml(exp.text) + ' ' + getClassificationBadge(exp.classification) + '</span></label>';
 html += '<div id="evidence-' + ci + '-' + ei + '" style="display:none;margin-top:6px"><textarea placeholder="' + escapeHtml(getEvidencePlaceholder(exp.classification)) + '" rows="2" style="font-size:12px"></textarea><div style="margin-top:8px"><label style="display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:700;color:var(--primary-dark);cursor:pointer;border:1px solid var(--primary);border-radius:6px;padding:4px 10px;background:var(--primary-light)"><span style="font-size:13px">📎</span><span>Attach supporting proof <span style="font-weight:500;color:var(--gray-600);font-size:11px">(photo, PDF, Word or Excel)</span></span><input type="file" id="att-exp-' + ci + '-' + ei + '" style="display:none" accept="image/*,.pdf,.doc,.docx,.xls,.xlsx" onchange="showAttName(this,\'attname-exp-' + ci + '-' + ei + '\')"></label><div id="attname-exp-' + ci + '-' + ei + '" style="font-size:11px;font-weight:700;color:var(--green);margin-top:4px"></div></div>' + rateBoxesHTML('exp-' + ci + '-' + ei, 'updateScore(' + ci + ',\'exp-\',\'score-\')') + '</div>';
-html += '<div style="margin-top:4px"><button type="button" class="btn btn-sm btn-outline" onclick="aiCoach(\'exp-' + ci + '-' + ei + '\')">✨ AI Assist</button> <button type="button" class="btn btn-sm btn-outline" onclick="aiRefine(\'exp-' + ci + '-' + ei + '\')">✍️ Refine Evidence</button></div><div id="ai-exp-' + ci + '-' + ei + '"></div></div>';
+html += '<div style="margin-top:4px"><button type="button" class="btn btn-sm btn-outline" onclick="aiCoach(\'exp-' + ci + '-' + ei + '\')">✍️AI Assist</button> <button type="button" class="btn btn-sm btn-outline" onclick="aiRefine(\'exp-' + ci + '-' + ei + '\')">✍️ Refine Evidence</button></div><div id="ai-exp-' + ci + '-' + ei + '"></div></div>';
 });
 html += '<div style="display:flex;justify-content:space-between;margin-top:10px;padding-top:8px;border-top:1px solid #e2e8f0"><span style="font-size:12px;color:var(--gray-500)">Weighted Score</span><span id="score-' + ci + '" style="font-size:13px;font-weight:700;color:var(--primary)">0.0 / 5</span></div></div>';
 });
@@ -993,8 +1015,8 @@ const { data: emp } = await _supabase.from('employees').select('*').eq('email', 
 if (!emp) { setContent('<div class="card"><p>Employee not found</p></div>'); return; }
 const { data: allResults } = await _supabase.from('assessments').select('*').eq('employee_id', emp.employee_id);
 var mgrRows = latestOnly(allResults || []).filter(r => r.type === 'Manager');
-if (mgrRows.length === 0) {
-setContent('<div class="card"><div class="card-title">Manager Assessment</div><p style="color:var(--gray-500)">Not yet assessed by your line manager.</p></div>');
+if (mgrRows.length === 0 || !assessmentReleased(allResults)) {
+setContent('<div class="card"><div class="card-title">Manager Assessment</div><p style="color:var(--gray-500)">' + (mgrRows.length === 0 ? 'Not yet assessed by your line manager.' : 'Your manager\'s assessment will become visible once your manager completes it and HR Admin approves both assessments.') + '</p></div>');
 return;
 }
 var html = '<div class="card"><div class="card-title">Manager Assessment: Current Role</div>';
@@ -1160,7 +1182,7 @@ var hasSelf = latest.some(function(r){ return r.type === 'Self'; });
 var hasMgr = latest.some(function(r){ return r.type === 'Manager'; });
 team.push({
 id: empId, name: emp.employee_name, position: emp.position, company: emp.company,
-hasSelf: hasSelf, selfScore: hasSelf ? calculateOverallScore(empId, 'Self', fr) : 0,
+hasSelf: hasSelf, selfScore: hasSelf ? calculateOverallScore(empId, 'Self', fr) : 0, released: assessmentReleased(rows),
 hasMgr: hasMgr, mgrScore: hasMgr ? calculateOverallScore(empId, 'Manager', fr) : 0,
 readiness: hasMgr ? getCurrentRoleReadiness(hasMgr ? calculateOverallScore(empId, 'Manager', fr) : 0).label : '',
 rows: rows
@@ -1178,16 +1200,16 @@ html += '<div class="stat-card" style="background:var(--green-light)"><div class
 html += '<div class="stat-card" style="background:var(--orange-light)"><div class="num" style="color:var(--orange)">' + pending.length + '</div><div class="lbl">Pending Assessments</div></div>';
 html += '<div class="stat-card" style="background:var(--purple-light)"><div class="num" style="color:var(--purple)">' + teamAvg + '%</div><div class="lbl">Avg Team Score</div></div>';
 html += '</div>';
-html += '<div class="card"><div class="card-title">Direct Reports</div><div class="table-wrap"><table><thead><tr><th>Employee</th><th>Self Score</th><th>Manager Score</th><th>Readiness</th><th>Status</th></tr></thead><tbody>';
+html += '<div class="card"><div class="card-title">Direct Reports</div><div class="table-wrap"><table><thead><tr><th>Employee</th><th>Self Score</th><th>Manager Score</th><th>Final Average</th><th>Readiness</th><th>Status</th></tr></thead><tbody>';
 team.forEach(function(t) {
 var status = t.hasMgr ? '<span class="badge badge-success">Complete</span>' : (t.hasSelf ? '<span class="badge badge-warning">Self Done</span>' : '<span class="badge badge-danger">Not Started</span>');
 html += '<tr><td><div style="display:flex;align-items:center;gap:10px"><div style="width:34px;height:34px;border-radius:50%;background:var(--primary-light);color:var(--primary);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:12px;flex:none">' + escapeHtml(initials(t.name)) + '</div><div><strong style="text-transform:uppercase;letter-spacing:0.3px">' + escapeHtml(t.name) + '</strong><div style="font-size:11px;color:var(--gray-500)">' + escapeHtml(t.position) + ', ' + escapeHtml(t.company || '') + '</div></div></div></td>';
-html += '<td>' + (t.hasSelf ? '<strong>' + t.selfScore + '%</strong>' : '—') + '</td>';
-html += '<td>' + (t.hasMgr ? '<strong>' + t.mgrScore + '%</strong>' : '—') + '</td>';
+html += '<td>' + (t.released ? (t.hasSelf ? '<strong>' + t.selfScore + '%</strong>' : '—') : (t.hasSelf ? '🔒' : '—')) + '</td>';html += '<td>' + (t.hasMgr ? '<strong>' + t.mgrScore + '%</strong>' : '—') + '</td>';
+html += '<td>' + ((t.hasSelf && t.hasMgr) ? '<strong style="color:' + (Math.round((t.selfScore + t.mgrScore) / 2) >= 80 ? 'var(--green)' : 'var(--primary)') + '">' + Math.round((t.selfScore + t.mgrScore) / 2) + '%</strong>' : '—') + '</td>';
 html += '<td>' + (t.hasMgr ? escapeHtml(t.readiness) : '—') + '</td>';
 html += '<td>' + status + '</td></tr>';
 });
-if (!team.length) html += '<tr><td colspan="5" style="color:var(--gray-500)">No direct reports found.</td></tr>';
+if (!team.length) html += '<tr><td colspan="6" style="color:var(--gray-500)">No direct reports found.</td></tr>';
 html += '</tbody></table></div></div>';
 html += '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px">';
 html += '<div class="card" style="margin-bottom:0"><div class="card-title">Quick Actions</div><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-primary" onclick="navigateTo(\'mgr-assess\')">New Assessment</button><button class="btn btn-outline" onclick="navigateTo(\'mgr-team\')">My Team</button></div></div>';
@@ -1463,7 +1485,7 @@ html += '<div class="competency-block"><div class="competency-header"><span clas
 comp.experiences.forEach(function(exp, ei) {
 html += '<div class="exp-item" data-classification="' + escapeHtml(exp.classification || '') + '" data-text="' + escapeHtml(exp.text) + '" id="' + pre + '-' + ci + '-' + ei + '"><label style="display:flex;align-items:flex-start;gap:8px;cursor:pointer"><input type="checkbox" onchange="toggleGen(\'' + pre + '\',\'' + spre + '\',' + ci + ',' + ei + ')" style="width:auto;margin-top:2px"><span class="exp-text">' + escapeHtml(exp.text) + ' ' + getClassificationBadge(exp.classification) + '</span></label>';
 html += '<div id="evidence-' + ci + '-' + ei + '" style="display:none;margin-top:6px"><textarea oninput="updateScore(' + ci + ',\'exp-\',\'score-\')" placeholder="' + escapeHtml(getEvidencePlaceholder(exp.classification)) + '" rows="2" style="font-size:12px"></textarea>' + rateBoxesHTML('exp-' + ci + '-' + ei, 'updateScore(' + ci + ',\'exp-\',\'score-\')') + '</div>';
-html += '<div style="margin-top:4px"><button type="button" class="btn btn-sm btn-outline" onclick="aiCoach(\'exp-' + ci + '-' + ei + '\')">✨ AI Assist</button> <button type="button" class="btn btn-sm btn-outline" onclick="aiRefine(\'exp-' + ci + '-' + ei + '\')">✍️ Refine Evidence</button></div><div id="ai-exp-' + ci + '-' + ei + '"></div></div>';
+html += '<div style="margin-top:4px"><button type="button" class="btn btn-sm btn-outline" onclick="aiCoach(\'exp-' + ci + '-' + ei + '\')">✍️AI Assist</button> <button type="button" class="btn btn-sm btn-outline" onclick="aiRefine(\'exp-' + ci + '-' + ei + '\')">✍️ Refine Evidence</button></div><div id="ai-exp-' + ci + '-' + ei + '"></div></div>';
 });
 html += '<div style="display:flex;justify-content:space-between;margin-top:10px;padding-top:8px;border-top:1px solid #e2e8f0"><span style="font-size:12px;color:var(--gray-500)">Weighted Score</span><span id="' + spre + '-' + ci + '" style="font-size:13px;font-weight:700;color:var(--primary)">0.0 / 5</span></div></div>';
 });
@@ -1518,7 +1540,7 @@ html += '<div class="competency-block"><div class="competency-header"><span clas
 comp.experiences.forEach(function(exp, ei) {
 html += '<div class="exp-item" data-classification="' + escapeHtml(exp.classification || '') + '" data-text="' + escapeHtml(exp.text) + '" id="' + pre + '-' + ci + '-' + ei + '"><label style="display:flex;align-items:flex-start;gap:8px;cursor:pointer"><input type="checkbox" onchange="toggleGen(\'' + pre + '\',\'' + spre + '\',' + ci + ',' + ei + ')" style="width:auto;margin-top:2px"><span class="exp-text">' + escapeHtml(exp.text) + ' ' + getClassificationBadge(exp.classification) + '</span></label>';
 html += '<div id="' + pre + 'e-' + ci + '-' + ei + '" style="display:none;margin-top:6px"><textarea placeholder="' + escapeHtml(getEvidencePlaceholder(exp.classification)) + '" rows="2" style="font-size:12px"></textarea><div style="margin-top:8px"><label style="display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:700;color:var(--primary-dark);cursor:pointer;border:1px solid var(--primary);border-radius:6px;padding:4px 10px;background:var(--primary-light)"><span style="font-size:13px">📎</span><span>Attach supporting proof <span style="font-weight:500;color:var(--gray-600);font-size:11px">(photo, PDF, Word or Excel)</span></span><input type="file" id="att-' + pre + '-' + ci + '-' + ei + '" style="display:none" accept="image/*,.pdf,.doc,.docx,.xls,.xlsx" onchange="showAttName(this,\'attname-' + pre + '-' + ci + '-' + ei + '\')"></label><div id="attname-' + pre + '-' + ci + '-' + ei + '" style="font-size:11px;font-weight:700;color:var(--green);margin-top:4px"></div></div>' + rateBoxesHTML(pre + '-' + ci + '-' + ei, 'updateScore(' + ci + ',\'' + pre + '-\',\'' + spre + '-\')') + '</div>';
-html += '<div style="margin-top:4px"><button type="button" class="btn btn-sm btn-outline" onclick="aiCoach(\'' + pre + '-' + ci + '-' + ei + '\')">✨ AI Assist</button></div><div id="ai-' + pre + '-' + ci + '-' + ei + '"></div></div>';
+html += '<div style="margin-top:4px"><button type="button" class="btn btn-sm btn-outline" onclick="aiCoach(\'' + pre + '-' + ci + '-' + ei + '\')">✍️AI Assist</button></div><div id="ai-' + pre + '-' + ci + '-' + ei + '"></div></div>';
 });
 html += '<div style="display:flex;justify-content:space-between;margin-top:10px;padding-top:8px;border-top:1px solid #e2e8f0"><span style="font-size:12px;color:var(--gray-500)">Weighted Score</span><span id="' + spre + '-' + ci + '" style="font-size:13px;font-weight:700;color:var(--primary)">0.0 / 5</span></div></div>';
 });
@@ -1565,8 +1587,8 @@ setTimeout(function(){ window._mgrSubmitting = false; }, 20000);
 var data = window['_assessOut_' + type];
 if (!data) { showToast('Nothing to submit'); return; }
 var emp = data.employee; var pre = data.prefix;
-var prospRole = document.getElementById('prospRoleSel') ? document.getElementById('prospRoleSel').value : '';
-if (type === 'Prospective' && !prospRole) { showToast('Select a prospective role'); return; }
+var prospRole = document.getElementById('prospRoleSel') ? document.getElementById('prospRoleSel').value : (document.getElementById('psRoleSel') ? document.getElementById('psRoleSel').value : '');
+if ((type === 'Prospective' || type === 'Prospective Self') && !prospRole) { showToast('Select a prospective role'); return; }
 const { count } = await _supabase.from('assessments').select('*', { count: 'exact', head: true }).eq('employee_id', emp.employee_id).eq('type', type);
 var round = (count || 0) + 1;
 var rows = [];
@@ -1586,11 +1608,11 @@ var ticked = cb.checked;
 rows.push({
 assessment_id: assessmentId, assessment_date: today, assessment_round: round,
 employee_id: emp.employee_id, employee_name: emp.employee_name,
-position: emp.position, prospective_role: type === 'Prospective' ? prospRole : '', type: type,
+position: emp.position, prospective_role: (type === 'Prospective' || type === 'Prospective Self') ? prospRole : '', type: type,
 comp_code: comp.code, comp_name: comp.name, weight: comp.weight / comp.experiences.length,
 experience_index: ei, experience_text: exp.text, ticked: ticked,
 evidence: ticked ? ta.value.trim() : '', assessor_email: APP.user.email,
-hr_status: 'Pending', hr_comment: '', hr_reviewer: '', classification: exp.classification || '', 
+hr_status: (type === 'Prospective Self' ? '' : 'Pending'), hr_comment: '', hr_reviewer: '', classification: exp.classification || '',hr_status: 'Pending', hr_comment: '', hr_reviewer: '', classification: exp.classification || '', 
 proficiency_rating: ratingVal, _att: 'att-' + pre + '-' + ci + '-' + ei
 });
 });
@@ -1605,9 +1627,9 @@ window._autoSaveArgs = null; if (window._autoSaveTimer) { clearInterval(window._
 runAICheck(rows);
 const { data: openReq } = await _supabase.from('redo_requests').select('id').eq('employee_id', emp.employee_id).eq('type', type).eq('status', 'Approved').limit(1);
 if (openReq && openReq.length) { await _supabase.from('redo_requests').update({ status: 'Used' }).eq('id', openReq[0].id); }
-showToast((type === 'Manager' ? 'Assessment' : 'Prospective assessment') + ' submitted! HR notified.');
-notifyHR('New ' + type + ' Assessment Submitted', APP.user.name + ' submitted a ' + type + ' assessment for ' + emp.employee_name + '. Pending HR review.');
-loadAssessEmp();
+showToast((type === 'Manager' ? 'Assessment' : 'Prospective assessment') + ' submitted!');
+notifyHR('New ' + type + ' Assessment Submitted', APP.user.name + ' submitted a ' + type + ' assessment for ' + emp.employee_name + '.');
+if (APP.currentRole === 'employee') loadSelfAssessment(); else loadAssessEmp();
 }
 async function loadManagerDetails() {
 setContent('<div class="loading"><div class="spinner"></div>Loading...</div>');
@@ -1646,12 +1668,13 @@ var pr = proRows.filter(function(r){ return r.comp_code === comp.code; });
 if (!se.length && !me.length && !pr.length) continue;
 html += '<div class="competency-block"><div class="competency-name" style="margin-bottom:8px">' + escapeHtml(comp.competency) + '</div>';
 html += '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">';
-html += '<div><div class="card-subtitle">EMPLOYEE (SELF)</div>' + detailCol(se, 'self-evidence') + '</div>';
+html += '<div><div class="card-subtitle">EMPLOYEE (SELF)</div>' + (assessmentReleased(allResults) ? detailCol(se, 'self-evidence') : '<p style="font-size:11px;color:var(--gray-400)">🔒 Visible once you complete the manager assessment and HR Admin approves both assessments</p>') + '</div>';
 html += '<div><div class="card-subtitle">MANAGER — CURRENT ROLE</div>' + detailCol(me, 'mgr-evidence') + '</div>';
 html += '<div><div class="card-subtitle">MANAGER — PROSPECTIVE ROLE</div>' + detailCol(pr, 'mgr-evidence') + '</div>';
 html += '</div></div>';
 }
-document.getElementById('detContent').innerHTML = '<div class="card"><button class="btn btn-sm btn-outline" onclick="printReport(\'' + id + '\')">Print / Save PDF</button></div>' + scoreBreakdownHTML(latest, 'Self') + scoreBreakdownHTML(latest, 'Manager') + scoreBreakdownHTML(latest, 'Prospective') + roundTable(allResults || [], 'Self') + roundTable(allResults || [], 'Manager') + roundTable(allResults || [], 'Prospective') + (html || '<p>No data.</p>');
+var rel = assessmentReleased(allResults);
+document.getElementById('detContent').innerHTML = '<div class="card"><button class="btn btn-sm btn-outline" onclick="printReport(\'' + id + '\')">Print / Save PDF</button></div>' + (rel ? scoreBreakdownHTML(latest, 'Self') + roundTable(allResults || [], 'Self') : '') + scoreBreakdownHTML(latest, 'Manager') + scoreBreakdownHTML(latest, 'Prospective') + roundTable(allResults || [], 'Manager') + roundTable(allResults || [], 'Prospective') + (html || '<p>No data.</p>');
 }
 function detailCol(rows, evClass) {
 if (!rows.length) return '<p style="font-size:11px;color:var(--gray-400)">Not done</p>';
@@ -1781,7 +1804,7 @@ var html = '<div class="card"><div class="card-title">Create Development Plan</d
 gaps.forEach(function(g) {
 html += '<option value="' + g.code + '" data-name="' + escapeHtml(g.name) + '">' + escapeHtml(g.name) + ' (' + g.pct + '%)</option>';
 });
-html += '</select></div><div class="form-group"><label>✨ AI focus (optional — tell the AI what to concentrate on)</label><textarea id="aiFocus" rows="2" placeholder="e.g. Focus on improving monthly HR reporting, presentation skills and meeting deadlines..."></textarea></div><button class="btn btn-sm btn-success" onclick="aiSuggestDP()" style="margin-bottom:10px">✨ AI Suggest Plan</button><div id="dpTasks"></div><button class="btn btn-sm btn-outline" onclick="addTask()" style="margin:8px 0">+ Add Task</button><br><button class="btn btn-primary" onclick="submitDP(\'' + id + '\')" style="margin-top:8px">Submit Plan</button></div>';
+html += '</select></div><div class="form-group"><label>✍️AI focus (optional — tell the AI what to concentrate on)</label><textarea id="aiFocus" rows="2" placeholder="e.g. Focus on improving monthly HR reporting, presentation skills and meeting deadlines..."></textarea></div><button class="btn btn-sm btn-success" onclick="aiSuggestDP()" style="margin-bottom:10px">✍️AI Suggest Plan</button><div id="dpTasks"></div><button class="btn btn-sm btn-outline" onclick="addTask()" style="margin:8px 0">+ Add Task</button><br><button class="btn btn-primary" onclick="submitDP(\'' + id + '\')" style="margin-top:8px">Submit Plan</button></div>';
 document.getElementById('dpContent').innerHTML = html;
 window._taskCount = 0;
 addTask();
@@ -1808,7 +1831,7 @@ var compName = cs.options[cs.selectedIndex].getAttribute('data-name') || cs.valu
 var pctMatch = (cs.options[cs.selectedIndex].textContent.match(/(\d+)%/) || [])[1] || '';
 var empId = document.getElementById('dpEmp') ? document.getElementById('dpEmp').value : '';
 const { data: emp } = await _supabase.from('employees').select('position, department').eq('employee_id', empId).single();
-showToast('✨ AI is writing the plan...');
+showToast('✍️AI is writing the plan...');
 var focus = document.getElementById('aiFocus') ? document.getElementById('aiFocus').value.trim() : '';
 var prompt = 'You are an expert HR learning-and-development consultant. Create a practical individual development plan for a ' + (emp ? emp.position : 'staff member') + ' who scored ' + pctMatch + '% on the competency "' + compName + '".' + (focus ? ' The manager explicitly wants the plan to focus on: ' + focus + '. Every task must relate to this focus and to the competency.' : ' Every task must directly build the competency "' + compName + '" in daily work.') + ' Return ONLY valid JSON in this exact shape, with 2 tasks and 1 to 2 actions per task: {"tasks":[{"task":"...","actions":[{"action":"...","measure":"...","responsible":"...","period":"..."}]}]}. Keep each item under 120 characters. No markdown.';
 try {
@@ -1833,7 +1856,7 @@ document.getElementById('dpr-' + ti + '-' + ai).value = a.responsible || '';
 document.getElementById('dpp-' + ti + '-' + ai).value = a.period || '';
 });
 });
-showToast('✨ AI plan ready — review and submit!');
+showToast('✍️AI plan ready — review and submit!');
 } catch (err) {
 showToast('AI failed: ' + err.message);
 }
@@ -1934,8 +1957,8 @@ var pctAssessed = totalStaff ? Math.round((assessedCount / totalStaff) * 100) : 
 var pendingReviews = Object.keys(pendingIds).length;
 var hrReqs = (reqs || []).filter(function(r){ return r.type === 'Manager'; });
 var pendingPlans = (devPlans || []).filter(function(d){ return String(d.hr_approved || '').trim() === ''; }).length;
-var critPos = {};
-(critPosRows || []).forEach(function(c){ critPos[(c.position_name || '').toUpperCase().trim()] = true; });var restrictHOHR = (APP.currentRole === 'hohr');
+var critPos = {}; var critLevel = {};
+(critPosRows || []).forEach(function(c){ var k = (c.position_name || '').toUpperCase().trim(); critPos[k] = true; critLevel[k] = c.criticality || 'Critical Role'; });var restrictHOHR = (APP.currentRole === 'hohr');
 var submittedIds = {};
 (chainRows || []).forEach(function(r){ if ((r.status || '') !== 'Draft') submittedIds[r.employee_id] = true; });
 var latestList = Object.keys(byAssessment).map(function(k){ return byAssessment[k]; })
@@ -1944,12 +1967,12 @@ var latestList = Object.keys(byAssessment).map(function(k){ return byAssessment[
 var html = '';
 if (hrReqs.length || pendingReviews || pendingPlans) {
 html += '<div class="card"><div class="card-title">Action Needed</div>';
-if (hrReqs.length) html += '<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--gray-100)"><span style="font-size:13px"><span class="badge badge-warning">' + hrReqs.length + '</span> redo request(s) waiting for HR decision</span><button class="btn btn-sm btn-primary" onclick="navigateTo(\'hr-redo\')">Open Requests</button></div>';
+if (hrReqs.length && APP.user.modes.isAdmin) html += '<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--gray-100)"><span style="font-size:13px"><span class="badge badge-warning">' + hrReqs.length + '</span> redo request(s) waiting for HR decision</span><button class="btn btn-sm btn-primary" onclick="navigateTo(\'hr-redo\')">Open Requests</button></div>';
 if (pendingReviews) html += '<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--gray-100)"><span style="font-size:13px"><span class="badge badge-purple">' + pendingReviews + '</span> manager assessment(s) pending HR review</span><button class="btn btn-sm btn-primary" onclick="navigateTo(\'hr-review\')">Review Now</button></div>';
 if (pendingPlans) html += '<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0"><span style="font-size:13px"><span class="badge badge-info">' + pendingPlans + '</span> development plan(s) awaiting approval</span><button class="btn btn-sm btn-primary" onclick="navigateTo(\'hr-devplans\')">Open Plans</button></div>';
 html += '</div>';
 }
-html += '<div class="card"><div class="card-title">HR Admin Dashboard</div></div>';
+html += '<div class="card"><div class="card-title">' + (APP.currentRole === 'hohr' ? 'Head of HR Dashboard' : 'HR Admin Dashboard') + '</div></div>';
 html += '<div class="stats-grid">';
 html += '<div class="stat-card" style="background:var(--primary-light)"><div class="num" style="color:var(--primary)">' + totalStaff + '</div><div class="lbl">Total Staff</div></div>';
 html += '<div class="stat-card" style="background:var(--green-light)"><div class="num" style="color:var(--green)">' + assessedCount + ' (' + pctAssessed + '%)</div><div class="lbl">Assessed</div></div>';
@@ -1965,10 +1988,12 @@ posMap[p].total++;
 if (mgrDoneIds[e.employee_id]) posMap[p].assessed++;
 });
 html += '<div class="card"><div class="card-title">Assessment Coverage by Position</div><div class="table-wrap"><table><thead><tr><th>Position</th><th>Type</th><th>Total</th><th>Assessed</th><th>%</th></tr></thead><tbody>';
-Object.keys(posMap).sort().forEach(function(p) {
+function critRank(p){ var lv = critLevel[p] || ''; if (lv.indexOf('Absolutely') === 0) return 0; if (lv.indexOf('Relatively') === 0) return 2; if (critPos[p]) return 1; return 3; }
+Object.keys(posMap).sort(function(a,b){ var ra = critRank(a), rb = critRank(b); if (ra !== rb) return ra - rb; return a.localeCompare(b); }).forEach(function(p) {
 var row = posMap[p];
 var pct = row.total ? Math.round((row.assessed / row.total) * 100) : 0;
-html += '<tr><td><strong>' + escapeHtml(p) + '</strong></td><td>' + (row.critical ? '<span class="badge badge-danger">Critical</span>' : '<span class="badge badge-info">Standard</span>') + '</td><td>' + row.total + '</td><td>' + row.assessed + '</td><td style="font-weight:700;color:' + (pct >= 70 ? 'var(--green)' : 'var(--orange)') + '">' + pct + '%</td></tr>';
+var typeHtml = critPos[p] ? '<span class="badge ' + critBadge(critLevel[p]) + '">' + escapeHtml(critLevel[p]) + '</span>' : '<span style="color:var(--gray-400)">—</span>';
+html += '<tr><td><strong>' + escapeHtml(p) + '</strong></td><td>' + typeHtml + '</td><td>' + row.total + '</td><td>' + row.assessed + '</td><td style="font-weight:700;color:' + (pct >= 70 ? 'var(--green)' : 'var(--orange)') + '">' + pct + '%</td></tr>';
 });
 html += '</tbody></table></div></div>';
 html += '<div class="card"><div class="card-title">Latest Assessments</div>';
@@ -2029,11 +2054,18 @@ position: emp.position, department: emp.department, company: emp.company, manage
 selfDone: selfDone, mgrDone: mgrDone, hrPending: hrPending, hrReviewed: hrReviewed
 });
 }
+const { data: critRows } = await _supabase.from('critical_positions').select('*');
+var critLevel2 = {};
+(critRows || []).forEach(function(c){ critLevel2[(c.position_name || '').toUpperCase().trim()] = c.criticality || 'Critical Role'; });
+function staffCritRank(s){ var lv = critLevel2[(s.position || '').toUpperCase().trim()] || ''; if (lv.indexOf('Absolutely') === 0) return 0; if (lv.indexOf('Relatively') === 0) return 2; if (lv) return 1; return 3; }
+staff.sort(function(a,b){ var ra = staffCritRank(a), rb = staffCritRank(b); if (ra !== rb) return ra - rb; return a.name.localeCompare(b.name); });
 var isHOHRonly = APP.user.modes.isHOHR && !APP.user.modes.isAdmin;
-var html = '<div class="card"><div class="card-title">All Staff</div><div class="table-wrap"><table><thead><tr><th>Name</th><th>Position</th><th>Company</th><th>Manager</th><th>Status</th>' + (isHOHRonly ? '' : '<th>Actions</th>') + '</tr></thead><tbody>';
+var html = '<div class="card"><div class="card-title">All Staff</div><div class="table-wrap"><table><thead><tr><th>Name</th><th>Position</th><th>Criticality</th><th>Company</th><th>Manager</th><th>Status</th>' + (isHOHRonly ? '' : '<th>Actions</th>') + '</tr></thead><tbody>';
 staff.forEach(function(s) {
+var sLv = critLevel2[(s.position || '').toUpperCase().trim()] || '';
 html += '<tr><td><strong>' + escapeHtml(s.name) + '</strong></td>';
 html += '<td style="font-size:11px">' + escapeHtml(s.position) + '</td>';
+html += '<td>' + (sLv ? '<span class="badge ' + critBadge(sLv) + '">' + escapeHtml(sLv) + '</span>' : '<span style="color:var(--gray-400)">—</span>') + '</td>';
 html += '<td>' + escapeHtml(s.company) + '</td>';
 html += '<td style="font-size:11px">' + escapeHtml(s.manager) + '</td>';
 html += '<td>';
@@ -2104,8 +2136,8 @@ html += '<div class="stat-card" style="background:var(--green-light)"><div class
 html += '<div class="stat-card" style="background:var(--purple-light)"><div class="num" style="color:var(--purple)">' + promoted + ' (' + pctPromoted + '%)</div><div class="lbl">Promotion Ready (subject to vacancy)</div></div>';
 html += '<div class="stat-card" style="background:var(--orange-light)"><div class="num" style="color:var(--orange)">' + onIdp + ' (' + pctIdp + '%)</div><div class="lbl">On IDP</div></div>';
 html += '</div>';
-html += '<div class="card"><div class="card-title">Manage Critical Positions</div><div style="display:flex;gap:8px"><input id="newCritPos" placeholder="e.g. Production Manager"><button class="btn btn-primary" onclick="addCriticalPosition()">Add</button></div><div style="margin-top:10px">';
-critList.forEach(function(c){ html += '<span class="badge badge-danger" style="margin:0 6px 6px 0;padding:6px 10px">' + escapeHtml(c.position_name) + ' <a style="color:inherit;cursor:pointer" onclick="deleteCriticalPosition(' + c.id + ')">✕</a></span>'; });
+html += '<div class="card"><div class="card-title">Manage Critical Positions</div><div style="display:flex;gap:8px;flex-wrap:wrap"><input id="newCritPos" placeholder="e.g. Production Manager" style="flex:1;min-width:180px"><select id="newCritLevel" style="width:auto"><option>Absolutely Critical Role</option><option selected>Critical Role</option><option>Relatively Critical Role</option></select><button class="btn btn-primary" onclick="addCriticalPosition()">Add</button></div><div style="margin-top:10px">';
+critList.forEach(function(c){ var lv = c.criticality || 'Critical Role'; html += '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;border:1px solid var(--gray-200);border-radius:6px;padding:6px 10px;margin:0 0 6px;font-size:12px"><span><strong>' + escapeHtml(c.position_name) + '</strong> <span class="badge ' + critBadge(lv) + '">' + escapeHtml(lv) + '</span></span><span style="display:flex;gap:6px;align-items:center"><select onchange="setCriticality(' + c.id + ',this.value)" style="width:auto;padding:3px 6px;font-size:11px"><option' + (lv === 'Absolutely Critical Role' ? ' selected' : '') + '>Absolutely Critical Role</option><option' + (lv === 'Critical Role' ? ' selected' : '') + '>Critical Role</option><option' + (lv === 'Relatively Critical Role' ? ' selected' : '') + '>Relatively Critical Role</option></select><button class="btn btn-sm btn-danger" onclick="deleteCriticalPosition(' + c.id + ')">✕</button></span></div>'; });
 if (!critList.length) html += '<p style="color:var(--gray-500);font-size:12px">No critical positions yet — add ONLY the roles that count for your KPI.</p>';
 html += '</div></div>';
 html += '<div class="card"><div class="card-title">Critical Roles Tracker</div><div class="table-wrap"><table><thead><tr><th>Employee</th><th>Position</th><th>Manager Assessment</th><th>IDP</th><th>Promotion Readiness</th></tr></thead><tbody>' + (rowsHtml || '<tr><td colspan="5" style="color:var(--gray-500)">No staff in critical positions yet.</td></tr>') + '</tbody></table></div></div>';
@@ -2113,17 +2145,20 @@ setContent(html);
 }
 async function addCriticalPosition() {
 var v = (document.getElementById('newCritPos').value || '').trim();
+var lv = document.getElementById('newCritLevel') ? document.getElementById('newCritLevel').value : 'Critical Role';
 if (!v) { showToast('Type a position name'); return; }
-const { error } = await _supabase.from('critical_positions').insert({ position_name: v });
+const { error } = await _supabase.from('critical_positions').insert({ position_name: v, criticality: lv });
 if (error) { showToast(error.message); return; }
 showToast('Critical position added');
 loadHRKPI();
 }
-async function deleteCriticalPosition(id) {
-if (!confirm('Remove this critical position?')) return;
-const { error } = await _supabase.from('critical_positions').delete().eq('id', id);
+async function setCriticality(id, lv) {
+const { error } = await _supabase.from('critical_positions').update({ criticality: lv }).eq('id', id);
 if (error) { showToast(error.message); return; }
+showToast('Classification updated');
 loadHRKPI();
+}
+function critBadge(lv) { lv = (lv || '').toString(); if (lv.indexOf('Absolutely') === 0) return 'badge-danger'; if (lv.indexOf('Relatively') === 0) return 'badge-info'; return 'badge-warning'; 
 }
 async function deleteEmployee(id, name) {
 if (!APP.user.modes.isAdmin) { showToast('Only HR Admin can delete'); return; }
@@ -2148,7 +2183,8 @@ showToast('Plan deleted');
 loadHRDPEmp();
 }
 async function deleteAllAssessments(empId, name) {
-if (!APP.user.modes.isAdmin) { showToast('Only HR Admin can delete'); return; }
+if ((code || '').toUpperCase().indexOf('CC') === 0 && !APP.user.modes.isAdmin) { showToast('Core competencies cannot be deleted — they are company-wide'); return; }
+if (!APP.user.modes.isAdmin && !APP.user.modes.isHOHR && !APP.user.modes.isManager) { showToast('Not allowed'); return; }
 if (!confirm('Delete ALL assessments for ' + name + '? This cannot be undone.')) return;
 if (!confirm('FINAL CHECK: Click OK to permanently delete.')) return;
 const { error } = await _supabase.from('assessments').delete().eq('employee_id', empId);
@@ -2164,7 +2200,7 @@ const { error } = await _supabase.from('competencies').delete().eq('code', code)
 if (error) { showToast(error.message); return; }
 showToast('Competency deleted');
 await refreshCompData();
-loadCompDetail();
+reloadCompView();
 }
 function goReview(id) { APP.reviewTarget = id; navigateTo('hr-review'); }
 async function loadHRReview() {
@@ -2194,14 +2230,14 @@ var id = document.getElementById('hrRevEmp').value;
 if (!id) { document.getElementById('hrRevContent').innerHTML = ''; return; }
 document.getElementById('hrRevContent').innerHTML = '<div class="loading"><div class="spinner"></div></div>';
 const { data: emp } = await _supabase.from('employees').select('*').eq('employee_id', id).single();
-const { data: allResultsRaw } = await _supabase.from('assessments').select('*').eq('employee_id', id).in('type', ['Manager', 'Prospective']);
+const { data: allResultsRaw } = await _supabase.from('assessments').select('*').eq('employee_id', id).in('type', ['Self', 'Manager', 'Prospective']);
 var allResults = latestOnly(allResultsRaw || []);
-var html = roundTable(allResultsRaw || [], 'Manager') + roundTable(allResultsRaw || [], 'Prospective');
-html += '<div class="card"><div style="font-size:13px;margin-bottom:12px"><strong>' + escapeHtml(emp.employee_name) + '</strong> | ' + escapeHtml(emp.position) + ' | ' + escapeHtml(emp.company) + '</div><button class="btn btn-sm btn-success" onclick="aiReviewPending(\'' + id + '\')">✨ AI Relevance Check — review all evidence before approving</button></div>';
-['Manager', 'Prospective'].forEach(function(type) {
+var html = roundTable(allResultsRaw || [], 'Self') + roundTable(allResultsRaw || [], 'Manager') + roundTable(allResultsRaw || [], 'Prospective');
+html += '<div class="card"><div style="font-size:13px;margin-bottom:12px"><strong>' + escapeHtml(emp.employee_name) + '</strong> | ' + escapeHtml(emp.position) + ' | ' + escapeHtml(emp.company) + '</div><button class="btn btn-sm btn-success" onclick="aiReviewPending(\'' + id + '\')">✍️AI Relevance Check — review all evidence before approving</button></div>';
+['Self', 'Manager', 'Prospective'].forEach(function(type) {
 var typeRows = allResults.filter(function(r){ return r.type === type; });
 if (!typeRows.length) return;
-html += '<div class="card"><div class="card-title">' + type + ' Assessment Review</div>';
+html += '<div class="card"><div class="card-title">' + (type === 'Self' ? 'Employee Self Assessment Review' : type + ' Assessment Review') + '</div>';
 for (var i = 0; i < APP.competencies.length; i++) {
 var comp = APP.competencies[i];
 var compRows = typeRows.filter(function(r){ return r.comp_code === comp.code; });
@@ -2225,7 +2261,7 @@ if (exp.ticked && hasEvidence) html += '<div class="exp-evidence mgr-evidence"><
 if (exp.ticked && !hasEvidence) html += '<div style="font-size:11px;color:var(--red);margin-top:4px">Ticked but no evidence — will not count until evidence is added.</div>';
 if (exp.ai_note) { var aiGood = exp.ai_note.indexOf('Relevant ✓') >= 0; html += '<div style="font-size:11px;color:' + (aiGood ? 'var(--green)' : 'var(--orange)') + ';background:' + (aiGood ? 'var(--green-light)' : 'var(--orange-light)') + ';padding:6px 8px;border-radius:4px;margin-top:4px">' + (aiGood ? '✅ ' : '⚠️ ') + escapeHtml(exp.ai_note) + (aiGood ? '' : ' — HR decides: approve anyway or return.') + '</div>'; }
 if (exp.ticked) {
-html += '<div class="review-actions"><select id="hrs-' + type + '-' + i + '-' + ei + '" onchange="toggleHRComment(this,\'hrc-' + type + '-' + i + '-' + ei + '\')" style="width:auto;padding:4px 8px;font-size:11px"><option value="Approved">Approve</option><option value="Disapproved">Disapprove</option><option value="Returned"' + (returned ? ' selected' : '') + '>Return</option></select>';
+html += '<div class="review-actions"><select id="hrs-' + type + '-' + i + '-' + ei + '" onchange="toggleHRComment(this,\'hrc-' + type + '-' + i + '-' + ei + '\')" style="width:auto;padding:4px 8px;font-size:11px"><option value="Approved">Approve</option><option value="Disapproved">Disapprove</option>' + (type === 'Self' ? '' : '<option value="Returned"' + (returned ? ' selected' : '') + '>Return</option>') + '</select>';
 html += '<input id="hrc-' + type + '-' + i + '-' + ei + '" placeholder="Comment required for Disapprove/Return" style="width:auto;flex:1;padding:4px 8px;font-size:11px;' + (returned ? '' : 'display:none') + '" value="' + escapeHtml(returned ? exp.hr_comment : '') + '"></div>';
 }
 html += '</div>';
@@ -2248,7 +2284,7 @@ async function doHRReview(empId) {
 var data = window._hrData;
 var rd = []; var invalid = false;
 var today = new Date().toISOString().slice(0, 10);
-['Manager', 'Prospective'].forEach(function(type) {
+['Self', 'Manager', 'Prospective'].forEach(function(type) {
 for (var i = 0; i < APP.competencies.length; i++) {
 var comp = APP.competencies[i];
 var compRows = (data.results || []).filter(function(r){ return r.type === type && r.comp_code === comp.code; });
@@ -2268,7 +2304,13 @@ for (var i = 0; i < rd.length; i++) {
 const { error } = await _supabase.from('assessments').update({ hr_status: rd[i].hr_status, hr_comment: rd[i].hr_comment, hr_reviewer: rd[i].hr_reviewer, hr_review_date: rd[i].hr_review_date }).eq('id', rd[i].id);
 if (error) { showToast(error.message); return; }
 }
-showToast('Review saved! ' + rd.length + ' updated. Manager will be notified only after the Head of HR decides.');
+const { data: fresh } = await _supabase.from('assessments').select('*').eq('employee_id', empId);
+if (assessmentReleased(fresh || [])) {
+var empR = data.employee;
+if (empR.manager_email) sendCMSemail(empR.manager_email, 'Assessments Released: ' + empR.employee_name, 'HR Admin has approved both the self-assessment and your manager assessment for ' + empR.employee_name + '. The employee\'s self-assessment is now visible to you in the CMS: ' + APP_LINK);
+sendCMSemail(empR.email, 'Assessments Released: ' + empR.employee_name, 'HR Admin has approved both assessments. Your manager\'s assessment is now visible to you in the CMS: ' + APP_LINK);
+}
+showToast('Review saved! ' + rd.length + ' updated.');
 loadHRRevEmp();
 }
 async function loadHRGaps() {
@@ -2427,7 +2469,7 @@ if (up.error) { showToast('Upload failed: ' + up.error.message); return; }
 attachment_name = f.name;
 attachment_url = _supabase.storage.from('dp-files').getPublicUrl(path).data.publicUrl;
 }
-showToast('✨ AI is checking your report...');
+showToast('✍️AI is checking your report...');
 var aiNote = await aiCheckDPReport(id, text);
 const { error } = await _supabase.from('dp_reports').update({ report_text: text, attachment_name: attachment_name, attachment_url: attachment_url, emp_submitted: true, submitted_date: new Date().toISOString().slice(0,10), mgr_status: 'Pending', ai_note: aiNote }).eq('id', id);
 if (error) { showToast(error.message); return; }
@@ -3449,7 +3491,7 @@ var ta = item.querySelector('textarea');
 var ev = ta ? ta.value.trim() : '';
 var out = document.getElementById('ai-' + itemId);
 if (!out) { out = document.createElement('div'); out.id = 'ai-' + itemId; item.appendChild(out); }
-out.innerHTML = '<div style="font-size:11px;color:var(--primary);margin-top:6px">✨ AI Assist is thinking...</div>';var prompt;
+out.innerHTML = '<div style="font-size:11px;color:var(--primary);margin-top:6px">✍️AI Assist is thinking...</div>';var prompt;
 if (ev) {
 prompt = 'You are a friendly HR competency coach. Experience to demonstrate: "' + expText + '". Drafted evidence: "' + ev + '". Judge whether the evidence is SPECIFIC and RELEVANT (real actions, numbers, dates, people or results) or WEAK/VAGUE/IRRELEVANT. If weak, say briefly why and give 2-3 concrete ideas to strengthen it. If good, encourage and suggest one small improvement. Return ONLY valid JSON: {"ok":true,"note":"...","ideas":["..."]} or {"ok":false,"note":"...","ideas":["...","..."]}. No markdown.';
 } else {
@@ -3675,6 +3717,58 @@ html += '</div>';
 });
 box.innerHTML = html;
 }
+function assessmentReleased(allResults) {
+var selfRows = (allResults || []).filter(function(r){ return r.type === 'Self'; });
+var mgrRows = (allResults || []).filter(function(r){ return r.type === 'Manager'; });
+if (!selfRows.length || !mgrRows.length) return false;
+function ok(rows) {
+return rows.some(function(r){ return r.hr_status === 'Approved'; }) && !rows.some(function(r){ return r.ticked && (r.hr_status === '' || r.hr_status === 'Pending'); });
+}
+return ok(selfRows) && ok(mgrRows);
+}
+function prospectiveSelfStatus(allResults, empId) {
+var latest = latestOnly(allResults || []);
+var fr = latest.map(function(r){ return { 'Employee ID': r.employee_id, 'Competency Code': r.comp_code, 'Type': r.type, 'Ticked': r.ticked, 'Evidence': r.evidence, 'HR_Status': r.hr_status, 'Rating': r.proficiency_rating }; });
+var selfRows = latest.filter(function(r){ return r.type === 'Self'; });
+var mgrRows = latest.filter(function(r){ return r.type === 'Manager'; });
+var psRows = latest.filter(function(r){ return r.type === 'Prospective Self'; });
+var out = { done: psRows.length > 0, psScore: 0, open: false, avg: null };
+if (psRows.length) out.psScore = calculateOverallScore(empId, 'Prospective Self', fr);
+if (!selfRows.length || !mgrRows.length) return out;
+var hrDone = mgrRows.some(function(r){ return r.hr_status === 'Approved'; }) && !mgrRows.some(function(r){ return r.ticked && (r.hr_status === '' || r.hr_status === 'Pending'); });
+if (!hrDone) return out;
+var avg = Math.round((calculateOverallScore(empId, 'Self', fr) + calculateOverallScore(empId, 'Manager', fr)) / 2);
+out.avg = avg;
+out.open = avg >= 80;
+return out;
+}
+function prospectiveSelfCard(emp, pss) {
+var h = '<div class="card"><div class="card-title">🚀 Prospective Role Self-Assessment</div>';
+if (pss.done) {
+h += '<p style="font-size:12px;color:var(--green);font-weight:600">Completed — Prospective (Self) score: ' + pss.psScore + '%</p>';
+} else if (pss.open) {
+var curRank = positionRank(emp.position);
+var higher = prospPositions().filter(function(p){ return positionRank(p) > curRank; });
+if (!higher.length) higher = prospPositions().filter(function(p){ return !sameText(p, emp.position); });
+h += '<p style="font-size:12px;color:var(--gray-600);margin-bottom:8px">🎉 Your final average is <strong>' + pss.avg + '%</strong> (80%+ required) — the door is OPEN! Choose a higher role to assess yourself for.</p>';
+h += '<div class="form-group"><label>Select prospective position (higher than ' + escapeHtml(emp.position) + ')</label><select id="psRoleSel"><option value="">-- Select --</option>' + higher.map(function(p){ return '<option>' + escapeHtml(p) + '</option>'; }).join('') + '</select></div>';
+h += '<button type="button" class="btn btn-primary" onclick="buildProspectiveSelfForm(\'' + emp.employee_id + '\')">Start Prospective Self-Assessment</button><div id="psSelfForm"></div>';
+} else {
+var why = (pss.avg === null) ? 'waiting for both assessments to be completed and approved by HR Admin' : 'current final average is ' + pss.avg + '%';
+h += '<p style="font-size:12px;color:var(--gray-500)">🔒 This unlocks automatically when your final average (Self + Manager, after HR approval) reaches <strong>80% or above</strong>. Status: ' + why + '.</p>';
+}
+h += '</div>';
+return h;
+}
+async function buildProspectiveSelfForm(empId) {
+var pos = document.getElementById('psRoleSel') ? document.getElementById('psRoleSel').value : '';
+if (!pos) { showToast('Select a prospective role first'); return; }
+var box = document.getElementById('psSelfForm');
+const { data: emp } = await _supabase.from('employees').select('*').eq('employee_id', empId).single();
+box.innerHTML = assessFormHTML(emp, 'Prospective Self', pos, 'ps', 'psscore');
+restoreDraft('Prospective Self', 'ps-', 'pse-', 'psscore-', empId);
+startAutoSave('Prospective Self', 'ps-', 'pse-', empId);
+}
 function sameText(a,b){ return (a||'').toString().toUpperCase().trim() === (b||'').toString().toUpperCase().trim(); }
 async function refreshCompData() {
 const { data: c } = await _supabase.from('competencies').select('*');
@@ -3781,11 +3875,11 @@ document.head.appendChild(s);
 function showJdBox() {
 var box = document.getElementById('compContent') || document.getElementById('mgrCompContent');
 if (!box) return;
-var h = '<div class="card" id="jdBox"><div class="card-title">✨ AI Competency Builder</div>';
+var h = '<div class="card" id="jdBox"><div class="card-title">✍️AI Competency Builder</div>';
 h += '<p style="font-size:11px;color:var(--gray-500);margin-bottom:8px">Paste anything about the role — duties, KPIs, a vacancy advert or your own notes (or upload a Word / text file). The AI drafts the competencies in our exact format and downloads them as an Excel file for you to review, edit and re‑upload.</p>';
 h += '<input type="file" id="jdFile" accept=".docx,.txt,.md" onchange="jdFilePicked(this)" style="margin-bottom:8px">';
 h += '<textarea id="jdText" rows="6" placeholder="Paste role notes, duties, KPIs or any document text here..."></textarea>';
-h += '<div style="display:flex;gap:8px;margin-top:8px"><button type="button" class="btn btn-primary" onclick="jdGenerate()">✨ Generate Excel Draft</button><button type="button" class="btn btn-outline" onclick="document.getElementById(\'jdBox\').remove()">Close</button></div></div>';
+h += '<div style="display:flex;gap:8px;margin-top:8px"><button type="button" class="btn btn-primary" onclick="jdGenerate()">✍️Generate Excel Draft</button><button type="button" class="btn btn-outline" onclick="document.getElementById(\'jdBox\').remove()">Close</button></div></div>';
 box.innerHTML = h + box.innerHTML;
 }
 async function jdFilePicked(input) {
@@ -3798,13 +3892,13 @@ var buf = await f.arrayBuffer();
 var res = await mammoth.extractRawText({ arrayBuffer: buf });
 var ta = document.getElementById('jdText');
 if (ta) ta.value = res.value || '';
-showToast('Text loaded — now click ✨ Generate Excel Draft');
+showToast('Text loaded — now click ✍️Generate Excel Draft');
 });
 } else {
 var txt = await f.text();
 var ta = document.getElementById('jdText');
 if (ta) ta.value = txt;
-showToast('Text loaded — now click ✨ Generate Excel Draft');
+showToast('Text loaded — now click ✍️Generate Excel Draft');
 }
 }
 async function jdGenerate() {
@@ -3818,17 +3912,11 @@ if (jd.length < 80) { showToast('Paste the JD / KPI text first'); return; }
 var comps = (APP.competencies || []).filter(function(c){ return (c.code || '').indexOf('CC') !== 0; });
 if (!comps.length) { showToast('No competencies in the library yet'); return; }
 var compList = comps.map(function(c){ return c.code + ' — ' + c.competency + ' (' + (c.category || '') + ', ' + (parseFloat(c.weight) || 0) + '%)'; }).join('; ');
-showToast('✨ AI is mapping the text to your competencies...');
-var prompt = 'You are an HR competency expert. Using ONLY the competencies in this exact list (code — name — category — weight): [' + compList + '], read the job description / KPI text below for the position "' + pos + '" (department "' + dep + '"). For every competency the text supports (aim for at least 5), write 2 to 4 observable past-tense experience statements that start with "Has " and assign each exactly one classification: "Must-Have (Critical)", "Important (Performance)" or "Value-Add (Developmental)". Return ONLY valid JSON (no markdown) in this exact shape: {"rows":[{"code":"AT","text":"Has ...","classification":"Must-Have (Critical)"}]}. Use only codes from the list. Text: ' + jd.slice(0, 6000);
+showToast('✍️AI is mapping the text to your competencies...');
+var prompt = 'You are an HR competency expert. Using ONLY the competencies in this exact list (code — name — category — weight): [' + compList + '], read the job description / KPI text below for the position "' + pos + '" (department "' + dep + '"). Cover EVERY competency in the list. Write a MINIMUM of 3 observable past-tense experience statements for competencies about Analytical Thinking, Judgement/Decision Making, Planning or Execution, and a MINIMUM of 2 for competencies about Continuous Learning, People Skills or Leadership (more is allowed where the text supports it). Every statement starts with "Has " and gets exactly one classification: "Must-Have (Critical)", "Important (Performance)" or "Value-Add (Developmental)". Return ONLY valid JSON (no markdown) in this exact shape: {"rows":[{"code":"AT","text":"Has ...","classification":"Must-Have (Critical)"}]}. Use only codes from the list. Text: ' + jd.slice(0, 6000);
 try {
-var res = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key=' + GEMINI_KEY, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] }) });
-var j = await res.json();
-var txt = '';
-if (j.candidates && j.candidates[0] && j.candidates[0].content && j.candidates[0].content.parts) txt = j.candidates[0].content.parts.map(function(p){ return p.text || ''; }).join('');
-if (!txt) { showToast('AI error: ' + (j.error ? j.error.message : 'no response')); return; }
-txt = txt.replace(/```json/gi, '').replace(/```/g, '');
-var s = txt.indexOf('{'), e = txt.lastIndexOf('}');
-if (s >= 0 && e > s) txt = txt.slice(s, e + 1);
+var txt = await callAI(prompt, true);
+if (!txt) return;
 var data = JSON.parse(txt);
 var rowsOut = [];
 (data.rows || []).forEach(function(r){
@@ -3838,6 +3926,10 @@ if (!meta || !(r.text || '').trim()) return;
 rowsOut.push({ 'Department': dep, 'Position': pos, 'Competency Code': meta.code, 'Competency Name': meta.competency, 'Category': meta.category || '', 'Weight %': parseFloat(meta.weight) || 0, 'Classification': r.classification || 'Important (Performance)', 'Experience Text': (r.text || '').trim() });
 });
 if (!rowsOut.length) { showToast('AI returned nothing usable — try again'); return; }
+var cntByCode = {}; rowsOut.forEach(function(r){ cntByCode[r['Competency Code']] = (cntByCode[r['Competency Code']] || 0) + 1; });
+var shortList = [];
+comps.forEach(function(c){ var mn = compMinExps(c.competency); if (mn && (cntByCode[c.code] || 0) < mn) shortList.push(c.code + ' (' + (cntByCode[c.code] || 0) + '/' + mn + ')'); });
+if (shortList.length) showToast('Below minimum experiences: ' + shortList.join(', ') + ' — add more in the Excel before uploading');
 loadXLSXLib(function(){
 if (!window.XLSX) { showToast('Excel library failed to load'); return; }
 var ws = XLSX.utils.json_to_sheet(rowsOut);
@@ -3848,14 +3940,39 @@ showToast('✅ Excel downloaded — review & edit, then ⬆ Bulk Upload it');
 });
 } catch (err) { showToast('AI failed: ' + err.message); }
 }
+function isOpComp(name){ var n=(name||'').toString().toUpperCase(); return n.indexOf('ANALYT')>=0 || n.indexOf('JUDG')>=0 || n.indexOf('DECISION')>=0 || n.indexOf('PLANN')>=0 || n.indexOf('EXEC')>=0; }
+function isBehComp(name){ var n=(name||'').toString().toUpperCase(); return n.indexOf('LEARN')>=0 || n.indexOf('PEOPLE')>=0 || n.indexOf('LEADER')>=0; }
+function compMinExps(name){ return isOpComp(name) ? 3 : (isBehComp(name) ? 2 : 0); }
+function enforceFrameworkRules(comps){
+var notes = [];
+comps.forEach(function(c){
+var min = compMinExps(c.name); var cnt = (c.experiences || []).length;
+if (min && cnt < min) notes.push(c.name + ': needs at least ' + min + ' experiences (has ' + cnt + ') — add more below.');
+});
+var op = comps.filter(function(c){ return isOpComp(c.name); });
+var beh = comps.filter(function(c){ return isBehComp(c.name); });
+var total = comps.reduce(function(a,c){ return a + (parseFloat(c.weight)||0); }, 0);
+var minOp = op.length ? Math.min.apply(null, op.map(function(c){ return parseFloat(c.weight)||0; })) : 0;
+var maxBeh = beh.length ? Math.max.apply(null, beh.map(function(c){ return parseFloat(c.weight)||0; })) : 0;
+if (op.length === 4 && beh.length === 3 && (minOp <= maxBeh || Math.round(total) !== 100)) {
+op.forEach(function(c){ c.weight = 16; });
+beh.forEach(function(c){ c.weight = 12; });
+notes.push('Weights auto-set: first four 16% each, last three 12% each (total 100%).');
+} else if (comps.length && Math.round(total) !== 100) {
+var diff = Math.round((100 - total) * 100) / 100;
+comps[comps.length - 1].weight = Math.round(((parseFloat(comps[comps.length - 1].weight)||0) + diff) * 100) / 100;
+notes.push('Weights adjusted so the total is exactly 100%.');
+}
+return notes;
+}
 async function aiGenerateComps() {
 var dep = '', pos = '';
 var depEl = document.getElementById('compDep'); var posEl = document.getElementById('compPos');
 if (depEl && posEl) { dep = (depEl.value || '').trim(); pos = (posEl.value || '').trim(); }
 else { dep = (APP.mgrDep || '').trim(); var mp = document.getElementById('mgrCompPos'); if (mp) pos = (mp.value || '').trim(); }
 if (!dep || !pos) { showToast('Select department and position first'); return; }
-showToast('✨ AI is drafting the framework for ' + pos + '...');
-var prompt = 'You are an HR competency framework expert. Create a complete competency framework for the position "' + pos + '" in the "' + dep + '" department. Return ONLY valid JSON (no markdown, no explanation) in exactly this shape: {"competencies":[{"code":"2-4 letter code not starting with CC","name":"Competency Name","category":"Functional","weight":12.5,"experiences":[{"text":"Has ...","classification":"Must-Have (Critical)"}]}]} Rules: 6-8 competencies; weights must total exactly 100; categories only Functional, People or Leadership; 3-4 experiences per competency; classification only one of "Must-Have (Critical)", "Important (Performance)", "Value-Add (Developmental)"; every experience starts with "Has "; codes unique.';
+showToast('✍️AI is drafting the framework for ' + pos + '...');
+var prompt = 'You are an HR competency framework expert. Create the FUNCTIONAL competencies for the position "' + pos + '" in the "' + dep + '" department. The 4 constant Core competencies (Customer Centric, Bold, Trustworthy, Collaboration) already exist at 7% each — do NOT include them. Return ONLY valid JSON (no markdown) in exactly this shape: {"competencies":[{"code":"2-4 letter code not starting with CC","name":"Competency Name","category":"Functional","weight":12,"experiences":[{"text":"Has ...","classification":"Must-Have (Critical)"}]}]} Rules: use these 7 functional competencies where they fit the role: Analytical Thinking & Problem Solving (12%), Judgement & Decision Making (12%), Planning (12%), Execution (12%), Continuous Learning & Improvement (8%), People Skills (8%), Leadership (8%) — functional weights must total 72 because the 4 Core add 28; MINIMUM 3 experiences for the first four and MINIMUM 2 for the last three; categories: first four Functional, People Skills = People, Leadership = Leadership; classification only one of "Must-Have (Critical)", "Important (Performance)", "Value-Add (Developmental)"; every experience starts with "Has ".';
 try {
 var txt = await callAI(prompt, true);
 if (!txt) return;
@@ -3863,8 +3980,10 @@ var s = txt.indexOf('{'), e = txt.lastIndexOf('}');
 if (s >= 0 && e > s) txt = txt.slice(s, e + 1);
 var data = JSON.parse(txt);
 if (!data.competencies || !data.competencies.length) { showToast('AI returned nothing usable — try again'); return; }
+var ruleNotes = enforceFrameworkRules(data.competencies);
 window._aiDraft = { dep: dep, pos: pos, comps: data.competencies };
 renderAiDraft();
+if (ruleNotes.length) showToast(ruleNotes[0]);
 } catch (err) { showToast('AI generation failed: ' + err.message); }
 }
 function draftExpRow(x) {
@@ -3882,10 +4001,11 @@ box.appendChild(div);
 function renderAiDraft() {
 var d = window._aiDraft; if (!d) return;
 var box = document.getElementById('compContent') || document.getElementById('mgrCompContent');
-var h = '<div class="card" id="aiDraftCard"><div class="card-title">✨ AI Draft — ' + escapeHtml(d.pos) + ' (' + escapeHtml(d.dep) + ')</div>';
+var h = '<div class="card" id="aiDraftCard"><div class="card-title">✍️AI Draft — ' + escapeHtml(d.pos) + ' (' + escapeHtml(d.dep) + ')</div>';
 h += '<p style="font-size:11px;color:var(--gray-500);margin-bottom:10px">Review and edit anything below, then save to the library or download as Excel.</p>';
 d.comps.forEach(function(c, ci) {
-h += '<div class="competency-block"><div style="display:grid;grid-template-columns:1fr 2fr 1.2fr 0.8fr;gap:6px">';
+var minEx = compMinExps(c.name);
+h += '<div class="competency-block"><div style="font-size:10px;font-weight:800;margin-bottom:4px;color:' + (minEx > 0 && (c.experiences || []).length >= minEx ? 'var(--green)' : 'var(--red)') + '">' + (minEx > 0 ? ('MINIMUM ' + minEx + ' EXPERIENCES — currently ' + (c.experiences || []).length) : '') + '</div><div style="display:grid;grid-template-columns:1fr 2fr 1.2fr 0.8fr;gap:6px">';
 h += '<div class="form-group" style="margin:0"><label>Code</label><input id="dc-' + ci + '" value="' + escapeHtml(c.code || '') + '"></div>';
 h += '<div class="form-group" style="margin:0"><label>Competency</label><input id="dn-' + ci + '" value="' + escapeHtml(c.name || '') + '"></div>';
 h += '<div class="form-group" style="margin:0"><label>Category</label><select id="dcat-' + ci + '"><option' + (c.category === 'People' ? ' selected' : '') + '>People</option><option' + (c.category === 'Leadership' ? ' selected' : '') + '>Leadership</option><option' + ((c.category || 'Functional') === 'Functional' ? ' selected' : '') + '>Functional</option></select></div>';
@@ -4049,7 +4169,7 @@ var html = '<div class="card"><div class="card-title">Competency Library</div>';
 html += '<p style="font-size:12px;color:var(--gray-500);margin-bottom:12px">Select a department to load its positions, then view, add, edit or delete competencies and experiences.</p>';
 html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px"><div class="form-group"><label>Department</label><select id="compDep" onchange="loadCompPositions()"><option value="">-- Select --</option>' + Object.keys(deps).sort().map(function(d){ return '<option>' + escapeHtml(d) + '</option>'; }).join('') + '</select></div>';
 html += '<div class="form-group"><label>Position</label><select id="compPos" onchange="loadCompDetail()"><option value="">-- Select --</option></select></div></div>';
-html += '<button class="btn btn-outline" onclick="showAddCompetency()">+ Add Competency</button> <button class="btn btn-success" onclick="compBulkPick()">⬆ Bulk Upload (Excel/CSV)</button> <button class="btn btn-outline" onclick="compBulkTemplate()">⬇ Template</button> <button class="btn btn-outline" onclick="aiGenerateComps()">✨ AI Generate</button> <button class="btn btn-outline" onclick="showJdBox()">✨ AI Competency Builder</button><input type="file" id="compBulkFile" accept=".xlsx,.xls,.csv" style="display:none" onchange="compBulkUpload(this)"></div><div id="compContent"></div>';
+html += '<button class="btn btn-outline" onclick="showAddCompetency()">+ Add Competency</button> <button class="btn btn-success" onclick="compBulkPick()">⬆ Bulk Upload (Excel/CSV)</button> <button class="btn btn-outline" onclick="compBulkTemplate()">⬇ Template</button> <button class="btn btn-outline" onclick="aiGenerateComps()">✍️AI Generate</button> <button class="btn btn-outline" onclick="showJdBox()">✍️AI Competency Builder</button><input type="file" id="compBulkFile" accept=".xlsx,.xls,.csv" style="display:none" onchange="compBulkUpload(this)"></div><div id="compContent"></div>';
 setContent(html);
 }
 async function loadCompPositions() {
@@ -4106,30 +4226,21 @@ posExps.forEach(function(x){ if (codes.indexOf(x.comp_code) === -1) codes.push(x
 if (!codes.length) html += '<p style="color:var(--gray-500)">No position competencies yet.</p>';
 codes.forEach(function(code) {
 var meta = APP.competencies.find(function(c){ return c.code === code; }) || {};
-html += compCard(meta, code, posExps.filter(function(x){ return x.comp_code === code; }), false);
+html += compCardMgr(meta, code, posExps.filter(function(x){ return x.comp_code === code; }));
 });
 html += addExpForm('POS');
 html += '</div>';
-const { data: empsLvl } = await _supabase.from('employees').select('department, position, competency_level');
-var cnt = {};
-(empsLvl || []).forEach(function(e){ if (sameText(e.department, dep) && sameText(e.position, pos) && (e.competency_level || '').trim()) cnt[(e.competency_level || '').trim()] = (cnt[(e.competency_level || '').trim()] || 0) + 1; });
-var autoLevel = ''; var best = 0;
-Object.keys(cnt).forEach(function(k){ if (cnt[k] > best) { best = cnt[k]; autoLevel = k; } });
-var selLevel = (window._coreLevel === null || window._coreLevel === undefined) ? autoLevel : window._coreLevel;
-html += '<div class="card"><div class="card-title">Core Competencies (apply to all positions by level)</div>';
-html += '<div class="form-group"><label>Core level shown for this role</label><select id="coreLevelSel" onchange="window._coreLevel=this.value;loadCompDetail()"><option value="">All levels (manage everything)</option>' + ['Foundational','Intermediate','Advanced','Master','Executive'].map(function(l){ return '<option value="' + l + '"' + (selLevel === l ? ' selected' : '') + '>' + l + '</option>'; }).join('') + '</select>' + (autoLevel ? '<div style="font-size:11px;color:var(--gray-500);margin-top:4px">Detected role level: ' + escapeHtml(autoLevel) + ' — this is what the role sees in assessments</div>' : '') + '</div>';
+html += '<div class="card"><div class="card-title">Core Competencies (company-wide — same for everyone, levels differ)</div>';
 APP.competencies.filter(function(c){ return (c.code || '').indexOf('CC') === 0; }).forEach(function(meta) {
-var exps = (APP.experiences || []).filter(function(x){ return x.comp_code === meta.code && (!selLevel || sameText(x.competency_level, selLevel)); });
-if (selLevel && !exps.length) return;
-html += compCard(meta, meta.code, exps, true);
+html += compCardFull(meta, meta.code, (APP.experiences || []).filter(function(x){ return x.comp_code === meta.code; }), true, 'hr');
 });
-html += addExpForm('CC');
 html += '</div>';
 box.innerHTML = html;
 }
 async function saveNewExperience(mode) {
-var dep = document.getElementById('compDep').value;
-var pos = document.getElementById('compPos').value;
+var depEl = document.getElementById('compDep'); var posEl = document.getElementById('compPos');
+var dep = depEl ? depEl.value : (APP.mgrDep || '');
+var pos = posEl ? posEl.value : (document.getElementById('mgrCompPos') ? document.getElementById('mgrCompPos').value : '');
 var text = document.getElementById('newExpText-' + mode).value.trim();
 var cls = document.getElementById('newExpClass-' + mode).value;
 var code = document.getElementById('newExpCode-' + mode).value;
@@ -4146,7 +4257,7 @@ if (error) { showToast(error.message); return; }
 showToast('Experience added');
 notifyHOHRCompChange('New Experience Uploaded', 'A new ' + cls + ' experience was uploaded under competency ' + code + (mode === 'CC' ? ' (Core, level ' + row.competency_level + ')' : ' for ' + pos + ' (' + dep + ')') + ' by ' + APP.user.name + '.');
 await refreshCompData();
-loadCompDetail();
+reloadCompView();
 }
 async function editExperience(id) {
 var row = (APP.experiences || []).find(function(x){ return x.id === id; });
@@ -4157,7 +4268,10 @@ var c = prompt('Classification (Must-Have (Critical) / Important (Performance) /
 if (c === null) c = row.classification;
 const { error } = await _supabase.from('experiences').update({ experience_text: t.trim(), classification: c }).eq('id', id);
 if (error) { showToast(error.message); return; }
+notifyHOHRCompChange('Experience updated', 'An experience under competency code ' + row.comp_code + ' was edited by ' + APP.user.name + '.');
 showToast('Updated');
+await refreshCompData();
+reloadCompView();
 await refreshCompData();
 loadCompDetail();
 }
@@ -4165,13 +4279,17 @@ async function deleteExperience(id) {
 if (!confirm('Delete this experience?')) return;
 const { error } = await _supabase.from('experiences').delete().eq('id', id);
 if (error) { showToast(error.message); return; }
+notifyHOHRCompChange('Experience deleted', 'An experience under competency code ' + row.comp_code + ' was deleted by ' + APP.user.name + '.');
 showToast('Deleted');
+await refreshCompData();
+reloadCompView();
 await refreshCompData();
 loadCompDetail();
 }
 async function editCompetency(code) {
 var meta = APP.competencies.find(function(c){ return c.code === code; });
 if (!meta) return;
+if ((code || '').toUpperCase().indexOf('CC') === 0 && !APP.user.modes.isAdmin && !APP.user.modes.isHOHR) { showToast('Core competencies are company-wide — only HR Admin / Head of HR can edit them'); return; }
 var changes = [];
 var n = prompt('Competency name:', meta.competency || '');
 if (n === null) n = meta.competency || ''; else if (n.trim() !== (meta.competency || '')) changes.push('Name: "' + (meta.competency || '') + '" → "' + n.trim() + '"');
@@ -4183,12 +4301,12 @@ if (!changes.length) { showToast('No changes made'); return; }
 const { error } = await _supabase.from('competencies').update({ competency: n.trim(), category: cat.trim(), weight: parseFloat(w) || 0 }).eq('code', code);
 if (error) { showToast(error.message); return; }
 showToast('Competency updated');
-if (APP.user.modes.isHOHR) notifyHR('Competency Library Change: ' + (n.trim() || code) + ' updated', 'Changed by: ' + APP.user.name + ' (Head of HR)' + String.fromCharCode(10) + 'Competency: ' + (n.trim() || code) + ' (code ' + code + ')' + String.fromCharCode(10) + 'What changed:' + String.fromCharCode(10) + '- ' + changes.join(String.fromCharCode(10) + '- ') + String.fromCharCode(10) + 'Review in the CMS: ' + APP_LINK);
+if (APP.user.modes.isHOHR || APP.user.modes.isManager) notifyHR('Competency Library Change: ' + (n.trim() || code) + ' updated', 'Changed by: ' + APP.user.name + (APP.user.modes.isHOHR ? ' (Head of HR)' : ' (Line Manager)') + String.fromCharCode(10) + 'Competency: ' + (n.trim() || code) + ' (code ' + code + ')' + String.fromCharCode(10) + 'What changed:' + String.fromCharCode(10) + '- ' + changes.join(String.fromCharCode(10) + '- ') + String.fromCharCode(10) + 'Review in the CMS: ' + APP_LINK);
 await refreshCompData();
-loadCompDetail();
+reloadCompView();
 }
 function showAddCompetency() {
-var box = document.getElementById('compContent');
+var box = document.getElementById('compContent') || document.getElementById('mgrCompContent');
 var h = '<div class="card"><div class="card-title">Add Competency</div>';
 h += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px"><div class="form-group"><label>Code</label><input id="acCode" placeholder="e.g. CC01 or PC-HR-01"></div><div class="form-group"><label>Weight (%)</label><input id="acWeight" type="number" step="0.01" placeholder="e.g. 9.09"></div></div>';
 h += '<div class="form-group"><label>Name</label><input id="acName" placeholder="e.g. People Skills"></div>';
@@ -4208,12 +4326,13 @@ var name = document.getElementById('acName').value.trim();
 var cat = document.getElementById('acCat').value.trim();
 var w = parseFloat(document.getElementById('acWeight').value) || 0;
 if (!code || !name) { showToast('Code and name are required'); return; }
+if ((code || '').toUpperCase().indexOf('CC') === 0 && !APP.user.modes.isAdmin && !APP.user.modes.isHOHR) { showToast('Managers cannot add core competencies — they are company-wide'); return; }
 const { error } = await _supabase.from('competencies').insert({ code: code, competency: name, category: cat, weight: w });
 if (error) { showToast(error.message); return; }
 showToast('Competency added');
 notifyHOHRCompChange('New Competency Added', 'A new competency "' + name + '" (code ' + code + ', weight ' + w + '%, category ' + (cat || '—') + ') was uploaded by ' + APP.user.name + '.');
 await refreshCompData();
-loadCompDetail();
+reloadCompView();
 }
 async function showSendApproval() {
 var dep = document.getElementById('compDep').value;
@@ -4261,6 +4380,53 @@ sendCMSemail(e.manager_email, 'CC: ' + pos + ' Competency Framework (for your in
 showToast('Sent for approval');
 loadCompDetail();
 }
+function compCardFull(meta, code, exps, isCore, role) {
+var can = (role === 'hr') || !isCore;
+var h = '<div class="competency-block"><div class="competency-header"><span class="competency-name">' + escapeHtml(meta.competency || code) + '</span><span class="competency-cat">' + escapeHtml(meta.category || '') + ' | ' + weightPct(meta.weight) + '%' + (isCore ? ' | CORE' : '');
+if (can) h += ' <button class="btn btn-sm btn-outline" onclick="editCompetency(\'' + escapeHtml(code) + '\')">Edit</button> <button class="btn btn-sm btn-danger" onclick="deleteCompetency(\'' + escapeHtml(code) + '\')">Del</button>';
+h += '</span></div>';
+exps.forEach(function(x) {
+h += '<div class="exp-item"><div class="exp-text">' + escapeHtml(x.experience_text) + ' ' + getClassificationBadge(x.classification) + (isCore ? ' <span class="badge badge-info">' + escapeHtml(x.competency_level || '') + '</span>' : '') + '</div>';
+if (can) h += '<div style="margin-top:4px;display:flex;gap:6px"><button class="btn btn-sm btn-outline" onclick="editExperience(' + x.id + ')">Edit</button><button class="btn btn-sm btn-danger" onclick="deleteExperience(' + x.id + ')">Delete</button></div>';
+h += '</div>';
+});
+if (can) h += '<div style="margin-top:8px"><button class="btn btn-sm btn-success" onclick="showAddExpFor(\'' + escapeHtml(code) + '\',' + (isCore ? 'true' : 'false') + ')">+ Add Experience</button><div id="addexp-' + escapeHtml(code) + '"></div></div>';
+h += '</div>';
+return h;
+}
+function showAddExpFor(code, isCore) {
+var box = document.getElementById('addexp-' + code);
+if (!box) return;
+if (box.innerHTML) { box.innerHTML = ''; return; }
+var h = '<div style="border-top:1px solid var(--gray-200);margin-top:8px;padding-top:8px"><div class="form-group"><textarea id="naeText-' + code + '" rows="2" placeholder="Experience text (starts with Has...)"></textarea></div><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px"><div class="form-group"><label>Classification</label><select id="naeClass-' + code + '"><option>Must-Have (Critical)</option><option>Important (Performance)</option><option>Value-Add (Developmental)</option></select></div>' + (isCore ? '<div class="form-group"><label>Level</label><select id="naeLevel-' + code + '"><option>Foundational</option><option>Intermediate</option><option>Advanced</option><option>Master</option></select></div>' : '') + '</div><button class="btn btn-sm btn-primary" onclick="saveExpFor(\'' + code + '\',' + (isCore ? 'true' : 'false') + ')">Save Experience</button></div>';
+box.innerHTML = h;
+}
+async function saveExpFor(code, isCore) {
+if (isCore && !APP.user.modes.isAdmin && !APP.user.modes.isHOHR) { showToast('Core competencies can only be changed by HR Admin / Head of HR'); return; }
+var t = (document.getElementById('naeText-' + code).value || '').trim();
+var cls = document.getElementById('naeClass-' + code).value;
+if (!t) { showToast('Type the experience text first'); return; }
+var lvl = isCore && document.getElementById('naeLevel-' + code) ? document.getElementById('naeLevel-' + code).value : '';
+var dep = '', pos = '';
+var depEl = document.getElementById('compDep'); var posEl = document.getElementById('compPos');
+if (depEl && posEl) { dep = depEl.value; pos = posEl.value; } else { dep = APP.mgrDep || ''; var mp = document.getElementById('mgrCompPos'); if (mp) pos = mp.value || ''; }
+const { error } = await _supabase.from('experiences').insert({ comp_code: code, experience_text: t, classification: cls, department: isCore ? '' : dep, position_name: isCore ? '' : pos, competency_level: lvl });
+if (error) { showToast(error.message); return; }
+showToast('Experience added under ' + code);
+notifyHOHRCompChange('New Experience Uploaded', 'A new ' + cls + ' experience was uploaded under competency ' + code + (isCore ? ' (Core, level ' + lvl + ')' : ' for ' + pos + ' (' + dep + ')') + ' by ' + APP.user.name + '.');
+await refreshCompData();
+reloadCompView();
+}
+function compCardMgr(meta, code, exps) {
+var h = '<div class="competency-block"><div class="competency-header"><span class="competency-name">' + escapeHtml(meta.competency || code) + '</span><span class="competency-cat">' + escapeHtml(meta.category || '') + ' | ' + weightPct(meta.weight) + '% <button class="btn btn-sm btn-outline" onclick="editCompetency(\'' + escapeHtml(code) + '\')">Edit</button></span></div>';
+exps.forEach(function(x) {
+h += '<div class="exp-item"><div class="exp-text">' + escapeHtml(x.experience_text) + ' ' + getClassificationBadge(x.classification) + '</div>';
+h += '<div style="margin-top:4px;display:flex;gap:6px"><button class="btn btn-sm btn-outline" onclick="editExperience(' + x.id + ')">Edit</button><button class="btn btn-sm btn-danger" onclick="deleteExperience(' + x.id + ')">Delete</button></div></div>';
+});
+h += '</div>';
+return h;
+}
+function reloadCompView() { if (document.getElementById('compContent')) loadCompDetail(); else if (document.getElementById('mgrCompContent')) loadMgrCompDetail(); }
 function compCardRO(meta, exps, isCore) {
 var h = '<div class="competency-block"><div class="competency-header"><span class="competency-name">' + escapeHtml(meta.competency || meta.code) + '</span><span class="competency-cat">' + escapeHtml(meta.category || '') + ' | ' + weightPct(meta.weight) + '%</span></div>';
 exps.forEach(function(x) {
@@ -4402,9 +4568,10 @@ var pos = {};
 (emps || []).forEach(function(e){ if (sameText(e.department, dep) && e.position) pos[e.position] = true; });
 (APP.experiences || []).forEach(function(x){ if (sameText(x.department, dep) && x.position_name) pos[x.position_name] = true; });
 var html = '<div class="card"><div class="card-title">Competency Library — ' + escapeHtml(dep || 'Your Department') + '</div>';
-html += '<p style="font-size:12px;color:var(--gray-500);margin-bottom:12px">View your department\'s competencies per position, and approve frameworks HR sends you.</p>';
+html += '<p style="font-size:12px;color:var(--gray-500);margin-bottom:8px">View your department\'s competencies per position, and approve frameworks HR sends you.</p>';
+html += '<p style="font-size:11px;color:var(--primary-dark);background:var(--primary-light);border:1px solid var(--gray-200);border-radius:8px;padding:8px 10px;margin-bottom:12px">📏 AI setup rules: Analytical Thinking, Judgement & Decision Making, Planning and Execution need <strong>at least 3 experiences</strong> each; Continuous Learning, People Skills and Leadership need <strong>at least 2</strong> each (more can be added). The first four always carry a <strong>higher weight</strong> than the last three (16% vs 12%), and total weight = <strong>100%</strong>.</p>';
 html += '<div class="form-group"><label>Position</label><select id="mgrCompPos" onchange="loadMgrCompDetail()"><option value="">-- Select --</option>' + Object.keys(pos).sort().map(function(p){ return '<option>' + escapeHtml(p) + '</option>'; }).join('') + '</select></div>';
-html += '<button class="btn btn-success" onclick="compBulkPick()">⬆ Bulk Upload (Excel/CSV)</button> <button class="btn btn-outline" onclick="compBulkTemplate()">⬇ Template</button> <button class="btn btn-outline" onclick="aiGenerateComps()">✨ AI Generate</button> <button class="btn btn-outline" onclick="showJdBox()">✨ AI Competency Builder</button><input type="file" id="compBulkFile" accept=".xlsx,.xls,.csv" style="display:none" onchange="compBulkUpload(this)"></div><div id="mgrCompContent"></div>';
+html += '<button class="btn btn-outline" onclick="showAddCompetency()">+ Add Competency</button> <button class="btn btn-outline" onclick="aiGenerateComps()">✨ AI Generate</button> <button class="btn btn-outline" onclick="showJdBox()">✨ AI Competency Builder</button></div><div id="mgrCompContent"></div>';
 setContent(html);
 }
 async function loadMgrCompDetail() {
@@ -4431,12 +4598,12 @@ posExps.forEach(function(x){ if (codes.indexOf(x.comp_code) === -1) codes.push(x
 if (!codes.length) html += '<p style="color:var(--gray-500)">No position competencies yet.</p>';
 codes.forEach(function(code) {
 var meta = APP.competencies.find(function(c){ return c.code === code; }) || {};
-html += compCardRO(meta, posExps.filter(function(x){ return x.comp_code === code; }), false);
+html += compCardFull(meta, code, posExps.filter(function(x){ return x.comp_code === code; }), false, 'mgr');
 });
 html += '</div>';
-html += '<div class="card"><div class="card-title">Core Competencies</div>';
+html += '<div class="card"><div class="card-title">Core Competencies (view only — same across the company)</div>';
 APP.competencies.filter(function(c){ return (c.code || '').indexOf('CC') === 0; }).forEach(function(meta) {
-html += compCardRO(meta, (APP.experiences || []).filter(function(x){ return x.comp_code === meta.code; }), true);
+html += compCardFull(meta, meta.code, (APP.experiences || []).filter(function(x){ return x.comp_code === meta.code; }), true, 'mgr');
 });
 html += '</div>';
 box.innerHTML = html;
@@ -4487,7 +4654,7 @@ if (GEMINI_KEY.indexOf('PASTE') === 0) { showToast('Add your free Gemini API key
 const { data: rows } = await _supabase.from('assessments').select('*').eq('employee_id', empId).in('type', ['Manager', 'Prospective']);
 var pending = (rows || []).filter(function(r){ return r.ticked && (r.hr_status === '' || r.hr_status === 'Pending' || r.hr_status === 'Returned'); });
 if (!pending.length) { showToast('No pending evidence to review'); return; }
-showToast('✨ AI is reviewing all evidence...');
+showToast('✍️AI is reviewing all evidence...');
 var list = pending.map(function(r, i){ return (i+1) + '. ' + (r.comp_name || r.comp_code) + ' | ' + (r.experience_text || '') + ' | Evidence: ' + (r.evidence || ''); }).join(String.fromCharCode(10));
 var prompt = 'You are an HR quality auditor. For each numbered item, judge whether the evidence is RELEVANT to the experience described and specific enough for HR to approve (good), or IRRELEVANT/weak/vague (bad). Return ONLY valid JSON: {"flags":[{"i":1,"reason":"..."}]} listing ONLY the irrelevant or weak items. If all are relevant return {"flags":[]}. No markdown.';
 try {
@@ -4504,7 +4671,7 @@ for (var f = 0; f < flags.length; f++) { if ((flags[f].i || 0) - 1 === k) flag =
 var note = flag ? ('AI: Possibly IRRELEVANT/weak — ' + (flag.reason || 'review carefully')) : 'AI: Relevant ✓';
 await _supabase.from('assessments').update({ ai_note: note }).eq('id', pending[k].id);
 }
-showToast('✨ AI review complete — ' + flags.length + ' item(s) flagged');
+showToast('✍️AI review complete — ' + flags.length + ' item(s) flagged');
 loadHRRevEmp();
 } catch (err) { showToast('AI review failed: ' + err.message); }
 }
