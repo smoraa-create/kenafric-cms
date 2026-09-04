@@ -192,6 +192,19 @@ tr:hover td { background: var(--gray-50); }
 .rt4 input:checked{background-color:#2563eb;border-color:#2563eb;}
 .rt5 input{border-color:#6ee7b7;background-color:#ecfdf5;} .rt5 label{color:#059669;}
 .rt5 input:checked{background-color:#059669;border-color:#059669;}
+/* ===== Role themes ===== */
+body.role-hr{--primary:#4338ca;--primary-light:#eef2ff;--primary-dark:#312e81;}
+body.role-employee{--primary:#2563eb;--primary-light:#dbeafe;--primary-dark:#1d4ed8;}
+body.role-manager{--primary:#0d9488;--primary-light:#ccfbf1;--primary-dark:#0f766e;}
+body.role-hohr{--primary:#b45309;--primary-light:#fef3c7;--primary-dark:#92400e;}
+body.role-csuite{--primary:#12365c;--primary-light:#e8eef5;--primary-dark:#0a1f38;}
+.sb-item.active{background:rgba(255,255,255,0.10);color:#fff;border-left-color:var(--primary);}
+.role-toggle select{background:var(--primary);color:#fff;}
+#roleBanner{display:none;padding:9px 24px;font-size:11px;font-weight:800;letter-spacing:1.2px;color:#fff;text-transform:uppercase;}
+body.sb-mode #roleBanner{margin-left:230px;}
+body.role-csuite .cs-stat{border-color:#c9a227;}
+body.role-csuite .cs-stat .num{color:#b48a1d;}
+body.role-csuite .cs-pill.active{background:#12365c;border-color:#c9a227;}
 </style>
 </head>
 <body>
@@ -224,6 +237,7 @@ tr:hover td { background: var(--gray-50); }
 <div class="nav-bar" style="display:none">
 <div class="nav-inner" id="mainNav"></div>
 </div>
+<div id="roleBanner"></div>
 <div class="content" id="mainContent">
 <div class="loading"><div class="spinner"></div>Loading...</div>
 </div>
@@ -367,6 +381,7 @@ function showLoginScreen(){
 document.querySelector('.header').style.display='none';
 document.querySelector('.nav-bar').style.display='none';
 document.body.classList.remove('sb-mode');
+var rb=document.getElementById('roleBanner');if(rb)rb.style.display='none';
 var sb = document.getElementById('sideNav');
 if (sb) { sb.style.display = 'none'; sb.innerHTML = ''; }
 document.getElementById('mainContent').innerHTML='<div style="min-height:80vh;display:flex;align-items:center;justify-content:center"><div style="width:100%;max-width:380px"><div style="text-align:center;margin-bottom:32px"><div style="width:56px;height:56px;background:linear-gradient(135deg,var(--primary-dark),var(--primary));border-radius:14px;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;box-shadow:0 4px 12px rgba(67,56,202,0.3)"><span style="color:white;font-size:22px;font-weight:800">K</span></div><h1 style="font-size:20px;font-weight:700;color:var(--gray-900)">Kenafric <span class="brand-accent">CMS</span></h1><p style="font-size:13px;color:var(--gray-500)">Competency Management System</p></div><div class="card" style="padding:28px"><div class="form-group"><label>Email Address</label><input type="email" id="loginEmail" placeholder="you@kenafricind.com"></div><div class="form-group"><label>Password</label><div style="position:relative"><input type="password" id="loginPass" placeholder="Enter your password" style="padding-right:40px"><button type="button" onclick="togglePassword()" id="eyeBtn" title="Show / hide password" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:16px;line-height:1">👁️</button></div></div><button class="btn btn-primary" onclick="doLogin()" style="width:100%;padding:12px;margin-top:8px">Sign In</button><p id="loginError" style="color:var(--red);font-size:12px;margin-top:10px;text-align:center;display:none"></p></div></div></div>';
@@ -391,7 +406,13 @@ if (modes.isAdmin) sel.innerHTML += '<option value="hr">HR Admin</option>';
 if (modes.isHOHR) sel.innerHTML += '<option value="hohr">Head of HR</option>';
 if (modes.isCSuite) sel.innerHTML += '<option value="csuite">C-Suite</option>';
 }
-function switchRole(role){APP.currentRole=role;document.getElementById('roleSwitch').value=role;var sb=document.getElementById('globalSearchBox');if(sb)sb.style.display=(role==='employee')?'none':'block';setupNav(role);}
+function switchRole(role){APP.currentRole=role;document.getElementById('roleSwitch').value=role;var sb=document.getElementById('globalSearchBox');if(sb)sb.style.display=(role==='employee')?'none':'block';document.body.classList.remove('role-hr','role-hohr','role-manager','role-csuite','role-employee');document.body.classList.add('role-'+role);setRoleBanner(role);setupNav(role);}
+function setRoleBanner(role){
+var b=document.getElementById('roleBanner');if(!b)return;
+var map={hr:{t:'HR ADMIN — Competency setup, reviews & system administration',c:'#4338ca'},hohr:{t:'HEAD OF HR — Decisions, escalations & oversight',c:'#b45309'},manager:{t:'MANAGER VIEW — Your team\'s assessments & development',c:'#0d9488'},csuite:{t:'EXECUTIVE VIEW — Organization talent readiness',c:'linear-gradient(90deg,#12365c,#3d3208)'},employee:{t:'EMPLOYEE VIEW — Your growth, assessments & development',c:'#2563eb'}};
+var m=map[role]||map.employee;
+b.style.display='block';b.style.background=m.c;b.textContent=m.t;
+}
 function setupNav(role) {
 var nav = document.getElementById('mainNav');
 var sb = document.getElementById('sideNav');
@@ -555,7 +576,7 @@ for (var i = 0; i < APP.competencies.length; i++) {
 var comp = APP.competencies[i];
 var w = parseFloat(comp.weight) || 0;
 var cs = calculateCompetencyScore(empId, comp.code, type, allResults);
-if (cs.total > 0) { totalWeight += w; weightedScore += (cs.score / 5 * 100) * w; }
+if (cs.total > 0) { totalWeight += w; weightedScore += Math.round((cs.score / 5) * 100) * w; }
 }
 return totalWeight > 0 ? Math.round(weightedScore / totalWeight) : 0;
 }
@@ -3680,7 +3701,7 @@ const { data: chainRows } = await _supabase.from('report_chain').select('employe
 }
 var html = '<div class="card"><div style="display:flex;justify-content:space-between;align-items:center"><div class="card-title" style="margin-bottom:0">All Assessments</div>' + (restrictHOHR ? '' : '<button class="btn btn-sm btn-success" onclick="exportAllExcel()">⬇ Export All (Excel)</button>') + '</div>';
 html += '<p style="font-size:12px;color:var(--gray-500);margin:8px 0 12px">' + (restrictHOHR ? 'Only employees whose assessment reports have been submitted to the Head of HR are listed. ' : '') + 'Scores use each person\'s latest assessment round. Click View for full evidence and review details.</p>';
-html += '<div class="table-wrap"><table><thead><tr><th>Employee</th><th>Position</th><th>Self</th><th>Manager (Current Role)</th><th>Manager (Prospective Role)</th><th></th></tr></thead><tbody>';
+html += '<div class="table-wrap"><table><thead><tr><th>Employee</th><th>Position</th><th>Self</th><th>Manager (Current Role)</th><th>Final Average</th><th>Manager (Prospective Role)</th><th></th></tr></thead><tbody>';
 (allEmps || []).forEach(function(emp) {
 if (restrictHOHR && !submittedIds[emp.employee_id]) return;
 var latest = latestOnly((allResults || []).filter(function(r){ return r.employee_id === emp.employee_id; }));
@@ -3688,11 +3709,15 @@ var fr = latest.map(function(r){ return { 'Employee ID': r.employee_id, 'Compete
 var hasS = fr.some(function(r){ return r['Type'] === 'Self'; });
 var hasM = fr.some(function(r){ return r['Type'] === 'Manager'; });
 var hasP = fr.some(function(r){ return r['Type'] === 'Prospective'; });
+var sS = hasS ? calculateOverallScore(emp.employee_id, 'Self', fr) : null;
+var sM = hasM ? calculateOverallScore(emp.employee_id, 'Manager', fr) : null;
+var sP = hasP ? calculateOverallScore(emp.employee_id, 'Prospective', fr) : null;
 html += '<tr><td><strong>' + escapeHtml(emp.employee_name) + '</strong></td>';
 html += '<td style="font-size:11px">' + escapeHtml(emp.position) + '</td>';
-html += '<td>' + (hasS ? '<strong>' + calculateOverallScore(emp.employee_id, 'Self', fr) + '%</strong>' : '<span style="color:var(--gray-400)">—</span>') + '</td>';
-html += '<td>' + (hasM ? '<strong>' + calculateOverallScore(emp.employee_id, 'Manager', fr) + '%</strong>' : '<span style="color:var(--gray-400)">—</span>') + '</td>';
-html += '<td>' + (hasP ? '<strong>' + calculateOverallScore(emp.employee_id, 'Prospective', fr) + '%</strong>' : '<span style="color:var(--gray-400)">—</span>') + '</td>';
+html += '<td>' + (sS !== null ? '<strong>' + sS + '%</strong>' : '<span style="color:var(--gray-400)">—</span>') + '</td>';
+html += '<td>' + (sM !== null ? '<strong>' + sM + '%</strong>' : '<span style="color:var(--gray-400)">—</span>') + '</td>';
+html += '<td>' + ((sS !== null && sM !== null) ? '<strong style="color:' + (Math.round((sS + sM) / 2) >= 80 ? 'var(--green)' : 'var(--primary)') + '">' + Math.round((sS + sM) / 2) + '%</strong>' : '<span style="color:var(--gray-400)">—</span>') + '</td>';
+html += '<td>' + (sP !== null ? '<strong>' + sP + '%</strong>' : '<span style="color:var(--gray-400)">—</span>') + '</td>';
 html += '<td><button class="btn btn-sm btn-primary" onclick="loadHRAllDetail(\'' + emp.employee_id + '\')">View</button> <button class="btn btn-sm btn-outline" onclick="printReport(\'' + emp.employee_id + '\')">PDF</button> <button class="btn btn-sm btn-success" onclick="emailReport(\'' + emp.employee_id + '\')">Email</button> <button class="btn btn-sm btn-outline" onclick="exportEmployeeExcel(\'' + emp.employee_id + '\')">Excel</button></td></tr>';
 });
 html += '</tbody></table></div></div><div id="hrAllContent"></div>';
