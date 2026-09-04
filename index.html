@@ -192,6 +192,8 @@ tr:hover td { background: var(--gray-50); }
 .rt4 input:checked{background-color:#2563eb;border-color:#2563eb;}
 .rt5 input{border-color:#6ee7b7;background-color:#ecfdf5;} .rt5 label{color:#059669;}
 .rt5 input:checked{background-color:#059669;border-color:#059669;}
+.avatar{cursor:pointer;overflow:hidden;}
+.avatar img{width:100%;height:100%;object-fit:cover;border-radius:10px;display:block;}
 .staff-table th{padding:6px 8px;font-size:9.5px;}
 .staff-table td{padding:6px 8px;font-size:11px;}
 .staff-table .badge{font-size:9px;padding:2px 6px;letter-spacing:0.2px;}
@@ -200,6 +202,9 @@ tr:hover td { background: var(--gray-50); }
 .staff-table td{padding:6px 8px;font-size:11px;}
 .staff-table .badge{font-size:9px;padding:2px 6px;letter-spacing:0.2px;}
 .staff-table .btn-sm{padding:4px 8px;font-size:10px;}
+.staff-ava{width:26px;height:26px;border-radius:50%;background:linear-gradient(135deg,var(--primary-dark),var(--primary));color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;vertical-align:middle;margin-right:6px;overflow:hidden;flex:none;}
+.staff-ava img{width:100%;height:100%;object-fit:cover;display:block;}
+.staff-table td:last-child{white-space:nowrap;}
 /* ===== Role themes ===== */
 body.role-hr{--primary:#4338ca;--primary-light:#eef2ff;--primary-dark:#312e81;}
 body.role-employee{--primary:#2563eb;--primary-light:#dbeafe;--primary-dark:#1d4ed8;}
@@ -225,7 +230,8 @@ body.role-csuite .cs-pill.active{background:#12365c;border-color:#c9a227;}
 </div>
 <div class="header-right">
 <div class="header-user">
-<div class="avatar" id="userAvatar">SM</div>
+<div class="avatar" id="userAvatar" title="Click to set profile picture" onclick="document.getElementById('profilePicInput').click()">--</div>
+<input type="file" id="profilePicInput" accept="image/*" style="display:none" onchange="uploadProfilePic(this)">
 <div>
 <div class="header-name" id="userInfo">Loading...</div>
 <div class="role-toggle" style="margin-top:4px;display:flex;align-items:center;gap:6px">
@@ -422,6 +428,9 @@ var m=map[role]||map.employee;
 b.style.display='block';b.style.background=m.c;b.textContent=m.t;
 }
 function setupNav(role) {
+loadAvatar();
+loadPhotoMap().then(function(){ decorateExisting(); });
+var pages = [], sections = null, brandSub = 'Competency System';
 var nav = document.getElementById('mainNav');
 var sb = document.getElementById('sideNav');
 var pages = [];
@@ -692,6 +701,7 @@ var hasProsp = formattedResults.some(r => r['Type'] === 'Prospective');
 var selfScore = hasSelf ? calculateOverallScore(emp.employee_id, 'Self', formattedResults) : 0;
 var mgrScore = hasMgr ? calculateOverallScore(emp.employee_id, 'Manager', formattedResults) : 0;
 var prospScore = hasProsp ? calculateOverallScore(emp.employee_id, 'Prospective', formattedResults) : 0;
+var released = assessmentReleased(allResults || []);
 var strengths = []; var gaps = []; var assessedComps = 0;
 var functional = []; var core = [];
 for (var i = 0; i < APP.competencies.length; i++) {
@@ -699,7 +709,7 @@ var comp = APP.competencies[i];
 var cs = calculateCompetencyScore(emp.employee_id, comp.code, 'Manager', formattedResults);
 var pct = cs.total > 0 ? Math.round((cs.score / 5) * 100) : 0;
 if (cs.total > 0) assessedComps++;
-if (hasMgr && cs.total > 0) {
+if (released && cs.total > 0) {
 if (pct >= 70) strengths.push({ name: comp.competency, pct: pct });
 else if (pct > 0) gaps.push({ name: comp.competency, pct: pct });
 }
@@ -744,6 +754,7 @@ html += '</div>';
 html += '<div class="card"><div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px">';
 html += '<div><div class="card-title" style="margin-bottom:2px">Competency Scores</div><div style="font-size:11px;color:var(--gray-500)">Overall weighted assessment results</div></div>';
 if (!released && hasMgr) html += '<span class="badge badge-purple">🔒 Manager results visible after HR review</span>';
+else if (!released && hasMgr) html += '<span class="badge badge-purple">🔒 Manager results visible after HR review</span>';
 else if (readiness) { var rc = mgrScore >= 81 ? 'success' : mgrScore >= 71 ? 'info' : mgrScore >= 61 ? 'warning' : 'danger'; html += '<span class="badge badge-' + rc + '">' + escapeHtml(readiness.label) + '</span>'; }
 else html += '<span class="badge badge-warning">Not Yet Assessed</span>';
 html += '</div>';
@@ -1298,18 +1309,21 @@ var mgrDone = mRows.length > 0;
 var hrReviewed = mgrDone && mRows.some(function(r){ return r.hr_status === 'Approved'; }) && !mRows.some(function(r){ return r.ticked && (r.hr_status === '' || r.hr_status === 'Pending'); });
 var fmtM = latestOnly(mRows).map(function(r){ return { 'Employee ID': r.employee_id, 'Competency Code': r.comp_code, 'Type': r.type, 'Ticked': r.ticked, 'Evidence': r.evidence, 'HR_Status': r.hr_status, 'Rating': r.proficiency_rating }; });
 var mgrScore = mgrDone ? calculateOverallScore(empId, 'Manager', fmtM) : 0;
+var fmtS = latestOnly((allResults || []).filter(function(r){ return r.employee_id === empId && r.type === 'Self'; })).map(function(r){ return { 'Employee ID': r.employee_id, 'Competency Code': r.comp_code, 'Type': r.type, 'Ticked': r.ticked, 'Evidence': r.evidence, 'HR_Status': r.hr_status, 'Rating': r.proficiency_rating }; });
+var selfScoreT = selfDone ? calculateOverallScore(empId, 'Self', fmtS) : 0;
+var finalAvgT = (selfDone && mgrDone) ? Math.round((selfScoreT + mgrScore) / 2) : 0;
 var prospDone = pRows.length > 0;
 var fmtP = latestOnly(pRows).map(function(r){ return { 'Employee ID': r.employee_id, 'Competency Code': r.comp_code, 'Type': r.type, 'Ticked': r.ticked, 'Evidence': r.evidence, 'HR_Status': r.hr_status, 'Rating': r.proficiency_rating }; });
 var prospScore = prospDone ? calculateOverallScore(empId, 'Prospective', fmtP) : 0;
 team.push({
 id: empId, name: emp.employee_name, email: emp.email, position: emp.position,
 department: emp.department, company: emp.company, selfDone: selfDone, mgrDone: mgrDone,
-hrReviewed: hrReviewed, mgrScore: mgrScore, prospDone: prospDone, prospScore: prospScore, prospRole: pRows.length ? (pRows[pRows.length - 1].prospective_role || '') : '',
+hrReviewed: hrReviewed, mgrScore: mgrScore, finalAvg: finalAvgT, prospDone: prospDone, prospScore: prospScore, prospRole: pRows.length ? (pRows[pRows.length - 1].prospective_role || '') : '',
 readiness: mgrDone ? getCurrentRoleReadiness(mgrScore).label : ''
 });
 }
 }
-var html = '<div class="card"><div class="card-title">My Team</div><div class="table-wrap"><table><thead><tr><th>Employee</th><th>Position</th><th>Self</th><th>Current Role</th><th>Prospective Role</th><th>Action</th></tr></thead><tbody>';
+var html = '<div class="card"><div class="card-title">My Team</div><div class="table-wrap"><table class="staff-table"><thead><tr><th>Employee</th><th>Position</th><th>Self</th><th>Current Role</th><th>Prospective Role</th><th>Action</th></tr></thead><tbody>';
 team.forEach(function(t) {
 html += '<tr><td><strong>' + escapeHtml(t.name) + '</strong><br><span style="font-size:11px;color:var(--gray-400)">' + escapeHtml(t.company) + '</span></td>';
 html += '<td>' + escapeHtml(t.position) + '</td>';
@@ -1340,7 +1354,7 @@ if (t.prospDone) {
 html += '<strong style="color:var(--purple)">' + t.prospScore + '%</strong> <span class="badge badge-purple">' + escapeHtml(t.prospRole || 'Prospective') + '</span>';
 html += '<div style="font-size:10px;margin-top:4px;color:' + (decFinal ? 'var(--primary)' : 'var(--gray-600)') + ';font-weight:' + (decFinal ? '700' : '400') + '">' + (decFinal ? '🏛 ' + escapeHtml(decFinal) : escapeHtml(getProspectiveReadiness(t.prospScore).label)) + '</div>';
 }
-} else if (t.hrReviewed && t.mgrScore >= 81) {
+} else if (t.hrReviewed && t.finalAvg >= 80) {
 html += '<span class="badge badge-info">Eligible — assess prospective role</span>';
 } else {
 html += '<span style="color:var(--gray-400)">—</span>';
@@ -1349,7 +1363,7 @@ html += '</td><td style="white-space:nowrap">';
 if (!t.mgrDone) html += '<button class="btn btn-sm btn-primary" onclick="startAssess(\'' + t.id + '\')">Assess</button>';
 else {
 html += '<button class="btn btn-sm btn-outline" onclick="viewDetails(\'' + t.id + '\')">View</button> ';
-if (t.hrReviewed && t.mgrScore >= 81 && !t.prospDone) html += '<button class="btn btn-sm btn-success" onclick="startProsp(\'' + t.id + '\')">Assess Prospective</button>';
+if (t.hrReviewed && t.finalAvg >= 80 && !t.prospDone) html += '<button class="btn btn-sm btn-success" onclick="startProsp(\'' + t.id + '\')">Assess Prospective</button>';
 }
 html += '</td></tr>';
 });
@@ -1454,22 +1468,27 @@ prospReq = preqs && preqs.length ? preqs[0] : null;
 }
 var frM = latestOnly(mgrRows).map(function(r){ return { 'Employee ID': r.employee_id, 'Competency Code': r.comp_code, 'Type': r.type, 'Ticked': r.ticked, 'Evidence': r.evidence, 'HR_Status': r.hr_status, 'Rating': r.proficiency_rating }; });
 var mgrScore = mgrRows.length ? calculateOverallScore(empId, 'Manager', frM) : 0;
+var selfRowsL = latestOnly((allResults || []).filter(function(r){ return r.type === 'Self'; }));
+var frS = selfRowsL.map(function(r){ return { 'Employee ID': r.employee_id, 'Competency Code': r.comp_code, 'Type': r.type, 'Ticked': r.ticked, 'Evidence': r.evidence, 'HR_Status': r.hr_status, 'Rating': r.proficiency_rating }; });
+var selfScoreL = selfRowsL.length ? calculateOverallScore(empId, 'Self', frS) : 0;
+var finalAvg = (selfRowsL.length && mgrRows.length) ? Math.round((selfScoreL + mgrScore) / 2) : 0;
 var hrReviewed = mgrRows.length > 0 && mgrRows.some(function(r){ return r.hr_status === 'Approved'; }) && !mgrRows.some(function(r){ return r.ticked && (r.hr_status === '' || r.hr_status === 'Pending'); });
 var canCurrent = (!mgrRows.length) || (curReq && curReq.status === 'Approved');
-var prospUnlocked = mgrRows.length > 0 && hrReviewed && mgrScore >= 81;
+APP._canCurrent = canCurrent; APP._curReqStatus = curReq ? curReq.status : '';
+var prospUnlocked = mgrRows.length > 0 && hrReviewed && finalAvg >= 80;
 var canProsp = prospUnlocked && ((!prospRows.length) || (prospReq && prospReq.status === 'Approved'));
 var html = '<div class="card"><div class="card-title">New Assessment — ' + escapeHtml(emp.employee_name) + ' (' + escapeHtml(emp.position) + ')</div>';
 html += '<div class="form-group"><label>Choose assessment type</label><select id="assessTypeSel" onchange="buildAssessForm(\'' + empId + '\')"><option value="">-- Select --</option>';
-if (canCurrent) html += '<option value="Manager">Current Role Assessment</option>';
+html += '<option value="Manager">Current Role Assessment' + (canCurrent ? '' : ' (redo — HR permission required)') + '</option>';
 if (canProsp) html += '<option value="Prospective">Prospective Role Assessment (higher position)</option>';
 html += '</select></div>';
 if (!mgrRows.length) html += '<p style="font-size:12px;color:var(--gray-500)">No current role assessment yet — choose Current Role Assessment to begin.</p>';
 if (mgrRows.length && curReq && curReq.status === 'Approved') html += '<p style="font-size:12px;color:var(--green);background:var(--green-light);padding:8px;border-radius:6px">HR approved a reassessment — choose Current Role Assessment above.</p>';
 if (mgrRows.length && !canCurrent) {
 if (curReq && curReq.status === 'Pending') html += '<p style="margin-top:6px"><span class="badge badge-warning">Redo request pending HR approval</span></p>';
-else html += '<p style="font-size:12px;color:var(--gray-500);margin-top:6px">Current role already assessed. To reassess, you need HR Admin approval.</p>' + redoBox('Manager', empId, emp.employee_name);
+else html += '<p style="font-size:12px;color:var(--gray-500);margin-top:6px">Current role already assessed — select "Current Role Assessment" above to request permission to redo.</p>'
 }
-if (mgrRows.length && !prospUnlocked) html += '<p style="font-size:12px;color:var(--gray-500);margin-top:8px">Prospective assessment unlocks after HR review and a current-role score of 81%+ (current: ' + mgrScore + '%).</p>';
+if (mgrRows.length && !prospUnlocked) html += '<p style="font-size:12px;color:var(--gray-500);margin-top:8px">Prospective assessment unlocks after HR Admin review and a FINAL AVERAGE (Self + Manager ÷ 2) of 80%+ (current final average: ' + finalAvg + '%).</p>';
 if (prospUnlocked && prospRows.length && prospReq && prospReq.status === 'Approved') html += '<p style="font-size:12px;color:var(--green);background:var(--green-light);padding:8px;border-radius:6px;margin-top:8px">HR approved a prospective reassessment — choose Prospective Role Assessment above.</p>';
 if (prospUnlocked && prospRows.length && !canProsp) {
 if (prospReq && prospReq.status === 'Pending') html += '<p style="margin-top:6px"><span class="badge badge-warning">Prospective redo request pending HR approval</span></p>';
@@ -1488,15 +1507,22 @@ var type = sel.value;
 if (!type) { box.innerHTML = ''; return; }
 const { data: emp } = await _supabase.from('employees').select('*').eq('employee_id', empId).single();
 if (type === 'Manager') {
+if (APP._canCurrent === false) {
+var rb2 = '';
+if (APP._curReqStatus === 'Pending') rb2 = '<p style="margin-top:6px"><span class="badge badge-warning">Redo request pending HR approval</span></p>';
+else rb2 = '<p style="font-size:12px;color:var(--gray-500);margin-bottom:8px">Current role already assessed. Send a redo request below — once HR Admin approves, this form unlocks automatically.</p>' + redoBox('Manager', empId, emp.employee_name);
+box.innerHTML = '<div style="padding:10px;border:1px solid var(--gray-200);border-radius:8px">' + rb2 + '</div>';
+return;
+}
 box.innerHTML = assessFormHTML(emp, 'Manager', emp.position, 'm', 'mscore');
 restoreDraft('Manager', 'm-', 'me-', 'mscore-', empId);
 startAutoSave('Manager', 'm-', 'me-', empId);
 return;
 }
 var curRank = positionRank(emp.position);
-var higher = prospPositions().filter(function(p){ return positionRank(p) > curRank; });
+var higher = prospPositions().filter(function(p){ return positionRank(p) >= curRank && !sameText(p, emp.position); });
 if (!higher.length) higher = prospPositions().filter(function(p){ return !sameText(p, emp.position); });
-box.innerHTML = '<div class="card"><div class="card-title">Prospective Role — higher positions only</div><div class="form-group"><label>Select prospective position (higher than ' + escapeHtml(emp.position) + ')</label><select id="prospRoleSel" onchange="buildProspForm(\'' + empId + '\')"><option value="">-- Select --</option>' + higher.map(function(p){ return '<option>' + escapeHtml(p) + '</option>'; }).join('') + '</select></div></div><div id="prospForm"></div>';
+box.innerHTML = '<div class="card"><div class="card-title">Prospective Role — same level or higher (never the current role)</div><div class="form-group"><label>SSelect Select prospective position (same level or higher than ' + escapeHtml(emp.position) + ')</label><select id="prospRoleSel" onchange="buildProspForm(\'' + empId + '\')"><option value="">-- Select --</option>' + higher.map(function(p){ return '<option>' + escapeHtml(p) + '</option>'; }).join('') + '</select></div></div><div id="prospForm"></div>';
 }
 function assessFormHTML(emp, type, position, pre, spre) {
 var allExps = getPositionExperiences(position, emp.department, emp.competency_level);
@@ -2111,9 +2137,13 @@ html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px"><div cl
 html += '<button class="btn btn-primary" onclick="saveNewEmployee()">Save Employee</button></div>';
 }
 html += '<div class="card"><div class="card-title">All Staff</div><div class="table-wrap"><table class="staff-table"><thead><tr><th>Name</th><th>Position</th><th>Criticality</th><th>Company</th><th>Line Manager</th><th>Employee Status</th><th>Manager Status</th>' + (isHOHRonly ? '' : '<th>Actions</th>') + '</tr></thead><tbody>';
+const { data: profs } = await _supabase.from('user_profiles').select('email, photo');
+var photoOf = {}; (profs || []).forEach(function(p){ if (p.photo) photoOf[(p.email || '').toLowerCase()] = p.photo; });
 staff.forEach(function(s) {
 var sLv = critLevel2[(s.position || '').toUpperCase().trim()] || '';
-html += '<tr><td style="font-size:11px;white-space:nowrap"><strong>' + escapeHtml(s.name) + '</strong></td>';html += '<td style="font-size:11px">' + escapeHtml(s.position) + '</td>';
+var pic = photoOf[(s.email || '').toLowerCase()] || '';
+var ini = (s.name || '--').split(' ').map(function(w){ return w[0]; }).slice(0, 2).join('').toUpperCase();
+html += '<tr><td style="font-size:11px;white-space:nowrap"><span class="staff-ava">' + (pic ? '<img src="' + pic + '" alt="">' : ini) + '</span><strong>' + escapeHtml(s.name) + '</strong></td>';
 html += '<td>' + (sLv ? '<span class="badge ' + critBadge(sLv) + '">' + escapeHtml(sLv) + '</span>' : '<span style="color:var(--gray-400)">—</span>') + '</td>';
 html += '<td>' + escapeHtml(s.company) + '</td>';
 html += '<td style="font-size:11px">' + escapeHtml(s.manager) + '</td>';
@@ -3094,7 +3124,10 @@ var hasM = fr.length > 0;
 var latest = latestOnly((allResults || []).filter(function(r){ return r.employee_id === e.employee_id; }));
 var pRows = latest.filter(function(r){ return r.type === 'Prospective'; });
 var pfr = latestOnly(pRows).map(function(r){ return { 'Employee ID': r.employee_id, 'Competency Code': r.comp_code, 'Type': r.type, 'Ticked': r.ticked, 'Evidence': r.evidence, 'HR_Status': r.hr_status, 'Rating': r.proficiency_rating }; });
-empStats[e.employee_id] = { hasM: hasM, mgrScore: hasM ? calculateOverallScore(e.employee_id, 'Manager', fr) : 0, prospScore: pRows.length ? calculateOverallScore(e.employee_id, 'Prospective', pfr) : 0, prospRole: pRows.length ? (pRows[0].prospective_role || '') : '' };
+var sRows2 = latest.filter(function(r){ return r.type === 'Self'; });
+var sfr2 = sRows2.map(function(r){ return { 'Employee ID': r.employee_id, 'Competency Code': r.comp_code, 'Type': r.type, 'Ticked': r.ticked, 'Evidence': r.evidence, 'HR_Status': r.hr_status, 'Rating': r.proficiency_rating }; });
+var hasS2 = sRows2.length > 0;
+empStats[e.employee_id] = { hasM: hasM, mgrScore: hasM ? calculateOverallScore(e.employee_id, 'Manager', fr) : 0, hasS: hasS2, selfScore: hasS2 ? calculateOverallScore(e.employee_id, 'Self', sfr2) : 0, prospScore: pRows.length ? calculateOverallScore(e.employee_id, 'Prospective', pfr) : 0, prospRole: pRows.length ? (pRows[0].prospective_role || '') : '' };
 });
 var assessedList = (empRows || []).filter(function(e){ return empStats[e.employee_id].hasM; });
 var totalAssessed = assessedList.length;
@@ -3106,7 +3139,8 @@ var dist = { a: 0, b: 0, c: 0, d: 0 };
 assessedList.forEach(function(e){ var s = empStats[e.employee_id].mgrScore; if (s >= 81) dist.a++; else if (s >= 71) dist.b++; else if (s >= 61) dist.c++; else dist.d++; });
 function pctOf(n){ return totalAssessed ? Math.round((n / totalAssessed) * 100) : 0; }
 var compAgg = {};
-assessedList.forEach(function(e){ var c = companyOf[e.employee_id]; if (!compAgg[c]) compAgg[c] = { t: 0, s: 0 }; compAgg[c].t++; compAgg[c].s += empStats[e.employee_id].mgrScore; });
+var compAgg = {};
+assessedList.forEach(function(e){ var c = companyOf[e.employee_id]; if (!compAgg[c]) compAgg[c] = { t: 0, s: 0, st: 0, ss: 0 }; compAgg[c].t++; compAgg[c].s += empStats[e.employee_id].mgrScore; if (empStats[e.employee_id].hasS) { compAgg[c].st++; compAgg[c].ss += empStats[e.employee_id].selfScore; } });
 var gapRows = [];
 for (var i = 0; i < APP.competencies.length; i++) {
 var comp = APP.competencies[i];
@@ -3205,10 +3239,12 @@ html += '<div class="cs-section" data-tab="comp" style="display:none">';
 html += '<div class="cs-card"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><h3>Company Comparison</h3><span class="cs-badge">Avg manager-rated score</span></div>';
 var compColors = ['#4338ca','#0d9488','#7c3aed','#ea580c','#2563eb','#db2777']; var ci2 = 0;
 Object.keys(compAgg).sort(function(a,b){ return (compAgg[b].s / compAgg[b].t) - (compAgg[a].s / compAgg[a].t); }).forEach(function(c){
-var avg = Math.round((compAgg[c].s / compAgg[c].t) / 20 * 10) / 10;
-var w = Math.round((avg / 5) * 100);
+var mgrAvgC = Math.round(compAgg[c].s / compAgg[c].t);
+var empAvgC = compAgg[c].st ? Math.round(compAgg[c].ss / compAgg[c].st) : null;
+var finAvgC = empAvgC !== null ? Math.round((empAvgC + mgrAvgC) / 2) : mgrAvgC;
+var w = finAvgC;
 var col = compColors[ci2++ % compColors.length];
-html += '<div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--gray-100)"><span style="width:8px;height:8px;border-radius:50%;background:' + col + ';flex:none"></span><span style="flex:1;font-size:12px;font-weight:700">' + escapeHtml(c) + '</span><span style="font-size:11px;color:var(--gray-500)">' + compAgg[c].t + ' assessed</span><span style="font-size:12px;font-weight:700;color:' + col + '">' + avg + '</span><div style="width:110px;height:5px;background:var(--gray-200);border-radius:3px;overflow:hidden;flex:none"><div style="width:' + w + '%;height:100%;background:' + col + '"></div></div></div>';
+html += '<div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--gray-100);flex-wrap:wrap"><span style="width:8px;height:8px;border-radius:50%;background:' + col + ';flex:none"></span><span style="flex:1;font-size:12px;font-weight:700">' + escapeHtml(c) + '</span><span style="font-size:11px;color:var(--gray-500)">' + compAgg[c].t + ' assessed</span><span style="font-size:11px;font-weight:700;color:#2563eb">Employee ' + (empAvgC !== null ? empAvgC + '%' : '—') + '</span><span style="font-size:11px;font-weight:700;color:var(--green)">Manager ' + mgrAvgC + '%</span><span style="font-size:12px;font-weight:800;color:' + col + '">Final ' + finAvgC + '%</span><div style="width:110px;height:5px;background:var(--gray-200);border-radius:3px;overflow:hidden;flex:none"><div style="width:' + w + '%;height:100%;background:' + col + '"></div></div></div>';
 });
 if (!Object.keys(compAgg).length) html += '<p style="font-size:12px;color:var(--gray-500);margin-top:10px">No assessed staff yet.</p>';
 html += '</div></div>';
@@ -3299,7 +3335,8 @@ var dist = { a: 0, b: 0, c: 0, d: 0 };
 assessedList.forEach(function(e){ var s = empStats[e.employee_id].mgrScore; if (s >= 81) dist.a++; else if (s >= 71) dist.b++; else if (s >= 61) dist.c++; else dist.d++; });
 function pctOf(n){ return totalAssessed ? Math.round((n / totalAssessed) * 100) : 0; }
 var compAgg = {};
-assessedList.forEach(function(e){ var c = companyOf[e.employee_id]; if (!compAgg[c]) compAgg[c] = { t: 0, s: 0 }; compAgg[c].t++; compAgg[c].s += empStats[e.employee_id].mgrScore; });
+var compAgg = {};
+assessedList.forEach(function(e){ var c = companyOf[e.employee_id]; if (!compAgg[c]) compAgg[c] = { t: 0, s: 0, st: 0, ss: 0 }; compAgg[c].t++; compAgg[c].s += empStats[e.employee_id].mgrScore; if (empStats[e.employee_id].hasS) { compAgg[c].st++; compAgg[c].ss += empStats[e.employee_id].selfScore; } });;
 var gapRows = [];
 for (var i = 0; i < APP.competencies.length; i++) {
 var comp = APP.competencies[i];
@@ -3398,10 +3435,12 @@ html += '<div class="cs-section" data-tab="comp" style="display:none">';
 html += '<div class="cs-card"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><h3>Company Comparison</h3><span class="cs-badge">Avg manager-rated score</span></div>';
 var compColors = ['#4338ca','#0d9488','#7c3aed','#ea580c','#2563eb','#db2777']; var ci2 = 0;
 Object.keys(compAgg).sort(function(a,b){ return (compAgg[b].s / compAgg[b].t) - (compAgg[a].s / compAgg[a].t); }).forEach(function(c){
-var avg = Math.round((compAgg[c].s / compAgg[c].t) / 20 * 10) / 10;
-var w = Math.round((avg / 5) * 100);
+var mgrAvgC = Math.round(compAgg[c].s / compAgg[c].t);
+var empAvgC = compAgg[c].st ? Math.round(compAgg[c].ss / compAgg[c].st) : null;
+var finAvgC = empAvgC !== null ? Math.round((empAvgC + mgrAvgC) / 2) : mgrAvgC;
+var w = finAvgC;
 var col = compColors[ci2++ % compColors.length];
-html += '<div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--gray-100)"><span style="width:8px;height:8px;border-radius:50%;background:' + col + ';flex:none"></span><span style="flex:1;font-size:12px;font-weight:700">' + escapeHtml(c) + '</span><span style="font-size:11px;color:var(--gray-500)">' + compAgg[c].t + ' assessed</span><span style="font-size:12px;font-weight:700;color:' + col + '">' + avg + '</span><div style="width:110px;height:5px;background:var(--gray-200);border-radius:3px;overflow:hidden;flex:none"><div style="width:' + w + '%;height:100%;background:' + col + '"></div></div></div>';
+html += '<div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--gray-100);flex-wrap:wrap"><span style="width:8px;height:8px;border-radius:50%;background:' + col + ';flex:none"></span><span style="flex:1;font-size:12px;font-weight:700">' + escapeHtml(c) + '</span><span style="font-size:11px;color:var(--gray-500)">' + compAgg[c].t + ' assessed</span><span style="font-size:11px;font-weight:700;color:#2563eb">Employee ' + (empAvgC !== null ? empAvgC + '%' : '—') + '</span><span style="font-size:11px;font-weight:700;color:var(--green)">Manager ' + mgrAvgC + '%</span><span style="font-size:12px;font-weight:800;color:' + col + '">Final ' + finAvgC + '%</span><div style="width:110px;height:5px;background:var(--gray-200);border-radius:3px;overflow:hidden;flex:none"><div style="width:' + w + '%;height:100%;background:' + col + '"></div></div></div>';
 });
 if (!Object.keys(compAgg).length) html += '<p style="font-size:12px;color:var(--gray-500);margin-top:10px">No assessed staff yet.</p>';
 html += '</div></div>';
@@ -3731,7 +3770,7 @@ const { data: chainRows } = await _supabase.from('report_chain').select('employe
 }
 var html = '<div class="card"><div style="display:flex;justify-content:space-between;align-items:center"><div class="card-title" style="margin-bottom:0">All Assessments</div>' + (restrictHOHR ? '' : '<button class="btn btn-sm btn-success" onclick="exportAllExcel()">⬇ Export All (Excel)</button>') + '</div>';
 html += '<p style="font-size:12px;color:var(--gray-500);margin:8px 0 12px">' + (restrictHOHR ? 'Only employees whose assessment reports have been submitted to the Head of HR are listed. ' : '') + 'Scores use each person\'s latest assessment round. Click View for full evidence and review details.</p>';
-html += '<div class="table-wrap"><table><thead><tr><th>Employee</th><th>Position</th><th>Self</th><th>Manager (Current Role)</th><th>Final Average</th><th>Manager (Prospective Role)</th><th></th></tr></thead><tbody>';
+html += '<div class="table-wrap"><table class="staff-table"><thead><tr><th>Employee</th><th>Position</th><th>Self</th><th>Manager (Current Role)</th><th>Final Average</th><th>Manager (Prospective Role)</th><th></th></tr></thead><tbody>';
 (allEmps || []).forEach(function(emp) {
 if (restrictHOHR && !submittedIds[emp.employee_id]) return;
 var latest = latestOnly((allResults || []).filter(function(r){ return r.employee_id === emp.employee_id; }));
@@ -3742,7 +3781,7 @@ var hasP = fr.some(function(r){ return r['Type'] === 'Prospective'; });
 var sS = hasS ? calculateOverallScore(emp.employee_id, 'Self', fr) : null;
 var sM = hasM ? calculateOverallScore(emp.employee_id, 'Manager', fr) : null;
 var sP = hasP ? calculateOverallScore(emp.employee_id, 'Prospective', fr) : null;
-html += '<tr><td><strong>' + escapeHtml(emp.employee_name) + '</strong></td>';
+html += '<tr><td style="font-size:11px;white-space:nowrap"><strong>' + escapeHtml(emp.employee_name) + '</strong></td>';
 html += '<td style="font-size:11px">' + escapeHtml(emp.position) + '</td>';
 html += '<td>' + (sS !== null ? '<strong>' + sS + '%</strong>' : '<span style="color:var(--gray-400)">—</span>') + '</td>';
 html += '<td>' + (sM !== null ? '<strong>' + sM + '%</strong>' : '<span style="color:var(--gray-400)">—</span>') + '</td>';
@@ -3839,10 +3878,10 @@ if (pss.done) {
 h += '<p style="font-size:12px;color:var(--green);font-weight:600">Completed — Prospective (Self) score: ' + pss.psScore + '%</p>';
 } else if (pss.open) {
 var curRank = positionRank(emp.position);
-var higher = prospPositions().filter(function(p){ return positionRank(p) > curRank; });
+var higher = prospPositions().filter(function(p){ return positionRank(p) >= curRank && !sameText(p, emp.position); });
 if (!higher.length) higher = prospPositions().filter(function(p){ return !sameText(p, emp.position); });
 h += '<p style="font-size:12px;color:var(--gray-600);margin-bottom:8px">🎉 Your final average is <strong>' + pss.avg + '%</strong> (80%+ required) — the door is OPEN! Choose a higher role to assess yourself for.</p>';
-h += '<div class="form-group"><label>Select prospective position (higher than ' + escapeHtml(emp.position) + ')</label><select id="psRoleSel"><option value="">-- Select --</option>' + higher.map(function(p){ return '<option>' + escapeHtml(p) + '</option>'; }).join('') + '</select></div>';
+h += '<div class="form-group"><label>Select prospective position (same level or higher than ' + escapeHtml(emp.position) + ')</label><select id="psRoleSel"><option value="">-- Select --</option>' + higher.map(function(p){ return '<option>' + escapeHtml(p) + '</option>'; }).join('') + '</select></div>';
 h += '<button type="button" class="btn btn-primary" onclick="buildProspectiveSelfForm(\'' + emp.employee_id + '\')">Start Prospective Self-Assessment</button><div id="psSelfForm"></div>';
 } else {
 var why = (pss.avg === null) ? 'waiting for both assessments to be completed and approved by HR Admin' : 'current final average is ' + pss.avg + '%';
@@ -3979,6 +4018,104 @@ _supabase.from('comp_tasks').update({ status: 'Done', completed_date: new Date()
 sendCMSemail(t.requested_by, 'Completed: ' + (t.manager_name || 'Manager') + ' set competencies for ' + t.position_name, (t.manager_name || 'The manager') + ' has set competencies for "' + t.position_name + '" (' + t.department + '). Review in the CMS: ' + APP_LINK);
 }
 });
+}
+/* ===== Profile picture ===== */
+var _origSetContent = setContent;
+setContent = function(html) {
+if (APP && APP._avaByName && html) {
+for (var k in APP._avaByName) {
+var token = '<strong>' + k + '</strong>';
+if (html.indexOf(token) >= 0) html = html.split(token).join('<strong>' + APP._avaByName[k] + k + '</strong>');
+}
+}
+_origSetContent(html);
+};
+async function loadPhotoMap() {
+if (APP._avaByName) return true;
+var rs = await Promise.all([
+_supabase.from('user_profiles').select('email, photo'),
+_supabase.from('employees').select('employee_name, email')
+]);
+APP._photoOf = {};
+(rs[0].data || []).forEach(function(p){ if (p.photo) APP._photoOf[(p.email || '').toLowerCase()] = p.photo; });
+APP._avaByName = {};
+(rs[1].data || []).forEach(function(e){
+var nm = e.employee_name || '';
+var pic = APP._photoOf[(e.email || '').toLowerCase()] || '';
+var ini = nm.split(' ').map(function(w){ return w[0]; }).slice(0, 2).join('').toUpperCase();
+APP._avaByName[escapeHtml(nm)] = '<span class="staff-ava">' + (pic ? '<img src="' + pic + '" alt="">' : ini) + '</span>';
+});
+return true;
+}
+function decorateExisting() {
+var mc = document.getElementById('mainContent'); if (!mc || !APP._avaByName) return;
+var h = mc.innerHTML, changed = false;
+for (var k in APP._avaByName) {
+var token = '<strong>' + k + '</strong>';
+if (h.indexOf(token) >= 0) { h = h.split(token).join('<strong>' + APP._avaByName[k] + k + '</strong>'); changed = true; }
+}
+if (changed) mc.innerHTML = h;
+}
+async function loadAvatar() {
+var el = document.getElementById('userAvatar'); if (!el || !APP.user) return;
+var em = (APP.user.email || '').toLowerCase();
+const { data } = await _supabase.from('user_profiles').select('photo').ilike('email', em).limit(1);
+var photo = data && data.length ? data[0].photo : '';
+if (photo) el.innerHTML = '<img src="' + photo + '" alt="profile">';
+else el.textContent = (APP.user.name || '--').split(' ').map(function(w){ return w[0]; }).slice(0, 2).join('').toUpperCase();
+}
+async function uploadProfilePic(inp) {
+var f = inp.files && inp.files[0]; inp.value = '';
+if (!f) return;
+var reader = new FileReader();
+reader.onload = function(ev) {
+var img = new Image();
+img.onload = async function() {
+var max = 240;
+var scale = Math.min(1, max / Math.max(img.width, img.height));
+var canvas = document.createElement('canvas');
+canvas.width = Math.round(img.width * scale);
+canvas.height = Math.round(img.height * scale);
+canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+var dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+var em = (APP.user.email || '').toLowerCase();
+const { data: up, error: e1 } = await _supabase.from('user_profiles').update({ photo: dataUrl }).ilike('email', em).select();
+if (e1) { showToast('Save failed: ' + e1.message); return; }
+if (!up || !up.length) {
+const { error: e2 } = await _supabase.from('user_profiles').insert({ email: em, role: 'EMPLOYEE', photo: dataUrl });
+if (e2) { showToast('Save failed: ' + e2.message); return; }
+}
+showToast('Profile picture updated');
+var el = document.getElementById('userAvatar'); if (el) el.innerHTML = '<img src="' + dataUrl + '" alt="profile">';
+};
+img.src = ev.target.result;
+};
+reader.readAsDataURL(f);
+}
+async function uploadProfilePic(inp) {
+var f = inp.files && inp.files[0]; inp.value = '';
+if (!f) return;
+var reader = new FileReader();
+reader.onload = function(ev) {
+var img = new Image();
+img.onload = async function() {
+var max = 240;
+var scale = Math.min(1, max / Math.max(img.width, img.height));
+var canvas = document.createElement('canvas');
+canvas.width = Math.round(img.width * scale);
+canvas.height = Math.round(img.height * scale);
+canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+var dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+const { error } = await _supabase.from('user_profiles').update({ photo: dataUrl }).eq('email', APP.user.email);
+if (error) { showToast(error.message); return; }
+const { count } = await _supabase.from('user_profiles').select('*', { count: 'exact', head: true }).eq('email', APP.user.email);
+if (!count) await _supabase.from('user_profiles').insert({ email: APP.user.email, role: 'EMPLOYEE', photo: dataUrl });
+showToast('Profile picture updated');
+loadAvatar();
+};
+img.src = ev.target.result;
+};
+reader.readAsDataURL(f);
 }
 function sameText(a,b){ return (a||'').toString().toUpperCase().trim() === (b||'').toString().toUpperCase().trim(); }
 async function refreshCompData() {
