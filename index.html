@@ -4,6 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Kenafric CMS</title>
+<link rel="preconnect" href="https://api.groq.com">
+<link rel="dns-prefetch" href="https://api.groq.com">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%231a1a6e'/%3E%3Cstop offset='1' stop-color='%235b4fcf'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='64' height='64' rx='14' fill='url(%23g)'/%3E%3Ctext x='32' y='45' font-family='Arial,sans-serif' font-size='34' font-weight='bold' fill='white' text-anchor='middle'%3EK%3C/text%3E%3C/svg%3E">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
@@ -192,6 +194,41 @@ tr:hover td { background: var(--gray-50); }
 .rt4 input:checked{background-color:#2563eb;border-color:#2563eb;}
 .rt5 input{border-color:#6ee7b7;background-color:#ecfdf5;} .rt5 label{color:#059669;}
 .rt5 input:checked{background-color:#059669;border-color:#059669;}
+.pchat-fab{position:fixed;right:22px;bottom:22px;z-index:300;width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,var(--primary),#7c3aed);color:#fff;font-size:22px;border:none;cursor:pointer;box-shadow:0 6px 18px rgba(67,56,202,0.4);display:none;align-items:center;justify-content:center;}
+.pchat-fab .ub{position:absolute;top:-4px;right:-4px;background:#e11d48;color:#fff;font-size:10px;font-weight:800;border-radius:10px;padding:2px 6px;}
+.pchat-panel{position:fixed;right:22px;bottom:90px;z-index:300;width:400px;max-width:calc(100vw - 32px);height:520px;max-height:calc(100vh - 120px);background:#fff;border-radius:14px;box-shadow:0 12px 40px rgba(15,23,42,0.25);display:none;flex-direction:column;overflow:hidden;border:1px solid var(--gray-200);}
+.pchat-panel.open{display:flex;}
+.pchat-head{background:linear-gradient(120deg,var(--primary-dark),var(--primary));color:#fff;padding:10px 14px;font-weight:800;font-size:13px;display:flex;justify-content:space-between;align-items:center;}
+.pchat-body{flex:1;display:flex;overflow:hidden;}
+.pchat-contacts{width:150px;border-right:1px solid var(--gray-200);overflow-y:auto;background:var(--gray-50);flex:none;}
+.pchat-contact{padding:8px 10px;font-size:11px;font-weight:700;cursor:pointer;border-bottom:1px solid var(--gray-100);display:flex;justify-content:space-between;align-items:center;gap:4px;}
+.pchat-contact:hover{background:var(--primary-light);}
+.pchat-contact.active{background:var(--primary-light);border-left:3px solid var(--primary);}
+.pchat-contact .ub{background:#e11d48;color:#fff;font-size:9px;border-radius:8px;padding:1px 5px;flex:none;}
+.pchat-thread{flex:1;display:flex;flex-direction:column;min-width:0;}
+.pchat-msgs{flex:1;overflow-y:auto;padding:10px;background:var(--gray-50);}
+.pchat-msg{margin:4px 0;padding:7px 10px;border-radius:10px;font-size:11px;max-width:80%;white-space:pre-wrap;line-height:1.4;}
+.pchat-msg.me{background:var(--primary);color:#fff;margin-left:auto;border-bottom-right-radius:4px;}
+.pchat-msg.them{background:#fff;border:1px solid var(--gray-200);border-bottom-left-radius:4px;}
+.pchat-msg .tm{display:block;font-size:9px;opacity:0.7;margin-top:2px;}
+.pchat-input{display:flex;gap:6px;padding:8px;border-top:1px solid var(--gray-200);}
+.pchat-input input{flex:1;}
+.pchat-input input{flex:1;}
+.kai-fab{position:fixed;right:22px;bottom:90px;z-index:300;height:52px;padding:0 18px;border-radius:26px;background:linear-gradient(135deg,#312e81,#7c3aed);color:#fff;font-size:13px;font-weight:800;letter-spacing:1px;border:none;cursor:pointer;box-shadow:0 6px 18px rgba(67,56,202,0.4);display:none;align-items:center;gap:8px;}
+.kai-fab:hover{transform:scale(1.05);}
+.kai-panel{position:fixed;right:22px;bottom:152px;z-index:300;width:380px;max-width:calc(100vw - 32px);height:500px;max-height:calc(100vh - 180px);background:#fff;border-radius:16px;box-shadow:0 12px 40px rgba(15,23,42,0.3);display:none;flex-direction:column;overflow:hidden;border:1px solid var(--gray-200);}
+.kai-panel.open{display:flex;}
+.kai-head{background:linear-gradient(120deg,#312e81,#7c3aed);color:#fff;padding:12px 14px;display:flex;justify-content:space-between;align-items:center;}
+.kai-head .t{font-weight:800;font-size:14px;letter-spacing:1px;}
+.kai-head .s{font-size:10px;opacity:0.85;margin-top:2px;}
+.kai-body{flex:1;overflow-y:auto;padding:12px;background:var(--gray-50);}
+.kai-msg{margin:6px 0;padding:8px 12px;border-radius:12px;font-size:12px;line-height:1.5;max-width:88%;white-space:pre-wrap;}
+.kai-msg.user{background:var(--primary);color:#fff;margin-left:auto;border-bottom-right-radius:4px;}
+.kai-msg.bot{background:#fff;color:var(--gray-800);border:1px solid var(--gray-200);border-bottom-left-radius:4px;}
+.kai-chips{display:flex;flex-wrap:wrap;gap:6px;padding:0 12px 8px;background:var(--gray-50);}
+.kai-chip{background:#eef2ff;color:#4338ca;border:1px solid #c7d2fe;border-radius:14px;padding:4px 10px;font-size:10px;font-weight:700;cursor:pointer;}
+.kai-input{display:flex;gap:6px;padding:10px;border-top:1px solid var(--gray-200);background:#fff;}
+.kai-input input{flex:1;}
 .avatar{cursor:pointer;overflow:hidden;}
 .avatar img{width:100%;height:100%;object-fit:cover;border-radius:10px;display:block;}
 .staff-table th{padding:6px 8px;font-size:9.5px;}
@@ -256,6 +293,24 @@ body.role-csuite .cs-pill.active{background:#12365c;border-color:#c9a227;}
 <div class="loading"><div class="spinner"></div>Loading...</div>
 </div>
 <div class="toast" id="toast"></div>
+<button class="pchat-fab" id="pchatFab" onclick="togglePChat()" style="display:none">💬<span class="ub" id="pchatUnread" style="display:none">0</span></button>
+<button class="kai-fab" id="kaiFab" onclick="toggleKai()" style="display:none">🤖 KAI</button>
+<div class="kai-panel" id="kaiPanel">
+<div class="kai-head"><div><div class="t">🤖 KAI</div><div class="s">Kenafric Artificial Intelligence — ask me anything</div></div><button onclick="toggleKai()" style="background:none;border:none;color:#fff;font-size:16px;cursor:pointer">✕</button></div>
+<div class="kai-body" id="kaiBody"></div>
+<div class="kai-chips" id="kaiChips"></div>
+<div class="kai-input"><input id="kaiText" placeholder="Ask KAI anything..." onkeydown="if(event.key==='Enter')sendKai()"><button class="btn btn-primary" onclick="sendKai()">Ask</button></div>
+</div>
+<div class="pchat-panel" id="pchatPanel">
+<div class="pchat-head"><span id="pchatTitle">💬 Kenafric Chat</span><button onclick="togglePChat()" style="background:none;border:none;color:#fff;font-size:16px;cursor:pointer">✕</button></div>
+<div class="pchat-body">
+<div class="pchat-contacts" id="pchatContacts"></div>
+<div class="pchat-thread">
+<div class="pchat-msgs" id="pchatMsgs"><p style="font-size:11px;color:var(--gray-500);padding:10px">Select a colleague to start chatting.</p></div>
+<div class="pchat-input"><input id="pchatText" placeholder="Type a message..." onkeydown="if(event.key==='Enter')sendPChat()"><button class="btn btn-primary" onclick="sendPChat()">Send</button></div>
+</div>
+</div>
+</div>
 <script>
 const SUPABASE_URL = 'https://nnmsfksnjaiageigscdf.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5ubXNma3NuamFpYWdlaWdzY2RmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY0NTI1NTQsImV4cCI6MjEwMjAyODU1NH0.K1rSsO-PHp6xzeUVVMal6-VsN-BYrzp3z_li6J2Krmc';
@@ -353,6 +408,8 @@ APP.competencies = boot2[0].data || [];
 APP.experiences = boot2[1].data || [];
 document.querySelector('.header').style.display = 'block';
 document.querySelector('.nav-bar').style.display = 'block';
+var pcf = document.getElementById('pchatFab'); if (pcf) pcf.style.display = 'flex';
+var kf = document.getElementById('kaiFab'); if (kf) kf.style.display = 'flex';
 document.getElementById('userInfo').textContent = APP.user.name;
 var av = document.getElementById('userAvatar');
 if(av && APP.user.name) {
@@ -395,6 +452,8 @@ function showLoginScreen(){
 document.querySelector('.header').style.display='none';
 document.querySelector('.nav-bar').style.display='none';
 document.body.classList.remove('sb-mode');
+var pcf2 = document.getElementById('pchatFab'); if (pcf2) pcf2.style.display = 'none'; document.getElementById('pchatPanel').classList.remove('open');
+var kf2 = document.getElementById('kaiFab'); if (kf2) kf2.style.display = 'none'; document.getElementById('kaiPanel').classList.remove('open');
 var rb=document.getElementById('roleBanner');if(rb)rb.style.display='none';
 var sb = document.getElementById('sideNav');
 if (sb) { sb.style.display = 'none'; sb.innerHTML = ''; }
@@ -4116,6 +4175,167 @@ loadAvatar();
 img.src = ev.target.result;
 };
 reader.readAsDataURL(f);
+}
+/* ===== Person-to-person chat ===== */
+window._pc = { open: false, withEmail: null, withName: '', contacts: [], unread: {} };
+function togglePChat() {
+window._pc.open = !window._pc.open;
+document.getElementById('pchatPanel').classList.toggle('open', window._pc.open);
+if (window._pc.open) pchatLoadContacts();
+}
+async function pchatLoadContacts() {
+const { data } = await _supabase.from('employees').select('employee_name, email').order('employee_name');
+var me = (APP.user.email || '').toLowerCase();
+window._pc.contacts = (data || []).filter(function(e){ var em = (e.email || '').toLowerCase(); return em && em !== me; });
+var h = '';
+window._pc.contacts.forEach(function(e, i){
+var em = (e.email || '').toLowerCase();
+var u = window._pc.unread[em] || 0;
+h += '<div class="pchat-contact' + (window._pc.withEmail === em ? ' active' : '') + '" onclick="pchatOpenIdx(' + i + ')"><span>' + escapeHtml(e.employee_name) + '</span>' + (u ? '<span class="ub">' + u + '</span>' : '') + '</div>';
+});
+document.getElementById('pchatContacts').innerHTML = h || '<p style="font-size:11px;color:var(--gray-500);padding:8px">No contacts</p>';
+}
+function pchatOpenIdx(i) {
+var c = window._pc.contacts[i]; if (!c) return;
+window._pc.withEmail = (c.email || '').toLowerCase();
+window._pc.withName = c.employee_name;
+window._pc.unread[window._pc.withEmail] = 0;
+document.getElementById('pchatTitle').textContent = '💬 ' + c.employee_name;
+pchatLoadContacts();
+pchatLoadMsgs();
+}
+async function pchatLoadMsgs() {
+var me = (APP.user.email || '').toLowerCase(); var them = window._pc.withEmail; if (!them) return;
+var r1 = await _supabase.from('messages').select('*').eq('sender_email', me).eq('recipient_email', them).order('id');
+var r2 = await _supabase.from('messages').select('*').eq('sender_email', them).eq('recipient_email', me).order('id');
+var all = (r1.data || []).concat(r2.data || []).sort(function(a,b){ return a.id - b.id; });
+var h = '';
+all.forEach(function(m){
+var mine = (m.sender_email || '').toLowerCase() === me;
+h += '<div class="pchat-msg ' + (mine ? 'me' : 'them') + '">' + escapeHtml(m.body) + '<span class="tm">' + (m.created_at || '').slice(11, 16) + '</span></div>';
+});
+var box = document.getElementById('pchatMsgs');
+box.innerHTML = h || '<p style="font-size:11px;color:var(--gray-500);padding:10px">No messages yet — say hello!</p>';
+box.scrollTop = box.scrollHeight;
+await _supabase.from('messages').update({ read: true }).eq('sender_email', them).eq('recipient_email', me).eq('read', false);
+}
+async function sendPChat() {
+var inp = document.getElementById('pchatText'); var body = (inp.value || '').trim();
+if (!body || !window._pc.withEmail) return;
+inp.value = '';
+await _supabase.from('messages').insert({ sender_email: (APP.user.email || '').toLowerCase(), recipient_email: window._pc.withEmail, body: body });
+await pchatLoadMsgs();
+}
+setInterval(async function(){
+if (!APP.user || !APP.user.email) return;
+var me = (APP.user.email || '').toLowerCase();
+const { data } = await _supabase.from('messages').select('id, sender_email').eq('recipient_email', me).eq('read', false);
+var rows = data || [];
+if (window._pc.open && window._pc.withEmail) {
+var fromThem = rows.some(function(m){ return (m.sender_email || '').toLowerCase() === window._pc.withEmail; });
+if (fromThem) pchatLoadMsgs();
+rows = rows.filter(function(m){ return (m.sender_email || '').toLowerCase() !== window._pc.withEmail; });
+}
+window._pc.unread = {};
+rows.forEach(function(m){ var s = (m.sender_email || '').toLowerCase(); window._pc.unread[s] = (window._pc.unread[s] || 0) + 1; });
+var b = document.getElementById('pchatUnread');
+if (b) { b.style.display = rows.length ? 'block' : 'none'; b.textContent = rows.length; }
+if (rows.length && !window._pc.open) showToast('💬 New message from ' + (rows[0].sender_email || '').split('@')[0]);
+if (window._pc.open) pchatLoadContacts();
+}, 8000);
+/* ===== KAI assistant ===== */
+window._kaiHist = [];
+function toggleKai() {
+var p = document.getElementById('kaiPanel');
+p.classList.toggle('open');
+if (p.classList.contains('open') && !window._kaiSeeded) {
+window._kaiSeeded = true;
+kaiMsg('bot', '👋 Hi ' + (APP.user ? APP.user.name : '') + '! I\'m KAI — Kenafric Artificial Intelligence. Ask me anything about the CMS: scores, approvals, prospective roles, redo requests, exports, chat... or tap a quick question below.');
+kaiChips();
+}
+}
+function kaiChips() {
+var qs = ['What score do I need for promotion?', 'How do I approve an assessment?', 'How is my score calculated?', 'How do I request a redo?', 'Who can see my scores?'];
+var h = '';
+qs.forEach(function(q, i){ h += '<span class="kai-chip" onclick="kaiAskChip(' + i + ')">' + q + '</span>'; });
+document.getElementById('kaiChips').innerHTML = h;
+window._kaiChips = qs;
+}
+function kaiAskChip(i){ document.getElementById('kaiText').value = window._kaiChips[i]; sendKai(); }
+function kaiMsg(who, text) {
+var b = document.getElementById('kaiBody');
+var d = document.createElement('div');
+d.className = 'kai-msg ' + who;
+d.textContent = text;
+b.appendChild(d);
+b.scrollTop = b.scrollHeight;
+return d;
+}
+async function sendKai() {
+var inp = document.getElementById('kaiText');
+var q = (inp.value || '').trim();
+if (!q) return;
+inp.value = '';
+kaiMsg('user', q);
+window._kaiHist.push({ r: 'user', t: q });
+var local = kaiLocal(q);
+var bubble = kaiMsg('bot', local || '…thinking…');
+var ai = '';
+try { ai = await kaiAnswer(q); } catch (e) { ai = ''; }
+if (ai) bubble.textContent = ai;
+else if (!local) bubble.textContent = '🤖 I couldn\'t reach my AI brain just now. Check the internet connection (or the Groq key) — or tap a quick chip below for instant help.';
+window._kaiHist.push({ r: 'bot', t: bubble.textContent });
+if (window._kaiHist.length > 12) window._kaiHist = window._kaiHist.slice(-12);
+}
+function kaiLocal(q) {
+var s = (q || '').toLowerCase();
+function has(w){ return s.indexOf(w) >= 0; }
+if (has('hello') || has('hi ') || s === 'hi' || has('hey')) return 'Hello! 👋 Ask me anything about Kenafric CMS — scores, approvals, prospective roles, redo requests, exports or chat.';
+if (has('procedure') || has('process') || has('steps') || has('assessment')) return 'The assessment procedure: 1) Employee does the Self Assessment — tick experiences, write evidence, rate 1-5, attach proof — and submits once. 2) The Line Manager completes the Current Role assessment. 3) HR Admin reviews every experience (Approve / Return / Disapprove). 4) When all decisions are done, scores release to employee and manager together. 5) A Final Average of 80%+ unlocks the Prospective assessment; 81%+ on prospective enters the Promotion-Ready Pool.';
+if (has('promotion') || has('prospective') || has('80%') || has('81')) return 'To be promotion-ready you need: 1) HR Admin review completed, 2) a FINAL AVERAGE (Self + Manager ÷ 2) of 80%+ to unlock the prospective assessment, and 3) a prospective score of 81%+ to enter the Promotion-Ready Pool.';
+if (has('redo') || has('re-assess') || has('reassess')) return 'A current-role assessment can only be redone with HR Admin approval. Open Assessment, choose "Current Role Assessment", and send the redo request with your reason. Once HR approves, the form unlocks for a new round.';
+if (has('approv')) return 'HR Admin: open Assessment Review, pick the employee, then Approve, Return or Disapprove each experience. When every Self and Manager experience has a decision, the report releases automatically and both the employee and manager see the scores.';
+if (has('calculat') || (has('score') && has('how'))) return 'Each ticked experience earns rating ÷ 5 × its tier weight (Critical counts most, then Important, then Value-Add). Competency scores are weighted (Core 7% each; Functional 12/12/12/12/8/8/8) into a % per assessment. Final Average = (Self + Manager) ÷ 2.';
+if (has('see my') || has('locked') || has('visible') || has('who can')) return 'You always see your own Self score. Manager scores, Final Average, strengths and gaps unlock only after HR Admin approves/disapproves ALL Self and Manager experiences (returns completed). HR Admin and Head of HR see everything.';
+if (has('chat')) return 'Click the 💬 button at the bottom right to chat with any colleague. Unread messages show a red badge and a toast notification.';
+if (has('photo') || has('picture') || has('avatar')) return 'Click your avatar/initials box in the top header, choose an image, and it is saved as your profile picture — it then appears next to your name across the app.';
+if (has('export') || has('excel') || has('pdf') || has('email')) return 'On All Assessments use View (full report), PDF, Excel or Email per employee. Export All (Excel) downloads the whole table.';
+if (has('gap')) return 'Gaps are competencies scoring below 70% in your manager assessment; strengths are 70%+. They appear under My Gaps / My Strengths once your report is released.';
+if (has('development') || has('idp') || has('plan')) return 'Development Plans are built by your manager from your gaps, approved by HR, and tracked with monthly progress reports and due dates.';
+return '';
+}
+async function kaiAnswer(q) {
+var role = APP.user ? (APP.currentRole === 'hr' ? 'HR Admin' : APP.currentRole === 'hohr' ? 'Head of HR' : APP.currentRole === 'manager' ? 'Line Manager' : APP.currentRole === 'csuite' ? 'C-Suite Executive' : 'Employee') : 'User';
+var hist = window._kaiHist.slice(0, -1).slice(-8).map(function(m){ return (m.r === 'user' ? 'User: ' : 'KAI: ') + m.t; }).join('\n');
+var prompt = 'You are KAI (Kenafric Artificial Intelligence), the friendly in-app assistant for Kenafric CMS, a competency management system for Kenafric Group. Current user role: ' + role + '. Answer concisely (max 160 words), plain text, step-by-step for how-to questions, using ONLY the knowledge below. If asked about anything outside the system, politely say you only assist with Kenafric CMS.\nSYSTEM KNOWLEDGE:\nROLES & THEMES: Employee (blue), Line Manager (teal), HR Admin (indigo), Head of HR (gold), C-Suite (navy/gold).\nSELF ASSESSMENT: employee ticks experiences, writes evidence, rates 1-5, attaches proof; one submission; a redo needs an HR-approved redo request.\nMANAGER ASSESSMENT: manager assesses the current role; if already assessed, select "Current Role Assessment" and send a redo request — the form unlocks when HR Admin approves.\nPROSPECTIVE: unlocks after HR review + FINAL AVERAGE (Self + Manager ÷ 2) ≥ 80%; prospective position must be same level or higher, never the current role; 81%+ on prospective joins the Promotion-Ready Pool.\nSCORING: experiences tiered Critical / Important / Value-Add; points = rating ÷ 5 × tier weight; competency weights total 100% (Core 7% each; Functional 12/12/12/12/8/8/8). Readiness: 81%+ Strong Performer / promotion-eligible; 71-80 Proficient; 61-70 Developing; 51-60 Below Expectations; lower = Critical Gap. Strengths ≥ 70%; Gaps < 70%.\nVISIBILITY: employees & managers see scores only after HR Admin approves/disapproves ALL Self + Manager experiences and completed returns (🔒 before that). HR Admin & Head of HR see everything.\nHR ADMIN: Assessment Review (approve/return/disapprove each experience), Redo Requests, staff add/delete, competency library, positions & criticality registry, PDF/Excel/Email exports.\nHEAD OF HR: decision queue (Promotion / Development Plan / Hold / Escalate to C-Suite / Return), oversight, report approvals.\nC-SUITE: executive dashboard — Employee/Manager/Final averages, succession pipeline, company comparison, critical competency gaps, development plans.\nDEVELOPMENT PLANS: manager builds from gaps; HR approves; monthly progress reports with due dates.\nEXTRAS: in-app person-to-person chat (💬 button), profile photo upload (click the header avatar), global staff search, All Staff / All Assessments tables with Employee Avg, Manager Avg and Final Avg.\nCONVERSATION SO FAR:\n' + hist + '\nUser: ' + q + '\nKAI:';
+try {
+var out = await Promise.race([
+kaiGroqFast(prompt),
+new Promise(function(res){ setTimeout(function(){ res(''); }, 7000); })
+]);
+return (out || '').trim();
+} catch (e) { return ''; }
+}
+var KAI_GROQ_KEY = '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';
+async function kaiGroqFast(prompt) {
+if (!KAI_GROQ_KEY) {
+var m = (document.documentElement.outerHTML.match(/gsk_[A-Za-z0-9]+/) || [])[0];
+if (m) KAI_GROQ_KEY = m;
+}
+if (!KAI_GROQ_KEY) return '';
+var r = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+method: 'POST',
+headers: { 'Authorization': 'Bearer ' + KAI_GROQ_KEY, 'Content-Type': 'application/json' },
+body: JSON.stringify({
+model: 'llama-3.1-8b-instant',
+messages: [{ role: 'user', content: prompt }],
+max_tokens: 200,
+temperature: 0.4
+})
+});
+if (!r.ok) return '';
+var j = await r.json();
+return ((j.choices && j.choices[0] && j.choices[0].message.content) || '').trim();
 }
 function sameText(a,b){ return (a||'').toString().toUpperCase().trim() === (b||'').toString().toUpperCase().trim(); }
 async function refreshCompData() {
