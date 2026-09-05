@@ -201,10 +201,15 @@ tr:hover td { background: var(--gray-50); }
 .pchat-head{background:linear-gradient(120deg,var(--primary-dark),var(--primary));color:#fff;padding:10px 14px;font-weight:800;font-size:13px;display:flex;justify-content:space-between;align-items:center;}
 .pchat-body{flex:1;display:flex;overflow:hidden;}
 .pchat-contacts{width:150px;border-right:1px solid var(--gray-200);overflow-y:auto;background:var(--gray-50);flex:none;}
-.pchat-contact{padding:8px 10px;font-size:11px;font-weight:700;cursor:pointer;border-bottom:1px solid var(--gray-100);display:flex;justify-content:space-between;align-items:center;gap:4px;}
+.pchat-contact{padding:7px 8px;font-size:10px;font-weight:700;cursor:pointer;border-bottom:1px solid var(--gray-100);display:flex;justify-content:space-between;align-items:center;gap:4px;}
+.pchat-contact .nm{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .pchat-contact:hover{background:var(--primary-light);}
 .pchat-contact.active{background:var(--primary-light);border-left:3px solid var(--primary);}
 .pchat-contact .ub{background:#e11d48;color:#fff;font-size:9px;border-radius:8px;padding:1px 5px;flex:none;}
+.on-dot{width:8px;height:8px;border-radius:50%;background:#cbd5e1;display:inline-block;margin-right:6px;vertical-align:middle;flex:none;}
+.on-dot.on{background:#22c55e;box-shadow:0 0 0 2px rgba(34,197,94,0.25);}
+.on-dot{width:8px;height:8px;border-radius:50%;background:#cbd5e1;display:inline-block;margin-right:6px;vertical-align:middle;flex:none;}
+.on-dot.on{background:#22c55e;box-shadow:0 0 0 2px rgba(34,197,94,0.25);}
 .pchat-thread{flex:1;display:flex;flex-direction:column;min-width:0;}
 .pchat-msgs{flex:1;overflow-y:auto;padding:10px;background:var(--gray-50);}
 .pchat-msg{margin:4px 0;padding:7px 10px;border-radius:10px;font-size:11px;max-width:80%;white-space:pre-wrap;line-height:1.4;}
@@ -304,7 +309,10 @@ body.role-csuite .cs-pill.active{background:#12365c;border-color:#c9a227;}
 <div class="pchat-panel" id="pchatPanel">
 <div class="pchat-head"><span id="pchatTitle">💬 Kenafric Chat</span><button onclick="togglePChat()" style="background:none;border:none;color:#fff;font-size:16px;cursor:pointer">✕</button></div>
 <div class="pchat-body">
-<div class="pchat-contacts" id="pchatContacts"></div>
+<div style="width:170px;flex:none;display:flex;flex-direction:column;border-right:1px solid var(--gray-200);background:var(--gray-50)">
+<input id="pchatSearch" placeholder="🔍 Search colleague..." oninput="pchatRenderContacts()" style="margin:6px;padding:6px 8px;font-size:11px;border-radius:8px">
+<div class="pchat-contacts" id="pchatContacts" style="width:auto;border-right:none;flex:1"></div>
+</div>
 <div class="pchat-thread">
 <div class="pchat-msgs" id="pchatMsgs"><p style="font-size:11px;color:var(--gray-500);padding:10px">Select a colleague to start chatting.</p></div>
 <div class="pchat-input"><input id="pchatText" placeholder="Type a message..." onkeydown="if(event.key==='Enter')sendPChat()"><button class="btn btn-primary" onclick="sendPChat()">Send</button></div>
@@ -319,33 +327,41 @@ const EMAILJS_SERVICE_ID = 'service_n25h19m';
 const EMAILJS_TEMPLATE_ID = 'template_498ij59';
 const EMAILJS_PUBLIC_KEY = 'JVdzezQg3OrI58-fT';
 const GEMINI_KEY = 'AQ.Ab8RN6KegDFeNLTfMt7yAYHXKYAuVjJAsZtyPuBW0CVg-QQwzw';
-var GROQ_KEY = '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';
-async function callGroq(prompt, wantJson) {
-if (!GROQ_KEY || GROQ_KEY.indexOf('PASTE') === 0) return '';
+function cleanAI(t) { return (t || '').replace(/```json/gi, '').replace(/```/g, '').trim(); }
+async function aiEngine(prompt, wantJson, maxTokens) {
+// 1) Hidden server-side key via Supabase Edge Function (never exposed, never revoked)
 try {
-var body = { model: 'llama-3.3-70b-versatile', messages: [{ role: 'user', content: prompt }], temperature: 0.4 };
-if (wantJson) body.response_format = { type: 'json_object' };
-var res = await fetch('https://api.groq.com/openai/v1/chat/completions', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + GROQ_KEY }, body: JSON.stringify(body) });
-var j = await res.json();
-var t = (j.choices && j.choices[0] && j.choices[0].message) ? (j.choices[0].message.content || '') : '';
-return t.replace(/```json/gi, '').replace(/```/g, '').trim();
-} catch (e) { return ''; }
-}
-async function callGemini(prompt, wantJson) {
+var b1 = { prompt: prompt, model: wantJson ? 'llama-3.3-70b-versatile' : 'llama-3.1-8b-instant', max_tokens: maxTokens || (wantJson ? 900 : 500) };
+if (wantJson) b1.response_format = { type: 'json_object' };
+const { data, error } = await _supabase.functions.invoke('groq-proxy', { body: b1 });
+if (!error && data && data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content) return cleanAI(data.choices[0].message.content);
+} catch (e) { console.log('groq-proxy unreachable: ' + e.message); }
+// 2) Fallback: direct Groq with in-file key (if present)
+var key = (typeof GROQ_KEY !== 'undefined' && GROQ_KEY) ? GROQ_KEY : ((typeof KAI_GROQ_KEY !== 'undefined' && KAI_GROQ_KEY) ? KAI_GROQ_KEY : '');
+if (key && key.indexOf('gsk_') === 0) {
+var models = wantJson ? ['llama-3.3-70b-versatile', 'llama-3.1-8b-instant'] : ['llama-3.1-8b-instant', 'llama-3.3-70b-versatile'];
+for (var i = 0; i < models.length; i++) {
 try {
-var body = { contents: [{ parts: [{ text: prompt }] }], generationConfig: { temperature: 0.4 } };
-if (wantJson) body.generationConfig.responseMimeType = 'application/json';
-var clean = await callAI(prompt, true);
-if (!clean) return;
-} catch (e) { return ''; }
+var b2 = { model: models[i], messages: [{ role: 'user', content: prompt }], temperature: 0.4, max_tokens: maxTokens || (wantJson ? 900 : 500) };
+if (wantJson) b2.response_format = { type: 'json_object' };
+var r = await fetch('https://api.groq.com/openai/v1/chat/completions', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + key }, body: JSON.stringify(b2) });
+if (r.ok) {
+var j = await r.json();
+if (j.choices && j.choices[0] && j.choices[0].message && j.choices[0].message.content) return cleanAI(j.choices[0].message.content);
+} else console.log('GROQ DIRECT ' + r.status + ' (' + models[i] + ')');
+} catch (e) { console.log('GROQ DIRECT FAIL: ' + e.message); }
 }
+}
+return '';
+}
+async function callGroq(prompt, wantJson) { return aiEngine(prompt, wantJson); }
+async function callGemini(prompt, wantJson) { return ''; }
 async function callAI(prompt, wantJson) {
-var t = await callGroq(prompt, wantJson);
-if (!t) t = await callGemini(prompt, wantJson);
-if (!t) showToast('AI error: no response — check Groq/Gemini keys');
+var t = await aiEngine(prompt, wantJson);
+if (!t) showToast('AI error: deploy the groq-proxy Edge Function with a GROQ_API_KEY secret, or add a Groq key in the file');
 return t;
 }
-const APP_LINK = 'https://cms.kenafricgroup.com';
+async function kaiGroqFast(prompt) { return aiEngine(prompt, false, 300); }const APP_LINK = 'https://cms.kenafricgroup.com';
 if (window.emailjs && EMAILJS_PUBLIC_KEY.indexOf('PASTE') !== 0) { emailjs.init({ publicKey: EMAILJS_PUBLIC_KEY }); }
 var APP = { user: null, currentRole: 'employee', currentPage: '', competencies: [], experiences: [] };
 function sendCMSemail(toEmail, subject, message) {
@@ -410,6 +426,7 @@ document.querySelector('.header').style.display = 'block';
 document.querySelector('.nav-bar').style.display = 'block';
 var pcf = document.getElementById('pchatFab'); if (pcf) pcf.style.display = 'flex';
 var kf = document.getElementById('kaiFab'); if (kf) kf.style.display = 'flex';
+startPresence();
 document.getElementById('userInfo').textContent = APP.user.name;
 var av = document.getElementById('userAvatar');
 if(av && APP.user.name) {
@@ -4176,6 +4193,20 @@ img.src = ev.target.result;
 };
 reader.readAsDataURL(f);
 }
+/* ===== Presence (online dots) ===== */
+function startPresence() {
+if (window._presenceTimer) clearInterval(window._presenceTimer);
+var beat = function(){ if (APP.user && APP.user.email) _supabase.from('presence').upsert({ email: APP.user.email.toLowerCase(), last_seen: new Date().toISOString() }); };
+beat();
+window._presenceTimer = setInterval(beat, 30000);
+}
+/* ===== Presence (online dots) ===== */
+function startPresence() {
+if (window._presenceTimer) clearInterval(window._presenceTimer);
+var beat = function(){ if (APP.user && APP.user.email) _supabase.from('presence').upsert({ email: APP.user.email.toLowerCase(), last_seen: new Date().toISOString() }); };
+beat();
+window._presenceTimer = setInterval(beat, 30000);
+}
 /* ===== Person-to-person chat ===== */
 window._pc = { open: false, withEmail: null, withName: '', contacts: [], unread: {} };
 function togglePChat() {
@@ -4185,15 +4216,34 @@ if (window._pc.open) pchatLoadContacts();
 }
 async function pchatLoadContacts() {
 const { data } = await _supabase.from('employees').select('employee_name, email').order('employee_name');
+const { data: pres } = await _supabase.from('presence').select('email, last_seen');
+var now = Date.now(); var online = {};
+(pres || []).forEach(function(p){ if (now - new Date(p.last_seen).getTime() < 90000) online[(p.email || '').toLowerCase()] = true; });
 var me = (APP.user.email || '').toLowerCase();
 window._pc.contacts = (data || []).filter(function(e){ var em = (e.email || '').toLowerCase(); return em && em !== me; });
 var h = '';
 window._pc.contacts.forEach(function(e, i){
 var em = (e.email || '').toLowerCase();
 var u = window._pc.unread[em] || 0;
-h += '<div class="pchat-contact' + (window._pc.withEmail === em ? ' active' : '') + '" onclick="pchatOpenIdx(' + i + ')"><span>' + escapeHtml(e.employee_name) + '</span>' + (u ? '<span class="ub">' + u + '</span>' : '') + '</div>';
+h += '<div class="pchat-contact' + (window._pc.withEmail === em ? ' active' : '') + '" onclick="pchatOpenIdx(' + i + ')"><span><span class="on-dot' + (online[em] ? ' on' : '') + '"></span>' + escapeHtml(e.employee_name) + '</span>' + (u ? '<span class="ub">' + u + '</span>' : '') + '</div>';
 });
 document.getElementById('pchatContacts').innerHTML = h || '<p style="font-size:11px;color:var(--gray-500);padding:8px">No contacts</p>';
+}
+function pchatRenderContacts() {
+var box = document.getElementById('pchatContacts'); if (!box) return;
+var q = (document.getElementById('pchatSearch') ? document.getElementById('pchatSearch').value : '').trim().toLowerCase();
+var all = window._pc.contacts || [];
+var list;
+if (q) list = all.filter(function(e){ return (e.employee_name || '').toLowerCase().indexOf(q) >= 0 || (e.position || '').toLowerCase().indexOf(q) >= 0; });
+else list = all.filter(function(e){ var em = (e.email || '').toLowerCase(); return (window._pc.unread[em] || 0) > 0 || window._pc.withEmail === em; });
+var h = '';
+list.forEach(function(e){
+var i = all.indexOf(e);
+var em = (e.email || '').toLowerCase();
+var u = window._pc.unread[em] || 0;
+h += '<div class="pchat-contact' + (window._pc.withEmail === em ? ' active' : '') + '" onclick="pchatOpenIdx(' + i + ')" title="' + escapeHtml(e.employee_name) + ' — ' + escapeHtml(e.position || '') + '"><span>' + escapeHtml(e.employee_name) + '</span>' + (u ? '<span class="ub">' + u + '</span>' : '') + '</div>';
+});
+box.innerHTML = h || (q ? '<p style="font-size:11px;color:var(--gray-500);padding:8px">No match for "' + escapeHtml(q) + '"</p>' : '<p style="font-size:11px;color:var(--gray-500);padding:8px">🔍 Type a name to find a colleague.<br>People with unread messages appear here automatically.</p>');
 }
 function pchatOpenIdx(i) {
 var c = window._pc.contacts[i]; if (!c) return;
@@ -4201,7 +4251,7 @@ window._pc.withEmail = (c.email || '').toLowerCase();
 window._pc.withName = c.employee_name;
 window._pc.unread[window._pc.withEmail] = 0;
 document.getElementById('pchatTitle').textContent = '💬 ' + c.employee_name;
-pchatLoadContacts();
+pchatRenderContacts();
 pchatLoadMsgs();
 }
 async function pchatLoadMsgs() {
@@ -4241,7 +4291,7 @@ rows.forEach(function(m){ var s = (m.sender_email || '').toLowerCase(); window._
 var b = document.getElementById('pchatUnread');
 if (b) { b.style.display = rows.length ? 'block' : 'none'; b.textContent = rows.length; }
 if (rows.length && !window._pc.open) showToast('💬 New message from ' + (rows[0].sender_email || '').split('@')[0]);
-if (window._pc.open) pchatLoadContacts();
+if (window._pc.open) pchatRenderContacts();
 }, 8000);
 /* ===== KAI assistant ===== */
 window._kaiHist = [];
@@ -4316,28 +4366,15 @@ new Promise(function(res){ setTimeout(function(){ res(''); }, 7000); })
 return (out || '').trim();
 } catch (e) { return ''; }
 }
-var KAI_GROQ_KEY = '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';
 async function kaiGroqFast(prompt) {
-if (!KAI_GROQ_KEY) {
-var m = (document.documentElement.outerHTML.match(/gsk_[A-Za-z0-9]+/) || [])[0];
-if (m) KAI_GROQ_KEY = m;
-}
-if (!KAI_GROQ_KEY) return '';
-var r = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-method: 'POST',
-headers: { 'Authorization': 'Bearer ' + KAI_GROQ_KEY, 'Content-Type': 'application/json' },
-body: JSON.stringify({
-model: 'llama-3.1-8b-instant',
-messages: [{ role: 'user', content: prompt }],
-max_tokens: 200,
-temperature: 0.4
-})
+try {
+const { data, error } = await _supabase.functions.invoke('groq-proxy', {
+body: { prompt: prompt, model: 'llama-3.1-8b-instant', max_tokens: 200 }
 });
-if (!r.ok) return '';
-var j = await r.json();
-return ((j.choices && j.choices[0] && j.choices[0].message.content) || '').trim();
-}
-function sameText(a,b){ return (a||'').toString().toUpperCase().trim() === (b||'').toString().toUpperCase().trim(); }
+if (error || !data || !data.choices) return '';
+return ((data.choices[0].message.content) || '').trim();
+} catch (e) { return ''; }
+}function sameText(a,b){ return (a||'').toString().toUpperCase().trim() === (b||'').toString().toUpperCase().trim(); }
 async function refreshCompData() {
 const { data: c } = await _supabase.from('competencies').select('*');
 APP.competencies = c || [];
@@ -5473,6 +5510,28 @@ await enterApp(data.session.user.email);
 showLoginScreen();
 }
 })();
+/* ===== FIXED AI ENGINE — routes ALL AI through the groq-proxy Edge Function ===== */
+async function callGroq(prompt, wantJson) {
+try {
+var body = { prompt: prompt, model: 'llama-3.1-8b-instant', max_tokens: wantJson ? 900 : 500 };
+if (wantJson) body.response_format = { type: 'json_object' };
+const { data, error } = await _supabase.functions.invoke('groq-proxy', { body: body });
+if (!error && data && data.choices && data.choices[0]) {
+var t0 = (data.choices[0].message && data.choices[0].message.content) || '';
+t0 = t0.replace(/```json/gi, '').replace(/```/g, '').trim();
+if (t0) return t0;
+}
+console.log('groq-proxy issue: ' + (error ? error.message : 'no choices in response'));
+} catch (e) { console.log('groq-proxy not reachable: ' + e.message); }
+return '';
+}
+async function callGemini(prompt, wantJson) { return ''; }
+async function callAI(prompt, wantJson) {
+var t = await callGroq(prompt, wantJson);
+if (!t) showToast('AI error — open F12 Console for the exact groq-proxy message');
+return t;
+}
+async function kaiGroqFast(prompt) { return await callGroq(prompt, false); }
 </script>
 </body>
 </html>
