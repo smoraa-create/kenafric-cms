@@ -4,8 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Kenafric CMS</title>
-<link rel="preconnect" href="https://api.groq.com">
-<link rel="dns-prefetch" href="https://api.groq.com">
+<link rel="preconnect" href="https://openrouter.ai">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%231a1a6e'/%3E%3Cstop offset='1' stop-color='%235b4fcf'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='64' height='64' rx='14' fill='url(%23g)'/%3E%3Ctext x='32' y='45' font-family='Arial,sans-serif' font-size='34' font-weight='bold' fill='white' text-anchor='middle'%3EK%3C/text%3E%3C/svg%3E">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
@@ -326,42 +325,54 @@ const _supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const EMAILJS_SERVICE_ID = 'service_n25h19m';
 const EMAILJS_TEMPLATE_ID = 'template_498ij59';
 const EMAILJS_PUBLIC_KEY = 'JVdzezQg3OrI58-fT';
-const GEMINI_KEY = 'AQ.Ab8RN6KegDFeNLTfMt7yAYHXKYAuVjJAsZtyPuBW0CVg-QQwzw';
+const OPENROUTER_KEY = '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';
+
 function cleanAI(t) { return (t || '').replace(/```json/gi, '').replace(/```/g, '').trim(); }
-async function aiEngine(prompt, wantJson, maxTokens) {
-// 1) Hidden server-side key via Supabase Edge Function (never exposed, never revoked)
+
+var OR_MODEL_CACHE = [];
+async function pickFreeModels() {
+if (OR_MODEL_CACHE.length) return OR_MODEL_CACHE;
+var list = [];
 try {
-var b1 = { prompt: prompt, model: wantJson ? 'llama-3.3-70b-versatile' : 'llama-3.1-8b-instant', max_tokens: maxTokens || (wantJson ? 900 : 500) };
-if (wantJson) b1.response_format = { type: 'json_object' };
-const { data, error } = await _supabase.functions.invoke('groq-proxy', { body: b1 });
-if (!error && data && data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content) return cleanAI(data.choices[0].message.content);
-} catch (e) { console.log('groq-proxy unreachable: ' + e.message); }
-// 2) Fallback: direct Groq with in-file key (if present)
-var key = (typeof GROQ_KEY !== 'undefined' && GROQ_KEY) ? GROQ_KEY : ((typeof KAI_GROQ_KEY !== 'undefined' && KAI_GROQ_KEY) ? KAI_GROQ_KEY : '');
-if (key && key.indexOf('gsk_') === 0) {
-var models = wantJson ? ['llama-3.3-70b-versatile', 'llama-3.1-8b-instant'] : ['llama-3.1-8b-instant', 'llama-3.3-70b-versatile'];
-for (var i = 0; i < models.length; i++) {
-try {
-var b2 = { model: models[i], messages: [{ role: 'user', content: prompt }], temperature: 0.4, max_tokens: maxTokens || (wantJson ? 900 : 500) };
-if (wantJson) b2.response_format = { type: 'json_object' };
-var r = await fetch('https://api.groq.com/openai/v1/chat/completions', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + key }, body: JSON.stringify(b2) });
+var r = await fetch('https://openrouter.ai/api/v1/models');
 if (r.ok) {
 var j = await r.json();
-if (j.choices && j.choices[0] && j.choices[0].message && j.choices[0].message.content) return cleanAI(j.choices[0].message.content);
-} else console.log('GROQ DIRECT ' + r.status + ' (' + models[i] + ')');
-} catch (e) { console.log('GROQ DIRECT FAIL: ' + e.message); }
+function pref(id) { var s = 0; if (id.indexOf('llama-3.3') >= 0) s += 5; if (id.indexOf('70b') >= 0) s += 3; if (id.indexOf('qwen') >= 0) s += 4; if (id.indexOf('gemini') >= 0) s += 4; if (id.indexOf('mistral') >= 0) s += 2; return s; }
+var free = (j.data || []).filter(function(m){ return (m.id || '').indexOf(':free') >= 0; });
+free.sort(function(a, b){ return pref(b.id) - pref(a.id); });
+list = free.map(function(m){ return m.id; });
 }
+} catch (e) { console.log('OpenRouter models list failed:', e.message); }
+if (!list.length) list = ['meta-llama/llama-3.3-70b-instruct:free', 'meta-llama/llama-3.1-8b-instant:free', 'mistralai/mistral-7b-instruct:free', 'google/gemma-3-27b-it:free'];
+OR_MODEL_CACHE = list;
+return list;
 }
-return '';
-}
-async function callGroq(prompt, wantJson) { return aiEngine(prompt, wantJson); }
-async function callGemini(prompt, wantJson) { return ''; }
 async function callAI(prompt, wantJson) {
-var t = await aiEngine(prompt, wantJson);
-if (!t) showToast('AI error: deploy the groq-proxy Edge Function with a GROQ_API_KEY secret, or add a Groq key in the file');
-return t;
+if (!OPENROUTER_KEY || OPENROUTER_KEY.indexOf('PASTE') !== -1) { showToast('OpenRouter API key is missing'); return ''; }
+var models = await pickFreeModels();
+for (var i = 0; i < models.length && i < 4; i++) {
+try {
+var r = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+method: 'POST',
+headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + OPENROUTER_KEY, 'HTTP-Referer': window.location.origin, 'X-Title': 'Kenafric CMS' },
+body: JSON.stringify({ model: models[i], messages: [{ role: 'user', content: prompt }], temperature: 0.4, max_tokens: wantJson ? 1000 : 500 })
+});
+if (r.ok) {
+var j = await r.json();
+if (j.choices && j.choices[0] && j.choices[0].message && j.choices[0].message.content) {
+console.log('KAI model used: ' + models[i]);
+return cleanAI(j.choices[0].message.content);
 }
-async function kaiGroqFast(prompt) { return aiEngine(prompt, false, 300); }const APP_LINK = 'https://cms.kenafricgroup.com';
+} else {
+console.log('OpenRouter model ' + models[i] + ' → ' + r.status);
+}
+} catch (e) { console.log('OpenRouter fetch failed:', e.message); }
+}
+showToast('AI error: no free model responded — see console');
+return '';
+}async function callGroq(prompt, wantJson) { return callAI(prompt, wantJson); }
+async function callGemini(prompt, wantJson) { return ''; }
+async function kaiGroqFast(prompt) { return callAI(prompt, false); } 'https://cms.kenafricgroup.com';
 if (window.emailjs && EMAILJS_PUBLIC_KEY.indexOf('PASTE') !== 0) { emailjs.init({ publicKey: EMAILJS_PUBLIC_KEY }); }
 var APP = { user: null, currentRole: 'employee', currentPage: '', competencies: [], experiences: [] };
 function sendCMSemail(toEmail, subject, message) {
@@ -1962,7 +1973,7 @@ document.getElementById('actions-' + ti).insertAdjacentHTML('beforeend', html);
 window['actionCount_' + ti]++;
 }
 async function aiSuggestDP() {
-if (GEMINI_KEY.indexOf('PASTE') === 0) { showToast('Add your free Gemini API key first'); return; }
+if (!OPENROUTER_KEY || OPENROUTER_KEY.indexOf('PASTE') !== -1) { showToast('Please add your OpenRouter API key in the code'); return; }
 var cs = document.getElementById('dpComp');
 if (!cs || !cs.value) { showToast('Select a competency gap first'); return; }
 var compName = cs.options[cs.selectedIndex].getAttribute('data-name') || cs.value;
@@ -2620,7 +2631,7 @@ inserts.push({ plan_id: planId, employee_id: r0.employee_id, employee_name: r0.e
 if (inserts.length) await _supabase.from('dp_reports').insert(inserts);
 }
 async function aiCheckDPReport(id, text) {
-if (GEMINI_KEY.indexOf('PASTE') === 0) return '';
+if (!OPENROUTER_KEY || OPENROUTER_KEY.indexOf('PASTE') !== -1) return '';
 const { data: rep } = await _supabase.from('dp_reports').select('*').eq('id', id).single();
 var prompt = 'You are an HR quality auditor. An employee submitted a monthly progress report for the development task "' + (rep.task||'') + '" (competency: ' + (rep.comp_name||'') + '). Report: "' + text + '". Judge whether it is specific, believable and relevant to the task (good) or vague/irrelevant (bad). Return ONLY valid JSON: {"ok":true} or {"ok":false,"reason":"..."}. No markdown.';
 try {
@@ -3685,7 +3696,7 @@ showToast('Mapping removed');
 loadCSuiteMappingCard();
 }
 async function aiCoach(itemId) {
-if (GEMINI_KEY.indexOf('PASTE') === 0) { showToast('Add your free Gemini API key first'); return; }
+if (!OPENROUTER_KEY || OPENROUTER_KEY.indexOf('PASTE') !== -1) { showToast('Please add your OpenRouter API key in the code'); return; }
 var item = document.getElementById(itemId);
 if (!item) return;
 var expText = item.getAttribute('data-text') || '';
@@ -3713,7 +3724,7 @@ out.innerHTML = h;
 } catch (err) { out.innerHTML = ''; showToast('AI Coach failed: ' + err.message); }
 }
 async function aiRefine(itemId) {
-if (GEMINI_KEY.indexOf('PASTE') === 0) { showToast('Add your free Gemini API key first'); return; }
+if (!OPENROUTER_KEY || OPENROUTER_KEY.indexOf('PASTE') !== -1) { showToast('Please add your OpenRouter API key in the code'); return; }
 var item = document.getElementById(itemId);
 if (!item) return;
 var ta = item.querySelector('textarea');
@@ -5240,7 +5251,7 @@ showToast(ok ? 'Approved — HR notified' : 'Changes requested — HR notified')
 loadMgrCompDetail();
 }
 async function runAICheck(rows) {
-if (GEMINI_KEY.indexOf('PASTE') === 0) return;
+if (!OPENROUTER_KEY || OPENROUTER_KEY.indexOf('PASTE') !== -1) return;
 var ticked = rows.filter(function(r){ return r.ticked && r.evidence; });
 if (!ticked.length) return;
 var list = ticked.map(function(r, i){ return (i+1) + '. ' + r.experience_text + ' | Evidence: ' + r.evidence; }).join(String.fromCharCode(10));
@@ -5264,7 +5275,7 @@ notifyHR('AI Evidence Pre-Check: ' + flags.length + ' item(s) flagged', 'The AI 
 } catch (err) { console.log('AI check skipped: ' + err.message); }
 }
 async function aiReviewPending(empId) {
-if (GEMINI_KEY.indexOf('PASTE') === 0) { showToast('Add your free Gemini API key first'); return; }
+if (!OPENROUTER_KEY || OPENROUTER_KEY.indexOf('PASTE') !== -1) { showToast('Please add your OpenRouter API key in the code'); return; }
 const { data: rows } = await _supabase.from('assessments').select('*').eq('employee_id', empId).in('type', ['Manager', 'Prospective']);
 var pending = (rows || []).filter(function(r){ return r.ticked && (r.hr_status === '' || r.hr_status === 'Pending' || r.hr_status === 'Returned'); });
 if (!pending.length) { showToast('No pending evidence to review'); return; }
@@ -5501,6 +5512,7 @@ if (!APP.user) return;
 var pageId = (event.state && event.state.page) ? event.state.page : (window.location.hash ? window.location.hash.substring(1) : null);
 if (pageId) navigateTo(pageId, false);
 });
+
 (async function() {
 const { data } = await _supabase.auth.getSession();
 if (data && data.session) {
@@ -5510,28 +5522,6 @@ await enterApp(data.session.user.email);
 showLoginScreen();
 }
 })();
-/* ===== FIXED AI ENGINE — routes ALL AI through the groq-proxy Edge Function ===== */
-async function callGroq(prompt, wantJson) {
-try {
-var body = { prompt: prompt, model: 'llama-3.1-8b-instant', max_tokens: wantJson ? 900 : 500 };
-if (wantJson) body.response_format = { type: 'json_object' };
-const { data, error } = await _supabase.functions.invoke('groq-proxy', { body: body });
-if (!error && data && data.choices && data.choices[0]) {
-var t0 = (data.choices[0].message && data.choices[0].message.content) || '';
-t0 = t0.replace(/```json/gi, '').replace(/```/g, '').trim();
-if (t0) return t0;
-}
-console.log('groq-proxy issue: ' + (error ? error.message : 'no choices in response'));
-} catch (e) { console.log('groq-proxy not reachable: ' + e.message); }
-return '';
-}
-async function callGemini(prompt, wantJson) { return ''; }
-async function callAI(prompt, wantJson) {
-var t = await callGroq(prompt, wantJson);
-if (!t) showToast('AI error — open F12 Console for the exact groq-proxy message');
-return t;
-}
-async function kaiGroqFast(prompt) { return await callGroq(prompt, false); }
 </script>
 </body>
 </html>
