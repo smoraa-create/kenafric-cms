@@ -337,7 +337,7 @@ try {
 var r = await fetch('https://openrouter.ai/api/v1/models');
 if (r.ok) {
 var j = await r.json();
-function pref(id) { var s = 0; if (id.indexOf('llama-3.3') >= 0) s += 5; if (id.indexOf('70b') >= 0) s += 3; if (id.indexOf('qwen') >= 0) s += 4; if (id.indexOf('gemini') >= 0) s += 4; if (id.indexOf('mistral') >= 0) s += 2; return s; }
+function pref(id) { var s = 0; if (id.indexOf('llama-3.3') >= 0) s += 8; if (id.indexOf('llama-3.1') >= 0) s += 6; if (id.indexOf('qwen') >= 0) s += 5; if (id.indexOf('gemini') >= 0) s += 5; if (id.indexOf('mistral') >= 0) s += 4; if (id.indexOf('70b') >= 0) s += 3; if (id.indexOf('gemma') >= 0) s += 3; return s; }
 var free = (j.data || []).filter(function(m){ return (m.id || '').indexOf(':free') >= 0; });
 free.sort(function(a, b){ return pref(b.id) - pref(a.id); });
 list = free.map(function(m){ return m.id; });
@@ -370,16 +370,28 @@ console.log('OpenRouter model ' + models[i] + ' → ' + r.status);
 }
 showToast('AI error: no free model responded — see console');
 return '';
-}async function callGroq(prompt, wantJson) { return callAI(prompt, wantJson); }
+}
+async function callModel(prompt, wantJson) { return callAI(prompt, wantJson); }
 async function callGemini(prompt, wantJson) { return ''; }
-async function kaiGroqFast(prompt) { return callAI(prompt, false); } 'https://cms.kenafricgroup.com';
-if (window.emailjs && EMAILJS_PUBLIC_KEY.indexOf('PASTE') !== 0) { emailjs.init({ publicKey: EMAILJS_PUBLIC_KEY }); }
+async function kaiFast(prompt) { return callAI(prompt, false); } 
+
+// FIX: Restored the missing variable declaration
+const APP_LINK = 'https://cms.kenafricgroup.com'; 
+
+if (window.emailjs && EMAILJS_PUBLIC_KEY.indexOf('PASTE') !== 0) { 
+    emailjs.init({ publicKey: EMAILJS_PUBLIC_KEY }); 
+}
+
 var APP = { user: null, currentRole: 'employee', currentPage: '', competencies: [], experiences: [] };
+
 function sendCMSemail(toEmail, subject, message) {
-if (!window.emailjs || EMAILJS_SERVICE_ID.indexOf('PASTE') === 0) { console.log('EmailJS not configured yet'); return; }
-emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, { to_email: toEmail, subject: subject, message: message })
-.then(function(){ showToast('Email sent to ' + toEmail); })
-.catch(function(err){ showToast('Email failed: ' + (err && err.text ? err.text : 'check EmailJS settings')); });
+    if (!window.emailjs || EMAILJS_SERVICE_ID.indexOf('PASTE') === 0) { 
+        console.log('EmailJS not configured yet'); 
+        return; 
+    }
+    emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, { to_email: toEmail, subject: subject, message: message })
+    .then(function(){ showToast('Email sent to ' + toEmail); })
+    .catch(function(err){ showToast('Email failed: ' + (err && err.text ? err.text : 'check EmailJS settings')); });
 }
 async function notifyHR(subject, message) {
 const { data } = await _supabase.from('user_profiles').select('email').eq('role', 'HR_ADMIN');
@@ -2230,7 +2242,7 @@ staff.forEach(function(s) {
 var sLv = critLevel2[(s.position || '').toUpperCase().trim()] || '';
 var pic = photoOf[(s.email || '').toLowerCase()] || '';
 var ini = (s.name || '--').split(' ').map(function(w){ return w[0]; }).slice(0, 2).join('').toUpperCase();
-html += '<tr><td style="font-size:11px;white-space:nowrap"><span class="staff-ava">' + (pic ? '<img src="' + pic + '" alt="">' : ini) + '</span><strong>' + escapeHtml(s.name) + '</strong></td>';
+html += '<tr><td style="font-size:11px;white-space:nowrap"><strong>' + escapeHtml(s.name) + '</strong></td>';
 html += '<td>' + (sLv ? '<span class="badge ' + critBadge(sLv) + '">' + escapeHtml(sLv) + '</span>' : '<span style="color:var(--gray-400)">—</span>') + '</td>';
 html += '<td>' + escapeHtml(s.company) + '</td>';
 html += '<td style="font-size:11px">' + escapeHtml(s.manager) + '</td>';
@@ -4371,21 +4383,16 @@ var hist = window._kaiHist.slice(0, -1).slice(-8).map(function(m){ return (m.r =
 var prompt = 'You are KAI (Kenafric Artificial Intelligence), the friendly in-app assistant for Kenafric CMS, a competency management system for Kenafric Group. Current user role: ' + role + '. Answer concisely (max 160 words), plain text, step-by-step for how-to questions, using ONLY the knowledge below. If asked about anything outside the system, politely say you only assist with Kenafric CMS.\nSYSTEM KNOWLEDGE:\nROLES & THEMES: Employee (blue), Line Manager (teal), HR Admin (indigo), Head of HR (gold), C-Suite (navy/gold).\nSELF ASSESSMENT: employee ticks experiences, writes evidence, rates 1-5, attaches proof; one submission; a redo needs an HR-approved redo request.\nMANAGER ASSESSMENT: manager assesses the current role; if already assessed, select "Current Role Assessment" and send a redo request — the form unlocks when HR Admin approves.\nPROSPECTIVE: unlocks after HR review + FINAL AVERAGE (Self + Manager ÷ 2) ≥ 80%; prospective position must be same level or higher, never the current role; 81%+ on prospective joins the Promotion-Ready Pool.\nSCORING: experiences tiered Critical / Important / Value-Add; points = rating ÷ 5 × tier weight; competency weights total 100% (Core 7% each; Functional 12/12/12/12/8/8/8). Readiness: 81%+ Strong Performer / promotion-eligible; 71-80 Proficient; 61-70 Developing; 51-60 Below Expectations; lower = Critical Gap. Strengths ≥ 70%; Gaps < 70%.\nVISIBILITY: employees & managers see scores only after HR Admin approves/disapproves ALL Self + Manager experiences and completed returns (🔒 before that). HR Admin & Head of HR see everything.\nHR ADMIN: Assessment Review (approve/return/disapprove each experience), Redo Requests, staff add/delete, competency library, positions & criticality registry, PDF/Excel/Email exports.\nHEAD OF HR: decision queue (Promotion / Development Plan / Hold / Escalate to C-Suite / Return), oversight, report approvals.\nC-SUITE: executive dashboard — Employee/Manager/Final averages, succession pipeline, company comparison, critical competency gaps, development plans.\nDEVELOPMENT PLANS: manager builds from gaps; HR approves; monthly progress reports with due dates.\nEXTRAS: in-app person-to-person chat (💬 button), profile photo upload (click the header avatar), global staff search, All Staff / All Assessments tables with Employee Avg, Manager Avg and Final Avg.\nCONVERSATION SO FAR:\n' + hist + '\nUser: ' + q + '\nKAI:';
 try {
 var out = await Promise.race([
-kaiGroqFast(prompt),
-new Promise(function(res){ setTimeout(function(){ res(''); }, 7000); })
+    kaiFast(prompt),
+    new Promise(function(res){ setTimeout(function(){ res(''); }, 7000); })
 ]);
 return (out || '').trim();
 } catch (e) { return ''; }
 }
-async function kaiGroqFast(prompt) {
-try {
-const { data, error } = await _supabase.functions.invoke('groq-proxy', {
-body: { prompt: prompt, model: 'llama-3.1-8b-instant', max_tokens: 200 }
-});
-if (error || !data || !data.choices) return '';
-return ((data.choices[0].message.content) || '').trim();
-} catch (e) { return ''; }
-}function sameText(a,b){ return (a||'').toString().toUpperCase().trim() === (b||'').toString().toUpperCase().trim(); }
+async function kaiFast(prompt) {
+    return await callAI(prompt, false);
+}
+function sameText(a,b){ return (a||'').toString().toUpperCase().trim() === (b||'').toString().toUpperCase().trim(); }
 async function refreshCompData() {
 const { data: c } = await _supabase.from('competencies').select('*');
 APP.competencies = c || [];
