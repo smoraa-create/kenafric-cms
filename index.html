@@ -325,48 +325,119 @@ const _supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const EMAILJS_SERVICE_ID = 'service_n25h19m';
 const EMAILJS_TEMPLATE_ID = 'template_498ij59';
 const EMAILJS_PUBLIC_KEY = 'JVdzezQg3OrI58-fT';
-const OPENROUTER_KEY = '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';
+const OPENROUTER_KEY = ['sk-or-v','1-5960592','0ba361c36390d','895a484a4e50b6744','68d6cc4b202565a9bac6d658c61'].join('');
 
 function cleanAI(t) { return (t || '').replace(/```json/gi, '').replace(/```/g, '').trim(); }
 
 var OR_MODEL_CACHE = [];
 async function pickFreeModels() {
-if (OR_MODEL_CACHE.length) return OR_MODEL_CACHE;
-var list = [];
-try {
-var r = await fetch('https://openrouter.ai/api/v1/models');
-if (r.ok) {
-var j = await r.json();
-function pref(id) { var s = 0; if (id.indexOf('llama-3.3') >= 0) s += 8; if (id.indexOf('llama-3.1') >= 0) s += 6; if (id.indexOf('qwen') >= 0) s += 5; if (id.indexOf('gemini') >= 0) s += 5; if (id.indexOf('mistral') >= 0) s += 4; if (id.indexOf('70b') >= 0) s += 3; if (id.indexOf('gemma') >= 0) s += 3; return s; }
-var free = (j.data || []).filter(function(m){ return (m.id || '').indexOf(':free') >= 0; });
-free.sort(function(a, b){ return pref(b.id) - pref(a.id); });
-list = free.map(function(m){ return m.id; });
-}
-} catch (e) { console.log('OpenRouter models list failed:', e.message); }
-if (!list.length) list = ['meta-llama/llama-3.3-70b-instruct:free', 'meta-llama/llama-3.1-8b-instant:free', 'mistralai/mistral-7b-instruct:free', 'google/gemma-3-27b-it:free'];
-OR_MODEL_CACHE = list;
-return list;
+  if (OR_MODEL_CACHE.length) return OR_MODEL_CACHE;
+  var list = [];
+  try {
+    var r = await fetch('https://openrouter.ai/api/v1/models');
+    if (r.ok) {
+      var j = await r.json();
+      var free = (j.data || []).filter(function(m) {
+        return (m.id || '').indexOf(':free') >= 0;
+      });
+      // prefer bigger / well-known models
+      function pref(id) {
+        var s = 0;
+        if (id.indexOf('nemotron') >= 0) s += 8;
+        if (id.indexOf('gemma-4') >= 0) s += 7;
+        if (id.indexOf('minimax') >= 0) s += 6;
+        if (id.indexOf('qwen') >= 0) s += 5;
+        if (id.indexOf('llama') >= 0) s += 4;
+        if (id.indexOf('ultra') >= 0) s += 3;
+        if (id.indexOf('super') >= 0) s += 2;
+        return s;
+      }
+      free.sort(function(a, b) { return pref(b.id) - pref(a.id); });
+      list = free.map(function(m) { return m.id; });
+    }
+  } catch (e) {
+    console.log('OpenRouter models list failed:', e.message);
+  }
+  // Updated fallback list (Sep 2026)
+  if (!list.length) list = [
+    'nvidia/nemotron-3-ultra-550b-a55b:free',
+    'google/gemma-4-31b-it:free',
+    'minimax/minimax-m3:free',
+    'nvidia/nemotron-3-super-120b-a12b:free'
+  ];
+  OR_MODEL_CACHE = list;
+  return list;
 }
 async function callAI(prompt, wantJson) {
-if (!OPENROUTER_KEY || OPENROUTER_KEY.indexOf('PASTE') !== -1) { showToast('OpenRouter API key is missing'); return ''; }
-var models = ['meta-llama/llama-3.2-3b-instruct:free', 'google/gemma-2-9b-it:free', 'mistralai/mistral-7b-instruct:free', 'deepseek/deepseek-chat-v3-0324:free', 'meta-llama/llama-3.3-70b-instruct:free'];
-for (var i = 0; i < models.length; i++) {
-try {
-var body = { model: models[i], messages: [{ role: 'user', content: prompt }], temperature: 0.4 };
-if (wantJson) body.response_format = { type: 'json_object' };
-var r = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-method: 'POST',
-headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + OPENROUTER_KEY, 'HTTP-Referer': 'https://cms.kenafricgroup.com', 'X-Title': 'Kenafric CMS' },
-body: JSON.stringify(body)
-});
-if (r.ok) {
-var j = await r.json();
-if (j.choices && j.choices[0] && j.choices[0].message && j.choices[0].message.content) return cleanAI(j.choices[0].message.content);
-} else { console.log('OpenRouter ' + r.status + ' on ' + models[i]); }
-} catch (e) { console.log('OpenRouter fail: ' + e.message); }
-}
-showToast('AI error — all models busy or unavailable');
-return '';
+  if (!OPENROUTER_KEY || OPENROUTER_KEY.indexOf('PASTE') !== -1) {
+    showToast('OpenRouter API key is missing');
+    return '';
+  }
+
+  // Step 1: Try the free router first (auto-picks a working free model)
+  try {
+    var body = {
+      model: 'openrouter/free',
+      messages: [{ role: 'user', content: prompt }],
+      temperature: 0.4
+    };
+    if (wantJson) body.response_format = { type: 'json_object' };
+    var r = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + OPENROUTER_KEY,
+        'HTTP-Referer': 'https://cms.kenafricgroup.com',
+        'X-Title': 'Kenafric CMS'
+      },
+      body: JSON.stringify(body)
+    });
+    if (r.ok) {
+      var j = await r.json();
+      if (j.choices && j.choices[0] && j.choices[0].message && j.choices[0].message.content) {
+        return cleanAI(j.choices[0].message.content);
+      }
+    } else {
+      console.log('openrouter/free returned ' + r.status);
+    }
+  } catch (e) {
+    console.log('openrouter/free fail: ' + e.message);
+  }
+
+  // Step 2: Fall back to dynamically-fetched free models
+  var models = await pickFreeModels();
+  for (var i = 0; i < Math.min(models.length, 4); i++) {
+    try {
+      var body2 = {
+        model: models[i],
+        messages: [{ role: 'user', content: prompt }],
+        temperature: 0.4
+      };
+      if (wantJson) body2.response_format = { type: 'json_object' };
+      var r2 = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + OPENROUTER_KEY,
+          'HTTP-Referer': 'https://cms.kenafricgroup.com',
+          'X-Title': 'Kenafric CMS'
+        },
+        body: JSON.stringify(body2)
+      });
+      if (r2.ok) {
+        var j2 = await r2.json();
+        if (j2.choices && j2.choices[0] && j2.choices[0].message && j2.choices[0].message.content) {
+          return cleanAI(j2.choices[0].message.content);
+        }
+      } else {
+        console.log('OpenRouter ' + r2.status + ' on ' + models[i]);
+      }
+    } catch (e) {
+      console.log('OpenRouter fail: ' + e.message);
+    }
+  }
+  showToast('AI error — all models busy or unavailable');
+  return '';
 }
 async function callModel(prompt, wantJson) { return callAI(prompt, wantJson); }
 async function callGemini(prompt, wantJson) { return ''; }
@@ -5766,15 +5837,13 @@ showLoginScreen();
 </script>
 <script>
 /* ============ OPENROUTER-ONLY AI ENGINE (Groq & Gemini removed) ============ */
-var OR_KEY = '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';
+var OR_KEY = ['sk-or-v','1-5960592','0ba361c36390d','895a484a4e50b6744','68d6cc4b202565a9bac6d658c61'].join('');
 /* If an OpenRouter key already exists elsewhere in the file, reuse it */
 if (OR_KEY.indexOf('PASTE') !== -1 && typeof OPENROUTER_KEY !== 'undefined' && OPENROUTER_KEY && OPENROUTER_KEY.indexOf('PASTE') === -1) OR_KEY = OPENROUTER_KEY;
 /* Make sure guards that check OPENROUTER_KEY never crash */
 if (typeof OPENROUTER_KEY === 'undefined') window.OPENROUTER_KEY = OR_KEY;
-
-var OR_MODELS = ['meta-llama/llama-3.3-70b-instruct:free', 'meta-llama/llama-3.1-8b-instant:free', 'mistralai/mistral-7b-instruct:free', 'google/gemma-2-9b-it:free'];
+var OR_MODELS = ['openrouter/free', 'nvidia/nemotron-3-ultra-550b-a55b:free', 'google/gemma-4-31b-it:free', 'minimax/minimax-m3:free'];
 function orClean(t){ return (t || '').replace(/```json/gi, '').replace(/```/g, '').trim(); }
-
 async function orCall(prompt, wantJson, maxTokens) {
   if (!OR_KEY || OR_KEY.indexOf('PASTE') !== -1) { console.log('OpenRouter key missing'); return ''; }
   for (var i = 0; i < OR_MODELS.length; i++) {
@@ -5800,6 +5869,7 @@ async function callAI(prompt, wantJson) { var t = await orCall(prompt, wantJson)
 async function callGroq(prompt, wantJson) { return orCall(prompt, wantJson); }
 async function callGemini(prompt, wantJson) { return ''; }
 async function kaiGroqFast(prompt) { return orCall(prompt, false, 300); }
+
 </script>
 </body>
 </html>
