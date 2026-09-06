@@ -3863,15 +3863,17 @@ async function loadHRAll() {
 setContent('<div class="loading"><div class="spinner"></div>Loading...</div>');
 const { data: allEmps } = await _supabase.from('employees').select('*');
 const { data: allResults } = await _supabase.from('assessments').select('*');
+const { data: chainRows } = await _supabase.from('report_chain').select('employee_id, status').order('id', { ascending: false });
+var decisionOf = {};
+(chainRows || []).forEach(function(r){ if (!decisionOf[r.employee_id]) decisionOf[r.employee_id] = r.status; });
 var restrictHOHR = (APP.currentRole === 'hohr');
 var submittedIds = {};
 if (restrictHOHR) {
-const { data: chainRows } = await _supabase.from('report_chain').select('employee_id, status');
 (chainRows || []).forEach(function(r){ if ((r.status || '') !== 'Draft') submittedIds[r.employee_id] = true; });
 }
 var html = '<div class="card"><div style="display:flex;justify-content:space-between;align-items:center"><div class="card-title" style="margin-bottom:0">All Assessments</div>' + (restrictHOHR ? '' : '<button class="btn btn-sm btn-success" onclick="exportAllExcel()">⬇ Export All (Excel)</button>') + '</div>';
 html += '<p style="font-size:12px;color:var(--gray-500);margin:8px 0 12px">' + (restrictHOHR ? 'Only employees whose assessment reports have been submitted to the Head of HR are listed. ' : '') + 'Scores use each person\'s latest assessment round. Click View for full evidence and review details.</p>';
-html += '<div class="table-wrap"><table class="staff-table"><thead><tr><th>Employee</th><th>Position</th><th>Self</th><th>Manager (Current Role)</th><th>Final Average</th><th>Prospective (Self)</th><th>Manager (Prospective)</th><th>Prospective Average</th><th></th></tr></thead><tbody>';
+html += '<div class="table-wrap"><table class="staff-table"><thead><tr><th>Employee</th><th>Position</th><th>Self</th><th>Manager (Current Role)</th><th>Final Average</th><th>Prospective (Self)</th><th>Manager (Prospective)</th><th>Prospective Average</th><th>Decision</th><th></th></tr></thead><tbody>';
 (allEmps || []).forEach(function(emp) {
 if (restrictHOHR && !submittedIds[emp.employee_id]) return;
 var latest = latestOnly((allResults || []).filter(function(r){ return r.employee_id === emp.employee_id; }));
@@ -3879,10 +3881,10 @@ var fr = latest.map(function(r){ return { 'Employee ID': r.employee_id, 'Compete
 var hasS = fr.some(function(r){ return r['Type'] === 'Self'; });
 var hasM = fr.some(function(r){ return r['Type'] === 'Manager'; });
 var hasP = fr.some(function(r){ return r['Type'] === 'Prospective'; });
+var hasPS = fr.some(function(r){ return r['Type'] === 'Prospective Self'; });
 var sS = hasS ? calculateOverallScore(emp.employee_id, 'Self', fr) : null;
 var sM = hasM ? calculateOverallScore(emp.employee_id, 'Manager', fr) : null;
 var sP = hasP ? calculateOverallScore(emp.employee_id, 'Prospective', fr) : null;
-var hasPS = fr.some(function(r){ return r['Type'] === 'Prospective Self'; });
 var sPS = hasPS ? calculateOverallScore(emp.employee_id, 'Prospective Self', fr) : null;
 var sPA = (sPS !== null && sP !== null) ? Math.round((sPS + sP) / 2) : null;
 html += '<tr><td style="font-size:11px;white-space:nowrap"><strong>' + escapeHtml(emp.employee_name) + '</strong></td>';
@@ -3893,12 +3895,35 @@ html += '<td>' + ((sS !== null && sM !== null) ? '<strong style="color:' + (Math
 html += '<td>' + (sPS !== null ? '<strong style="color:var(--purple)">' + sPS + '%</strong>' : '<span style="color:var(--gray-400)">—</span>') + '</td>';
 html += '<td>' + (sP !== null ? '<strong>' + sP + '%</strong>' : '<span style="color:var(--gray-400)">—</span>') + '</td>';
 html += '<td>' + (sPA !== null ? '<strong style="color:var(--orange)">' + sPA + '%</strong>' : '<span style="color:var(--gray-400)">—</span>') + '</td>';
-html += '<td>' + (sPA !== null ? '<strong style="color:' + (sPA >= 81 ? 'var(--green)' : 'var(--purple)') + '">' + sPA + '%</strong>' : '<span style="color:var(--gray-400)">—</span>') + '</td>';
-html += '<td><button class="btn btn-sm btn-primary" onclick="loadHRAllDetail(\'' + emp.employee_id + '\')">View</button> <button class="btn btn-sm btn-outline" onclick="printReport(\'' + emp.employee_id + '\')">PDF</button> <button class="btn btn-sm btn-success" onclick="emailReport(\'' + emp.employee_id + '\')">Email</button> <button class="btn btn-sm btn-outline" onclick="exportEmployeeExcel(\'' + emp.employee_id + '\')">Excel</button></td></tr>';
+html += '<td>' + decisionBadge(emp.employee_id, sS, sM, sPS, sP, sPA, decisionOf) + '</td>';
+html += '<td style="white-space:nowrap"><button class="btn btn-sm btn-primary" onclick="loadHRAllDetail(\'' + emp.employee_id + '\')">View</button> <button class="btn btn-sm btn-outline" onclick="printReport(\'' + emp.employee_id + '\')">PDF</button> <button class="btn btn-sm btn-success" onclick="emailReport(\'' + emp.employee_id + '\')">Email</button> <button class="btn btn-sm btn-outline" onclick="exportEmployeeExcel(\'' + emp.employee_id + '\')">Excel</button></td></tr>';
 });
 html += '</tbody></table></div></div><div id="hrAllContent"></div>';
 setContent(html);
 if (APP.hrAllTarget) { var t = APP.hrAllTarget; APP.hrAllTarget = null; loadHRAllDetail(t); }
+}
+function decisionBadge(empId, sS, sM, sPS, sP, sPA, decisionOf) {
+var org = (decisionOf || {})[empId] || '';
+if (org && org !== 'Draft') {
+if (org === 'Pending') return '<span class="badge badge-warning">📋 In HOHR review</span>';
+if (org === 'Escalated') return '<span class="badge badge-danger">⚡ Escalated to C-Suite</span>';
+if (org === 'Returned') return '<span class="badge badge-danger">↩ Returned to HR</span>';
+return '<span class="badge badge-success">🏛 ' + escapeHtml(String(org).replace('Approved: ', '')) + '</span>';
+}
+if (sPA !== null) {
+if (sPA >= 81) return '<span class="badge badge-success">🚀 Promote — Ready Now</span>';
+if (sPA >= 71) return '<span class="badge badge-info">🌱 Develop 6 months</span>';
+if (sPA >= 61) return '<span class="badge badge-warning">📚 IDP 12 months</span>';
+return '<span class="badge badge-danger">⚠️ Performance plan</span>';
+}
+if (sS !== null && sM !== null) {
+var fa = Math.round((sS + sM) / 2);
+if (fa >= 80) return '<span class="badge badge-purple">🎯 Assess prospective role</span>';
+if (fa >= 71) return '<span class="badge badge-info">🌱 Refine — reassess in 6m</span>';
+if (fa >= 61) return '<span class="badge badge-warning">📚 Development plan</span>';
+return '<span class="badge badge-danger">⚠️ Performance plan</span>';
+}
+return '<span style="color:var(--gray-400)">Awaiting assessments</span>';
 }
 async function loadHRAllDetail(empId) {
 var box = document.getElementById('hrAllContent');
