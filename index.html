@@ -2199,13 +2199,60 @@ var wrap = document.getElementById('globalSearchBox');
 if (box && wrap && !wrap.contains(ev.target)) box.style.display = 'none';
 });
 function openHRAll(empId) { APP.hrAllTarget = empId; navigateTo('hr-all'); }
+function compSetFor(dep, pos) {
+if (!dep || !pos) return false;
+var nd = dep.toString().toUpperCase().trim(), np = pos.toString().toUpperCase().trim();
+return (APP.experiences || []).some(function(x){ return (x.comp_code || '').indexOf('CC') !== 0 && (x.department || '').toString().toUpperCase().trim() === nd && (x.position_name || '').toString().toUpperCase().trim() === np; });
+}
+async function promptSetCompetencies(empId) {
+var emp = null;
+(window._aeEmps || []).forEach(function(e){ if (e.employee_id === empId) emp = e; });
+if (!emp) { showToast('Employee not found'); return; }
+var dep = (emp.department || '').trim(), pos = (emp.position || '').trim();
+var mgrEmail = emp.manager_email || '';
+if (!dep || !pos) { showToast(emp.employee_name + ' has no department/position'); return; }
+if (!mgrEmail) { showToast('No line manager on record for ' + emp.employee_name); return; }
+const { data: tasks } = await _supabase.from('comp_tasks').select('*').eq('department', dep).eq('position_name', pos).eq('status', 'Pending');
+var existing = (tasks || []).length > 0;
+if (!existing) {
+const { error } = await _supabase.from('comp_tasks').insert({ department: dep, position_name: pos, manager_email: mgrEmail, manager_name: emp.manager || '', message: '', due_date: '', status: 'Pending', requested_by: APP.user.email, requested_date: new Date().toISOString().slice(0,10) });
+if (error) { showToast(error.message); return; }
+}
+var NL = String.fromCharCode(10);
+sendCMSemail(mgrEmail, (existing ? 'Reminder: ' : 'Action Needed: ') + 'Set Competencies for ' + pos, 'Dear ' + (emp.manager || 'Manager') + ',' + NL + 'HR requests you to set the competency framework (experiences) for the position "' + pos + '" (' + dep + ').' + NL + 'Open the CMS → Competency Library and use the AI Competency Builder for a fast draft: ' + APP_LINK);
+showToast((existing ? 'Reminder' : 'Prompt') + ' sent to ' + (emp.manager || mgrEmail));
+loadHRStaff();
+}
+function compSetFor(dep, pos) {
+if (!dep || !pos) return false;
+var nd = dep.toString().toUpperCase().trim(), np = pos.toString().toUpperCase().trim();
+return (APP.experiences || []).some(function(x){ return (x.comp_code || '').indexOf('CC') !== 0 && (x.department || '').toString().toUpperCase().trim() === nd && (x.position_name || '').toString().toUpperCase().trim() === np; });
+}
+async function promptSetCompetencies(empId) {
+var emp = null;
+(window._aeEmps || []).forEach(function(e){ if (e.employee_id === empId) emp = e; });
+if (!emp) { showToast('Employee not found'); return; }
+var dep = (emp.department || '').trim(), pos = (emp.position || '').trim();
+var mgrEmail = emp.manager_email || '';
+if (!dep || !pos) { showToast(emp.employee_name + ' has no department/position'); return; }
+if (!mgrEmail) { showToast('No line manager on record for ' + emp.employee_name); return; }
+const { data: tasks } = await _supabase.from('comp_tasks').select('*').eq('department', dep).eq('position_name', pos).eq('status', 'Pending');
+var existing = (tasks || []).length > 0;
+if (!existing) {
+const { error } = await _supabase.from('comp_tasks').insert({ department: dep, position_name: pos, manager_email: mgrEmail, manager_name: emp.manager || '', message: '', due_date: '', status: 'Pending', requested_by: APP.user.email, requested_date: new Date().toISOString().slice(0,10) });
+if (error) { showToast(error.message); return; }
+}
+var NL = String.fromCharCode(10);
+sendCMSemail(mgrEmail, (existing ? 'Reminder: ' : 'Action Needed: ') + 'Set Competencies for ' + pos, 'Dear ' + (emp.manager || 'Manager') + ',' + NL + 'HR requests you to set the competency framework (experiences) for the position "' + pos + '" (' + dep + ').' + NL + 'Open the CMS → Competency Library and use the AI Competency Builder for a fast draft: ' + APP_LINK);
+showToast((existing ? 'Reminder' : 'Prompt') + ' sent to ' + (emp.manager || mgrEmail));
+loadHRStaff();
+}
 async function loadHRStaff() {
 setContent('<div class="loading"><div class="spinner"></div>Loading...</div>');
 const { data: allEmps } = await _supabase.from('employees').select('*');
 const { data: allResults } = await _supabase.from('assessments').select('*');
 const { data: regs } = await _supabase.from('critical_positions').select('*').order('position_name');
-const { data: deptRegs } = await _supabase.from('departments').select('*');
-window._aeRegs = regs || []; window._aeEmps = allEmps || []; window._aeDeptRegs = deptRegs || [];
+window._aeRegs = regs || []; window._aeEmps = allEmps || [];
 var staff = [];
 for (var i = 0; i < allEmps.length; i++) {
 var emp = allEmps[i];
@@ -2234,18 +2281,21 @@ if (!isHOHRonly) {
 html += '<div class="card"><div class="card-title">➕ Add Employee</div>';
 html += '<p style="font-size:11px;color:var(--gray-500);margin-bottom:10px">Type only the name, email and line manager — department, position and level come from the Positions & Criticality Registry.</p>';
 html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px"><div class="form-group"><label>Full Name</label><input id="aeName" placeholder="e.g. Jane Wanjiku"></div><div class="form-group"><label>Email</label><input id="aeEmail" placeholder="jane@kenafricind.com"></div></div>';
-html += '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px"><div class="form-group"><label>Company</label><input id="aeCompany" list="aeCompanyList" placeholder="e.g. Kenafric Industries" oninput="aeFillDepartments()"><datalist id="aeCompanyList">' + Object.keys(companies).sort().map(function(c){ return '<option value="' + escapeHtml(c) + '">'; }).join('') + '</datalist></div><div class="form-group"><label>Department</label><select id="aeDept" onchange="aeFillPositions()"><option value="">-- Select company first --</option></select></div><div class="form-group"><label>Position</label><select id="aePos"><option value="">-- Select department first --</option></select></div></div>';
-html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px"><div class="form-group"><label>Competency Level</label><select id="aeLevel"><option>Foundational</option><option selected>Intermediate</option><option>Advanced</option><option>Master</option></select></div><div class="form-group"><label>Line Manager</label><select id="aeMgr"><option value="">-- Select --</option>' + (window._aeEmps || []).slice().sort(function(a,b){ return (a.employee_name||'').localeCompare(b.employee_name||''); }).map(function(e){ return '<option value="' + escapeHtml(e.email) + '">' + escapeHtml(e.employee_name) + ' (' + escapeHtml(e.position) + ')</option>'; }).join('') + '</select></div></div>';
+html += '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px"><div class="form-group"><label>Department</label><select id="aeDept" onchange="aeFillPositions()"><option value="">-- Select --</option>' + Object.keys(regDeps).sort().map(function(d){ return '<option>' + escapeHtml(d) + '</option>'; }).join('') + '</select></div><div class="form-group"><label>Position</label><select id="aePos"><option value="">-- Select department first --</option></select></div><div class="form-group"><label>Competency Level</label><select id="aeLevel"><option>Foundational</option><option selected>Intermediate</option><option>Advanced</option><option>Master</option></select></div></div>';
+html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px"><div class="form-group"><label>Company</label><input id="aeCompany" list="aeCompanyList" placeholder="e.g. Kenafric Industries"><datalist id="aeCompanyList">' + Object.keys(companies).sort().map(function(c){ return '<option value="' + escapeHtml(c) + '">'; }).join('') + '</datalist></div><div class="form-group"><label>Line Manager</label><select id="aeMgr"><option value="">-- Select --</option>' + (window._aeEmps || []).slice().sort(function(a,b){ return (a.employee_name||'').localeCompare(b.employee_name||''); }).map(function(e){ return '<option value="' + escapeHtml(e.email) + '">' + escapeHtml(e.employee_name) + ' (' + escapeHtml(e.position) + ')</option>'; }).join('') + '</select></div></div>';
 html += '<button class="btn btn-primary" onclick="saveNewEmployee()">Save Employee</button></div>';
 }
-html += '<div class="card"><div class="card-title">All Staff</div><div class="table-wrap"><table class="staff-table"><thead><tr><th>Name</th><th>Position</th><th>Criticality</th><th>Company</th><th>Line Manager</th><th>Employee Status</th><th>Manager Status</th>' + (isHOHRonly ? '' : '<th>Actions</th>') + '</tr></thead><tbody>';
+html += '<div class="card"><div class="card-title">All Staff</div><div class="table-wrap"><table class="staff-table"><thead><tr><th>Name</th><th>Position</th><th>Competencies</th><th>Criticality</th><th>Company</th><th>Line Manager</th><th>Employee Status</th><th>Manager Status</th>' + (isHOHRonly ? '' : '<th>Actions</th>') + '</tr></thead><tbody>';
 const { data: profs } = await _supabase.from('user_profiles').select('email, photo');
 var photoOf = {}; (profs || []).forEach(function(p){ if (p.photo) photoOf[(p.email || '').toLowerCase()] = p.photo; });
 staff.forEach(function(s) {
 var sLv = critLevel2[(s.position || '').toUpperCase().trim()] || '';
 var pic = photoOf[(s.email || '').toLowerCase()] || '';
 var ini = (s.name || '--').split(' ').map(function(w){ return w[0]; }).slice(0, 2).join('').toUpperCase();
+var cSet = compSetFor(s.department, s.position);
 html += '<tr><td style="font-size:11px;white-space:nowrap"><strong>' + escapeHtml(s.name) + '</strong></td>';
+html += '<td style="font-size:11px">' + escapeHtml(s.position) + '</td>';
+html += '<td>' + (cSet ? '<span class="badge badge-success">Set ✓</span>' : '<span class="badge badge-danger">Not Set</span>') + '</td>';
 html += '<td>' + (sLv ? '<span class="badge ' + critBadge(sLv) + '">' + escapeHtml(sLv) + '</span>' : '<span style="color:var(--gray-400)">—</span>') + '</td>';
 html += '<td>' + escapeHtml(s.company) + '</td>';
 html += '<td style="font-size:11px">' + escapeHtml(s.manager) + '</td>';
@@ -2260,8 +2310,9 @@ if (!isHOHRonly) {
 html += '<td style="white-space:nowrap">';
 if (s.hrPending) html += '<button class="btn btn-sm btn-primary" onclick="goReview(\'' + s.id + '\')">Review</button> ';
 if (!s.selfDone) html += '<button class="btn btn-sm btn-outline" onclick="remind(\'' + escapeHtml(s.email) + '\',\'\',\'employee_self\')">Remind</button> ';
-if (!s.mgrDone && s.managerEmail) html += '<button class="btn btn-sm btn-outline" onclick="remind(\'\',\'' + escapeHtml(s.managerEmail) + '\',\'manager_assess\')">Remind Mgr</button>';
-html += ' <button class="btn btn-sm btn-danger" onclick="deleteEmployee(\'' + s.id + '\',\'' + escapeHtml(s.name) + '\')">Delete</button>';
+if (!s.mgrDone && s.managerEmail) html += '<button class="btn btn-sm btn-outline" onclick="remind(\'\',\'' + escapeHtml(s.managerEmail) + '\',\'manager_assess\')">Remind Mgr</button> ';
+if (!cSet && s.managerEmail) html += '<button class="btn btn-sm btn-outline" onclick="promptSetCompetencies(\'' + s.id + '\')">📤 Set Competencies</button> ';
+html += '<button class="btn btn-sm btn-danger" onclick="deleteEmployee(\'' + s.id + '\',\'' + escapeHtml(s.name) + '\')">Delete</button>';
 html += '</td>';
 }
 html += '</tr>';
