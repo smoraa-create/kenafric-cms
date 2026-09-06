@@ -541,13 +541,13 @@ else if (role === 'csuite') {
 pages = [{id:'cs-reports',label:'Executive Recommendations'}];
 } 
 else if (role === 'hr') {
-pages = [{id:'hr-dashboard',label:'Dashboard'},{id:'hr-kpi',label:'KPI Dashboard'},{id:'hr-departments',label:'Departments'},{id:'hr-prompool',label:'Promotion-Ready Pool'},{id:'hr-staff',label:'Staff List'},{id:'hr-review',label:'Assessment Review'},{id:'hr-gaps',label:'Employee Gaps'},{id:'hr-devplans',label:'Development Plans'},{id:'hr-all',label:'All Assessments'},{id:'hr-repappr',label:'Report Approvals'},{id:'hr-positions',label:'Positions & Criticality'},{id:'hr-comp',label:'Competency Library'},{id:'hr-redo',label:'Redo Requests'}];
+pages = [{id:'hr-dashboard',label:'Dashboard'},{id:'hr-kpi',label:'KPI Dashboard'},{id:'hr-managers',label:'Line Managers'},{id:'hr-departments',label:'Departments'},{id:'hr-prompool',label:'Promotion-Ready Pool'},{id:'hr-staff',label:'Staff List'},{id:'hr-review',label:'Assessment Review'},{id:'hr-gaps',label:'Employee Gaps'},{id:'hr-devplans',label:'Development Plans'},{id:'hr-all',label:'All Assessments'},{id:'hr-repappr',label:'Report Approvals'},{id:'hr-positions',label:'Positions & Criticality'},{id:'hr-comp',label:'Competency Library'},{id:'hr-redo',label:'Redo Requests'}];
 }
 if (role === 'hr' || role === 'manager' || role === 'hohr') {
 document.body.classList.add('sb-mode');
 sb.style.display = 'block';
 var svgI = function(p){ return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="0" y="0" width="0" height="0" fill="none"/>' + p + '</svg>'; };
-var icons = {'hr-dashboard':'▦','hr-kpi':'📊','hr-departments':'🏬','hr-staff':'👥','hr-prompool':'🏆','hr-gaps':'🎯','hr-review':'📋','hr-all':'🗂','hr-repappr':'📤','hr-devplans':'🌱','hr-redo':'🔁','hr-comp':'📚','hr-positions':'🏢',
+var icons = {'hr-dashboard':'▦','hr-departments':'🏬','hr-staff':'👥','hr-prompool':'🏆','hr-gaps':'🎯','hr-review':'📋','hr-all':'🗂','hr-repappr':'📤','hr-devplans':'🌱','hr-redo':'🔁','hr-comp':'📚','hr-positions':'🏢',
 'hohr-dash':'▦','hohr-kpi':'📊','hohr-positions':'🏢','hohr-staff':'👥','hohr-pool':'🏆','hohr-assessed':'✅','hohr-gaps':'🎯','hohr-strengths':'⭐','hohr-assess':'🗂','hohr-reports':'📤','hohr-devplans':'🌱','hohr-comp':'📚',
 'mgr-dashboard':svgI('<rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/>'),
 'mgr-team':svgI('<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>'),
@@ -562,7 +562,7 @@ var icons = {'hr-dashboard':'▦','hr-kpi':'📊','hr-departments':'🏬','hr-st
 var sections;
 if (role === 'hr') {
 sections = [
-{t:'Overview', ids:['hr-dashboard','hr-kpi','hr-departments','hr-positions','hr-comp']},{t:'People', ids:['hr-staff','hr-prompool','hr-gaps']},
+{t:'Overview', ids:['hr-dashboard','hr-kpi','hr-departments','hr-positions','hr-comp']},{t:'People', ids:['hr-staff','hr-managers','hr-prompool','hr-gaps']},
 {t:'Assessments', ids:['hr-review','hr-all','hr-repappr']},
 {t:'Development', ids:['hr-devplans','hr-redo']}
 ];
@@ -617,7 +617,7 @@ loadPage(pageId);
 document.querySelectorAll('.sb-item').forEach(function(b) { b.classList.toggle('active', b.getAttribute('data-page') === pageId); });
 }
 function getPageLabel(id) {
-var map = {'emp-profile':'My Profile','emp-selfassess':'Self Assessment','emp-mgrview':'Manager Assessment','emp-gaps':'My Gaps','emp-strengths':'My Strengths','emp-devplans':'Development Plans','mgr-dashboard':'Dashboard','mgr-team':'My Team','mgr-prompool':'Promotion-Ready Pool','mgr-assess':'Assessment','mgr-details':'Assessment Details','mgr-gaps':'Team Gaps','mgr-devplans':'Development Plans','mgr-requests':'Requests','mgr-repappr':'Report Approvals','mgr-comp':'Competency Library','hohr-reports':'Report Approvals','hohr-comp':'Competency Library','cs-reports':'Executive Recommendations','hr-dashboard':'Dashboard','hr-kpi':'KPI Dashboard','hr-departments':'Departments','hr-prompool':'Promotion-Ready Pool','hr-staff':'Staff List','hr-review':'Assessment Review','hr-gaps':'Employee Gaps','hr-devplans':'Development Plans','hr-all':'All Assessments','hr-repappr':'Report Approvals','hr-comp':'Competency Library','hr-redo':'Redo Requests','hr-positions':'Positions & Criticality'}
+var map = {'emp-profile':'My Profile','emp-selfassess':'Self Assessment','emp-mgrview':'Manager Assessment','emp-gaps':'My Gaps','emp-strengths':'My Strengths','emp-devplans':'Development Plans','mgr-dashboard':'Dashboard','mgr-team':'My Team','mgr-prompool':'Promotion-Ready Pool','mgr-assess':'Assessment','mgr-details':'Assessment Details','mgr-gaps':'Team Gaps','mgr-devplans':'Development Plans','mgr-requests':'Requests','mgr-repappr':'Report Approvals','mgr-comp':'Competency Library','hohr-reports':'Report Approvals','hohr-comp':'Competency Library','cs-reports':'Executive Recommendations','hr-dashboard':'Dashboard','hr-kpi':'KPI Dashboard','hr-departments':'Departments','hr-prompool':'Promotion-Ready Pool','hr-staff':'Staff List','hr-managers':'Line Managers','hr-review':'Assessment Review','hr-gaps':'Employee Gaps','hr-devplans':'Development Plans','hr-all':'All Assessments','hr-repappr':'Report Approvals','hr-comp':'Competency Library','hr-redo':'Redo Requests','hr-positions':'Positions & Criticality'}
 return map[id] || '';
 }
 function showToast(msg) {
@@ -771,6 +771,7 @@ case 'hr-kpi': loadHRKPI(); break;
 case 'hr-departments': loadHRDepartments(); break;
 case 'hr-prompool': loadHRPromPool(); break;
 case 'hr-staff': loadHRStaff(); break;
+case 'hr-managers': loadHRManagers(); break;
 case 'hr-review': loadHRReview(); break;
 case 'hr-gaps': loadHRGaps(); break;
 case 'hr-devplans': loadHRDevPlans(); break;
@@ -2423,6 +2424,70 @@ const { error } = await _supabase.from('departments').delete().eq('id', id);
 if (error) { showToast(error.message); return; }
 showToast('Department removed from registry');
 loadHRDepartments();
+}
+/* ===== Line Managers Registry ===== */
+async function loadHRManagers() {
+setContent('<div class="loading"><div class="spinner"></div>Loading...</div>');
+var dq = await Promise.all([
+_supabase.from('line_managers').select('*').order('manager_name'),
+_supabase.from('employees').select('employee_name, email, department, company, manager_email')
+]);
+var regs = dq[0].data || [];
+var emps = dq[1].data || [];
+var companies = {}; var departments = {};
+emps.forEach(function(e){ if (e.company) companies[e.company] = true; if (e.department) departments[e.department] = true; });
+regs.forEach(function(m){ if (m.company) companies[m.company] = true; if (m.department) departments[m.department] = true; });
+var mgrSet = {};
+emps.forEach(function(e){ if (e.manager_email) mgrSet[(e.manager_email || '').toLowerCase()] = { name: e.manager || e.employee_name, email: e.manager_email, department: e.department, company: e.company }; });
+regs.forEach(function(m){ mgrSet[(m.email || '').toLowerCase()] = { name: m.manager_name, email: m.email, department: m.department, company: m.company, registered: true }; });
+var teamCount = {};
+emps.forEach(function(e){ if (e.manager_email) teamCount[(e.manager_email || '').toLowerCase()] = (teamCount[(e.manager_email || '').toLowerCase()] || 0) + 1; });
+var html = '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px;margin-bottom:14px">';
+html += '<div class="card" style="margin-bottom:0"><div class="card-title">🏢 Companies (' + Object.keys(companies).length + ')</div>' + (Object.keys(companies).sort().map(function(c){ return '<span class="badge badge-info" style="margin:2px">' + escapeHtml(c) + '</span>'; }).join('') || '<p style="color:var(--gray-500);font-size:12px">None yet.</p>') + '</div>';
+html += '<div class="card" style="margin-bottom:0"><div class="card-title">🗂 Departments (' + Object.keys(departments).length + ')</div>' + (Object.keys(departments).sort().map(function(d){ return '<span class="badge badge-purple" style="margin:2px">' + escapeHtml(d) + '</span>'; }).join('') || '<p style="color:var(--gray-500);font-size:12px">None yet.</p>') + '</div>';
+html += '</div>';
+html += '<div class="card"><div class="card-title">➕ Add Line Manager</div>';
+html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">';
+html += '<div class="form-group" style="margin-bottom:0"><label>Full Name</label><input id="lmName" placeholder="e.g. Julius Angoli"></div>';
+html += '<div class="form-group" style="margin-bottom:0"><label>Email</label><input id="lmEmail" placeholder="e.g. julius@kenafricind.com"></div>';
+html += '</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px">';
+html += '<div class="form-group" style="margin-bottom:0"><label>Department</label><input id="lmDept" list="lmDeptList" placeholder="e.g. HUMAN RESOURCE"><datalist id="lmDeptList">' + Object.keys(departments).sort().map(function(d){ return '<option value="' + escapeHtml(d) + '">'; }).join('') + '</datalist></div>';
+html += '<div class="form-group" style="margin-bottom:0"><label>Company</label><input id="lmCompany" list="lmCompanyList" placeholder="e.g. Kenafric Industries"><datalist id="lmCompanyList">' + Object.keys(companies).sort().map(function(c){ return '<option value="' + escapeHtml(c) + '">'; }).join('') + '</datalist></div>';
+html += '</div><button class="btn btn-primary" style="margin-top:10px" onclick="addLineManager()">➕ Add Line Manager</button></div>';
+html += '<div class="card"><div class="card-title">🧑‍💼 Line Managers (' + Object.keys(mgrSet).length + ')</div>';
+html += '<div class="table-wrap"><table class="staff-table"><thead><tr><th>Name</th><th>Email</th><th>Department</th><th>Company</th><th>Team Size</th><th>Status</th><th></th></tr></thead><tbody>';
+Object.keys(mgrSet).sort().forEach(function(k) {
+var m = mgrSet[k];
+html += '<tr><td><strong>' + escapeHtml(m.name || '') + '</strong></td>';
+html += '<td style="font-size:11px">' + escapeHtml(m.email || '') + '</td>';
+html += '<td>' + escapeHtml(m.department || '—') + '</td>';
+html += '<td>' + escapeHtml(m.company || '—') + '</td>';
+html += '<td>' + (teamCount[k] || 0) + ' staff</td>';
+html += '<td>' + (m.registered ? '<span class="badge badge-success">Registered</span>' : '<span class="badge badge-warning">From staff records</span>') + '</td>';
+html += '<td>' + (m.registered ? '<button class="btn btn-sm btn-danger" onclick="deleteLineManager(\'' + escapeHtml(m.email) + '\',\'' + escapeHtml(m.name || '') + '\')">✕</button>' : '') + '</td></tr>';
+});
+html += '</tbody></table></div></div>';
+setContent(html);
+}
+async function addLineManager() {
+var name = (document.getElementById('lmName').value || '').trim();
+var email = (document.getElementById('lmEmail').value || '').trim().toLowerCase();
+var dept = (document.getElementById('lmDept').value || '').trim();
+var comp = (document.getElementById('lmCompany').value || '').trim();
+if (!name || !email) { showToast('Name and email are required'); return; }
+const { data: dup } = await _supabase.from('line_managers').select('id').ilike('email', email).limit(1);
+if (dup && dup.length) { showToast('This manager is already registered'); return; }
+const { error } = await _supabase.from('line_managers').insert({ manager_name: name, email: email, department: dept, company: comp });
+if (error) { showToast(error.message); return; }
+showToast('✅ Line Manager added: ' + name);
+loadHRManagers();
+}
+async function deleteLineManager(email, name) {
+if (!confirm('Remove ' + name + ' from the Line Managers registry? Staff records are NOT changed.')) return;
+const { error } = await _supabase.from('line_managers').delete().ilike('email', email);
+if (error) { showToast(error.message); return; }
+showToast('Line Manager removed');
+loadHRManagers();
 }
 async function loadHRKPI() {
 setContent('<div class="loading"><div class="spinner"></div>Loading KPI...</div>');
