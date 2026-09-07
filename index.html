@@ -663,13 +663,13 @@ else if (role === 'csuite') {
 pages = [{id:'cs-reports',label:'Executive Recommendations'}];
 } 
 else if (role === 'hr') {
-pages = [{id:'hr-dashboard',label:'Dashboard'},{id:'hr-kpi',label:'KPI Dashboard'},{id:'hr-managers',label:'Line Managers'},{id:'hr-departments',label:'Departments'},{id:'hr-prompool',label:'Promotion-Ready Pool'},{id:'hr-staff',label:'Staff List'},{id:'hr-review',label:'Assessment Review'},{id:'hr-gaps',label:'Employee Gaps'},{id:'hr-devplans',label:'Development Plans'},{id:'hr-all',label:'All Assessments'},{id:'hr-repappr',label:'Report Approvals'},{id:'hr-positions',label:'Positions & Criticality'},{id:'hr-comp',label:'Competency Library'},{id:'hr-redo',label:'Redo Requests'}];
+pages = [{id:'hr-dashboard',label:'Dashboard'},{id:'hr-kpi',label:'KPI Dashboard'},{id:'hr-managers',label:'Line Managers'},{id:'hr-departments',label:'Departments'},{id:'hr-companies',label:'Companies'},{id:'hr-prompool',label:'Promotion-Ready Pool'},{id:'hr-staff',label:'Staff List'},{id:'hr-review',label:'Assessment Review'},{id:'hr-gaps',label:'Employee Gaps'},{id:'hr-devplans',label:'Development Plans'},{id:'hr-all',label:'All Assessments'},{id:'hr-repappr',label:'Report Approvals'},{id:'hr-positions',label:'Positions & Criticality'},{id:'hr-comp',label:'Competency Library'},{id:'hr-redo',label:'Redo Requests'}];
 }
 if (role === 'hr' || role === 'manager' || role === 'hohr') {
 document.body.classList.add('sb-mode');
 sb.style.display = 'block';
 var svgI = function(p){ return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="0" y="0" width="0" height="0" fill="none"/>' + p + '</svg>'; };
-var icons = {'hr-dashboard':'▦','hr-departments':'🏬','hr-staff':'👥','hr-prompool':'🏆','hr-gaps':'🎯','hr-review':'📋','hr-all':'🗂','hr-repappr':'📤','hr-devplans':'🌱','hr-redo':'🔁','hr-comp':'📚','hr-positions':'🏢',
+var icons = {'hr-dashboard':'▦','hr-companies':'🏭','hr-departments':'🏬','hr-staff':'👥','hr-prompool':'🏆','hr-gaps':'🎯','hr-review':'📋','hr-all':'🗂','hr-repappr':'📤','hr-devplans':'🌱','hr-redo':'🔁','hr-comp':'📚','hr-positions':'🏢',
 'hohr-dash':'▦','hohr-kpi':'📊','hohr-positions':'🏢','hohr-staff':'👥','hohr-pool':'🏆','hohr-assessed':'✅','hohr-gaps':'🎯','hohr-strengths':'⭐','hohr-assess':'🗂','hohr-reports':'📤','hohr-devplans':'🌱','hohr-comp':'📚',
 'mgr-dashboard':svgI('<rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/>'),
 'mgr-team':svgI('<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>'),
@@ -684,7 +684,7 @@ var icons = {'hr-dashboard':'▦','hr-departments':'🏬','hr-staff':'👥','hr-
 var sections;
 if (role === 'hr') {
 sections = [
-{t:'Overview', ids:['hr-dashboard','hr-kpi','hr-departments','hr-positions','hr-comp']},{t:'People', ids:['hr-staff','hr-managers','hr-prompool','hr-gaps']},
+{t:'Overview', ids:['hr-dashboard','hr-kpi','hr-companies','hr-departments','hr-positions','hr-comp']},{t:'People', ids:['hr-staff','hr-managers','hr-prompool','hr-gaps']},
 {t:'Assessments', ids:['hr-review','hr-all','hr-repappr']},
 {t:'Development', ids:['hr-devplans','hr-redo']}
 ];
@@ -739,7 +739,7 @@ loadPage(pageId);
 document.querySelectorAll('.sb-item').forEach(function(b) { b.classList.toggle('active', b.getAttribute('data-page') === pageId); });
 }
 function getPageLabel(id) {
-var map = {'emp-profile':'My Profile','emp-selfassess':'Self Assessment','emp-mgrview':'Manager Assessment','emp-gaps':'My Gaps','emp-strengths':'My Strengths','emp-devplans':'Development Plans','mgr-dashboard':'Dashboard','mgr-team':'My Team','mgr-prompool':'Promotion-Ready Pool','mgr-assess':'Assessment','mgr-details':'Assessment Details','mgr-gaps':'Team Gaps','mgr-devplans':'Development Plans','mgr-requests':'Requests','mgr-repappr':'Report Approvals','mgr-comp':'Competency Library','hohr-reports':'Report Approvals','hohr-comp':'Competency Library','cs-reports':'Executive Recommendations','hr-dashboard':'Dashboard','hr-kpi':'KPI Dashboard','hr-departments':'Departments','hr-prompool':'Promotion-Ready Pool','hr-staff':'Staff List','hr-managers':'Line Managers','hr-review':'Assessment Review','hr-gaps':'Employee Gaps','hr-devplans':'Development Plans','hr-all':'All Assessments','hr-repappr':'Report Approvals','hr-comp':'Competency Library','hr-redo':'Redo Requests','hr-positions':'Positions & Criticality'}
+var map = {'emp-profile':'My Profile','emp-selfassess':'Self Assessment','emp-mgrview':'Manager Assessment','emp-gaps':'My Gaps','emp-strengths':'My Strengths','emp-devplans':'Development Plans','mgr-dashboard':'Dashboard','mgr-team':'My Team','mgr-prompool':'Promotion-Ready Pool','mgr-assess':'Assessment','mgr-details':'Assessment Details','mgr-gaps':'Team Gaps','mgr-devplans':'Development Plans','mgr-requests':'Requests','mgr-repappr':'Report Approvals','mgr-comp':'Competency Library','hohr-reports':'Report Approvals','hohr-comp':'Competency Library','cs-reports':'Executive Recommendations','hr-dashboard':'Dashboard','hr-kpi':'KPI Dashboard','hr-departments':'Departments','hr-companies':'Companies','hr-prompool':'Promotion-Ready Pool','hr-staff':'Staff List','hr-managers':'Line Managers','hr-review':'Assessment Review','hr-gaps':'Employee Gaps','hr-devplans':'Development Plans','hr-all':'All Assessments','hr-repappr':'Report Approvals','hr-comp':'Competency Library','hr-redo':'Redo Requests','hr-positions':'Positions & Criticality'}
 return map[id] || '';
 }
 function showToast(msg) {
@@ -891,6 +891,7 @@ case 'cs-reports': loadCSReports(); break;
 case 'hr-dashboard': loadHRDashboard(); break;
 case 'hr-kpi': loadHRKPI(); break;
 case 'hr-departments': loadHRDepartments(); break;
+case 'hr-companies': loadHRCompanies(); break;
 case 'hr-prompool': loadHRPromPool(); break;
 case 'hr-staff': loadHRStaff(); break;
 case 'hr-managers': loadHRManagers(); break;
@@ -2370,12 +2371,27 @@ sendCMSemail(mgrEmail, (existing ? 'Reminder: ' : 'Action Needed: ') + 'Set Comp
 showToast((existing ? 'Reminder' : 'Prompt') + ' sent to ' + (emp.manager || mgrEmail));
 loadHRStaff();
 }
+function aeMgrOptions() {
+var mgrSet = {};
+(window._aeEmps || []).forEach(function(e){ if (e.manager_email) mgrSet[(e.manager_email || '').toLowerCase()] = true; });
+(window._aeMgrRegs || []).forEach(function(m){ if (m.email) mgrSet[(m.email || '').toLowerCase()] = true; });
+var empEmails = {};
+(window._aeEmps || []).forEach(function(e){ empEmails[(e.email || '').toLowerCase()] = true; });
+var opts = (window._aeEmps || []).filter(function(e){ return mgrSet[(e.email || '').toLowerCase()]; })
+.sort(function(a,b){ return (a.employee_name || '').localeCompare(b.employee_name || ''); })
+.map(function(e){ return '<option value="' + escapeHtml(e.email) + '">' + escapeHtml(e.employee_name) + ' (' + escapeHtml(e.position) + ')</option>'; });
+(window._aeMgrRegs || []).forEach(function(m){
+if (m.email && !empEmails[(m.email || '').toLowerCase()]) opts.push('<option value="' + escapeHtml(m.email) + '">' + escapeHtml(m.manager_name || m.email) + ' (Line Manager)</option>');
+});
+return opts.join('');
+}
 async function loadHRStaff() {
 setContent('<div class="loading"><div class="spinner"></div>Loading...</div>');
 const { data: allEmps } = await _supabase.from('employees').select('*');
 const { data: allResults } = await _supabase.from('assessments').select('*');
 const { data: regs } = await _supabase.from('critical_positions').select('*').order('position_name');
-window._aeRegs = regs || []; window._aeEmps = allEmps || [];
+const { data: lmRows } = await _supabase.from('line_managers').select('email, manager_name');
+window._aeRegs = regs || []; window._aeEmps = allEmps || []; window._aeMgrRegs = lmRows || [];
 var staff = [];
 for (var i = 0; i < allEmps.length; i++) {
 var emp = allEmps[i];
@@ -2405,9 +2421,8 @@ html += '<div class="card"><div class="card-title">➕ Add Employee</div>';
 html += '<p style="font-size:11px;color:var(--gray-500);margin-bottom:10px">Type only the name, email and line manager — department, position and level come from the Positions & Criticality Registry.</p>';
 html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px"><div class="form-group"><label>Full Name</label><input id="aeName" placeholder="e.g. Jane Wanjiku"></div><div class="form-group"><label>Email</label><input id="aeEmail" placeholder="jane@kenafricind.com"></div></div>';
 html += '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px"><div class="form-group"><label>Department</label><select id="aeDept" onchange="aeFillPositions()"><option value="">-- Select --</option>' + Object.keys(regDeps).sort().map(function(d){ return '<option>' + escapeHtml(d) + '</option>'; }).join('') + '</select></div><div class="form-group"><label>Position</label><select id="aePos"><option value="">-- Select department first --</option></select></div><div class="form-group"><label>Competency Level</label><select id="aeLevel"><option>Foundational</option><option selected>Intermediate</option><option>Advanced</option><option>Master</option></select></div></div>';
-html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px"><div class="form-group"><label>Company</label><input id="aeCompany" list="aeCompanyList" placeholder="e.g. Kenafric Industries"><datalist id="aeCompanyList">' + Object.keys(companies).sort().map(function(c){ return '<option value="' + escapeHtml(c) + '">'; }).join('') + '</datalist></div><div class="form-group"><label>Line Manager</label><select id="aeMgr"><option value="">-- Select --</option>' + (window._aeEmps || []).slice().sort(function(a,b){ return (a.employee_name||'').localeCompare(b.employee_name||''); }).map(function(e){ return '<option value="' + escapeHtml(e.email) + '">' + escapeHtml(e.employee_name) + ' (' + escapeHtml(e.position) + ')</option>'; }).join('') + '</select></div></div>';
-html += '<button class="btn btn-primary" onclick="saveNewEmployee()">Save Employee</button></div>';
-}
+html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px"><div class="form-group"><label>Company</label><input id="aeCompany" list="aeCompanyList" placeholder="e.g. Kenafric Industries"><datalist id="aeCompanyList">' + Object.keys(companies).sort().map(function(c){ return '<option value="' + escapeHtml(c) + '">'; }).join('') + '</datalist></div><div class="form-group"><label>Line Manager</label><select id="aeMgr"><option value="">-- Select --</option>' + aeMgrOptions() + '</select></div></div>';
+html += '<button class="btn btn-primary" onclick="saveNewEmployee()">Save Employee</button></div>';}
 html += '<div class="card"><div class="card-title">All Staff</div><div class="table-wrap"><table class="staff-table"><thead><tr><th>Name</th><th>Position</th><th>Competencies</th><th>Criticality</th><th>Company</th><th>Line Manager</th><th>Employee Status</th><th>Manager Status</th>' + (isHOHRonly ? '' : '<th>Actions</th>') + '</tr></thead><tbody>';
 const { data: profs } = await _supabase.from('user_profiles').select('email, photo');
 var photoOf = {}; (profs || []).forEach(function(p){ if (p.photo) photoOf[(p.email || '').toLowerCase()] = p.photo; });
@@ -2442,6 +2457,8 @@ html += '</tr>';
 });
 html += '</tbody></table></div></div>';
 setContent(html);
+var mc = document.getElementById('mainContent');
+if (mc && !isHOHRonly && mc.children.length > 1) mc.appendChild(mc.children[0]);
 }
 function aeFillPositions() {
 var dep = document.getElementById('aeDept').value;
@@ -2460,7 +2477,7 @@ var mgrEmail = document.getElementById('aeMgr').value;
 if (!name || !email) { showToast('Name and email are required'); return; }
 if (!dep || !pos) { showToast('Select department and position'); return; }
 var mgrName = '';
-if (mgrEmail) { var m = (window._aeEmps || []).find(function(e){ return e.email === mgrEmail; }); mgrName = m ? m.employee_name : ''; }
+if (mgrEmail) { var m = (window._aeEmps || []).find(function(e){ return e.email === mgrEmail; }); mgrName = m ? m.employee_name : ''; if (!mgrName) { var lm = (window._aeMgrRegs || []).find(function(x){ return (x.email || '').toLowerCase() === mgrEmail.toLowerCase(); }); mgrName = lm ? (lm.manager_name || '') : ''; } }
 var empId = 'EMP-' + Date.now().toString(36).toUpperCase() + Math.random().toString(36).substr(2,3).toUpperCase();
 const { error } = await _supabase.from('employees').insert({ employee_id: empId, employee_name: name, email: email, department: dep, position: pos, competency_level: lvl, company: comp, manager: mgrName, manager_email: mgrEmail });
 if (error) { showToast(error.message); return; }
@@ -2477,6 +2494,84 @@ var deps = {};
 if (!comp) (window._aeRegs || []).forEach(function(r){ if (r.department) deps[r.department] = true; });
 Object.keys(deps).sort().forEach(function(d){ sel.innerHTML += '<option>' + escapeHtml(d) + '</option>'; });
 document.getElementById('aePos').innerHTML = '<option value="">-- Select department first --</option>';
+}
+/* ===== Companies Registry ===== */
+async function loadHRCompanies() {
+setContent('<div class="loading"><div class="spinner"></div>Loading...</div>');
+var dq = await Promise.all([
+_supabase.from('companies').select('*').order('name'),
+_supabase.from('employees').select('employee_id, company, department, position'),
+_supabase.from('departments').select('company, name'),
+_supabase.from('assessments').select('employee_id, type')
+]);
+var regs = dq[0].data || [];
+var emps = dq[1].data || [];
+var depRegs = dq[2].data || [];
+var asss = dq[3].data || [];
+var mgrByEmp = {};
+asss.forEach(function(a){ if (a.type === 'Manager') mgrByEmp[a.employee_id] = true; });
+var stats = {};
+function ensure(c){ if (!stats[c]) stats[c] = { staff: 0, deps: {}, pos: {}, assessed: {} }; return stats[c]; }
+emps.forEach(function(e){
+var c = (e.company || '').trim(); if (!c) return;
+var s = ensure(c);
+s.staff++;
+if (e.department) s.deps[e.department.toString().toUpperCase().trim()] = true;
+if (e.position) s.pos[e.position.toString().toUpperCase().trim()] = true;
+if (mgrByEmp[e.employee_id]) s.assessed[e.employee_id] = true;
+});
+depRegs.forEach(function(d){ var c = (d.company || '').trim(); if (!c || !d.name) return; ensure(c).deps[d.name.toString().toUpperCase().trim()] = true; });
+var regOf = {};
+regs.forEach(function(r){ regOf[(r.name || '').toString().toUpperCase().trim()] = r; ensure(r.name || ''); });
+var names = Object.keys(stats).sort(function(a,b){ return a.localeCompare(b); });
+var html = '<div class="card"><div class="card-title">🏭 Companies Registry</div>';
+html += '<p style="font-size:12px;color:var(--gray-500);margin-bottom:12px">Every company in the group with live headcount, department and position counts pulled from staff records.</p>';
+html += '<div class="table-wrap"><table class="staff-table"><thead><tr><th>Company</th><th>Staff</th><th>Departments</th><th>Positions</th><th>Assessed</th><th>Status</th><th></th></tr></thead><tbody>';
+if (!names.length) html += '<tr><td colspan="7" style="color:var(--gray-500)">No companies yet — add the first one below.</td></tr>';
+names.forEach(function(c) {
+var s = stats[c];
+var reg = regOf[c.toString().toUpperCase().trim()];
+var assessedCount = Object.keys(s.assessed).length;
+var pct = s.staff ? Math.round((assessedCount / s.staff) * 100) : 0;
+html += '<tr><td><strong>' + escapeHtml(c) + '</strong></td>';
+html += '<td>' + s.staff + '</td>';
+html += '<td>' + Object.keys(s.deps).length + '</td>';
+html += '<td>' + Object.keys(s.pos).length + '</td>';
+html += '<td>' + assessedCount + ' (' + pct + '%)</td>';
+html += '<td>' + (reg ? '<span class="badge badge-success">Registered</span>' : '<span class="badge badge-warning">From staff records</span>') + '</td>';
+html += '<td>' + (reg ? '<button class="btn btn-sm btn-danger" onclick="deleteCompany(' + reg.id + ',\'' + escapeHtml(c) + '\')">✕</button>' : '<button class="btn btn-sm btn-outline" onclick="registerCompany(\'' + escapeHtml(c) + '\')">Register</button>') + '</td></tr>';
+});
+html += '</tbody></table></div></div>';
+html += '<div class="card"><div class="card-title">➕ Add Company</div>';
+html += '<div style="display:grid;grid-template-columns:2fr auto;gap:8px;align-items:end">';
+html += '<div class="form-group" style="margin-bottom:0"><label>Company name</label><input id="newCompanyName" placeholder="e.g. Kenafric Brands Limited"></div>';
+html += '<button class="btn btn-primary" onclick="addCompany()">➕ Add Company</button></div></div>';
+setContent(html);
+}
+async function addCompany() {
+var name = (document.getElementById('newCompanyName').value || '').trim();
+if (!name) { showToast('Type a company name'); return; }
+const { data: dup } = await _supabase.from('companies').select('id').ilike('name', name).limit(1);
+if (dup && dup.length) { showToast('Company already registered'); return; }
+const { error } = await _supabase.from('companies').insert({ name: name });
+if (error) { showToast(error.message); return; }
+showToast('✅ Company added: ' + name);
+loadHRCompanies();
+}
+async function registerCompany(name) {
+const { data: dup } = await _supabase.from('companies').select('id').ilike('name', name).limit(1);
+if (dup && dup.length) { showToast('Company already registered'); return; }
+const { error } = await _supabase.from('companies').insert({ name: name });
+if (error) { showToast(error.message); return; }
+showToast('✅ Registered: ' + name);
+loadHRCompanies();
+}
+async function deleteCompany(id, name) {
+if (!confirm('Remove "' + name + '" from the Companies Registry? Staff records are NOT changed.')) return;
+const { error } = await _supabase.from('companies').delete().eq('id', id);
+if (error) { showToast(error.message); return; }
+showToast('Company removed from registry');
+loadHRCompanies();
 }
 /* ===== Departments Registry (company-aware) ===== */
 async function loadHRDepartments() {
@@ -2552,31 +2647,52 @@ async function loadHRManagers() {
 setContent('<div class="loading"><div class="spinner"></div>Loading...</div>');
 var dq = await Promise.all([
 _supabase.from('line_managers').select('*').order('manager_name'),
-_supabase.from('employees').select('employee_name, email, department, company, manager_email')
+_supabase.from('employees').select('*')
 ]);
 var regs = dq[0].data || [];
 var emps = dq[1].data || [];
 var companies = {}; var departments = {};
 emps.forEach(function(e){ if (e.company) companies[e.company] = true; if (e.department) departments[e.department] = true; });
 regs.forEach(function(m){ if (m.company) companies[m.company] = true; if (m.department) departments[m.department] = true; });
+var empByEmail = {};
+emps.forEach(function(e){ empByEmail[(e.email || '').toLowerCase()] = e; });
 var mgrSet = {};
-emps.forEach(function(e){ if (e.manager_email) mgrSet[(e.manager_email || '').toLowerCase()] = { name: e.manager || e.employee_name, email: e.manager_email, department: e.department, company: e.company }; });
-regs.forEach(function(m){ mgrSet[(m.email || '').toLowerCase()] = { name: m.manager_name, email: m.email, department: m.department, company: m.company, registered: true }; });
+emps.forEach(function(e){
+var me = (e.manager_email || '').toLowerCase();
+if (!me || mgrSet[me]) return;
+var mEmp = empByEmail[me];
+mgrSet[me] = {
+name: mEmp ? mEmp.employee_name : (e.manager || me.split('@')[0]),
+email: e.manager_email,
+department: mEmp ? (mEmp.department || '') : (e.department || ''),
+company: mEmp ? (mEmp.company || '') : (e.company || '')
+};
+});
+regs.forEach(function(m){
+var k = (m.email || '').toLowerCase();
+var mEmp = empByEmail[k];
+mgrSet[k] = {
+name: m.manager_name || (mEmp ? mEmp.employee_name : k.split('@')[0]),
+email: m.email,
+department: m.department || (mEmp ? (mEmp.department || '') : ''),
+company: m.company || (mEmp ? (mEmp.company || '') : ''),
+registered: true
+};
+});
 var teamCount = {};
 emps.forEach(function(e){ if (e.manager_email) teamCount[(e.manager_email || '').toLowerCase()] = (teamCount[(e.manager_email || '').toLowerCase()] || 0) + 1; });
 var html = '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px;margin-bottom:14px">';
 html += '<div class="card" style="margin-bottom:0"><div class="card-title">🏢 Companies (' + Object.keys(companies).length + ')</div>' + (Object.keys(companies).sort().map(function(c){ return '<span class="badge badge-info" style="margin:2px">' + escapeHtml(c) + '</span>'; }).join('') || '<p style="color:var(--gray-500);font-size:12px">None yet.</p>') + '</div>';
 html += '<div class="card" style="margin-bottom:0"><div class="card-title">🗂 Departments (' + Object.keys(departments).length + ')</div>' + (Object.keys(departments).sort().map(function(d){ return '<span class="badge badge-purple" style="margin:2px">' + escapeHtml(d) + '</span>'; }).join('') || '<p style="color:var(--gray-500);font-size:12px">None yet.</p>') + '</div>';
 html += '</div>';
-html += '<div class="card"><div class="card-title">➕ Add Line Manager</div>';
-html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">';
-html += '<div class="form-group" style="margin-bottom:0"><label>Full Name</label><input id="lmName" placeholder="e.g. Julius Angoli"></div>';
-html += '<div class="form-group" style="margin-bottom:0"><label>Email</label><input id="lmEmail" placeholder="e.g. julius@kenafricind.com"></div>';
-html += '</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px">';
-html += '<div class="form-group" style="margin-bottom:0"><label>Department</label><input id="lmDept" list="lmDeptList" placeholder="e.g. HUMAN RESOURCE"><datalist id="lmDeptList">' + Object.keys(departments).sort().map(function(d){ return '<option value="' + escapeHtml(d) + '">'; }).join('') + '</datalist></div>';
-html += '<div class="form-group" style="margin-bottom:0"><label>Company</label><input id="lmCompany" list="lmCompanyList" placeholder="e.g. Kenafric Industries"><datalist id="lmCompanyList">' + Object.keys(companies).sort().map(function(c){ return '<option value="' + escapeHtml(c) + '">'; }).join('') + '</datalist></div>';
-html += '</div><button class="btn btn-primary" style="margin-top:10px" onclick="addLineManager()">➕ Add Line Manager</button></div>';
-html += '<div class="card"><div class="card-title">🧑‍💼 Line Managers (' + Object.keys(mgrSet).length + ')</div>';
+var addCard = '<div class="card"><div class="card-title">➕ Add Line Manager</div>';
+addCard += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">';
+addCard += '<div class="form-group" style="margin-bottom:0"><label>Full Name</label><input id="lmName" placeholder="e.g. Julius Angoli"></div>';
+addCard += '<div class="form-group" style="margin-bottom:0"><label>Email</label><input id="lmEmail" placeholder="e.g. julius@kenafricind.com"></div>';
+addCard += '</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px">';
+addCard += '<div class="form-group" style="margin-bottom:0"><label>Department</label><input id="lmDept" list="lmDeptList" placeholder="e.g. HUMAN RESOURCE"><datalist id="lmDeptList">' + Object.keys(departments).sort().map(function(d){ return '<option value="' + escapeHtml(d) + '">'; }).join('') + '</datalist></div>';
+addCard += '<div class="form-group" style="margin-bottom:0"><label>Company</label><input id="lmCompany" list="lmCompanyList" placeholder="e.g. Kenafric Industries"><datalist id="lmCompanyList">' + Object.keys(companies).sort().map(function(c){ return '<option value="' + escapeHtml(c) + '">'; }).join('') + '</datalist></div>';
+addCard += '</div><button class="btn btn-primary" style="margin-top:10px" onclick="addLineManager()">➕ Add Line Manager</button></div>';html += '<div class="card"><div class="card-title">🧑‍💼 Line Managers (' + Object.keys(mgrSet).length + ')</div>';
 html += '<div class="table-wrap"><table class="staff-table"><thead><tr><th>Name</th><th>Email</th><th>Department</th><th>Company</th><th>Team Size</th><th>Status</th><th></th></tr></thead><tbody>';
 Object.keys(mgrSet).sort().forEach(function(k) {
 var m = mgrSet[k];
@@ -2589,6 +2705,7 @@ html += '<td>' + (m.registered ? '<span class="badge badge-success">Registered</
 html += '<td>' + (m.registered ? '<button class="btn btn-sm btn-danger" onclick="deleteLineManager(\'' + escapeHtml(m.email) + '\',\'' + escapeHtml(m.name || '') + '\')">✕</button>' : '') + '</td></tr>';
 });
 html += '</tbody></table></div></div>';
+html += addCard;
 setContent(html);
 }
 async function addLineManager() {
@@ -3994,7 +4111,6 @@ el.style.display = 'none';
 }
 }
 async function loadCSuiteMappingCard() {
-var oldCard = document.getElementById('csuiteMappingCard'); if (oldCard) oldCard.remove();
 const { data: maps } = await _supabase.from('csuite_mapping').select('*').order('id');
 const { data: cs } = await _supabase.from('user_profiles').select('email').eq('role', 'C_SUITE');
 var h = '<div class="card" id="csuiteMappingCard"><div class="card-title">🏛 C-Suite Mapping (Company / Department / C-Suite)</div>';
@@ -4008,6 +4124,7 @@ h += '<div style="margin-top:10px">';
 (maps || []).forEach(function(m){ h += '<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 8px;border:1px solid var(--gray-200);border-radius:6px;margin:4px 0;font-size:12px"><span><strong>' + escapeHtml(m.department || '') + '</strong> (' + escapeHtml(m.company || 'Any company') + ') → ' + escapeHtml(m.csuite_email || '') + '</span><button class="btn btn-sm btn-danger" onclick="deleteCSuiteMapping(' + m.id + ')">✕</button></div>'; });
 if (!(maps || []).length) h += '<p style="color:var(--gray-500);font-size:12px">No mappings yet — add one per department.</p>';
 h += '</div></div>';
+var oldCard = document.getElementById('csuiteMappingCard'); if (oldCard) oldCard.remove();
 document.getElementById('mainContent').insertAdjacentHTML('beforeend', h);
 }
 async function addCSuiteMapping() {
