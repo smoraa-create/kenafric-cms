@@ -663,13 +663,13 @@ else if (role === 'csuite') {
 pages = [{id:'cs-reports',label:'Executive Recommendations'}];
 } 
 else if (role === 'hr') {
-pages = [{id:'hr-dashboard',label:'Dashboard'},{id:'hr-kpi',label:'KPI Dashboard'},{id:'hr-managers',label:'Line Managers'},{id:'hr-departments',label:'Departments'},{id:'hr-companies',label:'Companies'},{id:'hr-prompool',label:'Promotion-Ready Pool'},{id:'hr-staff',label:'Staff List'},{id:'hr-review',label:'Assessment Review'},{id:'hr-gaps',label:'Employee Gaps'},{id:'hr-devplans',label:'Development Plans'},{id:'hr-all',label:'All Assessments'},{id:'hr-repappr',label:'Report Approvals'},{id:'hr-positions',label:'Positions & Criticality'},{id:'hr-comp',label:'Competency Library'},{id:'hr-redo',label:'Redo Requests'}];
+pages = [{id:'hr-dashboard',label:'Dashboard'},{id:'hr-kpi',label:'KPI Dashboard'},{id:'hr-managers',label:'Line Managers'},{id:'hr-departments',label:'Departments'},{id:'hr-companies',label:'Companies'},{id:'hr-prompool',label:'Promotion-Ready Pool'},{id:'hr-staff',label:'Staff List'},{id:'hr-review',label:'Assessment Review'},{id:'hr-gaps',label:'Employee Gaps'},{id:'hr-devplans',label:'Development Plans'},{id:'hr-all',label:'All Assessments'},{id:'hr-reports',label:'Reports'},{id:'hr-repappr',label:'Report Approvals'},{id:'hr-positions',label:'Positions & Criticality'},{id:'hr-comp',label:'Competency Library'},{id:'hr-redo',label:'Redo Requests'}];
 }
 if (role === 'hr' || role === 'manager' || role === 'hohr') {
 document.body.classList.add('sb-mode');
 sb.style.display = 'block';
 var svgI = function(p){ return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="0" y="0" width="0" height="0" fill="none"/>' + p + '</svg>'; };
-var icons = {'hr-dashboard':'▦','hr-companies':'🏭','hr-departments':'🏬','hr-staff':'👥','hr-prompool':'🏆','hr-gaps':'🎯','hr-review':'📋','hr-all':'🗂','hr-repappr':'📤','hr-devplans':'🌱','hr-redo':'🔁','hr-comp':'📚','hr-positions':'🏢',
+var icons = {'hr-dashboard':'▦','hr-companies':'🏭','hr-departments':'🏬','hr-staff':'👥','hr-prompool':'🏆','hr-gaps':'🎯','hr-review':'📋','hr-all':'🗂','hr-reports':'📑','hr-repappr':'📤','hr-devplans':'🌱','hr-redo':'🔁','hr-comp':'📚','hr-positions':'🏢',
 'hohr-dash':'▦','hohr-kpi':'📊','hohr-positions':'🏢','hohr-staff':'👥','hohr-pool':'🏆','hohr-assessed':'✅','hohr-gaps':'🎯','hohr-strengths':'⭐','hohr-assess':'🗂','hohr-reports':'📤','hohr-devplans':'🌱','hohr-comp':'📚',
 'mgr-dashboard':svgI('<rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/>'),
 'mgr-team':svgI('<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>'),
@@ -685,7 +685,7 @@ var sections;
 if (role === 'hr') {
 sections = [
 {t:'Overview', ids:['hr-dashboard','hr-kpi','hr-companies','hr-departments','hr-positions','hr-comp']},{t:'People', ids:['hr-staff','hr-managers','hr-prompool','hr-gaps']},
-{t:'Assessments', ids:['hr-review','hr-all','hr-repappr']},
+{t:'Assessments', ids:['hr-review','hr-all','hr-reports','hr-repappr']},
 {t:'Development', ids:['hr-devplans','hr-redo']}
 ];
 } else if (role === 'hohr') {
@@ -739,7 +739,7 @@ loadPage(pageId);
 document.querySelectorAll('.sb-item').forEach(function(b) { b.classList.toggle('active', b.getAttribute('data-page') === pageId); });
 }
 function getPageLabel(id) {
-var map = {'emp-profile':'My Profile','emp-selfassess':'Self Assessment','emp-mgrview':'Manager Assessment','emp-gaps':'My Gaps','emp-strengths':'My Strengths','emp-devplans':'Development Plans','mgr-dashboard':'Dashboard','mgr-team':'My Team','mgr-prompool':'Promotion-Ready Pool','mgr-assess':'Assessment','mgr-details':'Assessment Details','mgr-gaps':'Team Gaps','mgr-devplans':'Development Plans','mgr-requests':'Requests','mgr-repappr':'Report Approvals','mgr-comp':'Competency Library','hohr-reports':'Report Approvals','hohr-comp':'Competency Library','cs-reports':'Executive Recommendations','hr-dashboard':'Dashboard','hr-kpi':'KPI Dashboard','hr-departments':'Departments','hr-companies':'Companies','hr-prompool':'Promotion-Ready Pool','hr-staff':'Staff List','hr-managers':'Line Managers','hr-review':'Assessment Review','hr-gaps':'Employee Gaps','hr-devplans':'Development Plans','hr-all':'All Assessments','hr-repappr':'Report Approvals','hr-comp':'Competency Library','hr-redo':'Redo Requests','hr-positions':'Positions & Criticality'}
+var map = {'emp-profile':'My Profile','emp-selfassess':'Self Assessment','emp-mgrview':'Manager Assessment','emp-gaps':'My Gaps','emp-strengths':'My Strengths','emp-devplans':'Development Plans','mgr-dashboard':'Dashboard','mgr-team':'My Team','mgr-prompool':'Promotion-Ready Pool','mgr-assess':'Assessment','mgr-details':'Assessment Details','mgr-gaps':'Team Gaps','mgr-devplans':'Development Plans','mgr-requests':'Requests','mgr-repappr':'Report Approvals','mgr-comp':'Competency Library','hohr-reports':'Report Approvals','hohr-comp':'Competency Library','cs-reports':'Executive Recommendations','hr-dashboard':'Dashboard','hr-kpi':'KPI Dashboard','hr-departments':'Departments','hr-companies':'Companies','hr-prompool':'Promotion-Ready Pool','hr-staff':'Staff List','hr-managers':'Line Managers','hr-review':'Assessment Review','hr-gaps':'Employee Gaps','hr-devplans':'Development Plans','hr-all':'All Assessments','hr-reports':'Reports','hr-repappr':'Report Approvals','hr-comp':'Competency Library','hr-redo':'Redo Requests','hr-positions':'Positions & Criticality'}
 return map[id] || '';
 }
 function showToast(msg) {
@@ -900,6 +900,7 @@ case 'hr-gaps': loadHRGaps(); break;
 case 'hr-devplans': loadHRDevPlans(); break;
 case 'hr-redo': loadHRRedoRequests(); break;
 case 'hr-all': loadHRAll(); break;
+case 'hr-reports': loadHRReportsHub(); break;
 case 'hr-repappr': loadReportApprovals(); break;
 case 'hr-positions': loadHRPositions(); break;
 case 'hr-comp': loadHRComp(); break;
@@ -2735,40 +2736,44 @@ const { data: allEmps } = await _supabase.from('employees').select('*');
 const { data: allResults } = await _supabase.from('assessments').select('*');
 const { data: allPlans } = await _supabase.from('dev_plans').select('*');
 var critList = crit || [];
-var critNames = {};
-critList.forEach(function(c){ critNames[(c.position_name||'').toUpperCase().trim()] = true; });
-var critEmps = (allEmps || []).filter(function(e){ return critNames[(e.position||'').toUpperCase().trim()]; });
-var assessed = 0, promoted = 0, onIdp = 0, rowsHtml = '';
-critEmps.forEach(function(e) {
+var TIERS = ['Absolutely Critical Role', 'Critical Role', 'Relatively Critical Role'];
+var critLevelOf = {};
+critList.forEach(function(c){ critLevelOf[(c.position_name || '').toUpperCase().trim()] = c.criticality || 'Critical Role'; });
+function tierOf(e){ return critLevelOf[(e.position || '').toUpperCase().trim()] || ''; }
+var critEmps = (allEmps || []).filter(function(e){ return tierOf(e); });
+function fmtRows(rows){ return latestOnly(rows).map(function(r){ return { 'Employee ID': r.employee_id, 'Competency Code': r.comp_code, 'Type': r.type, 'Ticked': r.ticked, 'Evidence': r.evidence, 'HR_Status': r.hr_status, 'Rating': r.proficiency_rating }; }); }
+function empStats(e) {
 var mRows = (allResults || []).filter(function(r){ return r.employee_id === e.employee_id && r.type === 'Manager'; });
-var assessHtml = '';
-if (!mRows.length) { assessHtml = '<span class="badge badge-danger">Not Assessed</span>'; }
-else {
 var anyPending = mRows.some(function(r){ return r.ticked && (r.hr_status === '' || r.hr_status === 'Pending'); });
 var allDone = mRows.some(function(r){ return r.hr_status === 'Approved'; }) && !anyPending;
-var fr = latestOnly(mRows).map(function(r){ return { 'Employee ID': r.employee_id, 'Competency Code': r.comp_code, 'Type': r.type, 'Ticked': r.ticked, 'Evidence': r.evidence, 'HR_Status': r.hr_status, 'Rating': r.proficiency_rating }; });
-var score = calculateOverallScore(e.employee_id, 'Manager', fr);
-if (allDone) { assessed++; assessHtml = '<strong style="color:var(--green)">' + score + '%</strong> <span class="badge badge-success">Assessed</span>'; }
-else { assessHtml = '<span class="badge badge-purple">Awaiting HR Approval</span>'; }
-}
+var score = 0, assessHtml = '';
+if (!mRows.length) assessHtml = '<span class="badge badge-danger">Not Assessed</span>';
+else if (allDone) { score = calculateOverallScore(e.employee_id, 'Manager', fmtRows(mRows)); assessHtml = '<strong style="color:var(--green)">' + score + '%</strong> <span class="badge badge-success">Assessed</span>'; }
+else assessHtml = '<span class="badge badge-purple">Awaiting HR Approval</span>';
 var pRows = (allResults || []).filter(function(r){ return r.employee_id === e.employee_id && r.type === 'Prospective'; });
-var promHtml = '<span style="color:var(--gray-400)">—</span>';
+var pscore = 0, promHtml = '<span style="color:var(--gray-400)">—</span>';
 if (pRows.length) {
-var pfr = latestOnly(pRows).map(function(r){ return { 'Employee ID': r.employee_id, 'Competency Code': r.comp_code, 'Type': r.type, 'Ticked': r.ticked, 'Evidence': r.evidence, 'HR_Status': r.hr_status, 'Rating': r.proficiency_rating }; });
-var pscore = calculateOverallScore(e.employee_id, 'Prospective', pfr);
-if (pscore >= 81) { promoted++; promHtml = '<span class="badge badge-success">✓ Promotion Ready (' + pscore + '%)</span>'; }
-else { promHtml = '<span class="badge badge-info">' + pscore + '% — ' + getProspectiveReadiness(pscore).label + '</span>'; }
+pscore = calculateOverallScore(e.employee_id, 'Prospective', fmtRows(pRows));
+promHtml = pscore >= 81 ? '<span class="badge badge-success">✓ Promotion Ready (' + pscore + '%)</span>' : '<span class="badge badge-info">' + pscore + '% — ' + getProspectiveReadiness(pscore).label + '</span>';
 }
 var plans = (allPlans || []).filter(function(p){ return p.employee_id === e.employee_id; });
-var hasIdp = plans.length > 0;
-if (hasIdp) onIdp++;
-rowsHtml += '<tr><td><strong>' + escapeHtml(e.employee_name) + '</strong></td><td style="font-size:11px">' + escapeHtml(e.position) + '</td><td>' + assessHtml + '</td><td>' + (hasIdp ? '<span class="badge badge-info">' + plans.length + ' IDP(s)</span>' : '<span style="color:var(--gray-400)">—</span>') + '</td><td>' + promHtml + '</td></tr>';
+return { assessed: allDone, ready: pscore >= 81, idp: plans.length > 0, idpCount: plans.length, assessHtml: assessHtml, promHtml: promHtml };
+}
+var tierStats = {};
+TIERS.forEach(function(t){ tierStats[t] = { positions: {}, staff: 0, assessed: 0, ready: 0, idp: 0 }; });
+critList.forEach(function(c){ var t = tierStats[c.criticality || 'Critical Role']; if (t) t.positions[(c.position_name || '').toUpperCase().trim()] = true; });
+var rowsHtml = '';
+critEmps.slice().sort(function(a,b){ var d = TIERS.indexOf(tierOf(a)) - TIERS.indexOf(tierOf(b)); return d !== 0 ? d : a.employee_name.localeCompare(b.employee_name); }).forEach(function(e){
+var st = empStats(e); var t = tierOf(e);
+tierStats[t].staff++; if (st.assessed) tierStats[t].assessed++; if (st.ready) tierStats[t].ready++; if (st.idp) tierStats[t].idp++;
+rowsHtml += '<tr><td><strong>' + escapeHtml(e.employee_name) + '</strong></td><td style="font-size:11px">' + escapeHtml(e.position) + '</td><td><span class="badge ' + critBadge(t) + '">' + escapeHtml(t) + '</span></td><td>' + st.assessHtml + '</td><td>' + (st.idp ? '<span class="badge badge-info">' + st.idpCount + ' IDP(s)</span>' : '<span style="color:var(--gray-400)">—</span>') + '</td><td>' + st.promHtml + '</td></tr>';
 });
-var total = critEmps.length;
+var total = critEmps.length, assessed = 0, promoted = 0, onIdp = 0;
+TIERS.forEach(function(t){ assessed += tierStats[t].assessed; promoted += tierStats[t].ready; onIdp += tierStats[t].idp; });
 var pctAssessed = total ? Math.round((assessed / total) * 100) : 0;
 var pctPromoted = total ? Math.round((promoted / total) * 100) : 0;
 var pctIdp = total ? Math.round((onIdp / total) * 100) : 0;
-var html = '<div class="card"><div class="card-title">🎯 HR KPI Dashboard — Critical Roles Only</div><p style="font-size:12px;color:var(--gray-500)">Counts ONLY staff in positions YOU mark as critical. Employees scoring 81%+ on a Prospective Role Assessment join the Promotion-Ready Pool. Actual appointment remains subject to vacancy availability and management approval. Self-assessments and general roles are excluded.</p></div>';
+var html = '<div class="card"><div class="card-title">🎯 HR KPI Dashboard — Critical Roles Only</div><p style="font-size:12px;color:var(--gray-500)">Counts ONLY staff in positions YOU mark as critical, split by criticality level. Employees scoring 81%+ on a Prospective Role Assessment join the Promotion-Ready Pool. Actual appointment remains subject to vacancy availability and management approval. Self-assessments and general roles are excluded.</p></div>';
 html += '<div class="stats-grid">';
 html += '<div class="stat-card" style="background:var(--red-light)"><div class="num" style="color:var(--red)">' + critList.length + '</div><div class="lbl">Critical Roles Identified</div></div>';
 html += '<div class="stat-card" style="background:var(--primary-light)"><div class="num" style="color:var(--primary)">' + total + '</div><div class="lbl">Staff in Critical Roles</div></div>';
@@ -2776,12 +2781,27 @@ html += '<div class="stat-card" style="background:var(--green-light)"><div class
 html += '<div class="stat-card" style="background:var(--purple-light)"><div class="num" style="color:var(--purple)">' + promoted + ' (' + pctPromoted + '%)</div><div class="lbl">Promotion Ready (subject to vacancy)</div></div>';
 html += '<div class="stat-card" style="background:var(--orange-light)"><div class="num" style="color:var(--orange)">' + onIdp + ' (' + pctIdp + '%)</div><div class="lbl">On IDP</div></div>';
 html += '</div>';
+html += '<div class="card"><div class="card-title">🎯 Criticality Breakdown — Absolutely vs Critical vs Relatively Critical</div><div class="table-wrap"><table><thead><tr><th>Criticality Level</th><th>Positions</th><th>Staff</th><th>Assessed by Manager</th><th>Promotion Ready</th><th>On IDP</th></tr></thead><tbody>';
+TIERS.forEach(function(t){
+var s = tierStats[t];
+var pc = Object.keys(s.positions).length;
+var p = function(n){ return s.staff ? Math.round((n / s.staff) * 100) + '%' : '0%'; };
+html += '<tr><td><span class="badge ' + critBadge(t) + '">' + escapeHtml(t) + '</span></td><td>' + pc + '</td><td>' + s.staff + '</td><td>' + s.assessed + ' (' + p(s.assessed) + ')</td><td>' + s.ready + ' (' + p(s.ready) + ')</td><td>' + s.idp + ' (' + p(s.idp) + ')</td></tr>';
+});
+html += '</tbody></table></div></div>';
 html += '<div class="card"><div class="card-title">Manage Critical Positions</div><div style="display:flex;gap:8px;flex-wrap:wrap"><input id="newCritPos" placeholder="e.g. Production Manager" style="flex:1;min-width:180px"><select id="newCritLevel" style="width:auto"><option>Absolutely Critical Role</option><option selected>Critical Role</option><option>Relatively Critical Role</option></select><button class="btn btn-primary" onclick="addCriticalPosition()">Add</button></div><div style="margin-top:10px">';
 critList.forEach(function(c){ var lv = c.criticality || 'Critical Role'; html += '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;border:1px solid var(--gray-200);border-radius:6px;padding:6px 10px;margin:0 0 6px;font-size:12px"><span><strong>' + escapeHtml(c.position_name) + '</strong> <span class="badge ' + critBadge(lv) + '">' + escapeHtml(lv) + '</span></span><span style="display:flex;gap:6px;align-items:center"><select onchange="setCriticality(' + c.id + ',this.value)" style="width:auto;padding:3px 6px;font-size:11px"><option' + (lv === 'Absolutely Critical Role' ? ' selected' : '') + '>Absolutely Critical Role</option><option' + (lv === 'Critical Role' ? ' selected' : '') + '>Critical Role</option><option' + (lv === 'Relatively Critical Role' ? ' selected' : '') + '>Relatively Critical Role</option></select><button class="btn btn-sm btn-danger" onclick="deleteCriticalPosition(' + c.id + ')">✕</button></span></div>'; });
 if (!critList.length) html += '<p style="color:var(--gray-500);font-size:12px">No critical positions yet — add ONLY the roles that count for your KPI.</p>';
 html += '</div></div>';
-html += '<div class="card"><div class="card-title">Critical Roles Tracker</div><div class="table-wrap"><table><thead><tr><th>Employee</th><th>Position</th><th>Manager Assessment</th><th>IDP</th><th>Promotion Readiness</th></tr></thead><tbody>' + (rowsHtml || '<tr><td colspan="5" style="color:var(--gray-500)">No staff in critical positions yet.</td></tr>') + '</tbody></table></div></div>';
+html += '<div class="card"><div class="card-title">Critical Roles Tracker (grouped by criticality)</div><div class="table-wrap"><table><thead><tr><th>Employee</th><th>Position</th><th>Criticality</th><th>Manager Assessment</th><th>IDP</th><th>Promotion Readiness</th></tr></thead><tbody>' + (rowsHtml || '<tr><td colspan="6" style="color:var(--gray-500)">No staff in critical positions yet.</td></tr>') + '</tbody></table></div></div>';
 setContent(html);
+}
+async function deleteCriticalPosition(id) {
+if (!confirm('Remove this position from the critical list?')) return;
+const { error } = await _supabase.from('critical_positions').delete().eq('id', id);
+if (error) { showToast(error.message); return; }
+showToast('Critical position removed');
+loadHRKPI();
 }
 async function addCriticalPosition() {
 var v = (document.getElementById('newCritPos').value || '').trim();
@@ -3310,44 +3330,122 @@ sendCMSemail(r.submitted_by, 'Report Changes Requested', 'The Head of HR request
 showToast('Decision saved — notifications sent');
 loadReportApprovals();
 }
-async function openHOHRReport(empId) {
-var box = document.getElementById('hrAllContent');
-if (!box) return;
-box.innerHTML = '<div class="loading"><div class="spinner"></div>Preparing report...</div>';
+/* ===== HOHR REPORT — FULL DETAILS: Self + Manager + Average (Current & Prospective) ===== */
+function hohrPct(cs){ return (cs && cs.total > 0) ? Math.round((cs.score / 5) * 100) : null; }
+async function hohrData(empId) {
 const { data: emp } = await _supabase.from('employees').select('*').eq('employee_id', empId).single();
-if (!emp) { showToast('Employee not found'); return; }
 const { data: allResults } = await _supabase.from('assessments').select('*').eq('employee_id', empId);
 var latest = latestOnly(allResults || []);
 var fr = latest.map(function(r){ return { 'Employee ID': r.employee_id, 'Competency Code': r.comp_code, 'Type': r.type, 'Ticked': r.ticked, 'Evidence': r.evidence, 'HR_Status': r.hr_status, 'Rating': r.proficiency_rating }; });
-var mgrScore = calculateOverallScore(empId, 'Manager', fr);
-var pRows = latest.filter(function(r){ return r.type === 'Prospective'; });
-var prospScore = pRows.length ? calculateOverallScore(empId, 'Prospective', fr) : 0;
-var strengths = []; var gaps = [];
+var hasS = fr.some(function(r){ return r['Type'] === 'Self'; });
+var hasM = fr.some(function(r){ return r['Type'] === 'Manager'; });
+var hasP = fr.some(function(r){ return r['Type'] === 'Prospective'; });
+var hasPS = fr.some(function(r){ return r['Type'] === 'Prospective Self'; });
+var selfScore = hasS ? calculateOverallScore(empId, 'Self', fr) : 0;
+var mgrScore = hasM ? calculateOverallScore(empId, 'Manager', fr) : 0;
+var avgScore = (hasS && hasM) ? Math.round((selfScore + mgrScore) / 2) : 0;
+var psScore = hasPS ? calculateOverallScore(empId, 'Prospective Self', fr) : 0;
+var prospScore = hasP ? calculateOverallScore(empId, 'Prospective', fr) : 0;
+var psAvg = (hasPS && hasP) ? Math.round((psScore + prospScore) / 2) : 0;
+var compRows = [];
 for (var i = 0; i < APP.competencies.length; i++) {
 var comp = APP.competencies[i];
-var cs = calculateCompetencyScore(empId, comp.code, 'Manager', fr);
-if (cs.total > 0) {
-var pct = Math.round((cs.score / 5) * 100);
-if (pct >= 70) strengths.push('• ' + comp.competency + ' (' + pct + '%)');
-else if (pct > 0) gaps.push('• ' + comp.competency + ' (' + pct + '%)');
+var csS = calculateCompetencyScore(empId, comp.code, 'Self', fr);
+var csM = calculateCompetencyScore(empId, comp.code, 'Manager', fr);
+var csPS = calculateCompetencyScore(empId, comp.code, 'Prospective Self', fr);
+var csP = calculateCompetencyScore(empId, comp.code, 'Prospective', fr);
+if (csS.total + csM.total + csPS.total + csP.total === 0) continue;
+var s = hohrPct(csS), m = hohrPct(csM), ps = hohrPct(csPS), pm = hohrPct(csP);
+compRows.push({ name: comp.competency, s: s, m: m, a: (s !== null && m !== null) ? Math.round((s + m) / 2) : null, ps: ps, pm: pm, pa: (ps !== null && pm !== null) ? Math.round((ps + pm) / 2) : null });
 }
-}
+function sg(type) { var st = []; var gp = []; for (var k = 0; k < APP.competencies.length; k++) { var c2 = APP.competencies[k]; var cs = calculateCompetencyScore(empId, c2.code, type, fr); if (cs.total > 0) { var p = Math.round((cs.score / 5) * 100); if (p >= 70) st.push('• ' + c2.competency + ' (' + p + '%)'); else if (p > 0) gp.push('• ' + c2.competency + ' (' + p + '%)'); } } return { st: st, gp: gp }; }
+var cur = sg('Manager'); var pros = sg('Prospective');
 const { data: chainRows } = await _supabase.from('report_chain').select('*').eq('employee_id', empId).order('id', { ascending: false }).limit(1);
 var ex = (chainRows && chainRows.length) ? chainRows[0] : null;
-var html = '<div class="card" style="max-width:1000px;margin:0 auto">';
-html += '<div class="card-title">📝 HOHR Assessment Report — ' + escapeHtml(emp.employee_name) + '</div>';
-html += '<p style="font-size:12px;color:var(--gray-500)">' + escapeHtml(emp.position) + ' | ' + escapeHtml(emp.department || '') + ' | ' + escapeHtml(emp.company || '') + ' | Line Manager: ' + escapeHtml(emp.manager || 'N/A') + '</p>';
-html += '<div class="score-rings">' + makeRing(mgrScore, '#059669', 'Current Role') + (pRows.length ? makeRing(prospScore, '#7c3aed', 'Prospective') : '') + '</div>';
-html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:10px 0"><div style="background:var(--green-light);border-radius:8px;padding:10px"><div class="card-subtitle">SYSTEM-COMPUTED STRENGTHS (70%+)</div><div style="font-size:12px;white-space:pre-wrap">' + (strengths.join('\n') || 'None recorded') + '</div></div><div style="background:var(--orange-light);border-radius:8px;padding:10px"><div class="card-subtitle">SYSTEM-COMPUTED GAPS (BELOW 70%)</div><div style="font-size:12px;white-space:pre-wrap">' + (gaps.join('\n') || 'None recorded') + '</div></div></div>';
-html += '<div class="form-group"><label>1. STRENGTHS — your professional observations (editable)</label><textarea id="hohrStrengths" rows="5" style="width:100%">' + escapeHtml(ex && ex.strengths_text ? ex.strengths_text : strengths.join('\n')) + '</textarea></div>';
-html += '<div class="form-group"><label>2. GAPS & DEVELOPMENT NEEDS (editable)</label><textarea id="hohrGaps" rows="5" style="width:100%">' + escapeHtml(ex && ex.gaps_text ? ex.gaps_text : gaps.join('\n')) + '</textarea></div>';
-html += '<div class="form-group"><label>3. HR RECOMMENDATION (editable)</label><textarea id="hohrRec" rows="4" style="width:100%" placeholder="e.g. Recommend promotion to Senior HR Officer when a vacancy arises; meanwhile assign cross-departmental projects to build analytical skills...">' + escapeHtml(ex && ex.recommendation_text ? ex.recommendation_text : '') + '</textarea></div>';
-html += '<div class="form-group"><label>Suggested path (your recommendation — HOHR makes the final decision)</label><select id="hohrPath" style="width:auto"><option>Promotion</option><option>Development Plan</option><option>Promotion (Hold — No Vacancy)</option><option>Retain & Develop</option></select></div>';
-if (ex) html += '<p style="font-size:11px;color:var(--gray-500)">Existing report status: ' + escapeHtml(ex.status) + ' (' + escapeHtml(ex.stage) + ')</p>';
-html += '<div style="display:flex;gap:8px;margin-top:12px"><button class="btn btn-primary" onclick="saveHOHRReport(\'' + empId + '\',false)">📤 Submit to Head of HR</button> <button class="btn btn-outline" onclick="saveHOHRReport(\'' + empId + '\',true)">💾 Save Draft</button> <button class="btn btn-outline" onclick="loadHRAllDetail(\'' + empId + '\')">Cancel</button></div>';
+return { emp: emp, hasS: hasS, hasM: hasM, hasP: hasP, hasPS: hasPS, selfScore: selfScore, mgrScore: mgrScore, avgScore: avgScore, psScore: psScore, prospScore: prospScore, psAvg: psAvg, compRows: compRows, cur: cur, pros: pros, ex: ex };
+}
+function hohrDocHTML(d) {
+var NL = '\n'; var esc = escapeHtml;
+var TB = 'style="border:1px solid #999;padding:4px;background:#eee"';
+var TD = 'style="border:1px solid #999;padding:4px;text-align:center"';
+var TDL = 'style="border:1px solid #999;padding:4px"';
+function cell(v){ return v === null ? '—' : v + '%'; }
+var h = '<div style="text-align:center;border-bottom:3px solid #333;padding-bottom:8px;margin-bottom:12px"><div style="font-size:20px;font-weight:bold">KENAFRIC GROUP — COMPETENCY ASSESSMENT REPORT</div><div style="font-size:11px;color:#555">Confidential — Head of HR decision document</div></div>';
+h += '<p style="font-size:12px"><strong>' + esc(d.emp.employee_name) + '</strong> | ' + esc(d.emp.position) + ' | ' + esc(d.emp.department || '') + ' | ' + esc(d.emp.company || '') + ' | Line Manager: ' + esc(d.emp.manager || 'N/A') + ' | Generated: ' + new Date().toLocaleDateString('en-GB') + '</p>';
+h += '<table style="width:100%;border-collapse:collapse;font-size:12px;margin:8px 0"><tr><th ' + TB + '>Self (Current)</th><th ' + TB + '>Manager (Current)</th><th ' + TB + '>Final Average</th><th ' + TB + '>Prospective (Self)</th><th ' + TB + '>Prospective (Manager)</th><th ' + TB + '>Prospective Average</th></tr>';
+h += '<tr><td ' + TD + '><strong>' + (d.hasS ? d.selfScore + '%' : '—') + '</strong></td><td ' + TD + '><strong>' + (d.hasM ? d.mgrScore + '%' : '—') + '</strong></td><td ' + TD + '><strong>' + ((d.hasS && d.hasM) ? d.avgScore + '%' : '—') + '</strong></td><td ' + TD + '><strong>' + (d.hasPS ? d.psScore + '%' : '—') + '</strong></td><td ' + TD + '><strong>' + (d.hasP ? d.prospScore + '%' : '—') + '</strong></td><td ' + TD + '><strong>' + ((d.hasPS && d.hasP) ? d.psAvg + '%' : '—') + '</strong></td></tr></table>';
+h += '<table style="width:100%;border-collapse:collapse;font-size:11px;margin:8px 0"><tr><th ' + TB + '>Competency</th><th ' + TB + '>Self</th><th ' + TB + '>Manager</th><th ' + TB + '>Average</th><th ' + TB + '>Prosp Self</th><th ' + TB + '>Prosp Mgr</th><th ' + TB + '>Prosp Avg</th></tr>';
+d.compRows.forEach(function(r){ h += '<tr><td ' + TDL + '>' + esc(r.name) + '</td><td ' + TD + '>' + cell(r.s) + '</td><td ' + TD + '>' + cell(r.m) + '</td><td ' + TD + '>' + cell(r.a) + '</td><td ' + TD + '>' + cell(r.ps) + '</td><td ' + TD + '>' + cell(r.pm) + '</td><td ' + TD + '>' + cell(r.pa) + '</td></tr>'; });
+h += '</table>';
+h += '<div style="margin:8px 0"><strong>CURRENT ROLE — Strengths (70%+):</strong><div style="white-space:pre-wrap;border:1px solid #ccc;padding:6px;font-size:11px">' + esc(d.cur.st.join(NL) || 'None recorded') + '</div></div>';
+h += '<div style="margin:8px 0"><strong>CURRENT ROLE — Gaps (below 70%):</strong><div style="white-space:pre-wrap;border:1px solid #ccc;padding:6px;font-size:11px">' + esc(d.cur.gp.join(NL) || 'None recorded') + '</div></div>';
+if (d.hasP || d.hasPS) {
+h += '<div style="margin:8px 0"><strong>PROSPECTIVE ROLE — Strengths (70%+):</strong><div style="white-space:pre-wrap;border:1px solid #ccc;padding:6px;font-size:11px">' + esc(d.pros.st.join(NL) || 'None recorded') + '</div></div>';
+h += '<div style="margin:8px 0"><strong>PROSPECTIVE ROLE — Gaps (below 70%):</strong><div style="white-space:pre-wrap;border:1px solid #ccc;padding:6px;font-size:11px">' + esc(d.pros.gp.join(NL) || 'None recorded') + '</div></div>';
+}
+h += '<div style="margin:8px 0"><strong>HR Strengths (observations):</strong><div style="white-space:pre-wrap;border:1px solid #ccc;padding:6px;font-size:11px">' + esc(d.ex && d.ex.strengths_text ? d.ex.strengths_text : d.cur.st.join(NL)) + '</div></div>';
+h += '<div style="margin:8px 0"><strong>HR Gaps & Development Needs:</strong><div style="white-space:pre-wrap;border:1px solid #ccc;padding:6px;font-size:11px">' + esc(d.ex && d.ex.gaps_text ? d.ex.gaps_text : d.cur.gp.join(NL)) + '</div></div>';
+h += '<div style="margin:8px 0"><strong>HR Recommendation:</strong><div style="white-space:pre-wrap;border:1px solid #ccc;padding:6px;font-size:11px">' + esc(d.ex && d.ex.recommendation_text ? d.ex.recommendation_text : '—') + '</div></div>';
+h += '<p style="font-size:12px"><strong>Suggested path:</strong> ' + esc(d.ex && d.ex.suggested_path ? d.ex.suggested_path : '—') + ' | <strong>Report status:</strong> ' + esc(d.ex ? (d.ex.status + ' (' + d.ex.stage + ')') : 'Not submitted yet') + '</p>';
+h += '<div style="margin-top:28px;font-size:11px"><div style="display:inline-block;width:30%;margin-right:2%;border-top:1px solid #333;padding-top:4px">Employee</div><div style="display:inline-block;width:30%;margin-right:2%;border-top:1px solid #333;padding-top:4px">Line Manager</div><div style="display:inline-block;width:30%;border-top:1px solid #333;padding-top:4px">HR Admin</div></div>';
+h += '<div style="margin-top:14px;font-size:11px"><div style="display:inline-block;width:30%;margin-right:2%;border-top:1px solid #333;padding-top:4px">Head of HR</div></div>';
+return h;
+}
+async function printHOHRReport(empId) {
+var d = await hohrData(empId); if (!d.emp) { showToast('Employee not found'); return; }
+var w = window.open('', '_blank'); if (!w) { showToast('Pop-up blocked — allow pop-ups and try again'); return; }
+w.document.write('<html><head><title>Report - ' + escapeHtml(d.emp.employee_name) + '</title><style>body{font-family:Arial,Helvetica,sans-serif;color:#111;margin:24px;} @media print{.noprint{display:none}}</style></head><body>' + hohrDocHTML(d) + '<div class="noprint" style="margin-top:16px"><button onclick="window.print()" style="padding:8px 16px;font-size:13px">🖨 Print / Save as PDF</button></div></body></html>');
+w.document.close();
+}
+async function downloadHOHRReportWord(empId) {
+var d = await hohrData(empId); if (!d.emp) { showToast('Employee not found'); return; }
+var html = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word"><head><meta charset="UTF-8"></head><body>' + hohrDocHTML(d) + '</body></html>';
+var blob = new Blob(['\ufeff', html], { type: 'application/msword' });
+var a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'Report_' + (d.emp.employee_name || '').replace(/[^a-z0-9]+/gi, '_') + '.doc';
+document.body.appendChild(a); a.click(); document.body.removeChild(a);
+showToast('Word document downloaded');
+}
+async function openHOHRReport(empId) {
+var box = document.getElementById('hrAllContent') || document.getElementById('hrReportsContent');
+if (!box) return;
+box.innerHTML = '<div class="loading"><div class="spinner"></div>Preparing report...</div>';
+var d = await hohrData(empId);
+if (!d.emp) { showToast('Employee not found'); return; }
+var NL = '\n';
+function cell(v){ return v === null ? '<span style="color:var(--gray-400)">—</span>' : '<strong>' + v + '%</strong>'; }
+var html = '<div class="card" style="max-width:1100px;margin:0 auto">';
+html += '<div class="card-title">📝 HOHR Assessment Report — ' + escapeHtml(d.emp.employee_name) + '</div>';
+html += '<p style="font-size:12px;color:var(--gray-500)">' + escapeHtml(d.emp.position) + ' | ' + escapeHtml(d.emp.department || '') + ' | ' + escapeHtml(d.emp.company || '') + ' | Line Manager: ' + escapeHtml(d.emp.manager || 'N/A') + '</p>';
+html += '<div class="card-subtitle" style="margin-top:10px">CURRENT ROLE</div><div class="score-rings">';
+if (d.hasS) html += makeRing(d.selfScore, '#2563eb', 'Self (Current)');
+if (d.hasM) html += makeRing(d.mgrScore, '#059669', 'Manager (Current)');
+if (d.hasS && d.hasM) html += makeRing(d.avgScore, '#ea580c', 'Final Average');
+html += '</div>';
+if (d.hasPS || d.hasP) {
+html += '<div class="card-subtitle">PROSPECTIVE ROLE</div><div class="score-rings">';
+if (d.hasPS) html += makeRing(d.psScore, '#0ea5e9', 'Prospective (Self)');
+if (d.hasP) html += makeRing(d.prospScore, '#7c3aed', 'Prospective (Manager)');
+if (d.hasPS && d.hasP) html += makeRing(d.psAvg, '#9333ea', 'Prospective Average');
+html += '</div>';
+}
+html += '<div class="card-subtitle" style="margin-top:8px">SCORE DETAILS PER COMPETENCY</div><div class="table-wrap"><table class="staff-table"><thead><tr><th>Competency</th><th>Self</th><th>Manager</th><th>Average</th><th>Prosp Self</th><th>Prosp Mgr</th><th>Prosp Avg</th></tr></thead><tbody>';
+d.compRows.forEach(function(r){ html += '<tr><td>' + escapeHtml(r.name) + '</td><td>' + cell(r.s) + '</td><td>' + cell(r.m) + '</td><td>' + cell(r.a) + '</td><td>' + cell(r.ps) + '</td><td>' + cell(r.pm) + '</td><td>' + cell(r.pa) + '</td></tr>'; });
+html += '</tbody></table></div>';
+html += '<div class="card-subtitle" style="margin-top:12px">CURRENT ROLE — SYSTEM-COMPUTED</div>';
+html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:6px 0 12px"><div style="background:var(--green-light);border-radius:8px;padding:10px"><div class="card-subtitle">STRENGTHS (70%+)</div><div style="font-size:12px;white-space:pre-wrap">' + (d.cur.st.join(NL) || 'None recorded') + '</div></div><div style="background:var(--orange-light);border-radius:8px;padding:10px"><div class="card-subtitle">GAPS (BELOW 70%)</div><div style="font-size:12px;white-space:pre-wrap">' + (d.cur.gp.join(NL) || 'None recorded') + '</div></div></div>';
+if (d.hasP || d.hasPS) {
+html += '<div class="card-subtitle">PROSPECTIVE ROLE — SYSTEM-COMPUTED</div>';
+html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:6px 0 12px"><div style="background:var(--green-light);border-radius:8px;padding:10px"><div class="card-subtitle">STRENGTHS (70%+)</div><div style="font-size:12px;white-space:pre-wrap">' + (d.pros.st.join(NL) || 'None recorded') + '</div></div><div style="background:var(--orange-light);border-radius:8px;padding:10px"><div class="card-subtitle">GAPS (BELOW 70%)</div><div style="font-size:12px;white-space:pre-wrap">' + (d.pros.gp.join(NL) || 'None recorded') + '</div></div></div>';
+}
+html += '<div class="form-group"><label>1. STRENGTHS — your professional observations (editable)</label><textarea id="hohrStrengths" rows="4" style="width:100%">' + escapeHtml(d.ex && d.ex.strengths_text ? d.ex.strengths_text : d.cur.st.join(NL)) + '</textarea></div>';
+html += '<div class="form-group"><label>2. GAPS & DEVELOPMENT NEEDS (editable)</label><textarea id="hohrGaps" rows="4" style="width:100%">' + escapeHtml(d.ex && d.ex.gaps_text ? d.ex.gaps_text : d.cur.gp.join(NL)) + '</textarea></div>';
+html += '<div class="form-group"><label>3. HR RECOMMENDATION (editable)</label><textarea id="hohrRec" rows="3" style="width:100%">' + escapeHtml(d.ex && d.ex.recommendation_text ? d.ex.recommendation_text : '') + '</textarea></div>';
+html += '<div class="form-group"><label>Suggested path (your recommendation — HOHR makes the final decision)</label><select id="hohrPath" style="width:auto"><option>Promote — appoint now (subject to vacancy & process)</option><option>Promotion Ready — hold in Promotion-Ready Pool; develop to close remaining gaps</option><option>Develop for 3 months, then reassess</option><option>Develop for 6 months, then reassess</option><option>Develop for 12 months, then reassess</option><option>Develop for 18 months, then reassess</option><option>Performance improvement plan required</option><option>Retain & develop — no promotion path currently</option></select></div>';
+if (d.ex) html += '<p style="font-size:11px;color:var(--gray-500)">Existing report status: ' + escapeHtml(d.ex.status) + ' (' + escapeHtml(d.ex.stage) + ')</p>';
+html += '<div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap"><button class="btn btn-primary" onclick="saveHOHRReport(\'' + empId + '\',false)">📤 Submit to Head of HR</button> <button class="btn btn-outline" onclick="saveHOHRReport(\'' + empId + '\',true)">💾 Save Draft</button> <button class="btn btn-outline" onclick="printHOHRReport(\'' + empId + '\')">📄 Print / PDF</button> <button class="btn btn-success" onclick="downloadHOHRReportWord(\'' + empId + '\')">📝 Word</button> <button class="btn btn-outline" onclick="loadHRAllDetail(\'' + empId + '\')">Cancel</button></div>';
 html += '</div>';
 box.innerHTML = html;
-if (ex && ex.suggested_path) document.getElementById('hohrPath').value = ex.suggested_path;
+if (d.ex && d.ex.suggested_path) { var psSel = document.getElementById('hohrPath'); var found = false; for (var oi = 0; oi < psSel.options.length; oi++) { if (psSel.options[oi].text === d.ex.suggested_path) { found = true; break; } } if (!found) { var no = document.createElement('option'); no.text = d.ex.suggested_path; psSel.add(no); } psSel.value = d.ex.suggested_path; }
 }
 async function saveHOHRReport(empId, draftOnly) {
 var s = document.getElementById('hohrStrengths').value;
@@ -3376,7 +3474,7 @@ var list = (hohrs && hohrs.length) ? hohrs : [{ email: prompt('Head of HR email:
 list.forEach(function(u){ if (u && u.email) sendCMSemail(u.email, 'Assessment Report for Approval: ' + emp.employee_name, 'HR Admin prepared the competency report for ' + emp.employee_name + ' (' + emp.position + '). Current role: ' + mgrScore + '%. Prospective: ' + (prospScore || '—') + '%. HR recommends: ' + path + '. Log in to review the full document and decide: ' + APP_LINK); });
 showToast('Report submitted to Head of HR');
 } else showToast('Draft saved');
-loadHRAllDetail(empId);
+if (APP._reportReturn === 'hub') { APP._reportReturn = ''; loadHRReportsHub(); } else loadHRAllDetail(empId);
 }
 async function sendToHOHR(empId) {
 const { data: emp } = await _supabase.from('employees').select('*').eq('employee_id', empId).single();
@@ -3486,8 +3584,8 @@ return window._hohrSortDesc ? db.localeCompare(da) : da.localeCompare(db);
 });
 function groupOf(r){
 if (r.status === 'Escalated') return 'escalated';
-if (r.status === 'Pending') return 'pending';
-if (String(r.status).indexOf('Approved') === 0 || String(r.status).indexOf('Endorsed') === 0) return 'approved';
+if (r.status === 'Pending' || String(r.status).indexOf('Endorsed') === 0) return 'pending';
+if (String(r.status).indexOf('Approved') === 0 || String(r.status).indexOf('Finalized') === 0) return 'approved';
 return 'returned';
 }
 var counts = { all: rows.length, escalated: 0, pending: 0, approved: 0 };
@@ -3539,6 +3637,10 @@ html += '<button class="btn btn-sm btn-primary" onclick="decideReportChain(' + r
 html += '<button class="btn btn-sm btn-outline" onclick="decideReportChain(' + r.id + ',\'Approved: Promotion (Hold — No Vacancy)\')">Hold</button>';
 html += '<button class="btn btn-sm btn-outline" onclick="decideReportChain(' + r.id + ',\'Escalated\')">Escalate</button>';
 html += '<button class="btn btn-sm btn-danger" onclick="decideReportChain(' + r.id + ',\'Returned\')">Return</button>';
+} else if (String(r.status).indexOf('Endorsed') === 0) {
+html += '<div style="font-size:11px;color:var(--gray-600);width:100%">🏛 C-Suite decision: ' + escapeHtml(r.status) + (r.comment ? ' — "' + escapeHtml(r.comment) + '"' : '') + ' — review, add your final comment if needed, then finalize.</div>';
+html += '<input id="fin-' + r.id + '" placeholder="HOHR final comment (optional)" style="flex:1;min-width:140px;padding:5px 8px;font-size:11px">';
+html += '<button class="btn btn-sm btn-success" onclick="finalizeReport(' + r.id + ')">✅ Finalize & Notify</button>';
 } else {
 html += '<span style="font-size:11px;color:var(--gray-500)">' + escapeHtml(r.status) + (r.decided_by ? ' by ' + escapeHtml(r.decided_by) : '') + '</span>';
 if (r.comment) html += '<span style="font-size:11px;color:var(--gray-600)"> — ' + escapeHtml(r.comment) + '</span>';
@@ -3990,6 +4092,27 @@ html += '<div style="display:flex;align-items:center;gap:10px;padding:10px 0;bor
 html += '<p style="font-size:11px;color:var(--gray-500);margin-top:10px">Direct Development Plans to these priorities via the HR Admin view.</p></div></div>';
 setContent(html);
 }
+async function finalizeReport(id) {
+var c = document.getElementById('fin-' + id);
+var comment = c ? c.value.trim() : '';
+const { data: r } = await _supabase.from('report_chain').select('*').eq('id', id).single();
+if (!r) return;
+var newStatus = String(r.status || '').replace('Endorsed', 'Finalized');
+const { error } = await _supabase.from('report_chain').update({ status: newStatus, stage: 'FINALIZED', comment: comment || r.comment, decided_by: APP.user.email, decided_date: new Date().toISOString().slice(0,10) }).eq('id', id);
+if (error) { showToast(error.message); return; }
+var decisionText = newStatus.replace('Finalized: ', '');
+var NL = String.fromCharCode(10);
+/* 1) HR Admin (who submitted the report) */
+if (r.submitted_by) sendCMSemail(r.submitted_by, 'FINAL Decision: ' + r.employee_name + ' — ' + decisionText, 'The Head of HR has finalized the C-Suite endorsed decision for ' + r.employee_name + ' (' + (r.position || '') + '): ' + decisionText + '.' + NL + (r.comment ? 'C-Suite comment: ' + r.comment + NL : '') + (comment ? 'HOHR comment: ' + comment + NL : '') + 'Please proceed with the next steps in the CMS: ' + APP_LINK);
+/* 2) Line Manager — the employee is NOT notified */
+const { data: emp } = await _supabase.from('employees').select('manager_email').eq('employee_id', r.employee_id).single();
+if (emp && emp.manager_email) {
+if (decisionText.indexOf('Development Plan') >= 0) sendCMSemail(emp.manager_email, 'Development Plan Directed (FINAL): ' + r.employee_name, 'The C-Suite endorsed and the Head of HR finalized a DEVELOPMENT PLAN for ' + r.employee_name + '. Create the IDP from their gaps in the CMS: ' + APP_LINK);
+else sendCMSemail(emp.manager_email, 'Promotion Approved (FINAL): ' + r.employee_name, r.employee_name + ' has been approved for promotion by the C-Suite and Head of HR (subject to vacancy and company process).');
+}
+showToast('✅ Finalized — HR Admin and Line Manager notified (employee not notified)');
+loadHOHRReports();
+}
 async function decideCSReport(id, decision) {
 var c = document.getElementById('csc-' + id); var comment = c ? c.value.trim() : '';
 const { data: r } = await _supabase.from('report_chain').select('*').eq('id', id).single();
@@ -4295,6 +4418,84 @@ if (st === 'Returned') return '<span class="badge badge-warning">Returned</span>
 if (st === 'Pending') return '<span class="badge badge-purple">Pending HR</span>';
 return '';
 }
+/* ===== Reports Hub (HR Admin) ===== */
+function reportCancel(empId) {
+if (APP._reportReturn === 'hub') { APP._reportReturn = ''; loadHRReportsHub(); }
+else { APP._reportReturn = ''; loadHRAllDetail(empId); }
+}
+async function loadHRReportsHub() {
+APP._reportReturn = 'hub';
+setContent('<div class="loading"><div class="spinner"></div>Loading reports...</div>');
+const { data: emps } = await _supabase.from('employees').select('employee_id, employee_name, position');
+const { data: chains } = await _supabase.from('report_chain').select('*').order('id', { ascending: false });
+var html = '<div class="card"><div class="card-title">📑 Reports Hub — generate, edit, send & manage assessment reports</div>';
+html += '<p style="font-size:12px;color:var(--gray-500);margin-bottom:10px">Create the report document for any employee (system scores + your professional observations), edit it, send it to the Head of HR, or delete it.</p>';
+html += '<div style="display:flex;gap:8px;align-items:end"><div class="form-group" style="margin-bottom:0;flex:1"><label>Generate report for employee</label><select id="repEmpSel"><option value="">-- Select --</option>' + (emps || []).slice().sort(function(a,b){ return (a.employee_name||'').localeCompare(b.employee_name||''); }).map(function(e){ return '<option value="' + e.employee_id + '">' + escapeHtml(e.employee_name) + ' (' + escapeHtml(e.position || '') + ')</option>'; }).join('') + '</select></div><button class="btn btn-primary" onclick="generateReportFromHub()">📝 Generate Report</button></div></div>';
+html += '<div class="card"><div class="card-title">All Reports (' + (chains || []).length + ')</div>';
+if (!chains || !chains.length) html += '<p style="color:var(--gray-500)">No reports yet — generate the first one above.</p>';
+else {
+html += '<div class="table-wrap"><table class="staff-table"><thead><tr><th>Employee</th><th>Position</th><th>Current</th><th>Prospective</th><th>Stage</th><th>Status</th><th>Updated</th><th>Actions</th></tr></thead><tbody>';
+chains.forEach(function(r){
+var st = r.status || 'Draft';
+var badge = st === 'Pending' ? 'warning' : (String(st).indexOf('Approved') === 0 || String(st).indexOf('Endorsed') === 0 ? 'success' : (st === 'Draft' ? 'info' : 'danger'));
+html += '<tr><td><strong>' + escapeHtml(r.employee_name) + '</strong></td>';
+html += '<td style="font-size:11px">' + escapeHtml(r.position || '') + '</td>';
+html += '<td>' + (r.mgr_score || 0) + '%</td>';
+html += '<td>' + (r.prosp_score ? r.prosp_score + '%' : '—') + '</td>';
+html += '<td>' + escapeHtml(r.stage || '—') + '</td>';
+html += '<td><span class="badge badge-' + badge + '">' + escapeHtml(st) + '</span></td>';
+html += '<td style="font-size:11px">' + escapeHtml(r.decided_date || r.submitted_date || r.created_date || '') + '</td>';
+html += '<td style="white-space:nowrap">';
+html += '<button class="btn btn-sm btn-outline" onclick="viewReportDoc(' + r.id + ')">📄 View</button> ';
+if (st === 'Draft' || st === 'Returned') html += '<button class="btn btn-sm btn-primary" onclick="editReportFromHub(\'' + r.employee_id + '\')">✏️ Edit</button> <button class="btn btn-sm btn-success" onclick="sendDraftToHOHR(' + r.id + ')">📤 Send to HOHR</button> ';
+html += '<button class="btn btn-sm btn-danger" onclick="deleteReportChain(' + r.id + ',\'' + escapeHtml(r.employee_name) + '\')">🗑 Delete</button>';
+html += '</td></tr>';
+});
+html += '</tbody></table></div>';
+}
+html += '</div>';
+setContent('<div id="hrReportsContent">' + html + '</div>');
+}
+function generateReportFromHub() {
+var id = document.getElementById('repEmpSel').value;
+if (!id) { showToast('Select an employee first'); return; }
+APP._reportReturn = 'hub';
+openHOHRReport(id);
+}
+function editReportFromHub(empId) {
+APP._reportReturn = 'hub';
+openHOHRReport(empId);
+}
+async function viewReportDoc(id) {
+const { data: r } = await _supabase.from('report_chain').select('*').eq('id', id).single();
+if (!r) return;
+var box = document.getElementById('hrReportsContent'); if (!box) return;
+var h = '<div class="card"><div style="display:flex;justify-content:space-between;align-items:center"><div class="card-title" style="margin:0">📄 Report — ' + escapeHtml(r.employee_name) + '</div><button class="btn btn-outline" onclick="loadHRReportsHub()">← Back to Reports</button></div>';
+h += '<p style="font-size:12px;color:var(--gray-500);margin:6px 0">' + escapeHtml(r.position || '') + ' | Current: ' + (r.mgr_score || 0) + '% | Prospective: ' + (r.prosp_score || '—') + '% | Stage: ' + escapeHtml(r.stage || '—') + ' | Status: ' + escapeHtml(r.status || '—') + '</p>';
+h += '<div style="margin:8px 0"><strong>Strengths:</strong><div style="white-space:pre-wrap;background:var(--gray-50);padding:8px;border-radius:6px">' + escapeHtml(r.strengths_text || '—') + '</div></div>';
+h += '<div style="margin:8px 0"><strong>Gaps & Development Needs:</strong><div style="white-space:pre-wrap;background:var(--gray-50);padding:8px;border-radius:6px">' + escapeHtml(r.gaps_text || '—') + '</div></div>';
+h += '<div style="margin:8px 0"><strong>HR Recommendation:</strong><div style="white-space:pre-wrap;background:var(--primary-light);padding:8px;border-radius:6px">' + escapeHtml(r.recommendation_text || '—') + '</div></div>';
+h += '<p style="font-size:12px">Suggested path: <strong>' + escapeHtml(r.suggested_path || '—') + '</strong> | Submitted by: ' + escapeHtml(r.submitted_by || '—') + (r.comment ? ' | Decision comment: "' + escapeHtml(r.comment) + '"' : '') + '</p></div>';
+box.innerHTML = h;
+}
+async function sendDraftToHOHR(id) {
+const { data: r } = await _supabase.from('report_chain').select('*').eq('id', id).single();
+if (!r) return;
+if (r.status === 'Pending' || r.status === 'Escalated') { showToast('Already with ' + r.stage); return; }
+const { error } = await _supabase.from('report_chain').update({ status: 'Pending', stage: 'HOHR', submitted_date: new Date().toISOString().slice(0,10) }).eq('id', id);
+if (error) { showToast(error.message); return; }
+const { data: hohrs } = await _supabase.from('user_profiles').select('email').eq('role', 'HEAD_HR');
+(hohrs || []).forEach(function(u){ sendCMSemail(u.email, 'Assessment Report for Approval: ' + r.employee_name, 'HR Admin submitted the competency report for ' + r.employee_name + ' (' + (r.position || '') + '). Current: ' + (r.mgr_score || 0) + '%. Prospective: ' + (r.prosp_score || '—') + '%. Recommended: ' + (r.suggested_path || '—') + '. Review and decide: ' + APP_LINK); });
+showToast('Report sent to Head of HR');
+loadHRReportsHub();
+}
+async function deleteReportChain(id, name) {
+if (!confirm('Delete the report for ' + name + '? This removes the report document only — assessments stay intact.')) return;
+const { error } = await _supabase.from('report_chain').delete().eq('id', id);
+if (error) { showToast(error.message); return; }
+showToast('Report deleted');
+loadHRReportsHub();
+}
 async function loadHRAll() {
 setContent('<div class="loading"><div class="spinner"></div>Loading...</div>');
 const { data: allEmps } = await _supabase.from('employees').select('*');
@@ -4344,7 +4545,7 @@ if (org && org !== 'Draft') {
 if (org === 'Pending') return '<span class="badge badge-warning">📋 In HOHR review</span>';
 if (org === 'Escalated') return '<span class="badge badge-danger">⚡ Escalated to C-Suite</span>';
 if (org === 'Returned') return '<span class="badge badge-danger">↩ Returned to HR</span>';
-return '<span class="badge badge-success">🏛 ' + escapeHtml(String(org).replace('Approved: ', '')) + '</span>';
+return '<span class="badge badge-success">🏛 ' + escapeHtml(String(org).replace('Approved: ', '').replace('Finalized: ', 'FINAL: ')) + '</span>';
 }
 if (sPA !== null) {
 if (sPA >= 81) return '<span class="badge badge-success">🚀 Promote — Ready Now</span>';
