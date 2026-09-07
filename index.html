@@ -5361,10 +5361,10 @@ function showJdBox() {
 var box = document.getElementById('compContent') || document.getElementById('mgrCompContent');
 if (!box) return;
 var h = '<div class="card" id="jdBox"><div class="card-title">✍️AI Competency Builder</div>';
-h += '<p style="font-size:11px;color:var(--gray-500);margin-bottom:8px">Paste anything about the role — duties, KPIs, a vacancy advert or your own notes (or upload a Word / text file). The AI drafts the competencies in our exact format and downloads them as an Excel file for you to review, edit and re‑upload.</p>';
+h += '<p style="font-size:11px;color:var(--gray-500);margin-bottom:8px">Paste anything about the role — duties, KPIs, a vacancy advert or your own notes (or upload a Word / text file). The AI drafts the competencies in our exact format and opens an <strong>editable draft right here in the app</strong> — review, edit and save. No Excel needed.</p>';
 h += '<input type="file" id="jdFile" accept=".docx,.txt,.md" onchange="jdFilePicked(this)" style="margin-bottom:8px">';
 h += '<textarea id="jdText" rows="6" placeholder="Paste role notes, duties, KPIs or any document text here..."></textarea>';
-h += '<div style="display:flex;gap:8px;margin-top:8px"><button type="button" class="btn btn-primary" onclick="jdGenerate()">✍️Generate Excel Draft</button><button type="button" class="btn btn-outline" onclick="document.getElementById(\'jdBox\').remove()">Close</button></div></div>';
+h += '<div style="display:flex;gap:8px;margin-top:8px"><button type="button" class="btn btn-primary" onclick="jdGenerate()">✍️ Generate Draft (edit in app)</button><button type="button" class="btn btn-outline" onclick="document.getElementById(\'jdBox\').remove()">Close</button></div></div>';
 box.innerHTML = h + box.innerHTML;
 }
 async function jdFilePicked(input) {
@@ -5411,19 +5411,17 @@ if (!meta || !(r.text || '').trim()) return;
 rowsOut.push({ 'Department': dep, 'Position': pos, 'Competency Code': meta.code, 'Competency Name': meta.competency, 'Category': meta.category || '', 'Weight %': parseFloat(meta.weight) || 0, 'Classification': r.classification || 'Important (Performance)', 'Experience Text': (r.text || '').trim() });
 });
 if (!rowsOut.length) { showToast('AI returned nothing usable — try again'); return; }
-var cntByCode = {}; rowsOut.forEach(function(r){ cntByCode[r['Competency Code']] = (cntByCode[r['Competency Code']] || 0) + 1; });
-var shortList = [];
-comps.forEach(function(c){ var mn = compMinExps(c.competency); if (mn && (cntByCode[c.code] || 0) < mn) shortList.push(c.code + ' (' + (cntByCode[c.code] || 0) + '/' + mn + ')'); });
-if (shortList.length) showToast('Below minimum experiences: ' + shortList.join(', ') + ' — add more in the Excel before uploading');
-loadXLSXLib(function(){
-if (!window.XLSX) { showToast('Excel library failed to load'); return; }
-var ws = XLSX.utils.json_to_sheet(rowsOut);
-var wb = XLSX.utils.book_new();
-XLSX.utils.book_append_sheet(wb, ws, 'AI Draft');
-XLSX.writeFile(wb, 'AI_Competencies_' + pos.replace(/[^a-z0-9]/gi, '_') + '.xlsx');
-showToast('✅ Excel downloaded — review & edit, then ⬆ Bulk Upload it');
+var byCode = {};
+rowsOut.forEach(function(r){
+if (!byCode[r['Competency Code']]) byCode[r['Competency Code']] = { code: r['Competency Code'], name: r['Competency Name'], category: r['Category'] || 'Functional', weight: r['Weight %'] || 0, experiences: [] };
+byCode[r['Competency Code']].experiences.push({ text: r['Experience Text'], classification: r['Classification'] || 'Important (Performance)' });
 });
-} catch (err) { showToast('AI failed: ' + err.message); }
+var draftComps = Object.keys(byCode).map(function(k){ return byCode[k]; });
+var ruleNotes = enforceFrameworkRules(draftComps);
+window._aiDraft = { dep: dep, pos: pos, comps: draftComps };
+var jdBox = document.getElementById('jdBox'); if (jdBox) jdBox.remove();
+renderAiDraft();
+showToast('✅ Draft ready below — edit in the app, then press Save to Library' + (ruleNotes.length ? ' • ' + ruleNotes[0] : ''));} catch (err) { showToast('AI failed: ' + err.message); }
 }
 function isOpComp(name){ var n=(name||'').toString().toUpperCase(); return n.indexOf('ANALYT')>=0 || n.indexOf('JUDG')>=0 || n.indexOf('DECISION')>=0 || n.indexOf('PLANN')>=0 || n.indexOf('EXEC')>=0; }
 function isBehComp(name){ var n=(name||'').toString().toUpperCase(); return n.indexOf('LEARN')>=0 || n.indexOf('PEOPLE')>=0 || n.indexOf('LEADER')>=0; }
@@ -5499,7 +5497,7 @@ h += '<div id="dexps-' + ci + '" style="margin-top:6px">';
 (c.experiences || []).forEach(function(x){ h += draftExpRow(x); });
 h += '</div><button type="button" class="btn btn-sm btn-outline" onclick="addDraftExp(' + ci + ')">+ Add experience</button></div>';
 });
-h += '<div style="display:flex;gap:8px;margin-top:12px"><button type="button" class="btn btn-primary" onclick="saveAiDraft()">💾 Save to Library</button><button type="button" class="btn btn-success" onclick="downloadAiDraftExcel()">⬇ Download as Excel</button><button type="button" class="btn btn-outline" onclick="discardAiDraft()">🗑 Discard</button></div></div>';
+h += '<div style="display:flex;gap:8px;margin-top:12px"><button type="button" class="btn btn-primary" onclick="saveAiDraft()">💾 Save to Library</button>' + (APP.user.modes.isAdmin ? '<button type="button" class="btn btn-success" onclick="downloadAiDraftExcel()">⬇ Download as Excel</button>' : '') + '<button type="button" class="btn btn-outline" onclick="discardAiDraft()">🗑 Discard</button></div></div>';
 box.innerHTML = h + box.innerHTML;
 }
 async function saveAiDraft() {
