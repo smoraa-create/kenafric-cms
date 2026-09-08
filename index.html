@@ -104,6 +104,7 @@ label { font-size: 12px; font-weight: 600; color: var(--gray-700); display: bloc
 .badge-danger { background: var(--red-light); color: var(--red); }
 .badge-info { background: var(--primary-light); color: var(--primary); }
 .badge-purple { background: var(--purple-light); color: var(--purple); }
+.badge-gray { background: var(--gray-100); color: var(--gray-600); }
 .toast { position: fixed; bottom: 20px; right: 20px; background: var(--gray-900); color: white; padding: 12px 20px; border-radius: 8px; font-size: 13px; z-index: 1000; display: none; box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
 .toast.show { display: block; animation: slideUp 0.3s ease-out; }
 @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
@@ -2495,7 +2496,7 @@ track: emp.talent_track || ''
 const { data: critRows } = await _supabase.from('critical_positions').select('*');
 var critLevel2 = {};
 (critRows || []).forEach(function(c){ critLevel2[(c.position_name || '').toUpperCase().trim()] = c.criticality || 'Critical Role'; });
-function staffCritRank(s){ var lv = critLevel2[(s.position || '').toUpperCase().trim()] || ''; if (lv.indexOf('Absolutely') === 0) return 0; if (lv.indexOf('Relatively') === 0) return 2; if (lv) return 1; return 3; }
+function staffCritRank(s){ var lv = critLevel2[(s.position || '').toUpperCase().trim()] || ''; if (lv.indexOf('Absolutely') === 0) return 0; if (lv.indexOf('Relatively') === 0) return 2; if (lv.indexOf('Non') === 0) return 3; if (lv) return 1; return 3; }
 staff.sort(function(a,b){ var ra = staffCritRank(a), rb = staffCritRank(b); if (ra !== rb) return ra - rb; return a.name.localeCompare(b.name); });
 var isHOHRonly = APP.user.modes.isHOHR && !APP.user.modes.isAdmin;
 var regDeps = {};
@@ -2842,7 +2843,7 @@ var critList = crit || [];
 var TIERS = ['Absolutely Critical Role', 'Critical Role', 'Relatively Critical Role'];
 var critLevelOf = {};
 critList.forEach(function(c){ critLevelOf[(c.position_name || '').toUpperCase().trim()] = c.criticality || 'Critical Role'; });
-function tierOf(e){ return critLevelOf[(e.position || '').toUpperCase().trim()] || ''; }
+function tierOf(e){ var lv = critLevelOf[(e.position || '').toUpperCase().trim()] || ''; return TIERS.indexOf(lv) >= 0 ? lv : ''; }
 var critEmps = (allEmps || []).filter(function(e){ return tierOf(e); });
 function fmtRows(rows){ return latestOnly(rows).map(function(r){ return { 'Employee ID': r.employee_id, 'Competency Code': r.comp_code, 'Type': r.type, 'Ticked': r.ticked, 'Evidence': r.evidence, 'HR_Status': r.hr_status, 'Rating': r.proficiency_rating }; }); }
 function empStats(e) {
@@ -2892,8 +2893,8 @@ var p = function(n){ return s.staff ? Math.round((n / s.staff) * 100) + '%' : '0
 html += '<tr><td><span class="badge ' + critBadge(t) + '">' + escapeHtml(t) + '</span></td><td>' + pc + '</td><td>' + s.staff + '</td><td>' + s.assessed + ' (' + p(s.assessed) + ')</td><td>' + s.ready + ' (' + p(s.ready) + ')</td><td>' + s.idp + ' (' + p(s.idp) + ')</td></tr>';
 });
 html += '</tbody></table></div></div>';
-html += '<div class="card"><div class="card-title">Manage Critical Positions</div><div style="display:flex;gap:8px;flex-wrap:wrap"><input id="newCritPos" placeholder="e.g. Production Manager" style="flex:1;min-width:180px"><select id="newCritLevel" style="width:auto"><option>Absolutely Critical Role</option><option selected>Critical Role</option><option>Relatively Critical Role</option></select><button class="btn btn-primary" onclick="addCriticalPosition()">Add</button></div><div style="margin-top:10px">';
-critList.forEach(function(c){ var lv = c.criticality || 'Critical Role'; html += '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;border:1px solid var(--gray-200);border-radius:6px;padding:6px 10px;margin:0 0 6px;font-size:12px"><span><strong>' + escapeHtml(c.position_name) + '</strong> <span class="badge ' + critBadge(lv) + '">' + escapeHtml(lv) + '</span></span><span style="display:flex;gap:6px;align-items:center"><select onchange="setCriticality(' + c.id + ',this.value)" style="width:auto;padding:3px 6px;font-size:11px"><option' + (lv === 'Absolutely Critical Role' ? ' selected' : '') + '>Absolutely Critical Role</option><option' + (lv === 'Critical Role' ? ' selected' : '') + '>Critical Role</option><option' + (lv === 'Relatively Critical Role' ? ' selected' : '') + '>Relatively Critical Role</option></select><button class="btn btn-sm btn-danger" onclick="deleteCriticalPosition(' + c.id + ')">✕</button></span></div>'; });
+html += '<div class="card"><div class="card-title">Manage Critical Positions</div><div style="display:flex;gap:8px;flex-wrap:wrap"><input id="newCritPos" placeholder="e.g. Production Manager" style="flex:1;min-width:180px"><select id="newCritLevel" style="width:auto"><option>Absolutely Critical Role</option><option selected>Critical Role</option><option>Relatively Critical Role</option><option>Non-Critical Role</option></select><button class="btn btn-primary" onclick="addCriticalPosition()">Add</button></div><div style="margin-top:10px">';
+critList.forEach(function(c){ var lv = c.criticality || 'Critical Role'; html += '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;border:1px solid var(--gray-200);border-radius:6px;padding:6px 10px;margin:0 0 6px;font-size:12px"><span><strong>' + escapeHtml(c.position_name) + '</strong> <span class="badge ' + critBadge(lv) + '">' + escapeHtml(lv) + '</span></span><span style="display:flex;gap:6px;align-items:center"><select onchange="setCriticality(' + c.id + ',this.value)" style="width:auto;padding:3px 6px;font-size:11px"><option' + (lv === 'Absolutely Critical Role' ? ' selected' : '') + '>Absolutely Critical Role</option><option' + (lv === 'Critical Role' ? ' selected' : '') + '>Critical Role</option><option' + (lv === 'Relatively Critical Role' ? ' selected' : '') + '>Relatively Critical Role</option><option' + (lv === 'Non-Critical Role' ? ' selected' : '') + '>Non-Critical Role</option></select><button class="btn btn-sm btn-danger" onclick="deleteCriticalPosition(' + c.id + ')">✕</button></span></div>'; });
 if (!critList.length) html += '<p style="color:var(--gray-500);font-size:12px">No critical positions yet — add ONLY the roles that count for your KPI.</p>';
 html += '</div></div>';
 html += '<div class="card"><div class="card-title">Critical Roles Tracker (grouped by criticality)</div><div class="table-wrap"><table><thead><tr><th>Employee</th><th>Position</th><th>Criticality</th><th>Manager Assessment</th><th>IDP</th><th>Promotion Readiness</th></tr></thead><tbody>' + (rowsHtml || '<tr><td colspan="6" style="color:var(--gray-500)">No staff in critical positions yet.</td></tr>') + '</tbody></table></div></div>';
@@ -2921,7 +2922,8 @@ if (error) { showToast(error.message); return; }
 showToast('Classification updated');
 loadHRKPI();
 }
-function critBadge(lv) { lv = (lv || '').toString(); if (lv.indexOf('Absolutely') === 0) return 'badge-danger'; if (lv.indexOf('Relatively') === 0) return 'badge-info'; return 'badge-warning'; 
+function critBadge(lv) { lv = (lv || '').toString(); if (lv.indexOf('Absolutely') === 0) return 'badge-danger'; if (lv.indexOf('Relatively') === 0) return 'badge-info'; if (lv.indexOf('Non') === 0) return 'badge-gray';
+return 'badge-warning'; 
 }
 async function deleteEmployee(id, name) {
 if (!APP.user.modes.isAdmin) { showToast('Only HR Admin can delete'); return; }
@@ -4791,7 +4793,8 @@ box.innerHTML = assessFormHTML(emp, 'Prospective Self', pos, 'ps', 'psscore');
 restoreDraft('Prospective Self', 'ps-', 'pse-', 'psscore-', empId);
 startAutoSave('Prospective Self', 'ps-', 'pse-', empId);
 }
-function critBadge(lv){ lv=(lv||'').toString(); if(lv.indexOf('Absolutely')===0) return 'badge-danger'; if(lv.indexOf('Relatively')===0) return 'badge-info'; return 'badge-warning'; }
+function critBadge(lv){ lv=(lv||'').toString(); if(lv.indexOf('Absolutely')===0) return 'badge-danger'; if(lv.indexOf('Relatively')===0) return 'badge-info'; if (lv.indexOf('Non') === 0) return 'badge-gray';
+return 'badge-warning'; }
 async function loadHRPositions() {
 setContent('<div class="loading"><div class="spinner"></div>Loading...</div>');
 const { data: regs } = await _supabase.from('critical_positions').select('*').order('id');
@@ -4804,14 +4807,14 @@ html += '<p style="font-size:12px;color:var(--gray-500);margin-bottom:12px">Regi
 html += '<div style="display:grid;grid-template-columns:1.2fr 1.2fr 1.2fr auto;gap:8px;align-items:end">';
 html += '<div class="form-group" style="margin-bottom:0"><label>Department</label><input id="regDept" list="regDeptList" placeholder="e.g. HUMAN RESOURCE"><datalist id="regDeptList">' + Object.keys(deps).sort().map(function(d){ return '<option value="' + escapeHtml(d) + '">'; }).join('') + '</datalist></div>';
 html += '<div class="form-group" style="margin-bottom:0"><label>Position</label><input id="regPos" placeholder="e.g. Human Resource Officer"></div>';
-html += '<div class="form-group" style="margin-bottom:0"><label>Criticality</label><select id="regCrit"><option>Absolutely Critical Role</option><option selected>Critical Role</option><option>Relatively Critical Role</option></select></div>';
+html += '<div class="form-group" style="margin-bottom:0"><label>Criticality</label><select id="regCrit"><option>Absolutely Critical Role</option><option selected>Critical Role</option><option>Relatively Critical Role</option><option>Non-Critical Role</option></select></div>';
 html += '<button class="btn btn-primary" onclick="addPositionRegistry()">Add Position</button></div></div>';
-['Absolutely Critical Role','Critical Role','Relatively Critical Role'].forEach(function(lv){
+['Absolutely Critical Role','Critical Role','Relatively Critical Role','Non-Critical Role'].forEach(function(lv){
 var rows = (regs || []).filter(function(r){ return (r.criticality || 'Critical Role') === lv; });
 if (!rows.length) return;
 html += '<div class="card"><div class="card-title"><span class="badge ' + critBadge(lv) + '">' + escapeHtml(lv) + '</span> (' + rows.length + ')</div>';
 rows.forEach(function(r){
-html += '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;border:1px solid var(--gray-200);border-radius:6px;padding:8px 10px;margin:0 0 6px;font-size:12px"><span><strong>' + escapeHtml(r.position_name) + '</strong> <span style="color:var(--gray-500)">— ' + escapeHtml(r.department || '') + '</span></span><span style="display:flex;gap:6px"><select onchange="setRegistryCriticality(' + r.id + ',this.value)" style="width:auto;padding:3px 6px;font-size:11px"><option' + ((r.criticality||'Critical Role')==='Absolutely Critical Role'?' selected':'') + '>Absolutely Critical Role</option><option' + ((r.criticality||'Critical Role')==='Critical Role'?' selected':'') + '>Critical Role</option><option' + ((r.criticality||'Critical Role')==='Relatively Critical Role'?' selected':'') + '>Relatively Critical Role</option></select><button class="btn btn-sm btn-danger" onclick="deletePositionRegistry(' + r.id + ')">✕</button></span></div>';
+html += '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;border:1px solid var(--gray-200);border-radius:6px;padding:8px 10px;margin:0 0 6px;font-size:12px"><span><strong>' + escapeHtml(r.position_name) + '</strong> <span style="color:var(--gray-500)">— ' + escapeHtml(r.department || '') + '</span></span><span style="display:flex;gap:6px"><select onchange="setRegistryCriticality(' + r.id + ',this.value)" style="width:auto;padding:3px 6px;font-size:11px"><option' + ((r.criticality||'Critical Role')==='Absolutely Critical Role'?' selected':'') + '>Absolutely Critical Role</option><option' + ((r.criticality||'Critical Role')==='Critical Role'?' selected':'') + '>Critical Role</option><option' + ((r.criticality||'Critical Role')==='Relatively Critical Role'?' selected':'') + '>Relatively Critical Role</option><option' + ((r.criticality||'Critical Role')==='Non-Critical Role'?' selected':'') + '>Non-Critical Role</option></select><button class="btn btn-sm btn-danger" onclick="deletePositionRegistry(' + r.id + ')">✕</button></span></div>';
 });
 html += '</div>';
 });
