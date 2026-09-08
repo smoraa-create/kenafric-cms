@@ -505,7 +505,7 @@ if (window.emailjs && EMAILJS_PUBLIC_KEY.indexOf('PASTE') !== 0) {
 }
 
 var APP = { user: null, currentRole: 'employee', currentPage: '', competencies: [], experiences: [] };
-var ASSESS_COLS = 'id, employee_id, comp_code, type, ticked, proficiency_rating, hr_status, assessment_round, created_at';
+var ASSESS_COLS = 'id, employee_id, employee_name, comp_code, type, ticked, proficiency_rating, hr_status, hr_comment, hr_reviewer, hr_review_date, assessment_round, assessment_date, evidence_stub';
 async function cached(key, ttlMs, loader) {
 try { var raw = localStorage.getItem('kcache_' + key); if (raw) { var o = JSON.parse(raw); if (Date.now() - o.t < ttlMs) return o.d; } } catch (e) {}
 var d = await loader();
@@ -1659,7 +1659,7 @@ setContent(html);
 async function loadMgrPromPool() {
 setContent('<div class="loading"><div class="spinner"></div>Loading...</div>');
 const { data: allEmps } = await _supabase.from('employees').select('*');
-const { data: allResults } = await _supabase.from('assessments').select('*');
+const { data: allResults } = await _supabase.from('assessments').select(ASSESS_COLS);
 const { data: profs0 } = await _supabase.from('user_profiles').select('email, photo');
 const { data: chain0 } = await _supabase.from('report_chain').select('*').order('id', { ascending: false });
 var photoOf0 = {}; (profs0 || []).forEach(function(p){ if (p.photo) photoOf0[(p.email || '').toLowerCase()] = p.photo; });
@@ -1673,7 +1673,7 @@ setContent(promPoolHTML(team, allResults || [], 'My Promotion-Ready Pool', 'Memb
 async function loadHRPromPool() {
 setContent('<div class="loading"><div class="spinner"></div>Loading...</div>');
 const { data: allEmps } = await _supabase.from('employees').select('*');
-const { data: allResults } = await _supabase.from('assessments').select('*');
+const { data: allResults } = await _supabase.from('assessments').select(ASSESS_COLS);
 const { data: rap2 } = await _supabase.from('report_approvals').select('*');
 var appr2 = {}; (rap2 || []).forEach(function(r){ appr2[r.employee_id] = r.status; });
 setContent(promPoolHTML(allEmps || [], allResults || [], '🏆 Promotion-Ready Pool', 'Staff who score 81%+ on a Prospective Role Assessment join this pool. Actual appointment remains subject to vacancy availability and management approval.', appr2));
@@ -2495,7 +2495,7 @@ selfDone: selfDone, mgrDone: mgrDone, hrPending: hrPending, hrReviewed: hrReview
 track: emp.talent_track || ''
 });
 }
-const { data: critRows } = await _supabase.from('critical_positions').select('*');
+var critRows = regs || [];
 var critLevel2 = {};
 (critRows || []).forEach(function(c){ critLevel2[(c.position_name || '').toUpperCase().trim()] = c.criticality || 'Critical Role'; });
 function staffCritRank(s){ var lv = critLevel2[(s.position || '').toUpperCase().trim()] || ''; if (lv.indexOf('Absolutely') === 0) return 0; if (lv.indexOf('Relatively') === 0) return 2; if (lv.indexOf('Non') === 0) return 3; if (lv) return 1; return 3; }
@@ -2975,53 +2975,82 @@ async function loadHRReview() {
 setContent('<div class="loading"><div class="spinner"></div>Loading...</div>');
 const { data: allEmps } = await _supabase.from('employees').select('*');
 const { data: allResults } = await _supabase.from('assessments').select('*');
-var staff = [];
-for (var i = 0; i < allEmps.length; i++) {
-var emp = allEmps[i];
-var mgrDone = allResults.some(r => r.employee_id === emp.employee_id && (r.type === 'Manager' || r.type === 'Prospective' || r.type === 'Prospective Self'));
-if (mgrDone) staff.push(emp);
-}
+window._hrRevAll = { emps: allEmps || [], results: allResults || [] };
+var deps = {};
+(allEmps || []).forEach(function(e) {
+var has = (allResults || []).some(function(r){ return r.employee_id === e.employee_id; });
+if (!has) return;
+var d = (e.department || '').trim() || '(No department)';
+deps[d] = (deps[d] || 0) + 1;
+});
 var html = '<div class="card"><div class="card-title">Assessment Review & Approval</div>';
-html += '<p style="font-size:12px;color:var(--gray-500);margin-bottom:12px">Approve, reject, or return manager experiences.</p>';
-html += '<div class="form-group"><label>Employee</label><select id="hrRevEmp" onchange="loadHRRevEmp()"><option value="">-- Select --</option>';
-staff.forEach(function(s) { html += '<option value="' + s.employee_id + '">' + escapeHtml(s.employee_name) + '</option>'; });
-html += '</select></div></div><div id="hrRevContent"></div>';
+html += '<p style="font-size:12px;color:var(--gray-500);margin-bottom:12px">Pick a department to see its staff and each person\'s review status, then open anyone to approve, return or disapprove experiences.</p>';
+html += '<div class="form-group"><label>Department</label><select id="hrRevDep" onchange="loadHRRevDep()"><option value="">-- Select department --</option>' + Object.keys(deps).sort().map(function(d){ return '<option value="' + escapeHtml(d) + '">' + escapeHtml(d) + ' (' + deps[d] + ')</option>'; }).join('') + '</select></div></div>';
+html += '<div id="hrRevStaff"></div><div id="hrRevContent"></div>';
 setContent(html);
 if (APP.reviewTarget) {
-document.getElementById('hrRevEmp').value = APP.reviewTarget;
-loadHRRevEmp();
+var emp0 = null; (allEmps || []).forEach(function(e){ if (e.employee_id === APP.reviewTarget) emp0 = e; });
+if (emp0) {
+document.getElementById('hrRevDep').value = (emp0.department || '').trim() || '(No department)';
+loadHRRevDep();
+loadHRRevEmp(APP.reviewTarget);
+}
 APP.reviewTarget = null;
 }
 }
-async function loadHRRevEmp() {
-var id = document.getElementById('hrRevEmp').value;
-if (!id) { document.getElementById('hrRevContent').innerHTML = ''; return; }
+function hrRevStatusOf(empId) {
+var rows = latestOnly((window._hrRevAll.results || []).filter(function(r){ return r.employee_id === empId; }));
+var st = { pend: 0, ret: 0, app: 0, dis: 0, types: {} };
+rows.forEach(function(r){
+st.types[r.type] = true;
+if (!r.ticked) return;
+var s = r.hr_status || '';
+if (s === '' || s === 'Pending') st.pend++;
+else if (s === 'Returned') st.ret++;
+else if (s === 'Approved') st.app++;
+else if (s === 'Disapproved') st.dis++;
+});
+st.typeList = Object.keys(st.types);
+return st;
+}
+function loadHRRevDep() {
+var dep = document.getElementById('hrRevDep').value;
+var box = document.getElementById('hrRevStaff');
+var cbox = document.getElementById('hrRevContent'); if (cbox) cbox.innerHTML = '';
+if (!dep) { box.innerHTML = ''; return; }
+var list = (window._hrRevAll.emps || []).filter(function(e){ return ((e.department || '').trim() || '(No department)') === dep; });
+var html = '<div class="card"><div class="card-title">' + escapeHtml(dep) + ' — review status by staff</div>';
+html += '<div class="table-wrap"><table class="staff-table"><thead><tr><th>Employee</th><th>Position</th><th>Assessments</th><th>Pending</th><th>Returned</th><th>Decided</th><th>Status</th><th></th></tr></thead><tbody>';
+if (!list.length) html += '<tr><td colspan="8" style="color:var(--gray-500)">No staff with assessments in this department.</td></tr>';
+list.forEach(function(e){
+var s = hrRevStatusOf(e.employee_id);
+var overall = s.pend > 0 ? '<span class="badge badge-purple">Pending HR review</span>' : (s.ret > 0 ? '<span class="badge badge-warning">Returned — awaiting manager</span>' : ((s.app + s.dis) > 0 ? '<span class="badge badge-success">Review complete ✓</span>' : '<span class="badge badge-info">Nothing ticked yet</span>'));
+html += '<tr><td><strong>' + escapeHtml(e.employee_name) + '</strong></td>';
+html += '<td style="font-size:11px">' + escapeHtml(e.position || '') + '</td>';
+html += '<td style="font-size:10px">' + s.typeList.map(function(t){ return '<span class="badge badge-info">' + escapeHtml(t) + '</span>'; }).join(' ') + '</td>';
+html += '<td>' + (s.pend ? '<strong style="color:var(--purple)">' + s.pend + '</strong>' : '0') + '</td>';
+html += '<td>' + (s.ret ? '<strong style="color:var(--orange)">' + s.ret + '</strong>' : '0') + '</td>';
+html += '<td>' + (s.app + s.dis) + '</td>';
+html += '<td>' + overall + '</td>';
+html += '<td><button class="btn btn-sm btn-primary" onclick="loadHRRevEmp(\'' + e.employee_id + '\')">Open Review</button></td></tr>';
+});
+html += '</tbody></table></div></div>';
+box.innerHTML = html;
+}
+async function loadHRRevEmp(id) {
+id = id || window._hrRevTarget || '';
+if (!id) { var box0 = document.getElementById('hrRevContent'); if (box0) box0.innerHTML = ''; return; }
+window._hrRevTarget = id;
 document.getElementById('hrRevContent').innerHTML = '<div class="loading"><div class="spinner"></div></div>';
 const { data: emp } = await _supabase.from('employees').select('*').eq('employee_id', id).single();
 const { data: allResultsRaw } = await _supabase.from('assessments').select('*').eq('employee_id', id).in('type', ['Self', 'Manager', 'Prospective Self', 'Prospective']);
 var allResults = latestOnly(allResultsRaw || []);
-window._hrData = { employee: emp, results: allResults };
 var html = roundTable(allResultsRaw || [], 'Self') + roundTable(allResultsRaw || [], 'Manager') + roundTable(allResultsRaw || [], 'Prospective Self') + roundTable(allResultsRaw || [], 'Prospective');
 html += '<div class="card"><div style="font-size:13px;margin-bottom:12px"><strong>' + escapeHtml(emp.employee_name) + '</strong> | ' + escapeHtml(emp.position) + ' | ' + escapeHtml(emp.company) + '</div><button class="btn btn-sm btn-success" onclick="aiReviewPending(\'' + id + '\')">✍️AI Relevance Check — review all evidence before approving</button></div>';
-html += '<div class="card"><div class="form-group" style="margin-bottom:0"><label>🔎 Choose which assessment to review</label><select id="hrRevTypeSel" onchange="renderReviewSections()" style="max-width:460px"><option value="all">All assessments (current + prospective)</option><option value="Self">SELF — Current Role (employee-written)</option><option value="Manager">MANAGER — Current Role (manager-written)</option><option value="Prospective Self">SELF — Prospective Role (employee-written)</option><option value="Prospective">MANAGER — Prospective Role (manager-written)</option></select></div></div>';
-html += '<div id="hrRevSections"></div>';
-html += '<button class="btn btn-primary" onclick="doHRReview(\'' + id + '\')" style="width:100%;margin-top:16px">Submit Review</button>';
-document.getElementById('hrRevContent').innerHTML = html;
-renderReviewSections();
-}
-function renderReviewSections() {
-var data = window._hrData; if (!data) return;
-var sel = document.getElementById('hrRevTypeSel');
-var chosen = sel ? sel.value : 'all';
-var allResults = data.results || [];
-var TITLES = { 'Self': '🧍 SELF — CURRENT ROLE (employee-written)', 'Manager': '👔 MANAGER — CURRENT ROLE (manager-written)', 'Prospective Self': '🚀 SELF — PROSPECTIVE ROLE (employee-written)', 'Prospective': '🎯 MANAGER — PROSPECTIVE ROLE (manager-written)' };
-var html = '';
 ['Self', 'Manager', 'Prospective Self', 'Prospective'].forEach(function(type) {
-if (chosen !== 'all' && chosen !== type) return;
 var typeRows = allResults.filter(function(r){ return r.type === type; });
 if (!typeRows.length) return;
-html += '<div class="card"><div class="card-title">' + (TITLES[type] || (type + ' Assessment Review')) + '</div>';
-html += '<p style="font-size:11px;color:var(--gray-500);margin:-6px 0 10px">Completed by: ' + escapeHtml(typeRows[0].assessor_email || '—') + ' on ' + escapeHtml(typeRows[0].assessment_date || '—') + '</p>';
+html += '<div class="card"><div class="card-title">' + (type === 'Self' ? 'Employee Self Assessment Review' : type + ' Assessment Review') + '</div>';
 for (var i = 0; i < APP.competencies.length; i++) {
 var comp = APP.competencies[i];
 var compRows = typeRows.filter(function(r){ return r.comp_code === comp.code; });
@@ -3055,8 +3084,9 @@ html += '</div>';
 }
 html += '</div>';
 });
-if (!html) html = '<div class="card"><p style="color:var(--gray-500)">No assessment of this type has been submitted yet.</p></div>';
-document.getElementById('hrRevSections').innerHTML = html;
+html += '<button class="btn btn-primary" onclick="doHRReview(\'' + id + '\')" style="width:100%;margin-top:16px">Submit Review</button>';
+document.getElementById('hrRevContent').innerHTML = html;
+window._hrData = { employee: emp, results: allResults };
 }
 function toggleHRComment(sel, inputId) {
 var c = document.getElementById(inputId);
@@ -3095,6 +3125,7 @@ if (empR.manager_email) sendCMSemail(empR.manager_email, 'Assessments Released: 
 sendCMSemail(empR.email, 'Assessments Released: ' + empR.employee_name, 'HR Admin has approved both assessments. Your manager\'s assessment is now visible to you in the CMS: ' + APP_LINK);
 }
 showToast('Review saved! ' + rd.length + ' updated.');
+if (document.getElementById('hrRevDep') && document.getElementById('hrRevDep').value) loadHRRevDep();
 loadHRRevEmp();
 }
 async function loadHRGaps() {
