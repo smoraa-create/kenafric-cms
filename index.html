@@ -682,7 +682,7 @@ else if (role === 'csuite') {
 pages = [{id:'cs-reports',label:'Executive Recommendations'}];
 } 
 else if (role === 'hr') {
-pages = [{id:'hr-dashboard',label:'Dashboard'},{id:'hr-kpi',label:'KPI Dashboard'},{id:'hr-managers',label:'Line Managers'},{id:'hr-departments',label:'Departments'},{id:'hr-companies',label:'Companies'},{id:'hr-prompool',label:'Promotion-Ready Pool'},{id:'hr-staff',label:'Staff List'},{id:'hr-review',label:'Assessment Review'},{id:'hr-gaps',label:'Employee Gaps'},{id:'hr-devplans',label:'Development Plans'},{id:'hr-all',label:'All Assessments'},{id:'hr-reports',label:'Reports'},{id:'hr-repappr',label:'Report Approvals'},{id:'hr-positions',label:'Positions & Criticality'},{id:'hr-comp',label:'Competency Library'},{id:'hr-redo',label:'Redo Requests'}];
+pages = [{id:'hr-dashboard',label:'Dashboard'},{id:'hr-kpi',label:'KPI Dashboard'},{id:'hr-managers',label:'Line Managers'},{id:'hr-departments',label:'Departments'},{id:'hr-companies',label:'Companies'},{id:'hr-prompool',label:'Promotion-Ready Pool'},{id:'hr-staff',label:'All Employees'},{id:'hr-review',label:'Assessment Review'},{id:'hr-gaps',label:'Employee Gaps'},{id:'hr-devplans',label:'Development Plans'},{id:'hr-all',label:'All Assessments'},{id:'hr-reports',label:'Reports'},{id:'hr-repappr',label:'Report Approvals'},{id:'hr-positions',label:'Positions & Criticality'},{id:'hr-comp',label:'Competency Library'},{id:'hr-redo',label:'Redo Requests'}];
 }
 if (role === 'hr' || role === 'manager' || role === 'hohr') {
 document.body.classList.add('sb-mode');
@@ -758,7 +758,7 @@ loadPage(pageId);
 document.querySelectorAll('.sb-item').forEach(function(b) { b.classList.toggle('active', b.getAttribute('data-page') === pageId); });
 }
 function getPageLabel(id) {
-var map = {'emp-profile':'My Profile','emp-selfassess':'Self Assessment','emp-mgrview':'Manager Assessment','emp-gaps':'My Gaps','emp-strengths':'My Strengths','emp-devplans':'Development Plans','mgr-dashboard':'Dashboard','mgr-team':'My Team','mgr-prompool':'Promotion-Ready Pool','mgr-assess':'Assessment','mgr-details':'Assessment Details','mgr-gaps':'Team Gaps','mgr-devplans':'Development Plans','mgr-requests':'Requests','mgr-repappr':'Report Approvals','mgr-comp':'Competency Library','hohr-reports':'Report Approvals','hohr-comp':'Competency Library','cs-reports':'Executive Recommendations','hr-dashboard':'Dashboard','hr-kpi':'KPI Dashboard','hr-departments':'Departments','hr-companies':'Companies','hr-prompool':'Promotion-Ready Pool','hr-staff':'Staff List','hr-managers':'Line Managers','hr-review':'Assessment Review','hr-gaps':'Employee Gaps','hr-devplans':'Development Plans','hr-all':'All Assessments','hr-reports':'Reports','hr-repappr':'Report Approvals','hr-comp':'Competency Library','hr-redo':'Redo Requests','hr-positions':'Positions & Criticality'}
+var map = {'emp-profile':'My Profile','emp-selfassess':'Self Assessment','emp-mgrview':'Manager Assessment','emp-gaps':'My Gaps','emp-strengths':'My Strengths','emp-devplans':'Development Plans','mgr-dashboard':'Dashboard','mgr-team':'My Team','mgr-prompool':'Promotion-Ready Pool','mgr-assess':'Assessment','mgr-details':'Assessment Details','mgr-gaps':'Team Gaps','mgr-devplans':'Development Plans','mgr-requests':'Requests','mgr-repappr':'Report Approvals','mgr-comp':'Competency Library','hohr-reports':'Report Approvals','hohr-comp':'Competency Library','cs-reports':'Executive Recommendations','hr-dashboard':'Dashboard','hr-kpi':'KPI Dashboard','hr-departments':'Departments','hr-companies':'Companies','hr-prompool':'Promotion-Ready Pool','hr-staff':'All Employees','hr-managers':'Line Managers','hr-review':'Assessment Review','hr-gaps':'Employee Gaps','hr-devplans':'Development Plans','hr-all':'All Assessments','hr-reports':'Reports','hr-repappr':'Report Approvals','hr-comp':'Competency Library','hr-redo':'Redo Requests','hr-positions':'Positions & Criticality'}
 return map[id] || '';
 }
 function showToast(msg) {
@@ -2475,6 +2475,8 @@ const { data: allEmps } = await _supabase.from('employees').select('*');
 const { data: allResults } = await _supabase.from('assessments').select('*');
 const { data: regs } = await _supabase.from('critical_positions').select('*').order('position_name');
 const { data: lmRows } = await _supabase.from('line_managers').select('email, manager_name');
+window._aeRegs = regs || []; window._aeEmps = allEmps || []; window._aeMgrRegs = lmRows || [];
+await loadPhotoMap(true);
 const { data: depRows } = await _supabase.from('departments').select('company, name');
 window._aeRegs = regs || []; window._aeEmps = allEmps || []; window._aeMgrRegs = lmRows || []; window._aeDepRegs = depRows || [];
 var staff = [];
@@ -2756,6 +2758,7 @@ _supabase.from('employees').select('*')
 ]);
 var regs = dq[0].data || [];
 var emps = dq[1].data || [];
+await loadPhotoMap(true);
 var companies = {}; var departments = {};
 emps.forEach(function(e){ if (e.company) companies[e.company] = true; if (e.department) departments[e.department] = true; });
 regs.forEach(function(m){ if (m.company) companies[m.company] = true; if (m.department) departments[m.department] = true; });
@@ -2927,7 +2930,7 @@ return 'badge-warning';
 }
 async function deleteEmployee(id, name) {
 if (!APP.user.modes.isAdmin) { showToast('Only HR Admin can delete'); return; }
-if (!confirm('Delete ' + name + ' from the staff list? This cannot be undone.')) return;
+if (!confirm('Delete ' + name + ' from the All Employees? This cannot be undone.')) return;
 var also = confirm('Also delete ALL their assessments, development plans and requests? OK = delete everything. Cancel = keep their records.');
 const { error } = await _supabase.from('employees').delete().eq('employee_id', id);
 if (error) { showToast(error.message); return; }
@@ -4925,21 +4928,24 @@ if (html.indexOf(token) >= 0) html = html.split(token).join('<strong>' + APP._av
 }
 _origSetContent(html);
 };
-async function loadPhotoMap() {
-if (APP._avaByName) return true;
+async function loadPhotoMap(force) {
+if (APP._avaByName && !force) return true;
 var rs = await Promise.all([
 _supabase.from('user_profiles').select('email, photo'),
-_supabase.from('employees').select('employee_name, email')
+_supabase.from('employees').select('employee_name, email, manager'),
+_supabase.from('line_managers').select('manager_name, email')
 ]);
 APP._photoOf = {};
 (rs[0].data || []).forEach(function(p){ if (p.photo) APP._photoOf[(p.email || '').toLowerCase()] = p.photo; });
 APP._avaByName = {};
-(rs[1].data || []).forEach(function(e){
-var nm = e.employee_name || '';
-var pic = APP._photoOf[(e.email || '').toLowerCase()] || '';
+function addPerson(nm, em){
+if (!nm) return;
+var pic = APP._photoOf[(em || '').toLowerCase()] || '';
 var ini = nm.split(' ').map(function(w){ return w[0]; }).slice(0, 2).join('').toUpperCase();
 APP._avaByName[escapeHtml(nm)] = '<span class="staff-ava">' + (pic ? '<img src="' + pic + '" alt="">' : ini) + '</span>';
-});
+}
+(rs[1].data || []).forEach(function(e){ addPerson(e.employee_name, e.email); if (e.manager) addPerson(e.manager, ''); });
+(rs[2].data || []).forEach(function(m){ addPerson(m.manager_name, m.email); });
 return true;
 }
 function decorateExisting() {
@@ -5019,10 +5025,13 @@ canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
 var dataUrl = canvas.toDataURL('image/jpeg', 0.85);
 const { error } = await _supabase.from('user_profiles').update({ photo: dataUrl }).eq('email', APP.user.email);
 if (error) { showToast(error.message); return; }
-const { count } = await _supabase.from('user_profiles').select('*', { count: 'exact', head: true }).eq('email', APP.user.email);
+const { count } = await _supabase.from('user_profiles').select('*', { count: 'exact', head: true }).ilike('email', APP.user.email);
 if (!count) await _supabase.from('user_profiles').insert({ email: APP.user.email, role: 'EMPLOYEE', photo: dataUrl });
+APP._photoOf = APP._photoOf || {}; APP._photoOf[(APP.user.email || '').toLowerCase()] = dataUrl;
+if (APP._avaByName) APP._avaByName[escapeHtml(APP.user.name || '')] = '<span class="staff-ava"><img src="' + dataUrl + '" alt=""></span>';
+var el2 = document.getElementById('userAvatar'); if (el2) el2.innerHTML = '<img src="' + dataUrl + '" alt="profile">';
+decorateExisting();
 showToast('Profile picture updated');
-loadAvatar();
 };
 img.src = ev.target.result;
 };
