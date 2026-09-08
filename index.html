@@ -509,6 +509,15 @@ var d = await loader();
 try { localStorage.setItem('kcache_' + key, JSON.stringify({ t: Date.now(), d: d })); } catch (e) {}
 return d;
 }
+function avgCompScore(empId, code, fr) {
+var s = calculateCompetencyScore(empId, code, 'Self', fr);
+var m = calculateCompetencyScore(empId, code, 'Manager', fr);
+var sum = 0, n = 0;
+if (s.total > 0) { sum += s.score; n++; }
+if (m.total > 0) { sum += m.score; n++; }
+if (!n) return { score: 0, total: 0 };
+return { score: sum / n, total: Math.max(s.total, m.total) };
+}
 
 function sendCMSemail(toEmail, subject, message) {
     if (!window.emailjs || EMAILJS_SERVICE_ID.indexOf('PASTE') === 0) { 
@@ -1017,12 +1026,12 @@ if (hasProsp && prospScore > 0) html += '<div style="text-align:center;margin:6p
 html += '</div>';
 html += '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px">';
 html += '<div class="card" style="margin-bottom:0"><div class="card-title" style="font-size:13px">Functional Competencies</div>';
-if (!released) html += '<p style="font-size:12px;color:var(--gray-500)">🔒 Manager-rated scores appear after HR Admin completes the review.</p>';
+if (!released) html += '<p style="font-size:12px;color:var(--gray-500)">🔒 Final scores (average of your self-assessment and manager assessment) appear after HR Admin completes the review.</p>';
 else if (functional.length) functional.forEach(function(f){ html += compRow(f, '#2563eb'); });
 else html += '<p style="font-size:12px;color:var(--gray-500)">No functional competencies configured.</p>';
 html += '</div>';
 html += '<div class="card" style="margin-bottom:0"><div class="card-title" style="font-size:13px">Core Competencies</div>';
-if (!released) html += '<p style="font-size:12px;color:var(--gray-500)">🔒 Manager-rated scores appear after HR Admin completes the review.</p>';
+if (!released) html += '<p style="font-size:12px;color:var(--gray-500)">🔒 Final scores (average of your self-assessment and manager assessment) appear after HR Admin completes the review.</p>';
 else if (core.length) core.forEach(function(c2){ html += compRow(c2, '#059669'); });
 else html += '<p style="font-size:12px;color:var(--gray-500)">No core competencies configured.</p>';
 html += '</div></div>';if (core.length) core.forEach(function(c2){ html += compRow(c2, '#059669'); });
@@ -3358,7 +3367,7 @@ var compRows = [];
 for (var i = 0; i < APP.competencies.length; i++) {
 var comp = APP.competencies[i];
 var csS = calculateCompetencyScore(empId, comp.code, 'Self', fr);
-var csM = calculateCompetencyScore(empId, comp.code, 'Manager', fr);
+var csM = avgCompScore(empId, comp.code, fr);
 var csPS = calculateCompetencyScore(empId, comp.code, 'Prospective Self', fr);
 var csP = calculateCompetencyScore(empId, comp.code, 'Prospective', fr);
 if (csS.total + csM.total + csPS.total + csP.total === 0) continue;
