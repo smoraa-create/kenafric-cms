@@ -502,6 +502,13 @@ if (window.emailjs && EMAILJS_PUBLIC_KEY.indexOf('PASTE') !== 0) {
 }
 
 var APP = { user: null, currentRole: 'employee', currentPage: '', competencies: [], experiences: [] };
+var ASSESS_COLS = 'id, employee_id, comp_code, type, ticked, proficiency_rating, hr_status, assessment_round, created_at';
+async function cached(key, ttlMs, loader) {
+try { var raw = localStorage.getItem('kcache_' + key); if (raw) { var o = JSON.parse(raw); if (Date.now() - o.t < ttlMs) return o.d; } } catch (e) {}
+var d = await loader();
+try { localStorage.setItem('kcache_' + key, JSON.stringify({ t: Date.now(), d: d })); } catch (e) {}
+return d;
+}
 
 function sendCMSemail(toEmail, subject, message) {
     if (!window.emailjs || EMAILJS_SERVICE_ID.indexOf('PASTE') === 0) { 
