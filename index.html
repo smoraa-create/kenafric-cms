@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html>
 <head>
@@ -347,6 +348,25 @@ body.role-csuite .cs-pill.active{background:#12365c;border-color:#c9a227;}
 <div class="pchat-thread">
 <div class="pchat-msgs" id="pchatMsgs"><p style="font-size:11px;color:var(--gray-500);padding:10px">Select a colleague to start chatting.</p></div>
 <div class="pchat-input"><input id="pchatText" placeholder="Type a message..." onkeydown="if(event.key==='Enter')sendPChat()"><button class="btn btn-primary" onclick="sendPChat()">Send</button></div>
+}
+function applyReviewFilter(v){
+var host = document.getElementById('revBox') || document.getElementById('reviewContent') || document.getElementById('reviewBox');
+if (!host) return;
+var cards = host.querySelectorAll('.card');
+var shown = 0;
+cards.forEach(function(c){
+var t = ((c.querySelector('.card-title') || {}).textContent) || '';
+var show = true;
+if (v === 'self') show = /self assessment review/i.test(t) && !/prospective/i.test(t);
+else if (v === 'mgr') show = /manager assessment review/i.test(t) && !/prospective/i.test(t);
+else if (v === 'pself') show = /prospective/i.test(t) && !/manager/i.test(t);
+else if (v === 'pmgr') show = /prospective/i.test(t) && /manager/i.test(t);
+c.style.display = show ? '' : 'none';
+if (show) shown++;
+});
+var n = document.getElementById('revFilterCount');
+if (n) n.textContent = shown ? shown + ' section(s) shown' : 'Nothing submitted for this type yet';
+}
 </div>
 </div>
 </div>
@@ -911,7 +931,7 @@ case 'hr-companies': loadHRCompanies(); break;
 case 'hr-prompool': loadHRPromPool(); break;
 case 'hr-staff': loadHRStaff(); break;
 case 'hr-managers': loadHRManagers(); break;
-case 'hr-review': loadHRReview(); break;
+case 'hr-review': loadHRReview(); setTimeout(reviewFilterBar, 400); break;
 case 'hr-gaps': loadHRGaps(); break;
 case 'hr-devplans': loadHRDevPlans(); break;
 case 'hr-redo': loadHRRedoRequests(); break;
@@ -2906,14 +2926,16 @@ var id = document.getElementById('hrRevEmp').value;
 if (!id) { document.getElementById('hrRevContent').innerHTML = ''; return; }
 document.getElementById('hrRevContent').innerHTML = '<div class="loading"><div class="spinner"></div></div>';
 const { data: emp } = await _supabase.from('employees').select('*').eq('employee_id', id).single();
-const { data: allResultsRaw } = await _supabase.from('assessments').select('*').eq('employee_id', id).in('type', ['Self', 'Manager', 'Prospective']);
+const { data: allResultsRaw } = await _supabase.from('assessments').select('*').eq('employee_id', id).in('type', ['Self', 'Manager', 'Prospective Self', 'Prospective']);
 var allResults = latestOnly(allResultsRaw || []);
 var html = roundTable(allResultsRaw || [], 'Self') + roundTable(allResultsRaw || [], 'Manager') + roundTable(allResultsRaw || [], 'Prospective Self') + roundTable(allResultsRaw || [], 'Prospective');
 html += '<div class="card"><div style="font-size:13px;margin-bottom:12px"><strong>' + escapeHtml(emp.employee_name) + '</strong> | ' + escapeHtml(emp.position) + ' | ' + escapeHtml(emp.company) + '</div><button class="btn btn-sm btn-success" onclick="aiReviewPending(\'' + id + '\')">✍️AI Relevance Check — review all evidence before approving</button></div>';
 ['Self', 'Manager', 'Prospective Self', 'Prospective'].forEach(function(type) {
 var typeRows = allResults.filter(function(r){ return r.type === type; });
 if (!typeRows.length) return;
-html += '<div class="card"><div class="card-title">' + (type === 'Self' ? 'Employee Self Assessment Review' : type + ' Assessment Review') + '</div>';
+var TITLES = { 'Self': '🧍 SELF — CURRENT ROLE (written by the employee)', 'Manager': '👔 MANAGER — CURRENT ROLE (written by the line manager)', 'Prospective Self': '🚀 SELF — PROSPECTIVE ROLE (written by the employee)', 'Prospective': '🎯 MANAGER — PROSPECTIVE ROLE (written by the line manager)' };
+html += '<div class="card"><div class="card-title">' + (TITLES[type] || (type + ' Assessment Review')) + '</div>';
+html += '<p style="font-size:11px;color:var(--gray-500);margin:-6px 0 10px">Completed by: ' + escapeHtml(typeRows[0].assessor_email || '—') + ' on ' + escapeHtml(typeRows[0].assessment_date || '—') + ' | Round ' + (typeRows[0].assessment_round || 1) + '</p>';
 for (var i = 0; i < APP.competencies.length; i++) {
 var comp = APP.competencies[i];
 var compRows = typeRows.filter(function(r){ return r.comp_code === comp.code; });
@@ -2960,7 +2982,7 @@ async function doHRReview(empId) {
 var data = window._hrData;
 var rd = []; var invalid = false;
 var today = new Date().toISOString().slice(0, 10);
-['Self', 'Manager', 'Prospective'].forEach(function(type) {
+['Self', 'Manager', 'Prospective Self', 'Prospective'].forEach(function(type) {
 for (var i = 0; i < APP.competencies.length; i++) {
 var comp = APP.competencies[i];
 var compRows = (data.results || []).filter(function(r){ return r.type === type && r.comp_code === comp.code; });
@@ -6391,6 +6413,53 @@ if (r.hr_comment) L.push('   HR Comment: ' + r.hr_comment);
 });
 });
 sendCMSemail(APP.user.email, 'Assessment Report: ' + emp.employee_name, L.join(String.fromCharCode(10)));
+}
+/* ===== Review type filter v3 ===== */
+function reviewSectionTitles(){
+var root = document.getElementById('mainContent'); if (!root) return [];
+var cand = root.querySelectorAll('.card-title, h3, h4, .card-subtitle, b, strong, div, span');
+return Array.prototype.slice.call(cand)
+.filter(function(t){ var s = (t.textContent || '').trim(); return /assessment review/i.test(s) && s.length < 60; })
+.filter(function(t){ var p = t.parentElement; var ps = p ? (p.textContent || '').trim() : ''; return !(/assessment review/i.test(ps) && ps.length < 60); });
+}
+function reviewFilterBar(){
+var root = document.getElementById('mainContent'); if (!root) return;
+if (!reviewSectionTitles().length) return;
+if (document.getElementById('revFilterBar')) return;
+var bar = document.createElement('div');
+bar.id = 'revFilterBar';
+bar.style.cssText = 'display:flex;gap:10px;align-items:center;background:var(--primary-light);border:1px solid var(--primary);border-radius:10px;padding:10px 12px;margin-bottom:12px;position:sticky;top:8px;z-index:40;box-shadow:0 4px 14px rgba(67,56,202,.15);';
+bar.innerHTML = '<strong style="font-size:12px;color:var(--primary-dark);white-space:nowrap">🔎 I am approving:</strong>' +
+'<select id="revFilterSel" onchange="applyReviewFilter(this.value)" style="flex:1;padding:8px 10px;border-radius:8px;border:1px solid var(--gray-300);font-size:12px;font-weight:700">' +
+'<option value="all">All assessments (current + prospective)</option>' +
+'<option value="self">SELF — Current Role</option>' +
+'<option value="mgr">MANAGER — Current Role</option>' +
+'<option value="pself">SELF — Prospective Role</option>' +
+'<option value="pmgr">MANAGER — Prospective Role</option>' +
+'</select><span id="revFilterCount" style="font-size:11px;color:var(--gray-600);white-space:nowrap"></span>';
+root.insertBefore(bar, root.firstChild);
+applyReviewFilter('all');
+}
+function applyReviewFilter(v){
+var titles = reviewSectionTitles();
+var shown = 0;
+titles.forEach(function(t){
+var txt = t.textContent;
+var show = true;
+if (v === 'self') show = /self/i.test(txt) && !/prospective/i.test(txt);
+else if (v === 'mgr') show = /manager/i.test(txt) && !/prospective/i.test(txt);
+else if (v === 'pself') show = /prospective/i.test(txt) && /self/i.test(txt);
+else if (v === 'pmgr') show = /prospective/i.test(txt) && !/self/i.test(txt);
+var card = t.closest ? t.closest('.card') : null;
+var multi = card && card.querySelectorAll('.card-title').length > 1;
+if (card && !multi) { card.style.display = show ? '' : 'none'; if (show) shown++; return; }
+var nodes = [t]; var n = t.nextElementSibling;
+while (n && titles.indexOf(n) === -1) { nodes.push(n); n = n.nextElementSibling; }
+nodes.forEach(function(el){ el.style.display = show ? '' : 'none'; });
+if (show) shown++;
+});
+var c = document.getElementById('revFilterCount');
+if (c) c.textContent = titles.length ? shown + ' of ' + titles.length + ' sections shown' : '';
 }
 window.addEventListener('popstate', function(event) {
 if (!APP.user) return;
