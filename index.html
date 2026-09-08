@@ -2488,7 +2488,8 @@ var hrReviewed = mgrRows.length > 0 && mgrRows.some(r => r.hr_status === 'Approv
 staff.push({
 id: empId, name: emp.employee_name, email: emp.email, managerEmail: emp.manager_email,
 position: emp.position, department: emp.department, company: emp.company, manager: emp.manager,
-selfDone: selfDone, mgrDone: mgrDone, hrPending: hrPending, hrReviewed: hrReviewed
+selfDone: selfDone, mgrDone: mgrDone, hrPending: hrPending, hrReviewed: hrReviewed,
+track: emp.talent_track || ''
 });
 }
 const { data: critRows } = await _supabase.from('critical_positions').select('*');
@@ -2509,8 +2510,16 @@ html += '<p style="font-size:11px;color:var(--gray-500);margin-bottom:10px">Type
 html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px"><div class="form-group"><label>Full Name</label><input id="aeName" placeholder="e.g. Jane Wanjiku"></div><div class="form-group"><label>Email</label><input id="aeEmail" placeholder="jane@kenafricind.com"></div></div>';
 html += '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px"><div class="form-group"><label>Department</label><select id="aeDept" onchange="aeFillPositions()"><option value="">-- Select --</option>' + Object.keys(regDeps).sort().map(function(d){ return '<option>' + escapeHtml(d) + '</option>'; }).join('') + '</select></div><div class="form-group"><label>Position</label><select id="aePos"><option value="">-- Select department first --</option></select></div><div class="form-group"><label>Competency Level</label><select id="aeLevel"><option>Foundational</option><option selected>Intermediate</option><option>Advanced</option><option>Master</option></select></div></div>';
 html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px"><div class="form-group"><label>Company</label><input id="aeCompany" list="aeCompanyList" placeholder="e.g. Kenafric Industries"><datalist id="aeCompanyList">' + Object.keys(companies).sort().map(function(c){ return '<option value="' + escapeHtml(c) + '">'; }).join('') + '</datalist></div><div class="form-group"><label>Line Manager</label><select id="aeMgr"><option value="">-- Select --</option>' + aeMgrOptions() + '</select></div></div>';
+html += '<div class="form-group"><label>Talent Track — why are we assessing this person? (optional)</label><select id="aeTrack"><option value="">— None —</option><option>Promotion Track</option><option>Succession Track</option><option>Talent Pipeline</option><option>Development Track</option></select></div>';
 html += '<button class="btn btn-primary" onclick="saveNewEmployee()">Save Employee</button></div>';}
-html += '<div class="card"><div class="card-title">All Staff</div><div class="table-wrap"><table class="staff-table"><thead><tr><th>Name</th><th>Position</th><th>Competencies</th><th>Criticality</th><th>Company</th><th>Line Manager</th><th>Employee Status</th><th>Manager Status</th>' + (isHOHRonly ? '' : '<th>Actions</th>') + '</tr></thead><tbody>';
+var TRACKS = ['Promotion Track', 'Succession Track', 'Talent Pipeline', 'Development Track'];
+var trackFilter = window._staffTrackFilter || '';
+var trackCounts = {}; TRACKS.forEach(function(t){ trackCounts[t] = staff.filter(function(s){ return (s.track || '') === t; }).length; });
+html += '<div class="card"><div class="card-title">🎯 Talent Tracks — group staff by assessment purpose</div><div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><select onchange="window._staffTrackFilter=this.value;loadHRStaff()" style="width:auto"><option value="">Show: All tracks</option>' + TRACKS.map(function(t){ return '<option value="' + t + '"' + (trackFilter === t ? ' selected' : '') + '>Show: ' + t + '</option>'; }).join('') + '</select>';
+TRACKS.forEach(function(t){ html += '<span class="badge ' + trackBadge(t) + '" style="cursor:pointer" onclick="window._staffTrackFilter=\'' + t + '\';loadHRStaff()">' + t + ': ' + trackCounts[t] + '</span>'; });
+html += '<span class="badge" style="background:var(--gray-100);color:var(--gray-600);cursor:pointer" onclick="window._staffTrackFilter=\'\';loadHRStaff()">No track: ' + staff.filter(function(s){ return !(s.track || ''); }).length + '</span></div><p style="font-size:11px;color:var(--gray-500);margin-top:6px">Promotion = assess for immediate next level · Succession = groom for a named future role · Talent Pipeline = broad bench strength · Development = close gaps via IDP. Click a badge to see only that group.</p></div>';
+if (trackFilter) staff = staff.filter(function(s){ return (s.track || '') === trackFilter; });
+html += '<div class="card"><div class="card-title">All Staff' + (trackFilter ? ' — ' + escapeHtml(trackFilter) : '') + '</div><div class="table-wrap"><table class="staff-table"><thead><tr><th>Name</th><th>Position</th><th>Track</th><th>Competencies</th><th>Criticality</th><th>Company</th><th>Line Manager</th><th>Employee Status</th><th>Manager Status</th>' + (isHOHRonly ? '' : '<th>Actions</th>') + '</tr></thead><tbody>';
 const { data: profs } = await _supabase.from('user_profiles').select('email, photo');
 var photoOf = {}; (profs || []).forEach(function(p){ if (p.photo) photoOf[(p.email || '').toLowerCase()] = p.photo; });
 staff.forEach(function(s) {
@@ -2520,6 +2529,7 @@ var ini = (s.name || '--').split(' ').map(function(w){ return w[0]; }).slice(0, 
 var cSet = compSetFor(s.department, s.position);
 html += '<tr><td style="font-size:11px;white-space:nowrap"><strong>' + escapeHtml(s.name) + '</strong></td>';
 html += '<td style="font-size:11px">' + escapeHtml(s.position) + '</td>';
+html += '<td>' + (isHOHRonly ? ((s.track || '') ? '<span class="badge ' + trackBadge(s.track) + '">' + escapeHtml(s.track) + '</span>' : '<span style="color:var(--gray-400)">—</span>') : '<select onchange="setTalentTrack(\'' + s.id + '\',this.value)" style="width:auto;padding:3px 6px;font-size:10px"><option value="">—</option>' + TRACKS.map(function(t){ return '<option' + ((s.track || '') === t ? ' selected' : '') + '>' + t + '</option>'; }).join('') + '</select>') + '</td>';
 html += '<td>' + (cSet ? '<span class="badge badge-success">Set ✓</span>' : '<span class="badge badge-danger">Not Set</span>') + '</td>';
 html += '<td>' + (sLv ? '<span class="badge ' + critBadge(sLv) + '">' + escapeHtml(sLv) + '</span>' : '<span style="color:var(--gray-400)">—</span>') + '</td>';
 html += '<td>' + escapeHtml(s.company) + '</td>';
@@ -2547,6 +2557,8 @@ setContent(html);
 var mc = document.getElementById('mainContent');
 if (mc && !isHOHRonly && mc.children.length > 1) mc.appendChild(mc.children[0]);
 }
+function trackBadge(t){ t=(t||'').toString(); if(t.indexOf('Promotion')===0) return 'badge-success'; if(t.indexOf('Succession')===0) return 'badge-purple'; if(t.indexOf('Talent')===0) return 'badge-info'; if(t.indexOf('Development')===0) return 'badge-warning'; return 'badge-info'; }
+async function setTalentTrack(id, v){ const { error } = await _supabase.from('employees').update({ talent_track: v }).eq('employee_id', id); if (error){ showToast(error.message); return; } showToast(v ? '✅ Moved to ' + v : 'Track cleared'); loadHRStaff(); }
 function aeFillPositions() {
 var dep = (document.getElementById('aeDept').value || '').toString().toUpperCase().trim();
 var sel = document.getElementById('aePos');
@@ -2570,7 +2582,8 @@ if (!dep || !pos) { showToast('Select department and position'); return; }
 var mgrName = '';
 if (mgrEmail) { var m = (window._aeEmps || []).find(function(e){ return e.email === mgrEmail; }); mgrName = m ? m.employee_name : ''; if (!mgrName) { var lm = (window._aeMgrRegs || []).find(function(x){ return (x.email || '').toLowerCase() === mgrEmail.toLowerCase(); }); mgrName = lm ? (lm.manager_name || '') : ''; } }
 var empId = 'EMP-' + Date.now().toString(36).toUpperCase() + Math.random().toString(36).substr(2,3).toUpperCase();
-const { error } = await _supabase.from('employees').insert({ employee_id: empId, employee_name: name, email: email, department: dep, position: pos, competency_level: lvl, company: comp, manager: mgrName, manager_email: mgrEmail });
+var track = document.getElementById('aeTrack') ? document.getElementById('aeTrack').value : '';
+const { error } = await _supabase.from('employees').insert({ employee_id: empId, employee_name: name, email: email, department: dep, position: pos, competency_level: lvl, company: comp, manager: mgrName, manager_email: mgrEmail, talent_track: track });
 if (error) { showToast(error.message); return; }
 showToast('✅ ' + name + ' added as ' + pos + ' (' + dep + ')');
 loadHRStaff();
