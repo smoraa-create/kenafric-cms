@@ -5570,7 +5570,7 @@ var comps = (APP.competencies || []).filter(function(c){ return (c.code || '').i
 if (!comps.length) { showToast('No competencies in the library yet'); return; }
 var compList = comps.map(function(c){ return c.code + ' — ' + c.competency + ' (' + (c.category || '') + ', ' + (parseFloat(c.weight) || 0) + '%)'; }).join('; ');
 showToast('✍️AI is mapping the text to your competencies...');
-var prompt = 'You are an HR competency expert. Using ONLY the competencies in this exact list (code — name — category — weight): [' + compList + '], read the job description / KPI text below for the position "' + pos + '" (department "' + dep + '"). Cover EVERY competency in the list. Write a MINIMUM of 3 observable past-tense experience statements for competencies about Analytical Thinking, Judgement/Decision Making, Planning or Execution, and a MINIMUM of 2 for competencies about Continuous Learning, People Skills or Leadership (more is allowed where the text supports it). Every statement starts with "Has " and gets exactly one classification: "Must-Have (Critical)", "Important (Performance)" or "Value-Add (Developmental)". Return ONLY valid JSON (no markdown) in this exact shape: {"rows":[{"code":"AT","text":"Has ...","classification":"Must-Have (Critical)"}]}. Use only codes from the list. Text: ' + jd.slice(0, 6000);
+var prompt = 'You are an HR competency expert. Using ONLY the competencies in this exact list (code — name — category — weight): [' + compList + '], read the job description / KPI text below for the position "' + pos + '" (department "' + dep + '"). Cover EVERY competency in the list. Write a MINIMUM of 3 observable past-tense experience statements for competencies about Analytical Thinking, Judgement/Decision Making, Planning or Execution, and a MINIMUM of 2 for competencies about Continuous Learning, People Skills or Leadership (more is allowed where the text supports it). Every statement starts with "Has " and gets exactly one classification: "Must-Have (Critical)", "Important (Performance Enhancing)" or "Value-Add (Developmental)". Return ONLY valid JSON (no markdown) in this exact shape: {"rows":[{"code":"AT","text":"Has ...","classification":"Must-Have (Critical)"}]}. Use only codes from the list. Text: ' + jd.slice(0, 6000);
 try {
 var txt = await callAI(prompt, true);
 if (!txt) return;
@@ -5580,13 +5580,13 @@ var rowsOut = [];
 var meta = null;
 for (var i = 0; i < comps.length; i++) { if ((comps[i].code || '').toUpperCase() === (r.code || '').toString().toUpperCase().trim()) meta = comps[i]; }
 if (!meta || !(r.text || '').trim()) return;
-rowsOut.push({ 'Department': dep, 'Position': pos, 'Competency Code': meta.code, 'Competency Name': meta.competency, 'Category': meta.category || '', 'Weight %': parseFloat(meta.weight) || 0, 'Classification': r.classification || 'Important (Performance)', 'Experience Text': (r.text || '').trim() });
+rowsOut.push({ 'Department': dep, 'Position': pos, 'Competency Code': meta.code, 'Competency Name': meta.competency, 'Category': meta.category || '', 'Weight %': parseFloat(meta.weight) || 0, 'Classification': r.classification || 'Important (Performance Enhancing)', 'Experience Text': (r.text || '').trim() });
 });
 if (!rowsOut.length) { showToast('AI returned nothing usable — try again'); return; }
 var byCode = {};
 rowsOut.forEach(function(r){
 if (!byCode[r['Competency Code']]) byCode[r['Competency Code']] = { code: r['Competency Code'], name: r['Competency Name'], category: r['Category'] || 'Functional', weight: r['Weight %'] || 0, experiences: [] };
-byCode[r['Competency Code']].experiences.push({ text: r['Experience Text'], classification: r['Classification'] || 'Important (Performance)' });
+byCode[r['Competency Code']].experiences.push({ text: r['Experience Text'], classification: r['Classification'] || 'Important (Performance Enhancing)' });
 });
 var draftComps = Object.keys(byCode).map(function(k){ return byCode[k]; });
 var ruleNotes = enforceFrameworkRules(draftComps);
@@ -5627,7 +5627,7 @@ if (depEl && posEl) { dep = (depEl.value || '').trim(); pos = (posEl.value || ''
 else { dep = (APP.mgrDep || '').trim(); var mp = document.getElementById('mgrCompPos'); if (mp) pos = (mp.value || '').trim(); }
 if (!dep || !pos) { showToast('Select department and position first'); return; }
 showToast('✍️AI is drafting the framework for ' + pos + '...');
-var prompt = 'You are an HR competency framework expert. Create the FUNCTIONAL competencies for the position "' + pos + '" in the "' + dep + '" department. The 4 constant Core competencies (Customer Centric, Bold, Trustworthy, Collaboration) already exist at 7% each — do NOT include them. Return ONLY valid JSON (no markdown) in exactly this shape: {"competencies":[{"code":"2-4 letter code not starting with CC","name":"Competency Name","category":"Functional","weight":12,"experiences":[{"text":"Has ...","classification":"Must-Have (Critical)"}]}]} Rules: use these 7 functional competencies where they fit the role: Analytical Thinking & Problem Solving (12%), Judgement & Decision Making (12%), Planning (12%), Execution (12%), Continuous Learning & Improvement (8%), People Skills (8%), Leadership (8%) — functional weights must total 72 because the 4 Core add 28; MINIMUM 3 experiences for the first four and MINIMUM 2 for the last three; categories: first four Functional, People Skills = People, Leadership = Leadership; classification only one of "Must-Have (Critical)", "Important (Performance)", "Value-Add (Developmental)"; every experience starts with "Has ".';
+var prompt = 'You are an HR competency framework expert. Create the FUNCTIONAL competencies for the position "' + pos + '" in the "' + dep + '" department. The 4 constant Core competencies (Customer Centric, Bold, Trustworthy, Collaboration) already exist at 7% each — do NOT include them. Return ONLY valid JSON (no markdown) in exactly this shape: {"competencies":[{"code":"2-4 letter code not starting with CC","name":"Competency Name","category":"Functional","weight":12,"experiences":[{"text":"Has ...","classification":"Must-Have (Critical)"}]}]} Rules: use these 7 functional competencies where they fit the role: Analytical Thinking & Problem Solving (12%), Judgement & Decision Making (12%), Planning (12%), Execution (12%), Continuous Learning & Improvement (8%), People Skills (8%), Leadership (8%) — functional weights must total 72 because the 4 Core add 28; MINIMUM 3 experiences for the first four and MINIMUM 2 for the last three; categories: first four Functional, People Skills = People, Leadership = Leadership; classification only one of "Must-Have (Critical)", "Important (Performance Enhancing)", "Value-Add (Developmental)"; every experience starts with "Has ".';
 try {
 var txt = await callAI(prompt, true);
 if (!txt) return;
@@ -5645,14 +5645,14 @@ if (ruleNotes.length) showToast(ruleNotes[0]);
 }
 function draftExpRow(x) {
 var cl = x.classification || '';
-return '<div style="display:flex;gap:6px;margin-bottom:6px"><input style="flex:1" value="' + escapeHtml(x.text || '') + '"><select><option' + (cl.indexOf('Critical') >= 0 ? ' selected' : '') + '>Must-Have (Critical)</option><option' + (cl.indexOf('Important') >= 0 ? ' selected' : '') + '>Important (Performance)</option><option' + (cl.indexOf('Value') >= 0 ? ' selected' : '') + '>Value-Add (Developmental)</option></select><button type="button" class="btn btn-sm btn-danger" onclick="this.parentNode.remove()">✕</button></div>';
+return '<div style="display:flex;gap:6px;margin-bottom:6px"><input style="flex:1" value="' + escapeHtml(x.text || '') + '"><select><option' + (cl.indexOf('Critical') >= 0 ? ' selected' : '') + '>Must-Have (Critical)</option><option' + (cl.indexOf('Important') >= 0 ? ' selected' : '') + '>Important (Performance Enhancing)</option><option' + (cl.indexOf('Value') >= 0 ? ' selected' : '') + '>Value-Add (Developmental)</option></select><button type="button" class="btn btn-sm btn-danger" onclick="this.parentNode.remove()">✕</button></div>';
 }
 function addDraftExp(ci) {
 var box = document.getElementById('dexps-' + ci);
 if (!box) return;
 var div = document.createElement('div');
 div.style.cssText = 'display:flex;gap:6px;margin-bottom:6px';
-div.innerHTML = '<input style="flex:1" placeholder="Has ..."><select><option>Must-Have (Critical)</option><option>Important (Performance)</option><option>Value-Add (Developmental)</option></select><button type="button" class="btn btn-sm btn-danger" onclick="this.parentNode.remove()">✕</button>';
+div.innerHTML = '<input style="flex:1" placeholder="Has ..."><select><option>Must-Have (Critical)</option><option>Important (Performance Enhancing)</option><option>Value-Add (Developmental)</option></select><button type="button" class="btn btn-sm btn-danger" onclick="this.parentNode.remove()">✕</button>';
 box.appendChild(div);
 }
 function renderAiDraft() {
@@ -5768,7 +5768,7 @@ var text = (m['experiencetext'] || m['text'] || m['experience'] || '').toString(
 var clsRaw = (m['classification'] || '').toString().toLowerCase();
 var cls = '';
 if (clsRaw.indexOf('critical') >= 0 || clsRaw.indexOf('must') >= 0) cls = 'Must-Have (Critical)';
-else if (clsRaw.indexOf('important') >= 0 || clsRaw.indexOf('performance') >= 0) cls = 'Important (Performance)';
+else if (clsRaw.indexOf('important') >= 0 || clsRaw.indexOf('performance') >= 0) cls = 'Important (Performance Enhancing)';
 else if (clsRaw.indexOf('value') >= 0 || clsRaw.indexOf('developmental') >= 0) cls = 'Value-Add (Developmental)';
 
 var dept = (m['department'] || '').toString().trim();
@@ -5862,7 +5862,7 @@ function addExpForm(mode) {
 var h = '<div style="border-top:1px solid var(--gray-200);margin-top:10px;padding-top:10px"><div class="card-subtitle">ADD EXPERIENCE (' + (mode === 'CC' ? 'CORE' : 'POSITION') + ')</div>';
 h += '<div class="form-group"><textarea id="newExpText-' + mode + '" rows="2" placeholder="Experience text..."></textarea></div>';
 h += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">';
-h += '<div class="form-group"><label>Classification</label><select id="newExpClass-' + mode + '"><option>Must-Have (Critical)</option><option>Important (Performance)</option><option>Value-Add (Developmental)</option></select></div>';
+h += '<div class="form-group"><label>Classification</label><select id="newExpClass-' + mode + '"><option>Must-Have (Critical)</option><option>Important (Performance Enhancing)</option><option>Value-Add (Developmental)</option></select></div>';
 if (mode === 'CC') h += '<div class="form-group"><label>Level</label><select id="newExpLevel"><option>Foundational</option><option>Intermediate</option><option>Advanced</option><option>Master</option></select></div>';
 h += '</div>';
 h += '<div class="form-group"><label>Competency</label><select id="newExpCode-' + mode + '">' + APP.competencies.filter(function(c){ return (c.code.indexOf('CC') === 0) === (mode === 'CC'); }).map(function(c){ return '<option value="' + escapeHtml(c.code) + '">' + escapeHtml(c.code + ' — ' + c.competency) + '</option>'; }).join('') + '</select></div>';
@@ -5930,7 +5930,7 @@ var row = (APP.experiences || []).find(function(x){ return x.id === id; });
 if (!row) return;
 var t = prompt('Edit experience text:', row.experience_text || '');
 if (t === null) return;
-var c = prompt('Classification (Must-Have (Critical) / Important (Performance) / Value-Add (Developmental)):', row.classification || '');
+var c = prompt('Classification (Must-Have (Critical) / Important (Performance Enhancing) / Value-Add (Developmental)):', row.classification || '');
 if (c === null) c = row.classification;
 const { error } = await _supabase.from('experiences').update({ experience_text: t.trim(), classification: c }).eq('id', id);
 if (error) { showToast(error.message); return; }
@@ -6069,7 +6069,7 @@ function showAddExpFor(code, isCore) {
 var box = document.getElementById('addexp-' + code);
 if (!box) return;
 if (box.innerHTML) { box.innerHTML = ''; return; }
-var h = '<div style="border-top:1px solid var(--gray-200);margin-top:8px;padding-top:8px"><div class="form-group"><textarea id="naeText-' + code + '" rows="2" placeholder="Experience text (starts with Has...)"></textarea></div><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px"><div class="form-group"><label>Classification</label><select id="naeClass-' + code + '"><option>Must-Have (Critical)</option><option>Important (Performance)</option><option>Value-Add (Developmental)</option></select></div>' + (isCore ? '<div class="form-group"><label>Level</label><select id="naeLevel-' + code + '"><option>Foundational</option><option>Intermediate</option><option>Advanced</option><option>Master</option></select></div>' : '') + '</div><button class="btn btn-sm btn-primary" onclick="saveExpFor(\'' + code + '\',' + (isCore ? 'true' : 'false') + ')">Save Experience</button></div>';
+var h = '<div style="border-top:1px solid var(--gray-200);margin-top:8px;padding-top:8px"><div class="form-group"><textarea id="naeText-' + code + '" rows="2" placeholder="Experience text (starts with Has...)"></textarea></div><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px"><div class="form-group"><label>Classification</label><select id="naeClass-' + code + '"><option>Must-Have (Critical)</option><option>Important (Performance Enhancing)</option><option>Value-Add (Developmental)</option></select></div>' + (isCore ? '<div class="form-group"><label>Level</label><select id="naeLevel-' + code + '"><option>Foundational</option><option>Intermediate</option><option>Advanced</option><option>Master</option></select></div>' : '') + '</div><button class="btn btn-sm btn-primary" onclick="saveExpFor(\'' + code + '\',' + (isCore ? 'true' : 'false') + ')">Save Experience</button></div>';
 box.innerHTML = h;
 }
 async function saveExpFor(code, isCore) {
@@ -6181,7 +6181,7 @@ if (!row) return;
 var changes = [];
 var t = prompt('Edit experience text:', row.experience_text || '');
 if (t === null) t = row.experience_text || ''; else if (t.trim() !== (row.experience_text || '')) changes.push('Text: "' + (row.experience_text || '') + '" → "' + t.trim() + '"');
-var c = prompt('Classification (Must-Have (Critical) / Important (Performance) / Value-Add (Developmental)):', row.classification || '');
+var c = prompt('Classification (Must-Have (Critical) / Important (Performance Enhancing) / Value-Add (Developmental)):', row.classification || '');
 if (c === null) c = row.classification || ''; else if (c.trim() !== (row.classification || '')) changes.push('Classification: "' + (row.classification || '') + '" → "' + c.trim() + '"');
 if (!changes.length) { showToast('No changes made'); return; }
 const { error } = await _supabase.from('experiences').update({ experience_text: t.trim(), classification: c.trim() }).eq('id', id);
@@ -6329,7 +6329,7 @@ if (pend) h += '<div style="margin-top:4px;display:flex;gap:6px"><button class="
 h += '</div>';
 });
 h += '<div style="border-top:1px solid var(--gray-200);margin-top:8px;padding-top:8px"><div class="form-group"><textarea id="mseText-' + escapeHtml(meta.code) + '" rows="2" placeholder="Has ... (past tense, observable, starts with Has)"></textarea></div>';
-h += '<div class="form-group"><label>Classification</label><select id="mseClass-' + escapeHtml(meta.code) + '"><option>Must-Have (Critical)</option><option>Important (Performance)</option><option>Value-Add (Developmental)</option></select></div>';
+h += '<div class="form-group"><label>Classification</label><select id="mseClass-' + escapeHtml(meta.code) + '"><option>Must-Have (Critical)</option><option>Important (Performance Enhancing)</option><option>Value-Add (Developmental)</option></select></div>';
 h += '<button class="btn btn-sm btn-primary" onclick="saveMgrExp(\'' + escapeHtml(meta.code) + '\')">+ Add Experience</button></div>';
 h += '</div>';
 return h;
@@ -6400,30 +6400,117 @@ const { data: appr } = await _supabase.from('comp_approvals').select('*').eq('de
 var ap = appr && appr.length ? appr[0] : null;
 var html = '';
 if (ap && ap.status === 'Pending' && ap.assigned_to === APP.user.email) {
-html += '<div class="card"><div class="card-title">Approval Needed</div><p style="font-size:12px;color:var(--gray-500);margin-bottom:8px">HR sent this framework on ' + escapeHtml(ap.requested_date || '') + '. Review below, then approve or request changes.</p>';
-html += '<div class="form-group"><textarea id="apprComment" rows="2" placeholder="Comment (required when requesting changes)..."></textarea></div>';
-html += '<button class="btn btn-success" onclick="decideApproval(' + ap.id + ',true)">Approve</button> ';
-html += '<button class="btn btn-danger" onclick="decideApproval(' + ap.id + ',false)">Request Changes</button></div>';
+html += '<div class="card"><div class="card-title">Approval Needed</div><p style="font-size:12px;color:var(--gray-500);margin-bottom:8px">HR sent this framework on ' + escapeHtml(ap.requested_date || '') + '. Review below, then approve or request changes.</p><div class="form-group"><textarea id="apprComment" rows="2" placeholder="Comment (required when requesting changes)..."></textarea></div><button class="btn btn-success" onclick="decideApproval(' + ap.id + ',true)">Approve</button> <button class="btn btn-danger" onclick="decideApproval(' + ap.id + ',false)">Request Changes</button></div>';
 } else if (ap) {
 var bcls = ap.status === 'Approved' ? 'success' : (ap.status === 'Pending' ? 'purple' : 'danger');
-html += '<div class="card"><span class="badge badge-' + bcls + '">' + escapeHtml(ap.status) + (ap.status === 'Pending' ? ' — assigned to ' + escapeHtml(ap.assigned_to || '') : '') + '</span>' + (ap.comment ? '<div style="font-size:12px;color:var(--gray-600);margin-top:6px"><strong>Comment:</strong> ' + escapeHtml(ap.comment) + '</div>' : '') + '</div>';
+html += '<div class="card"><span class="badge badge-' + bcls + '">' + escapeHtml(ap.status) + '</span>' + (ap.comment ? '<div style="font-size:12px;color:var(--gray-600);margin-top:6px"><strong>Comment:</strong> ' + escapeHtml(ap.comment) + '</div>' : '') + '</div>';
 }
-html += '<div class="card"><div class="card-title">Position Competencies — ' + escapeHtml(pos) + ' (' + escapeHtml(dep) + ')</div>';
-html += '<p style="font-size:11px;color:var(--gray-500);margin-bottom:10px">All competency titles below are constant. Add the experiences your role needs under each one and choose the classification. New saves appear as <span class="badge badge-warning">⏳ Awaiting HR Approval</span> until HR Admin or Head of HR approves.</p>';
-var any = false;
-APP.competencies.filter(function(c){ return (c.code || '').indexOf('CC') !== 0; }).forEach(function(meta) {
-any = true;
-var exps = (APP.experiences || []).filter(function(x){ return x.comp_code === meta.code && sameText(x.department, dep) && sameText(x.position_name, pos); });
-html += compCardFull(meta, meta.code, exps, false, 'mgr');
-});
-if (!any) html += '<p style="color:var(--gray-500)">No competencies in the library yet — contact HR Admin.</p>';
-html += '</div>';
+html += '<div class="card"><div class="card-title">Set Experiences — ' + escapeHtml(pos) + ' (' + escapeHtml(dep) + ')</div>';
+html += '<p style="font-size:12px;color:var(--gray-600);margin-bottom:10px">Competency names, codes and weights are <strong>constant</strong> (owned by HR). Fill <strong>every required box</strong> below — 3 for Analytical Thinking, Judgement & Decision Making, Planning and Execution; 2 for Continuous Learning, People Skills and Leadership — and pick 🔴 Critical / 🟠 Important / 🟢 Value-Add for each. Add extra boxes only if needed. <strong>Nothing reaches HR until all required boxes are filled and you press 📤 Submit Framework to HR.</strong></p>';
+html += '<div id="mgrSetBlocks"></div>';
+html += '<div style="display:flex;gap:8px;margin-top:14px;border-top:1px solid var(--gray-200);padding-top:12px"><button class="btn btn-primary" onclick="submitMgrSet()">📤 Submit Framework to HR</button><button class="btn btn-outline" onclick="saveMgrSetDraft()">💾 Save Draft</button></div></div>';
 html += '<div class="card"><div class="card-title">Core Competencies (view only — same across the company)</div>';
 APP.competencies.filter(function(c){ return (c.code || '').indexOf('CC') === 0; }).forEach(function(meta) {
 html += compCardFull(meta, meta.code, (APP.experiences || []).filter(function(x){ return x.comp_code === meta.code; }), true, 'mgr');
 });
 html += '</div>';
 box.innerHTML = html;
+renderMgrSetBlocks(dep, pos);
+restoreMgrSetDraft(dep, pos);
+}
+function mgrSlotRow(code, idx) {
+return '<div style="display:flex;gap:8px;margin:8px 0;align-items:flex-start"><textarea id="mset-' + code + '-' + idx + '" rows="2" placeholder="Has ... (past tense, observable, starts with Has)" style="flex:1"></textarea><select id="msetc-' + code + '-' + idx + '" style="width:200px;flex:none"><option value="Must-Have (Critical)">🔴 Critical</option><option value="Important (Performance)" selected>🟠 Important</option><option value="Value-Add (Developmental)">🟢 Value-Add</option></select></div>';
+}
+function renderMgrSetBlocks(dep, pos) {
+var holder = document.getElementById('mgrSetBlocks'); if (!holder) return;
+var html = '';
+APP.competencies.filter(function(c){ return (c.code || '').indexOf('CC') !== 0; }).forEach(function(meta) {
+var code = meta.code;
+var existing = (APP.experiences || []).filter(function(x){ return x.comp_code === code && sameText(x.department, dep) && sameText(x.position_name, pos); });
+var min = compMinExps(meta.competency);
+var req = Math.max(min - existing.length, 0);
+html += '<div class="competency-block"><div class="competency-header"><span class="competency-name">' + escapeHtml(meta.competency) + '</span><span class="competency-cat">' + escapeHtml(code) + ' | ' + weightPct(meta.weight) + '% (constant)</span></div>';
+if (min > 0) html += '<div style="font-size:10px;font-weight:800;margin-bottom:6px;color:' + (existing.length >= min ? 'var(--green)' : 'var(--red)') + '">REQUIRED ' + min + ' EXPERIENCES — already saved: ' + existing.length + ' | to fill now: ' + req + '</div>';
+existing.forEach(function(x){
+var pend = (x.approval_status || 'Approved') === 'Pending';
+html += '<div class="exp-item ' + (pend ? 'returned' : 'ticked') + '"><div class="exp-text">' + escapeHtml(x.experience_text) + ' ' + getClassificationBadge(x.classification) + (pend ? ' <span class="badge badge-warning">⏳ Awaiting HR Approval</span>' : ' <span class="badge badge-success">Approved</span>') + '</div>' + (pend ? '<div style="margin-top:4px"><button class="btn btn-sm btn-danger" onclick="deleteExperience(' + x.id + ')">Delete</button></div>' : '') + '</div>';
+});
+html += '<div id="msetslots-' + code + '" data-req="' + req + '">';
+for (var i = 0; i < req; i++) html += mgrSlotRow(code, i);
+html += '</div>';
+html += '<button type="button" class="btn btn-sm btn-outline" onclick="addMgrSlot(\'' + code + '\')">+ Add another experience (optional)</button>';
+html += '</div>';
+});
+holder.innerHTML = html || '<p style="color:var(--gray-500)">No functional competencies in the library yet — contact HR Admin.</p>';
+}
+function addMgrSlot(code) {
+var box = document.getElementById('msetslots-' + code); if (!box) return;
+box.insertAdjacentHTML('beforeend', mgrSlotRow(code, box.children.length));
+}
+function saveMgrSetDraft() {
+var dep = APP.mgrDep || '', pos = (document.getElementById('mgrCompPos') || {}).value || '';
+var d = {};
+document.querySelectorAll('[id^="msetslots-"]').forEach(function(box){
+var code = box.id.replace('msetslots-', '');
+for (var i = 0; i < box.children.length; i++) {
+var t = (document.getElementById('mset-' + code + '-' + i) || {}).value || '';
+var c = (document.getElementById('msetc-' + code + '-' + i) || {}).value || '';
+if (t.trim()) d[code + '|' + i] = { t: t, c: c };
+}
+});
+localStorage.setItem('mgrset_' + dep + '_' + pos, JSON.stringify(d));
+showToast('💾 Draft saved — close and continue later');
+}
+function restoreMgrSetDraft(dep, pos) {
+var raw = localStorage.getItem('mgrset_' + dep + '_' + pos); if (!raw) return;
+var d; try { d = JSON.parse(raw); } catch (e) { return; }
+Object.keys(d).forEach(function(k){
+var parts = k.split('|'); var code = parts[0]; var i = parseInt(parts[1], 10);
+var box = document.getElementById('msetslots-' + code); if (!box) return;
+while (box.children.length <= i) addMgrSlot(code);
+var t = document.getElementById('mset-' + code + '-' + i); if (t) t.value = d[k].t || '';
+var c = document.getElementById('msetc-' + code + '-' + i); if (c && d[k].c) c.value = d[k].c;
+});
+}
+async function submitMgrSet() {
+var dep = APP.mgrDep || '', pos = (document.getElementById('mgrCompPos') || {}).value || '';
+if (!dep || !pos) { showToast('Select a position first'); return; }
+var rows = []; var missing = []; var emptyRequired = [];
+APP.competencies.filter(function(c){ return (c.code || '').indexOf('CC') !== 0; }).forEach(function(meta) {
+var code = meta.code;
+var existing = (APP.experiences || []).filter(function(x){ return x.comp_code === code && sameText(x.department, dep) && sameText(x.position_name, pos); });
+var min = compMinExps(meta.competency);
+var box = document.getElementById('msetslots-' + code);
+var req = box ? parseInt(box.getAttribute('data-req') || '0', 10) : 0;
+var filled = 0;
+if (box) {
+for (var i = 0; i < box.children.length; i++) {
+var tEl = document.getElementById('mset-' + code + '-' + i);
+var cEl = document.getElementById('msetc-' + code + '-' + i);
+var t = tEl ? tEl.value.trim() : '';
+if (i < req) {
+if (!t) { emptyRequired.push(meta.competency + ' box ' + (i + 1)); if (tEl) tEl.style.borderColor = 'var(--red)'; }
+else { tEl.style.borderColor = ''; filled++; rows.push({ comp_code: code, experience_text: t, classification: cEl ? cEl.value : 'Important (Performance)', department: dep, position_name: pos, competency_level: '', approval_status: 'Pending' }); }
+} else if (t) {
+filled++; rows.push({ comp_code: code, experience_text: t, classification: cEl ? cEl.value : 'Important (Performance)', department: dep, position_name: pos, competency_level: '', approval_status: 'Pending' });
+}
+}
+}
+if (existing.length + filled < min) missing.push(meta.competency + ' (' + (existing.length + filled) + '/' + min + ')');
+});
+if (emptyRequired.length) { showToast('Fill every required box first — empty: ' + emptyRequired.join(', ')); return; }
+if (missing.length) { showToast('Minimums not met: ' + missing.join(', ')); return; }
+if (!rows.length) { showToast('Nothing new to submit — all minimums already saved'); return; }
+if (!confirm('Submit ' + rows.length + ' experience(s) for ' + pos + ' to HR for approval?')) return;
+const { error } = await _supabase.from('experiences').insert(rows);
+if (error) { showToast(error.message); return; }
+localStorage.removeItem('mgrset_' + dep + '_' + pos);
+await refreshCompData();
+notifyHR('Competency Framework Submitted: ' + pos + ' (' + dep + ')', APP.user.name + ' submitted ' + rows.length + ' experiences for ' + pos + ' (' + dep + '). They are awaiting your approval in the CMS: ' + APP_LINK);
+_supabase.from('user_profiles').select('email').eq('role', 'HEAD_HR').then(function(res){ (res.data || []).forEach(function(u){ sendCMSemail(u.email, 'Competency Framework Submitted: ' + pos + ' (' + dep + ')', APP.user.name + ' submitted ' + rows.length + ' experiences awaiting approval: ' + APP_LINK); }); });
+showToast('✅ Submitted to HR for approval');
+completeCompTasksFor(dep, pos);
+loadMgrCompDetail();
 }
 async function decideApproval(id, ok) {
 var comment = document.getElementById('apprComment') ? document.getElementById('apprComment').value.trim() : '';
