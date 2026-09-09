@@ -1,4 +1,5 @@
 
+
 <!DOCTYPE html>
 <html>
 <head>
@@ -2483,6 +2484,7 @@ const { data: regs } = await _supabase.from('critical_positions').select('*').or
 const { data: lmRows } = await _supabase.from('line_managers').select('email, manager_name');
 window._aeRegs = regs || []; window._aeEmps = allEmps || []; window._aeMgrRegs = lmRows || [];
 await loadPhotoMap(true);
+await loadPositionsRegistry();
 const { data: depRows } = await _supabase.from('departments').select('company, name');
 window._aeRegs = regs || []; window._aeEmps = allEmps || []; window._aeMgrRegs = lmRows || []; window._aeDepRegs = depRows || [];
 var staff = [];
@@ -2576,6 +2578,7 @@ var pos = {};
 (window._aeRegs || []).forEach(function(r){ if ((r.department || '').toString().toUpperCase().trim() === dep && r.position_name) pos[r.position_name] = true; });
 (window._aeEmps || []).forEach(function(e){ if ((e.department || '').toString().toUpperCase().trim() === dep && e.position) pos[e.position] = true; });
 (APP.experiences || []).forEach(function(x){ if ((x.department || '').toString().toUpperCase().trim() === dep && x.position_name) pos[x.position_name] = true; });
+var reg4 = posRegFor((document.getElementById('aeDept') || {}).value || ''); Object.keys(reg4).forEach(function(p){ pos[p] = true; });
 Object.keys(pos).sort().forEach(function(p){ sel.innerHTML += '<option>' + escapeHtml(p) + '</option>'; });
 }
 async function saveNewEmployee() {
@@ -3044,11 +3047,10 @@ html += '</tbody></table></div></div>';
 box.innerHTML = html;
 }
 async function loadHRRevEmp(id) {
-id = id || window._hrRevTarget || '';
-if (!id) { var box0 = document.getElementById('hrRevContent'); if (box0) box0.innerHTML = ''; return; }
-window._hrRevTarget = id;
-document.getElementById('hrRevContent').innerHTML = '<div class="loading"><div class="spinner"></div></div>';
-const { data: emp } = await _supabase.from('employees').select('*').eq('employee_id', id).single();
+id = id || window._hrRevLast || ((document.getElementById('hrRevEmp') || {}).value || '');
+window._hrRevLast = id;
+if (!id) { var b0 = document.getElementById('hrRevContent'); if (b0) b0.innerHTML = ''; return; }
+document.getElementById('hrRevContent').innerHTML = '<div class="loading"><div class="spinner"></div></div>';const { data: emp } = await _supabase.from('employees').select('*').eq('employee_id', id).single();
 const { data: allResultsRaw } = await _supabase.from('assessments').select('*').eq('employee_id', id).in('type', ['Self', 'Manager', 'Prospective Self', 'Prospective']);
 var allResults = latestOnly(allResultsRaw || []);
 var html = roundTable(allResultsRaw || [], 'Self') + roundTable(allResultsRaw || [], 'Manager') + roundTable(allResultsRaw || [], 'Prospective Self') + roundTable(allResultsRaw || [], 'Prospective');
@@ -5426,6 +5428,29 @@ async function kaiAnswer(q) {
 async function kaiFast(prompt) {
   return await callAI(prompt, false);
 }
+async function loadPositionsRegistry() {
+if (window._posRegByDep) return window._posRegByDep;
+var rs = await Promise.all([
+_supabase.from('positions').select('*'),
+_supabase.from('departments').select('*')
+]);
+var nameById = {};
+(rs[1].data || []).forEach(function(d){ nameById[(d.department_id || d.id || '').toString().toUpperCase().trim()] = (d.name || ''); });
+var map = {};
+(rs[0].data || []).forEach(function(p){
+var dn = nameById[(p.department_id || '').toString().toUpperCase().trim()] || '';
+if (!dn || !p.position_name) return;
+if (!map[dn]) map[dn] = {};
+map[dn][p.position_name] = true;
+});
+window._posRegByDep = map;
+return map;
+}
+function posRegFor(dep) {
+var m = window._posRegByDep || {}; var out = {};
+Object.keys(m).forEach(function(k){ if (sameText(k, dep)) { var src = m[k]; Object.keys(src).forEach(function(p){ out[p] = true; }); } });
+return out;
+}
 function sameText(a,b){ return (a||'').toString().toUpperCase().trim() === (b||'').toString().toUpperCase().trim(); }
 async function refreshCompData() {
 const { data: c } = await _supabase.from('competencies').select('*');
@@ -5821,12 +5846,37 @@ if (document.getElementById('compContent')) loadCompDetail(); else if (document.
 input.value = '';
 });
 }
+async function loadPositionsRegistry() {
+if (window._posRegByDep) return window._posRegByDep;
+var rs = await Promise.all([
+_supabase.from('positions').select('*'),
+_supabase.from('departments').select('*')
+]);
+var nameById = {};
+(rs[1].data || []).forEach(function(d){ nameById[(d.department_id || d.id || '').toString().toUpperCase().trim()] = d.name || ''; });
+var map = {};
+(rs[0].data || []).forEach(function(p){
+var dn = nameById[(p.department_id || '').toString().toUpperCase().trim()] || '';
+if (!dn || !p.position_name) return;
+if (!map[dn]) map[dn] = {};
+map[dn][p.position_name] = true;
+});
+window._posRegByDep = map;
+return map;
+}
+function posRegFor(dep) {
+var m = window._posRegByDep || {}; var out = {};
+Object.keys(m).forEach(function(k){ if (sameText(k, dep)) out = m[k]; });
+return out;
+}
 async function loadHRComp() {
 setContent('<div class="loading"><div class="spinner"></div>Loading...</div>');
 const { data: emps } = await _supabase.from('employees').select('department, position');
 var deps = {};
 (emps || []).forEach(function(e){ if (e.department) deps[e.department] = true; });
 (APP.experiences || []).forEach(function(x){ if (x.department) deps[x.department] = true; });
+await loadPositionsRegistry();
+Object.keys(window._posRegByDep || {}).forEach(function(d){ deps[d] = true; });
 var html = '<div class="card"><div class="card-title">Competency Library</div>';
 html += '<p style="font-size:12px;color:var(--gray-500);margin-bottom:12px">Select a department to load its positions, then view, add, edit or delete competencies and experiences.</p>';
 html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px"><div class="form-group"><label>Department</label><select id="compDep" onchange="loadCompPositions()"><option value="">-- Select --</option>' + Object.keys(deps).sort().map(function(d){ return '<option>' + escapeHtml(d) + '</option>'; }).join('') + '</select></div>';
@@ -5846,6 +5896,7 @@ var pos = {};
 (APP.experiences || []).forEach(function(x){ if (sameText(x.department, dep) && x.position_name) pos[x.position_name] = true; });
 const { data: emps } = await _supabase.from('employees').select('position, department');
 (emps || []).forEach(function(e){ if (sameText(e.department, dep) && e.position) pos[e.position] = true; });
+var reg3 = posRegFor(dep); Object.keys(reg3).forEach(function(p){ pos[p] = true; });
 Object.keys(pos).sort().forEach(function(p){ sel.innerHTML += '<option>' + escapeHtml(p) + '</option>'; });
 }
 function compCard(meta, code, exps, isCore) {
@@ -6251,6 +6302,52 @@ html += compCardHOHR(meta, meta.code, (APP.experiences || []).filter(function(x)
 html += '</div>';
 box.innerHTML = html;
 }
+async function loadPositionsRegistry() {
+if (window._posRegByDep) return window._posRegByDep;
+var rs = await Promise.all([
+_supabase.from('positions').select('*'),
+_supabase.from('departments').select('*')
+]);
+var nameById = {};
+(rs[1].data || []).forEach(function(d){ nameById[(d.department_id || d.id || '').toString().toUpperCase().trim()] = d.name || ''; });
+var map = {};
+(rs[0].data || []).forEach(function(p){
+var dn = nameById[(p.department_id || '').toString().toUpperCase().trim()] || '';
+if (!dn || !p.position_name) return;
+if (!map[dn]) map[dn] = {};
+map[dn][p.position_name] = true;
+});
+window._posRegByDep = map;
+return map;
+}
+function posRegFor(dep) {
+var m = window._posRegByDep || {}; var out = {};
+Object.keys(m).forEach(function(k){ if (sameText(k, dep)) out = m[k]; });
+return out;
+}
+async function loadPositionsRegistry() {
+if (window._posRegByDep) return window._posRegByDep;
+var rs = await Promise.all([
+_supabase.from('positions').select('*'),
+_supabase.from('departments').select('*')
+]);
+var nameById = {};
+(rs[1].data || []).forEach(function(d){
+var code = (d.department_id || d.id || '').toString().toUpperCase().trim();
+if (code) nameById[code] = d.name || '';
+if (d.name) nameById[(d.name || '').toString().toUpperCase().trim()] = d.name;
+});
+var map = {};
+(rs[0].data || []).forEach(function(p){
+var dn = p.department || nameById[(p.department_id || '').toString().toUpperCase().trim()] || '';
+if (!dn || !p.position_name) return;
+if (!map[dn]) map[dn] = {};
+map[dn][p.position_name] = true;
+});
+window._posRegByDep = map;
+return map;
+}
+function posRegFor(dep){ var m = window._posRegByDep || {}; var out = {}; Object.keys(m).forEach(function(k){ if (sameText(k, dep)) { var src = m[k]; Object.keys(src).forEach(function(p){ out[p] = true; }); } }); return out; }
 async function mgrDepList() {
 var meEmail = (APP.user.email || '').toLowerCase();
 const { data: meRows } = await _supabase.from('employees').select('department').ilike('email', meEmail).limit(1);
@@ -6269,14 +6366,38 @@ sel.innerHTML = '<option value="">-- Select --</option>';
 var pos = {};
 (APP.experiences || []).forEach(function(x){ if (sameText(x.department, dep) && x.position_name) pos[x.position_name] = true; });
 (window._mgrAllPos || []).forEach(function(e){ if (sameText(e.department, dep) && e.position) pos[e.position] = true; });
+var reg = posRegFor(dep); Object.keys(reg).forEach(function(p){ pos[p] = true; });
 Object.keys(pos).sort().forEach(function(p){ sel.innerHTML += '<option>' + escapeHtml(p) + '</option>'; });
+}
+async function loadPositionsRegistry() {
+if (window._posRegByDep) return window._posRegByDep;
+var rs = await Promise.all([
+_supabase.from('positions').select('*'),
+_supabase.from('departments').select('*')
+]);
+var nameById = {};
+(rs[1].data || []).forEach(function(d){ nameById[(d.department_id || d.id || '').toString().toUpperCase().trim()] = d.name || ''; });
+var map = {};
+(rs[0].data || []).forEach(function(p){
+var dn = nameById[(p.department_id || '').toString().toUpperCase().trim()] || '';
+if (!dn || !p.position_name) return;
+if (!map[dn]) map[dn] = {};
+map[dn][p.position_name] = true;
+});
+window._posRegByDep = map;
+return map;
+}
+function posRegFor(dep) {
+var m = window._posRegByDep || {}; var out = {};
+Object.keys(m).forEach(function(k){ if (sameText(k, dep)) out = m[k]; });
+return out;
 }
 async function loadMgrSetComp() {
 setContent('<div class="loading"><div class="spinner"></div>Loading...</div>');
 var info = await mgrDepList();
 APP.mgrDep = info.dep || (info.list[0] || '');
 const { data: allPos } = await _supabase.from('employees').select('position, department');
-window._mgrAllPos = allPos || [];
+window._mgrAllPos = allPos || []; await loadPositionsRegistry();
 const { data: myTasks } = await _supabase.from('comp_tasks').select('*').eq('status', 'Pending');
 var pendTasks = (myTasks || []).filter(function(t){ return (t.manager_email || '').toLowerCase() === (APP.user.email || '').toLowerCase(); });
 var html = '<div class="card"><div class="card-title">🛠 Set Competencies — experiences for your positions</div>';
@@ -6364,7 +6485,7 @@ const { data: repRows } = await _supabase.from('employees').select('department')
 const { data: taskRows } = await _supabase.from('comp_tasks').select('department, manager_email').eq('status', 'Pending');
 (taskRows || []).forEach(function(t){ if ((t.manager_email || '').toLowerCase() === meEmail && t.department) deps[t.department] = true; });
 const { data: allPos } = await _supabase.from('employees').select('position, department');
-window._mgrCompEmps = allPos || [];
+window._mgrCompEmps = allPos || []; await loadPositionsRegistry();
 var depList = Object.keys(deps).sort();
 if (!APP.mgrDep || deps[APP.mgrDep] === undefined) APP.mgrDep = depList[0] || (me ? (me.department || '') : '');
 var html = '<div class="card"><div class="card-title">Competency Library — set experiences for your positions</div>';
@@ -6388,6 +6509,7 @@ if (!dep) return;
 var pos = {};
 (APP.experiences || []).forEach(function(x){ if (sameText(x.department, dep) && x.position_name) pos[x.position_name] = true; });
 (window._mgrCompEmps || []).forEach(function(e){ if (sameText(e.department, dep) && e.position) pos[e.position] = true; });
+var reg2 = posRegFor(dep); Object.keys(reg2).forEach(function(p){ pos[p] = true; });
 Object.keys(pos).sort().forEach(function(p){ posSel.innerHTML += '<option>' + escapeHtml(p) + '</option>'; });
 }
 async function loadMgrCompDetail() {
