@@ -7056,5 +7056,132 @@ return (out || '').trim();
 } catch (e) { return ''; }
 }
 </script>
+<script>
+/* ============ AI FRAMEWORK VALIDATOR — FLAGS ONLY, NEVER MODIFIES COMPETENCIES ============ */
+var AI_FLAG_SEL = 'id, scope, ref_id, comp_code, department, position_name, check_type, severity, message, status, checked_by, checked_date';
+function aiValRoles(){ return !!(APP.user && (APP.user.modes.isAdmin || APP.user.modes.isHOHR)); }
+function fwPosExps(dep,pos){ return (APP.experiences||[]).filter(function(x){ return (x.comp_code||'').indexOf('CC')!==0 && sameText(x.department,dep) && sameText(x.position_name,pos); }); }
+function fwCoreExps(){ return (APP.experiences||[]).filter(function(x){ return (x.comp_code||'').indexOf('CC')===0; }); }
+function fwCompOf(code){ for (var i=0;i<(APP.competencies||[]).length;i++) if (APP.competencies[i].code===code) return APP.competencies[i]; return null; }
+
+/* ---- Deterministic rule checks (no AI needed) ---- */
+function deterministicChecks(dep,pos){
+  var flags=[], posExps=fwPosExps(dep,pos), byCode={};
+  posExps.forEach(function(x){ (byCode[x.comp_code]=byCode[x.comp_code]||[]).push(x); });
+  (APP.competencies||[]).filter(function(c){ return (c.code||'').indexOf('CC')!==0; }).forEach(function(c){
+    var n=(byCode[c.code]||[]).length, min=compMinExps(c.competency);
+    if (!n) flags.push({scope:'competency',comp_code:c.code,check_type:'COVERAGE',severity:'high',message:c.competency+' has NO experiences set for '+pos+'.'});
+    else if (min && n<min) flags.push({scope:'competency',comp_code:c.code,check_type:'MIN_COUNT',severity:'high',message:c.competency+' has '+n+' experience(s); minimum required is '+min+'.'});
+  });
+  var seen={};
+  posExps.concat(fwCoreExps()).forEach(function(x){
+    var t=(x.experience_text||'').trim(), key=t.toUpperCase();
+    if (!t) return;
+    if (!(x.classification||'').trim()) flags.push({scope:'experience',ref_id:x.id,comp_code:x.comp_code,check_type:'CLASSIFICATION',severity:'high',message:'No classification (Critical/Important/Value-Add): "'+t.slice(0,80)+'"'});
+    if (t.indexOf('Has ')!==0) flags.push({scope:'experience',ref_id:x.id,comp_code:x.comp_code,check_type:'FORMAT',severity:'medium',message:'Experience should start with "Has " (past tense, observable): "'+t.slice(0,80)+'"'});
+    if (t.length<40) flags.push({scope:'experience',ref_id:x.id,comp_code:x.comp_code,check_type:'CLARITY',severity:'medium',message:'Too short/vague to assess reliably: "'+t+'"'});
+    if (seen[key]) flags.push({scope:'experience',ref_id:x.id,comp_code:x.comp_code,check_type:'DUPLICATE',severity:'medium',message:'Exact duplicate experience text also used under '+seen[key]+': "'+t.slice(0,80)+'"'});
+    seen[key]=x.comp_code;
+  });
+  var core=(APP.competencies||[]).filter(function(c){ return (c.code||'').indexOf('CC')===0; });
+  var func=(APP.competencies||[]).filter(function(c){ return (c.code||'').indexOf('CC')!==0; });
+  var coreTot=0, funcTot=0;
+  core.forEach(function(c){ var w=parseFloat(c.weight)||0; coreTot+=w; if (w!==7) flags.push({scope:'framework',comp_code:c.code,check_type:'WEIGHT',severity:'medium',message:'Core competency '+c.competency+' weight is '+w+'% (standard is 7%).'}); });
+  func.forEach(function(c){ funcTot+=parseFloat(c.weight)||0; });
+  if (Math.round(funcTot)!==72) flags.push({scope:'framework',check_type:'WEIGHT',severity:'high',message:'Functional weights total '+funcTot+'% — expected 72% (4 Core × 7% = 28%; grand total must be 100%).'});
+  if (Math.round(coreTot+funcTot)!==100) flags.push({scope:'framework',check_type:'WEIGHT',severity:'high',message:'Core + Functional weights total '+(coreTot+funcTot)+'% — must equal exactly 100%.'});
+  var op=func.filter(function(c){ return isOpComp(c.competency); }).map(function(c){ return parseFloat(c.weight)||0; });
+  var beh=func.filter(function(c){ return isBehComp(c.competency); }).map(function(c){ return parseFloat(c.weight)||0; });
+  if (op.length && beh.length && Math.min.apply(null,op) <= Math.max.apply(null,beh))
+    flags.push({scope:'framework',check_type:'WEIGHT',severity:'medium',message:'Operational competencies (AT/JD/PL/EX = 12% each) must carry a HIGHER weight than behavioural ones (CL/PS/LD = 8% each).'});
+  return flags;
+}
+
+/* ---- AI qualitative audit (returns flags only; explicitly forbidden to rewrite) ---- */
+async function aiQualitativeChecks(dep,pos,exps){
+  if (!exps.length) return [];
+  var list=exps.map(function(x,i){ var m=fwCompOf(x.comp_code); return (i+1)+'. ['+(x.comp_code||'')+'] '+(m?m.competency:x.comp_code)+' | '+(x.classification||'no classification')+' | '+x.experience_text; }).join('\n');
+  var prompt='You are an HR competency framework auditor. Position: "'+pos+'" (Department: "'+dep+'"). Below are the experiences configured per competency. Audit them and return ONLY valid JSON (no markdown): {"flags":[{"i":<item number>,"type":"OBSERVABILITY|MEASURABILITY|CLASSIFICATION_FIT|RELEVANCE|OVERLAP|CLARITY","severity":"high|medium|low","message":"<one sentence, plain English>"}]} listing ONLY problematic items. Checks: (a) observable, past-tense, provable behaviour; (b) specific/measurable enough for evidence and rating 1-5; (c) classification fits (Critical = must-have for the role, Important = performance enhancing, Value-Add = developmental); (d) relevant to this position and department; (e) two items in the same competency overlapping/duplicating; (f) wording too unclear to assess. If everything is fine return {"flags":[]}. NEVER rewrite or suggest new competency text — audit only.';
+  try {
+    var t=await callAI(prompt+'\n'+list, true);
+    if (!t) return [];
+    var s=t.indexOf('{'), e=t.lastIndexOf('}'); if (s>=0 && e>s) t=t.slice(s,e+1);
+    var out=JSON.parse(t); var res=[];
+    (out.flags||[]).forEach(function(f){
+      var idx=(f.i||0)-1; if (idx<0 || idx>=exps.length) return;
+      var x=exps[idx];
+      res.push({ scope:'experience', ref_id:x.id, comp_code:x.comp_code, check_type:'AI_'+(f.type||'REVIEW'),
+        severity:(String(f.severity||'medium').toLowerCase()), message:'[AI] '+(f.message||'')+' — "'+(x.experience_text||'').slice(0,80)+'"' });
+    });
+    return res;
+  } catch(err){ console.log('AI validation skipped: '+err.message); return []; }
+}
+
+/* ---- Run + persist (inserts into comp_ai_flags ONLY — competencies untouched) ---- */
+async function runAiValidation(dep,pos){
+  if (!aiValRoles()) { showToast('Only HR Admin / Head of HR can run validation'); return; }
+  if (!dep || !pos) { showToast('Select department and position first'); return; }
+  showToast('🤖 AI is validating the framework...');
+  var exps=fwPosExps(dep,pos);
+  var flags=deterministicChecks(dep,pos).concat(await aiQualitativeChecks(dep,pos,exps));
+  var today=new Date().toISOString().slice(0,10);
+  flags.forEach(function(f){ f.status='Open'; f.checked_by=APP.user.email; f.checked_date=today; f.department=dep; f.position_name=pos; });
+  window._aiFlagTemp=null;
+  var del=await _supabase.from('comp_ai_flags').delete().eq('department',dep).eq('position_name',pos);
+  if (del.error) { window._aiFlagTemp=flags; showToast('⚠️ Flags shown for this session only — run the comp_ai_flags SQL to persist them for HR & HOHR'); }
+  else if (flags.length) {
+    var ins=await _supabase.from('comp_ai_flags').insert(flags);
+    if (ins.error) { window._aiFlagTemp=flags; showToast('⚠️ Could not save flags: '+ins.error.message); }
+  }
+  window._aiFlagLastRunMap=window._aiFlagLastRunMap||{}; window._aiFlagLastRunMap[dep+'|'+pos]=today;
+  showToast(flags.length ? '🚩 '+flags.length+' flag(s) raised — nothing was changed' : '✅ No flags — framework looks compliant');
+  appendAiValidationCard();
+}
+async function loadAiFlags(dep,pos){
+  if (window._aiFlagTemp) return window._aiFlagTemp;
+  var r=await _supabase.from('comp_ai_flags').select(AI_FLAG_SEL).eq('department',dep).eq('position_name',pos).order('id');
+  return r.data||[];
+}
+async function dismissAiFlag(i){
+  if (!aiValRoles()) return;
+  var f=(window._aiFlagLastList||[])[i]; if (!f) return;
+  f.status='Dismissed';
+  if (f.id) await _supabase.from('comp_ai_flags').update({ status:'Dismissed' }).eq('id', f.id);
+  appendAiValidationCard();
+}
+function sevBadge(s){ s=(s||'low').toLowerCase(); return s==='high'?'badge-danger':(s==='medium'?'badge-warning':'badge-info'); }
+function aiFlagsCardHTML(dep,pos,flags){
+  window._aiFlagLastList=flags;
+  var order={high:0,medium:1,low:2};
+  var open=flags.filter(function(f){ return f.status!=='Dismissed'; }).sort(function(a,b){ return (order[a.severity]||3)-(order[b.severity]||3); });
+  var dism=flags.filter(function(f){ return f.status==='Dismissed'; });
+  var last=(window._aiFlagLastRunMap||{})[dep+'|'+pos] || (flags.length?flags[0].checked_date:'');
+  var h='<div class="card" id="aiFlagCard"><div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap"><div><div class="card-title" style="margin-bottom:2px">🤖 AI Framework Validation — flags only (never edits)</div><div style="font-size:11px;color:var(--gray-500)">Rule checks (minimums, weights, duplicates, format) + AI quality audit. Competencies, weights and experiences are NEVER modified — issues are raised here for HR Admin / Head of HR to decide. Last run: '+(last||'not run yet')+'</div></div><button class="btn btn-primary" onclick="runAiValidation(\''+escapeHtml(dep)+'\',\''+escapeHtml(pos)+'\')">'+(flags.length?'🔄 Re-run AI Validation':'🤖 Run AI Validation')+'</button></div>';
+  if (!flags.length) h+='<p style="font-size:12px;color:var(--green);margin-top:8px">No flags raised'+(last?' — framework validated as compliant ✓':' — run the validation to check this framework.')+'</p>';
+  open.forEach(function(f){ var i=flags.indexOf(f);
+    h+='<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;border:1px solid var(--gray-200);border-left:4px solid '+(f.severity==='high'?'#dc2626':f.severity==='medium'?'#ea580c':'#2563eb')+';border-radius:6px;padding:8px 10px;margin:6px 0;font-size:12px"><span><span class="badge '+sevBadge(f.severity)+'">'+escapeHtml(f.severity||'low')+'</span> <strong>'+escapeHtml(f.check_type||'')+'</strong> <span style="color:var(--gray-500)">· '+escapeHtml(f.comp_code||'')+'</span><div style="margin-top:3px;color:var(--gray-700)">'+escapeHtml(f.message||'')+'</div></span><button class="btn btn-sm btn-outline" style="flex:none" onclick="dismissAiFlag('+i+')">Dismiss</button></div>';
+  });
+  if (dism.length) h+='<div style="font-size:11px;color:var(--gray-400);margin-top:6px">'+dism.length+' dismissed flag(s): '+dism.map(function(f){ return escapeHtml((f.check_type||'')+' — '+(f.message||'').slice(0,60)); }).join(' · ')+'</div>';
+  return h+'</div>';
+}
+async function appendAiValidationCard(){
+  if (!aiValRoles()) return;
+  var depEl=document.getElementById('compDep')||document.getElementById('hohrCompDep');
+  var posEl=document.getElementById('compPos')||document.getElementById('hohrCompPos');
+  var box=document.getElementById('compContent')||document.getElementById('hohrCompContent');
+  if (!depEl || !posEl || !box) return;
+  var dep=depEl.value, pos=posEl.value;
+  var old=document.getElementById('aiFlagCard'); if (old) old.remove();
+  if (!dep || !pos) return;
+  var flags=await loadAiFlags(dep,pos);
+  var first=box.querySelector('.card');
+  if (first) first.insertAdjacentHTML('beforebegin', aiFlagsCardHTML(dep,pos,flags));
+  else box.insertAdjacentHTML('afterbegin', aiFlagsCardHTML(dep,pos,flags));
+}
+/* Hook into both library views (HR Admin + Head of HR) */
+var _origLoadCompDetail2=loadCompDetail, _origLoadHOHRCompDetail2=loadHOHRCompDetail;
+loadCompDetail=async function(){ await _origLoadCompDetail2(); appendAiValidationCard(); };
+loadHOHRCompDetail=async function(){ await _origLoadHOHRCompDetail2(); appendAiValidationCard(); };
+</script>
 </body>
 </html>
