@@ -7793,5 +7793,583 @@ var _origLoadCompDetail2=loadCompDetail, _origLoadHOHRCompDetail2=loadHOHRCompDe
 loadCompDetail=async function(){ await _origLoadCompDetail2(); appendAiValidationCard(); };
 loadHOHRCompDetail=async function(){ await _origLoadHOHRCompDetail2(); appendAiValidationCard(); };
 </script>
+<script>
+/* Whole-position framework workflow, v1.
+ * Live content and drafts are separate database revisions.
+ * Existing interface palette retained; one competency header carries its weight.
+ */
+var FW = { catalogue:null, revision:null, position:null, mode:null, dirty:false, busy:false, token:0 };
+async function fwRPC(action,data) {
+ var r=await _supabase.rpc('cms_framework',{p_action:action,p_data:data || {}});
+ if(r.error) throw new Error(r.error.message);
+ return r.data;
+}
+async function fwCatalogue() {
+ var selectedMode = APP.currentRole;
+ var c=await fwRPC('catalogue');
+ if (APP.currentRole !== selectedMode) throw new Error('Role changed. Reopen the page.');
+if (selectedMode === 'manager') {
+  var scope = await _supabase.rpc('cms_my_manager_positions');
+  if (scope.error) throw new Error(scope.error.message);
+  if (APP.currentRole !== selectedMode) {
+    throw new Error('Role changed. Reopen Set Competencies.');
+  }
+  var managedIds = new Set(scope.data || []);
+  c.positions = (c.positions || []).map(function(p) {
+    return Object.assign({}, p, {can_edit: managedIds.has(p.id)});
+  });
+}
+ FW.catalogue=c;
+ APP.competencies=c.competencies || [];
+ APP.experiences=(c.positions || []).flatMap(function(p){
+  return (p.items || []).map(function(i){return {id:i.id,comp_code:i.code,experience_text:i.text,
+   classification:i.classification,competency_level:i.level,department:p.department,
+   position_name:p.position,approval_status:'Approved',ai_note:i.ai_note};});
+ });
+ return c;
+}
+fetchFrameworkForReview=fwCatalogue;
+refreshCompData=fwCatalogue;
+function fwIsReviewer(){return !!(FW.catalogue && FW.catalogue.reviewer && (APP.currentRole==='hr' || APP.currentRole==='hohr'));}
+function fwLabel(p){return p.department ? p.department+' / '+p.position : 'Company-wide Core';}
+function fwPosition(dep,pos){return (FW.catalogue && FW.catalogue.positions || []).find(function(p){return sameText(p.department,dep)&&sameText(p.position,pos);});}
+function fwCore(){return fwPosition('','');}
+function fwMinimums(r) {
+ var out=[],items=r.items || [],p=FW.position;
+ if(p && !p.department) {
+  var baseline=p.items || [];
+  baseline.forEach(function(i){if(!items.some(function(x){return x.code===i.code && x.level===i.level && (x.text || '').trim();}))out.push(i.code+' / '+i.level+' needs an experience');});
+ } else {
+  [['FC001',3],['FC002',3],['FC003',3],['FC004',3],['FC005',2],['PC001',2],['LC001',2]].forEach(function(pair){
+   var n=items.filter(function(i){return i.code===pair[0] && (i.text || '').trim() && i.classification;}).length;
+   if(n<pair[1])out.push(compNameOf(pair[0])+': '+n+'/'+pair[1]);
+  });
+ }
+ if(items.some(function(i){return !(i.text || '').trim() || !i.classification;}))out.push('Complete or remove every empty optional experience');
+ return Array.from(new Set(out));
+}
+async function fwOpen(mode) {
+ if(FW.busy){showToast('Please wait for the current framework operation.');return;}
+ if(FW.dirty && !confirm('Leave without saving this framework draft?'))return;
+ var token=++FW.token; FW.mode=mode;FW.revision=null;FW.position=null;FW.dirty=false;
+ setContent('<div class="card"><p>Loading published frameworks...</p></div>');
+ try {
+  await fwCatalogue();if(token!==FW.token)return;
+  if(mode==='review' && !fwIsReviewer())throw new Error('HR Admin or HOHR framework permission is required.');
+  var title=mode==='library'?'Competency Library':mode==='review'?'Competency Approvals & Publication':'Set Competencies';
+  var h='<div id="fwScreen" class="card"><div class="card-title">'+title+'</div>';
+  h+='<p style="margin-bottom:12px">'+(mode==='library'?'Published content only. A draft never replaces a live framework.':mode==='review'?'Approve each experience, then publish the complete position in one action.':'Save a private draft. Submit only when all seven competency minimums are complete.')+'</p>';
+  h+='<div id="fwChoice"></div><div id="fwBody" style="margin-top:16px"></div></div>';
+  setContent(h);
+  if(mode==='review'){
+   var queue=await fwRPC('queue');if(token!==FW.token)return;
+   var sel=document.createElement('select');sel.id='fwRevisionChoice';
+   sel.innerHTML='<option value="">Select submitted framework ('+queue.length+')</option>'+queue.map(function(r){return '<option value="'+escapeHtml(r.id)+'">'+escapeHtml(fwLabel(r))+'</option>';}).join('');
+   sel.onchange=async function(){if(!sel.value)return;try{FW.revision=await fwRPC('get',{id:sel.value});FW.position=FW.catalogue.positions.find(p=>p.id===FW.revision.position_id);fwRenderRevision();}catch(e){showToast(e.message);}};
+   document.getElementById('fwChoice').appendChild(sel);
+   if(!queue.length)document.getElementById('fwBody').textContent='No submitted frameworks. Private drafts do not appear here.';
+  }else{
+   var positions=FW.catalogue.positions.filter(function(p){
+    if(mode==='library') return !!p.live_version && (APP.currentRole!=='manager' || p.can_edit);
+    return p.can_edit;
+   });
+   var sel=document.createElement('select');sel.id='fwPositionChoice';
+   sel.innerHTML='<option value="">Select department and position</option>'+positions.map(function(p){return '<option value="'+escapeHtml(p.id)+'">'+escapeHtml(fwLabel(p))+'</option>';}).join('');
+   sel.onchange=async function(){
+    if(FW.dirty&&!confirm('Discard unsaved draft edits?')){sel.value=FW.position.id;return;}
+    FW.dirty=false;FW.revision=null;FW.position=positions.find(p=>p.id===sel.value);
+    if(!FW.position){document.getElementById('fwBody').innerHTML='';return;}
+    if(mode==='library')fwRenderLibrary();
+    else try{FW.revision=await fwRPC('open',{position_id:FW.position.id});if(FW.revision)fwRenderRevision();else fwStartCard();}catch(e){document.getElementById('fwBody').textContent=e.message;}
+   };document.getElementById('fwChoice').appendChild(sel);
+  }
+ }catch(e){setContent('<div class="card"><p>'+escapeHtml(e.message)+'</p><p>Install the publication SQL first and check the private reviewer/roster setup.</p></div>');}
+}
+function fwStartCard(){
+ document.getElementById('fwBody').innerHTML='<p>'+(FW.position.live_version?'The published version stays live while you revise it.':'No published framework yet: assessments remain locked.')+'</p><button class="btn btn-primary" onclick="fwStart()">Start private revision</button>';
+}
+async function fwStart(){
+ if(FW.busy)return;FW.busy=true;
+ try{FW.revision=await fwRPC('start',{position_id:FW.position.id});FW.dirty=false;fwRenderRevision();}catch(e){showToast(e.message);}finally{FW.busy=false;fwButtons();}
+}
+function fwGroups(items){
+ var map=new Map();items.forEach(i=>{if(!map.has(i.code))map.set(i.code,[]);map.get(i.code).push(i);});
+ return Array.from(map.keys()).sort(compareCompetencyDisplay).map(code=>({code,items:map.get(code)}));
+}
+function fwHeading(code){
+ var c=APP.competencies.find(c=>c.code===code) || {};
+ return '<div class="competency-header"><strong>'+escapeHtml(c.competency || code)+'</strong><span>'+escapeHtml(c.category || '')+' | '+weightPct(c.weight || 0)+'% for this competency</span></div>';
+}
+function fwRenderLibrary(){
+ var p=FW.position,items=(p.items || []).slice();
+ if(p.department && fwCore())items=items.concat(fwCore().items || []);
+ var h='<h3>'+escapeHtml(fwLabel(p))+'</h3>';
+ fwGroups(items).forEach(g=>{
+  h+='<section class="competency-block">'+fwHeading(g.code);
+  g.items.forEach(i=>{h+='<div class="exp-item"><p>'+escapeHtml(i.text)+' '+getClassificationBadge(i.classification)+'</p>'+(i.level?'<span class="badge badge-info">'+escapeHtml(i.level)+'</span>':'')+'</div>';});
+  h+='</section>';
+ });
+ if(p.can_edit)h+='<button class="btn btn-outline" onclick="fwStart()">Edit in a separate revision</button>';
+ document.getElementById('fwBody').innerHTML=h;
+}
+function fwRenderRevision(){
+ var r=FW.revision,p=FW.position; if(!r || !p)return;
+ var draft=r.state==='Draft',review=r.state==='Submitted' && fwIsReviewer();
+ if(draft && p.department){
+  [['FC001',3],['FC002',3],['FC003',3],['FC004',3],['FC005',2],['PC001',2],['LC001',2]].forEach(function(pair){
+   var existing=r.items.filter(i=>i.code===pair[0]).length;
+   for(var slot=existing;slot<pair[1];slot++){
+    r.items.push({id:crypto.randomUUID(),code:pair[0],text:'',classification:'Important (Performance Enhancing)',level:'',ai_note:null});
+    FW.dirty=true;
+   }
+  });
+ }
+ var items=r.items || [];
+ var codes=p.department?['FC001','FC002','FC003','FC004','FC005','PC001','LC001']:
+  APP.competencies.filter(c=>c.code.indexOf('CC')===0).map(c=>c.code);
+ items.forEach(i=>{if(!codes.includes(i.code))codes.push(i.code);});codes.sort(compareCompetencyDisplay);
+ var h='<h3>'+escapeHtml(fwLabel(p))+'</h3><p><strong>'+escapeHtml(r.state)+'</strong> | '+(p.live_version?'Existing published version remains available.':'Assessments locked until publication.')+'</p>';
+ codes.forEach(code=>{
+  var group=items.filter(i=>i.code===code);
+  h+='<section class="competency-block">'+fwHeading(code);
+  var min=['FC001','FC002','FC003','FC004'].includes(code)?3:['FC005','PC001','LC001'].includes(code)?2:0;
+  if(min)h+='<p>Required: '+min+' complete experiences | Entered: '+group.filter(i=>i.text.trim()).length+'</p>';
+  group.forEach(i=>{
+   h+='<div class="exp-item">';
+   if(draft){
+    h+='<textarea id="fwt-'+i.id+'" rows="3" oninput="fwInput(\''+i.id+'\',\'text\',this.value)" onblur="fwAudit(\''+i.id+'\')">'+escapeHtml(i.text)+'</textarea>';
+    var options=['Must-Have (Critical)','Important (Performance Enhancing)','Value-Add (Developmental)'];if(i.classification&&!options.includes(i.classification))options.unshift(i.classification);
+    h+='<select onchange="fwInput(\''+i.id+'\',\'classification\',this.value)">'+options.map(o=>'<option'+(o===i.classification?' selected':'')+'>'+escapeHtml(o)+'</option>').join('')+'</select>';
+   }else h+='<p>'+escapeHtml(i.text)+' '+getClassificationBadge(i.classification)+'</p>';
+   if(i.level)h+='<span class="badge badge-info">'+escapeHtml(i.level)+'</span>';
+   h+='<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px"><button type="button" class="btn btn-outline" onclick="fwAudit(\''+i.id+'\')">AI Validate / Ideas</button>';
+   if(draft)h+='<button type="button" class="btn btn-outline" onclick="fwRemove(\''+i.id+'\')">Remove from draft</button>';
+   if(review){
+    h+='<button type="button" class="btn btn-outline" onclick="fwReviewEdit(\''+i.id+'\')">Edit</button>';
+    h+='<button type="button" class="btn btn-success" '+(r.review[i.id]?'disabled':'')+' onclick="fwApprove(\''+i.id+'\')">'+(r.review[i.id]?'Approved for this revision':'Approve experience')+'</button>';
+   }
+   h+='</div><div id="fwai-'+i.id+'">'+fwNoteHTML(i)+'</div></div>';
+  });
+  if(draft)h+='<button class="btn btn-outline" onclick="fwAdd(\''+code+'\')">Add experience</button>';
+  h+='</section>';
+ });
+ if(p.department && fwCore()){
+  h+='<h3>Company-wide Core (published separately)</h3>';
+  fwGroups(fwCore().items || []).forEach(g=>{h+='<section class="competency-block">'+fwHeading(g.code);g.items.forEach(i=>{h+='<p class="exp-item">'+escapeHtml(i.text)+' <span class="badge badge-info">'+escapeHtml(i.level)+'</span></p>';});h+='</section>';});
+ }
+ h+='<div id="fwProgress" style="padding:12px"></div><div style="display:flex;gap:10px;flex-wrap:wrap">';
+ if(draft)h+='<button class="btn btn-outline" onclick="fwSave(false)">Save private draft</button><button id="fwSubmit" class="btn btn-primary" onclick="fwSave(true)">Submit complete framework to HR / HOHR</button>';
+ if(review)h+='<button class="btn btn-outline" onclick="fwReturn()">Return whole framework to manager</button><button id="fwPublish" class="btn btn-success" onclick="fwPublish()">Publish complete approved framework</button>';
+ h+='</div>';
+ document.getElementById('fwBody').innerHTML=h;fwButtons();
+}
+function fwNoteHTML(i){try{var n=JSON.parse(i.ai_note || '');return n.text===i.text?qualityResultHTML(n.result):'';}catch(e){return '';}}
+function fwButtons(){
+ if(!FW.revision)return;
+ var body=document.getElementById('fwBody');
+ if(body)body.querySelectorAll('textarea, select').forEach(function(el){el.disabled=FW.busy;});
+ var missing=fwMinimums(FW.revision),unapproved=FW.revision.items.filter(i=>!FW.revision.review[i.id]).length;
+ var el=document.getElementById('fwProgress');if(el)el.textContent=missing.length?missing.join(' · '):FW.revision.state==='Draft'?'All required fields complete. Ready to submit.':unapproved?unapproved+' experiences still need approval. Nothing new is live yet.':'All experiences approved. Ready for final publication.';
+ var submit=document.getElementById('fwSubmit');if(submit)submit.disabled=FW.busy||missing.length>0;
+ var pub=document.getElementById('fwPublish');if(pub)pub.disabled=FW.busy||missing.length>0||unapproved>0;
+}
+function fwInput(id,key,value){
+ if(FW.busy)return;var i=FW.revision.items.find(i=>i.id===id);if(!i)return;
+ i[key]=value;i.ai_note=null;FW.dirty=true;var out=document.getElementById('fwai-'+id);if(out)out.textContent='Not validated after this edit.';fwButtons();
+}
+function fwAdd(code){
+ if(FW.busy)return;var level='';
+ if(code.indexOf('CC')===0){level=prompt('Core level: Foundational, Intermediate, Advanced, Master or Executive');if(!level)return;}
+ FW.revision.items.push({id:crypto.randomUUID(),code,text:'',classification:'Important (Performance Enhancing)',level,ai_note:null});FW.dirty=true;fwRenderRevision();
+}
+function fwRemove(id){if(FW.busy)return;if(!confirm('Remove this item from the private draft? The live version is unchanged.'))return;FW.revision.items=FW.revision.items.filter(i=>i.id!==id);FW.dirty=true;fwRenderRevision();}
+var fwOldPeers=qualityPeers;
+qualityPeers=function(row){
+ if(!FW.revision || !row._revision)return fwOldPeers(row);
+ var items=FW.revision.items.filter(i=>i.id!==row.id);
+ if(FW.position.department&&fwCore())items=items.concat(fwCore().items || []);
+ return items.map(i=>({ref:i.id,code:i.code,title:compNameOf(i.code),text:i.text,level:i.level}));
+};
+async function fwAudit(id){
+ var r=FW.revision,i=r&&r.items.find(i=>i.id===id);if(!i||!i.text.trim())return null;
+ var sig=JSON.stringify([i.text,i.classification,i.code,i.level]),out=document.getElementById('fwai-'+id);
+ if(out)out.textContent='Checking wording, relevance and semantic duplicates...';
+ try{
+  var result=await runExperienceQuality({id:i.id,comp_code:i.code,experience_text:i.text,
+   classification:i.classification,competency_level:i.level,department:FW.position.department,position_name:FW.position.position,_revision:true});
+  if(FW.revision!==r || sig!==JSON.stringify([i.text,i.classification,i.code,i.level]))return null;
+  i.ai_note=JSON.stringify({kind:'cms-quality-v1',text:i.text,code:i.code,result,checked_at:new Date().toISOString()});
+  if(r.state==='Draft')FW.dirty=true;
+  if(out && document.getElementById('fwai-'+id)===out){
+   out.innerHTML=qualityResultHTML(result);
+   if(result.suggestion){
+    var b=document.createElement('button');b.className='btn btn-outline';b.textContent='Use suggested wording';
+    b.onclick=async()=>{
+     if(FW.busy || FW.revision!==r || sig!==JSON.stringify([i.text,i.classification,i.code,i.level]))return;
+     if(r.state==='Draft'){fwInput(id,'text',result.suggestion);fwRenderRevision();}
+     else await fwMutate('edit_item',{item:{id,text:result.suggestion,classification:i.classification}});
+    };out.appendChild(b);
+   }
+  }return result;
+ }catch(e){if(out)out.textContent='AI unavailable: '+e.message;return null;}
+}
+async function fwMutate(action,extra){
+ if(FW.busy)return false;FW.busy=true;fwButtons();
+ try{
+  var r=await fwRPC(action,Object.assign({id:FW.revision.id,edit_number:FW.revision.edit_number},extra));
+  FW.revision=r;FW.dirty=false;
+  if(action==='publish'){await fwCatalogue();showToast('Published atomically. All libraries now use this complete revision.');FW.busy=false;await fwOpen('library');}
+  else if(action==='return'){FW.busy=false;await fwOpen('review');showToast('Returned to private draft. Live version is unchanged.');}
+  else{fwRenderRevision();showToast(action==='return'?'Returned to private draft. Existing published version unchanged.':'Saved. Live framework is unchanged until Publish.');}
+  return true;
+ }catch(e){showToast(e.message);return false;}finally{FW.busy=false;fwButtons();}
+}
+async function fwSave(submit){
+ if(FW.busy)return;
+ if(submit && fwMinimums(FW.revision).length){fwButtons();return;}
+ if(submit){
+  FW.busy=true;fwButtons();var snap=JSON.stringify(FW.revision.items.map(i=>[i.id,i.text,i.classification]));
+  var flags=0;
+  for(const i of FW.revision.items){var result=await fwAudit(i.id);if(!result){FW.busy=false;fwButtons();showToast('Complete AI checks before submitting. Draft can still be saved.');return;}flags+=result.flags.length;}
+  FW.busy=false;
+  if(snap!==JSON.stringify(FW.revision.items.map(i=>[i.id,i.text,i.classification]))){showToast('Draft changed during checks. Retry.');return;}
+  if(!confirm((flags?flags+' AI flags need human review. ':'')+'Submit this complete framework for HR/HOHR review?')){fwButtons();return;}
+ }
+ await fwMutate(submit?'submit':'save',{items:FW.revision.items});
+}
+async function fwReviewEdit(id){
+ var i=FW.revision.items.find(i=>i.id===id);if(!i||FW.busy)return;
+ var t=prompt('Edit statement:',i.text);if(t===null)return;
+ var c=prompt('Classification:',i.classification);if(c===null)return;
+ await fwMutate('edit_item',{item:{id,text:t.trim(),classification:c.trim()}});
+}
+async function fwApprove(id){
+ if(FW.busy)return;FW.busy=true;fwButtons();
+ var result=await fwAudit(id);FW.busy=false;
+ if(!result){showToast('AI check failed. Retry before approval.');fwButtons();return;}
+ if(result.flags.length&&!confirm('AI flags are shown on this experience. Approve it unchanged for this revision?')){fwButtons();return;}
+ await fwMutate('approve_item',{item_id:id});
+}
+async function fwReturn(){if(confirm('Return the entire submitted revision to its owner? All revision approvals reset; live content remains unchanged.'))await fwMutate('return',{});}
+async function fwPublish(){if(fwMinimums(FW.revision).length||FW.revision.items.some(i=>!FW.revision.review[i.id]))return;if(confirm('Publish this complete approved revision, replacing the live framework in all libraries?'))await fwMutate('publish',{});}
+loadHRComp=()=>fwOpen('library');
+loadHOHRComp=()=>fwOpen('library');
+loadHRCompApprovals=()=>fwOpen('review');
+loadMgrComp=()=>fwOpen('library');
+loadMgrSetComp=()=>fwOpen('draft');
+var fwLegacyLoadPage=loadPage;
+loadPage=function(id){
+ if(['hr-comp','hohr-comp','mgr-comp'].includes(id))return fwOpen('library');
+ if(['hr-comp-approvals','hohr-comp-approvals'].includes(id))return fwOpen('review');
+ if(id==='mgr-setcomp')return fwOpen('draft');
+ return fwLegacyLoadPage(id);
+};
+var fwLegacyGetPositionExperiences=getPositionExperiences;
+getPositionExperiences=function(pos,dep,level){
+ var p=fwPosition(dep,pos),c=fwCore();
+ if(!p || !p.live_version || !c || !c.live_version)return {};
+ var desired=String(level || 'Intermediate').trim();
+ if(desired==='Intermidiate')desired='Intermediate';
+ var result={};
+ var items=(p.items || []).concat((c.items || []).filter(i=>sameText(i.level,desired)));
+ items.forEach(function(i){
+  if(!i.code || !(i.text || '').trim())return;
+  if(!result[i.code])result[i.code]=[];
+  result[i.code].push({idx:result[i.code].length,text:i.text,classification:i.classification || ''});
+ });
+ return result;
+};
+// Capture versions at form build time, not at submission time.
+var fwAssessmentVersions={};
+var fwLegacyAssessFormHTML=assessFormHTML;
+assessFormHTML=function(emp,type,pos,pre,spre){
+ var p=fwPosition(emp.department,pos),c=fwCore();
+ if(!p || !p.live_version || !c || !c.live_version){
+  delete window['_assessOut_'+type];
+  return '<div class="card"><strong>Assessment locked</strong><p>The complete framework for this position must be approved and published first.</p></div>';
+ }
+ fwAssessmentVersions[type+'|'+emp.employee_id]=[p.live_version,c.live_version];
+ return fwLegacyAssessFormHTML(emp,type,pos,pre,spre);
+};
+var fwOldLoadSelf=loadSelfAssessment;
+loadSelfAssessment=async function(){
+ try{await fwCatalogue();}catch(e){setContent('<div class="card">Framework unavailable. Assessments remain locked.</div>');return;}
+ window._selfData=null;
+ var employeeResult=await _supabase.from('employees').select('*').eq('email',APP.user.email).single();
+ var employee=employeeResult.data;
+ if(!employee || !fwPosition(employee.department,employee.position)?.live_version || !fwCore()?.live_version){
+  setContent('<div class="card"><strong>Assessment locked</strong><p>The complete framework for your position must be published first.</p></div>');return;
+ }
+ fwAssessmentVersions['Self|'+employee.employee_id]=[fwPosition(employee.department,employee.position).live_version,fwCore().live_version];
+ await fwOldLoadSelf();
+ if(window._selfData){var emp=window._selfData.employee,p=fwPosition(emp.department,emp.position),c=fwCore();if(p&&p.live_version&&c&&c.live_version)fwAssessmentVersions['Self|'+emp.employee_id]=[p.live_version,c.live_version];}
+};
+var fwOldLoadAssessEmp=loadAssessEmp;
+loadAssessEmp=async function(){try{await fwCatalogue();await fwOldLoadAssessEmp();}catch(e){showToast('Framework unavailable. Assessment locked.');}};
+// Refresh before opening either kind of prospective form as well.
+var fwOldBuildProsp=buildProspForm;
+buildProspForm=async function(empId){try{await fwCatalogue();return await fwOldBuildProsp(empId);}catch(e){showToast('Framework unavailable. Assessment locked.');}};
+// Bind every inserted assessment row to the version used to render its form.
+// Database trigger verifies current publication, trusted employee/manager scope,
+// statement membership, and rejects stale forms without touching old records.
+var fwOriginalFrom=_supabase.from.bind(_supabase);
+_supabase.from=function(table){
+ var q=fwOriginalFrom(table);
+ if(table==='assessments'){
+  var insert=q.insert.bind(q);
+  q.insert=function(values,options){
+   var rows=Array.isArray(values)?values:[values];
+   var enriched=rows.map(function(r){
+    var v=fwAssessmentVersions[r.type+'|'+r.employee_id];
+    return Object.assign({},r,{framework_version:v?v[0]:null,core_framework_version:v?v[1]:null});
+   });return insert(Array.isArray(values)?enriched:enriched[0],options);
+  };
+ }return q;
+};
+// Never restore positional drafts into another framework version.
+var fwOldSaveDraft=saveDraft,fwOldRestoreDraft=restoreDraft;
+saveDraft=function(type,itemPre,evPre,empId,silent){
+ fwOldSaveDraft(type,itemPre,evPre,empId,silent);
+ var v=fwAssessmentVersions[type+'|'+empId];
+ if(v)localStorage.setItem('cms_draft_version_'+type+'_'+empId,JSON.stringify(v));
+};
+restoreDraft=function(type,itemPre,evPre,scorePre,empId){
+ var version=fwAssessmentVersions[type+'|'+empId];
+ if(localStorage.getItem('cms_draft_version_'+type+'_'+empId)!==JSON.stringify(version)){
+  if(localStorage.getItem('cms_draft_'+type+'_'+empId))showToast('An older draft was kept but not restored: its framework version differs or is unknown.');
+  return;
+ }fwOldRestoreDraft(type,itemPre,evPre,scorePre,empId);
+};
+window.addEventListener('beforeunload',function(e){if(FW.dirty){e.preventDefault();e.returnValue='';}});
+var fwOldNavigate=navigateTo;
+navigateTo=function(id){
+ if(FW.busy){showToast('Please wait for the current framework operation.');return;}
+ if(FW.dirty){if(!confirm('Leave without saving this framework draft?'))return;FW.dirty=false;}
+ return fwOldNavigate(id);
+};
+// Disable the previous immediate-live editor entry points.
+editExperience=function(){showToast('Open Competency Library and use Edit in a separate revision.');};
+hohrEditExperience=editExperience;
+saveExperienceChange=async function(){showToast('Use a separate framework revision.');return false;};
+approveExperience=function(){showToast('Approve inside Competency Approvals & Publication, then Publish the complete revision.');};
+approveFrameworkReview=approveExperience;
+saveMgrExp=function(){showToast('Use Set Competencies: Save private draft, then Submit complete framework.');};
+submitMgrSet=saveMgrExp;
+
+</script>
+<script>
+/* All Employees: company -> department -> paginated employees.
+   Match the approved indigo/teal/purple/amber overview.
+   Summary requests carry only grouping fields; never full assessment rows. */
+var EB={company:null,department:null,page:0,size:25,search:'',track:'',status:'',token:0,cache:null,cacheAt:0,refs:null};
+function ebAllowed(){return APP.currentRole==='hr'||APP.currentRole==='hohr';}
+function ebAdmin(){return APP.currentRole==='hr' && APP.user && APP.user.modes.isAdmin;}
+function ebKey(v){return String(v||'').trim().toUpperCase();}
+function ebLabel(v){return v||'Unassigned';}
+function ebButton(text,fn,cls){
+ var b=document.createElement('button');b.type='button';b.className=cls||'btn btn-outline';b.textContent=text;b.onclick=fn;return b;
+}
+async function ebAll(table,columns,configure){
+ var rows=[],start=0;
+ for(;;){
+  var q=_supabase.from(table).select(columns).order('id').range(start,start+499);
+  if(configure)q=configure(q);
+  var r=await q;if(r.error)throw new Error(r.error.message);
+  rows=rows.concat(r.data||[]);if(!r.data||r.data.length<500)return rows;start+=500;
+ }
+}
+async function ebSummary(force){
+ if(!force&&EB.cache&&Date.now()-EB.cacheAt<120000)return EB.cache;
+ // Only the two grouping fields: no staff profiles, assessment bodies or photos.
+ var rows=await ebAll('employees','company,department');
+ var companies=new Map();
+ rows.forEach(function(r){
+  var ck=ebKey(r.company),dk=ebKey(r.department);
+  if(!companies.has(ck))companies.set(ck,{key:ck,name:String(r.company||'').trim(),count:0,departments:new Map()});
+  var c=companies.get(ck);c.count++;
+  if(!c.departments.has(dk))c.departments.set(dk,{key:dk,name:String(r.department||'').trim(),count:0});
+  c.departments.get(dk).count++;
+ });
+ EB.rawGroups=rows;EB.cache=companies;EB.cacheAt=Date.now();return companies;
+}
+function ebShell(){
+ var root=document.createElement('div');root.id='employeeBrowser';
+ root.innerHTML='<style>#employeeBrowser .eb-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:16px}#employeeBrowser .eb-tile{text-align:left;padding:24px;border:1px solid #dce3f0;border-radius:14px;cursor:pointer;min-height:140px;font:inherit;transition:transform .15s}#employeeBrowser .eb-tile:hover{transform:translateY(-2px)}#employeeBrowser .eb-tile strong{display:block;font-size:22px;margin-bottom:12px}#employeeBrowser .eb-tile span{display:block;margin-top:6px}#employeeBrowser th,#employeeBrowser td{font-size:13px}#employeeBrowser .eb-head{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}#employeeBrowser .eb-filter{display:flex;gap:10px;flex-wrap:wrap;margin:18px 0}#employeeBrowser .eb-filter>*{flex:1;min-width:160px}#employeeBrowser details{min-width:120px}#employeeBrowser details button{display:block;margin:6px 0}#employeeBrowser .eb-crumb{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:16px}#employeeBrowser .eb-crumb .btn{padding:4px 6px}#employeeBrowser .eb-error{padding:18px;border-left:3px solid #dc2626;background:#fff1f2}</style><div class="card"><div id="ebCrumb" class="eb-crumb"></div><div class="eb-head"><div><h2 style="color:#172554">All Employees</h2><p id="ebSubtitle" style="color:#64748b">Company → Department → Employees</p></div><div id="ebTopActions"></div></div><div id="ebFilters"></div><div id="ebContent"><p>Loading...</p></div><div id="ebPager" style="margin-top:16px"></div></div><div id="ebAdd"></div>';
+ setContent('');document.getElementById('mainContent').appendChild(root);
+ var actions=root.querySelector('#ebTopActions');
+ actions.appendChild(ebButton('Refresh',()=>ebShow(true)));
+ if(ebAdmin())actions.appendChild(ebButton('+ Add Employee',ebOpenAdd,'btn btn-primary'));
+ ebBreadcrumbs();
+ return root;
+}
+function ebBreadcrumbs(){
+ var el=document.getElementById('ebCrumb');if(!el)return;el.innerHTML='';
+ el.appendChild(ebButton('All Employees',()=>{EB.company=null;EB.department=null;EB.search='';EB.page=0;ebShow();}));
+ if(EB.company!==null){
+  el.append(' › ');el.appendChild(ebButton(ebLabel(EB.company),()=>{EB.department=null;EB.search='';EB.page=0;ebShow();}));
+ }
+ if(EB.department!==null){el.append(' › '+ebLabel(EB.department));}
+ if(EB.search)el.append(' › Search results');
+}
+async function ebShow(force){
+ if(!ebAllowed()){showToast('HR access required');return;}
+ if(force)EB.refs=null;
+ var token=++EB.token,role=APP.currentRole,root=ebShell();
+ function active(){return EB.token===token&&APP.currentRole===role&&document.getElementById('employeeBrowser')===root;}
+ try{
+  var companies=await ebSummary(force);if(!active())return;
+  var content=root.querySelector('#ebContent');content.innerHTML='';
+  ebFilters();
+  if(EB.department!==null||EB.search){await ebEmployees(root,active);return;}
+  var list=EB.company===null?Array.from(companies.values()):Array.from((companies.get(EB.company)||{departments:new Map()}).departments.values());
+  list.sort((a,b)=>a.name.localeCompare(b.name));
+  root.querySelector('#ebSubtitle').textContent=EB.company===null?'Choose a company':'Choose a department in '+ebLabel(EB.company);
+  var grid=document.createElement('div');grid.className='eb-grid';content.appendChild(grid);
+  var colors=[['#eef2ff','#3730a3'],['#ecfdf5','#047857'],['#f5f3ff','#6d28d9'],['#fffbeb','#b45309']];
+  list.forEach(function(item,i){
+   var tile=ebButton('',()=>{if(EB.company===null)EB.company=item.key;else EB.department=item.key;EB.page=0;EB.search='';ebShow();},'eb-tile');
+   tile.style.background=colors[i%4][0];tile.style.color=colors[i%4][1];
+   var title=document.createElement('strong');title.textContent=ebLabel(item.name);tile.appendChild(title);
+   var count=document.createElement('span');count.textContent=item.count+' employees';tile.appendChild(count);
+   if(item.departments){var deps=document.createElement('span');deps.textContent=item.departments.size+' departments';tile.appendChild(deps);}
+   var next=document.createElement('span');next.textContent=EB.company===null?'View departments →':'View employees →';tile.appendChild(next);grid.appendChild(tile);
+  });
+  if(!list.length)content.textContent='No employees in this group yet. Add an employee to create its company/department card.';
+ }catch(e){if(active()){var el=root.querySelector('#ebContent');el.className='eb-error';el.textContent='Could not load employees: '+e.message;el.appendChild(ebButton('Retry',()=>ebShow(true)));}}
+}
+function ebFilters(){
+ var host=document.getElementById('ebFilters');host.className='eb-filter';
+ var form=document.createElement('form');form.style.display='flex';form.style.gap='8px';
+ var input=document.createElement('input');input.type='search';input.value=EB.search;input.placeholder=EB.department!==null?'Search this department':EB.company!==null?'Search this company':'Search employees across companies';input.setAttribute('aria-label',input.placeholder);form.appendChild(input);
+ var go=document.createElement('button');go.type='submit';go.className='btn btn-outline';go.textContent='Search';form.appendChild(go);
+ form.onsubmit=function(e){e.preventDefault();EB.search=input.value.trim();EB.page=0;ebShow();};host.appendChild(form);
+ if(EB.department!==null||EB.search){
+  var track=document.createElement('select');track.setAttribute('aria-label','Talent track');
+  ['', 'Promotion Track','Succession Track','Talent Pipeline','Development Track'].forEach(t=>{var o=new Option(t||'Talent track: All',t);track.add(o);});track.value=EB.track;
+  track.onchange=()=>{EB.track=track.value;EB.page=0;ebShow();};host.appendChild(track);
+  var status=document.createElement('select');status.setAttribute('aria-label','Status on this page');
+  [['','Status: All on this page'],['pending','Pending HR on this page'],['reviewed','Reviewed on this page'],['missing','Self not done on this page']].forEach(p=>status.add(new Option(p[1],p[0])));
+  status.value=EB.status;status.onchange=()=>{EB.status=status.value;ebApplyStatus();};host.appendChild(status);
+ }
+}
+function ebScope(q){
+ // Match the actual stored variants behind normalized cards, including NULL.
+ var clauses=[];
+ ['company','department'].forEach(function(field){
+  if(EB[field]===null)return;
+  var values=Array.from(new Set((EB.rawGroups||[]).filter(r=>ebKey(r[field])===EB[field]).map(r=>r[field])));
+  var nonnull=values.filter(v=>v!==null&&v!==undefined),parts=[];
+  if(values.some(v=>v==null))parts.push(field+'.is.null');
+  if(nonnull.length)parts.push(field+'.in.('+nonnull.map(v=>JSON.stringify(v)).join(',')+')');
+  if(!parts.length)parts.push(field+'.eq.'+JSON.stringify(EB[field]));
+  clauses.push(parts.length>1?'or('+parts.join(',')+')':parts[0]);
+ });
+ if(clauses.length)q=q.or('and('+clauses.join(',')+')');
+ if(EB.track)q=q.eq('talent_track',EB.track);
+ if(EB.search)q=q.ilike('employee_name','%'+ebLike(EB.search)+'%');
+ return q;
+}
+function ebLike(s){return String(s).replace(/[\\%_]/g,'\\$&');}
+async function ebEmployees(root,active){
+ var start=EB.page*EB.size;
+ // No assessment evidence, files or employee photos are fetched for this table.
+ var q=_supabase.from('employees').select('employee_id,employee_name,email,company,department,position,manager,manager_email,talent_track',{count:'exact'}).order('employee_name').order('employee_id').range(start,start+EB.size-1);
+ var r=await ebScope(q);if(r.error)throw new Error(r.error.message);if(!active())return;
+ var employees=r.data||[];EB.visible=employees;
+ var content=root.querySelector('#ebContent');content.innerHTML='';
+ root.querySelector('#ebSubtitle').textContent=(r.count||0)+' matching employees • '+(employees.length?'Showing '+(start+1)+'–'+(start+employees.length):'No results');
+ var table=document.createElement('table');var wrap=document.createElement('div');wrap.className='table-wrap';wrap.appendChild(table);content.appendChild(wrap);
+ table.innerHTML='<thead><tr><th>Employee</th><th>Position</th><th>Line Manager</th><th>Talent Track</th><th>Self</th><th>Manager</th><th>Actions</th></tr></thead><tbody></tbody>';
+ var tbody=table.querySelector('tbody');
+ employees.forEach(function(e){
+  var tr=document.createElement('tr');tr.dataset.employee=e.employee_id;
+  [e.employee_name,e.position,e.manager,e.talent_track||'No track','Loading…','Loading…'].forEach(function(v){var td=document.createElement('td');td.textContent=v||'Unassigned';tr.appendChild(td);});
+  var td=document.createElement('td');var details=document.createElement('details');var sum=document.createElement('summary');sum.textContent='•••';sum.setAttribute('aria-label','Actions for '+e.employee_name);details.appendChild(sum);td.appendChild(details);tr.appendChild(td);tbody.appendChild(tr);
+  details.appendChild(ebButton('View assessments',()=>{APP.hrAllTarget=e.employee_id;navigateTo('hr-all');}));
+  if(ebAdmin()){
+   details.appendChild(ebButton('Review',()=>goReview(e.employee_id)));
+   details.appendChild(ebButton('Remind employee',()=>{if(confirm('Send a self-assessment reminder to '+e.employee_name+'?'))remind(e.email,'','employee_self');}));
+   if(e.manager_email)details.appendChild(ebButton('Remind manager',()=>{if(confirm('Send the manager an assessment reminder for '+e.employee_name+'?'))remind('',e.manager_email,'manager_assess');}));
+   details.appendChild(ebButton('Set talent track',()=>ebEditTrack(e)));
+   details.appendChild(ebButton('Request competencies',()=>{if(confirm('Request competency setup for '+e.position+'?'))promptSetCompetencies(e.employee_id);}));
+   details.appendChild(ebButton('Delete employee',()=>deleteEmployee(e.employee_id,e.employee_name),'btn btn-danger'));
+  }
+ });
+ var pager=root.querySelector('#ebPager');pager.innerHTML='';pager.style.display='flex';pager.style.gap='10px';pager.style.alignItems='center';
+ var prev=ebButton('Previous',()=>{EB.page--;ebShow();});prev.disabled=EB.page===0;pager.appendChild(prev);
+ var text=document.createElement('span');text.textContent='Page '+(EB.page+1)+' • '+EB.size+' per page';pager.appendChild(text);
+ var next=ebButton('Next',()=>{EB.page++;ebShow();});next.disabled=start+employees.length>=(r.count||0);pager.appendChild(next);
+ if(!employees.length){content.append('No matching employees.');return;}
+ try{
+  var ids=employees.map(e=>e.employee_id);
+  var rows=await ebAll('assessments','employee_id,type,ticked,hr_status',q=>q.in('employee_id',ids));
+  if(!active())return;
+  var summaries=new Map(ids.map(id=>[id,{self:false,mgr:false,pending:false,approved:false}]));
+  rows.forEach(function(a){var s=summaries.get(a.employee_id);if(!s)return;if(a.type==='Self')s.self=true;if(a.type==='Manager'){s.mgr=true;if(a.hr_status==='Approved')s.approved=true;if(a.ticked&&(!a.hr_status||a.hr_status==='Pending'))s.pending=true;}});
+  tbody.querySelectorAll('tr').forEach(function(tr){
+   var s=summaries.get(tr.dataset.employee),reviewed=s.mgr&&s.approved&&!s.pending;
+   tr.dataset.self=s.self?'done':'missing';tr.dataset.manager=reviewed?'reviewed':s.pending?'pending':s.mgr?'done':'missing';
+   function badge(td,text,cls){td.innerHTML='';var b=document.createElement('span');b.className='badge '+cls;b.textContent=text;td.appendChild(b);}
+   badge(tr.children[4],s.self?'Done':'Not Done',s.self?'badge-success':'badge-warning');
+   badge(tr.children[5],reviewed?'Reviewed':s.pending?'Pending HR':s.mgr?'Done':'Not Done',reviewed?'badge-success':s.pending?'badge-purple':'badge-warning');
+  });ebApplyStatus();
+ }catch(e){if(active()){tbody.querySelectorAll('tr').forEach(tr=>{tr.children[4].textContent='Unavailable';tr.children[5].textContent='Unavailable';});showToast('Employee list loaded, but assessment statuses failed. Refresh to retry.');}}
+}
+function ebApplyStatus(){
+ var rows=document.querySelectorAll('#ebContent tbody tr');var shown=0;
+ rows.forEach(function(tr){var visible=!EB.status||(EB.status==='missing'?tr.dataset.self==='missing':tr.dataset.manager===EB.status);tr.hidden=!visible;if(visible)shown++;});
+ var existing=document.getElementById('ebStatusNotice');if(existing)existing.remove();
+ if(EB.status){var p=document.createElement('p');p.id='ebStatusNotice';p.textContent=shown+' employees match this status on the current page. Use Next for more.';document.getElementById('ebContent').appendChild(p);}
+}
+async function ebEditTrack(e){
+ var value=prompt('Talent track: Promotion Track, Succession Track, Talent Pipeline, Development Track (leave blank for none)',e.talent_track||'');
+ if(value===null)return;
+ value=value.trim();if(!['','Promotion Track','Succession Track','Talent Pipeline','Development Track'].includes(value)){showToast('Choose one of the listed tracks.');return;}
+ var r=await _supabase.from('employees').update({talent_track:value}).eq('employee_id',e.employee_id);
+ if(r.error){showToast(r.error.message);return;}showToast('Talent track updated');ebShow();
+}
+async function ebOpenAdd(){
+ if(!ebAdmin())return;
+ var host=document.getElementById('ebAdd');if(!host)return;
+ if(host.children.length){if(confirm('Close the unsaved Add Employee form?'))host.innerHTML='';return;}
+ host.innerHTML='<div class="card">Loading employee setup fields...</div>';
+ try{
+  if(!EB.refs){
+   var values=await Promise.all([
+    ebAll('employees','employee_name,email,manager,manager_email,department,position,company'),
+    ebAll('critical_positions','department,position_name,criticality'),
+    ebAll('line_managers','email,manager_name'),
+    ebAll('departments','company,name'),
+    loadPositionsRegistry()
+   ]);EB.refs=values;
+  }
+  if(document.getElementById('ebAdd')!==host)return;
+  window._aeEmps=EB.refs[0];window._aeRegs=EB.refs[1];window._aeMgrRegs=EB.refs[2];window._aeDepRegs=EB.refs[3];window._aeDeptRegs=EB.refs[3];
+  var deps=new Set();_aeEmps.forEach(e=>{if(e.department)deps.add(e.department);});_aeRegs.forEach(r=>{if(r.department)deps.add(r.department);});_aeDepRegs.forEach(r=>{if(r.name)deps.add(r.name);});
+  var h='<div class="card"><div class="eb-head"><h3>Add Employee</h3><button class="btn btn-outline" onclick="ebOpenAdd()">Close</button></div><p>Position and level should match the position registry.</p>';
+  h+='<label>Full name</label><input id="aeName"><label>Email</label><input type="email" id="aeEmail">';
+  h+='<label>Company</label><input id="aeCompany" value="'+escapeHtml(EB.company||'')+'">';
+  h+='<label>Department</label><select id="aeDept" onchange="aeFillPositions()"><option value="">Select department</option>'+Array.from(deps).sort().map(d=>'<option>'+escapeHtml(d)+'</option>').join('')+'</select>';
+  h+='<label>Position</label><select id="aePos"><option value="">Select department first</option></select><label>Competency level</label><select id="aeLevel"><option>Foundational</option><option selected>Intermediate</option><option>Advanced</option><option>Master</option></select>';
+  h+='<label>Line manager</label><select id="aeMgr"><option value="">Select manager</option>'+aeMgrOptions()+'</select>';
+  h+='<label>Talent track</label><select id="aeTrack"><option value="">None</option><option>Promotion Track</option><option>Succession Track</option><option>Talent Pipeline</option><option>Development Track</option></select>';
+  h+='<button class="btn btn-primary" style="margin-top:16px" onclick="ebSaveEmployee(this)">Save Employee</button></div>';
+  host.innerHTML=h;
+  if(EB.department){var match=Array.from(document.getElementById('aeDept').options).find(o=>ebKey(o.value)===EB.department);if(match){document.getElementById('aeDept').value=match.value;aeFillPositions();}}
+  host.scrollIntoView({behavior:'smooth',block:'start'});
+ }catch(e){host.innerHTML='';var card=document.createElement('div');card.className='card';card.textContent='Could not load Add Employee: '+e.message;host.appendChild(card);host.appendChild(ebButton('Close',()=>host.innerHTML=''));}
+}
+async function ebSaveEmployee(button){
+ button.disabled=true;EB.cache=null;EB.refs=null;
+ try{await saveNewEmployee();}finally{if(button.isConnected)button.disabled=false;}
+}
+loadHRStaff=function(){return ebShow();};
+var ebPreviousLoadPage=loadPage;
+loadPage=function(id){
+ if(id==='hr-staff'||id==='hohr-staff'){EB.company=null;EB.department=null;EB.page=0;EB.search='';EB.track='';EB.status='';return ebShow();}
+ EB.token++;return ebPreviousLoadPage(id);
+};
+
+</script>
 </body>
 </html>
