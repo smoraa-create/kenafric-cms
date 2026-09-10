@@ -8371,5 +8371,755 @@ loadPage=function(id){
 };
 
 </script>
+<script>
+/* Shared aggregate overview and isolated assigned executive cases.
+   No private report text is loaded by the overview route. */
+var EX={token:0,company:'',department:'',case:null,busy:false};
+function exHR(){return APP.currentRole==='hr'||APP.currentRole==='hohr';}
+async function exRPC(action,data){
+ var r=await _supabase.rpc('cms_executive_cases',{p_action:action,p_data:data||{}});
+ if(r.error)throw new Error(r.error.message);return r.data;
+}
+function exButton(text,fn,kind){
+ var b=document.createElement('button');b.type='button';b.className='btn '+(kind||'btn-outline');b.textContent=text;b.onclick=fn;return b;
+}
+function exPanel(title,text){
+ var d=document.createElement('section');d.className='card';var h=document.createElement('h3');h.textContent=title;d.appendChild(h);
+ if(text!==undefined){var p=document.createElement('p');p.textContent=text;d.appendChild(p);}return d;
+}
+function exShell(title){
+ setContent('<div id="exRoot"><style>#exRoot h2,#exRoot h3{color:#12365c}#exRoot h3{margin-bottom:12px}#exRoot .ex-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px}#exRoot .ex-metric{font-size:32px;font-weight:800;color:#12365c}#exRoot .ex-filters{display:flex;gap:12px;flex-wrap:wrap;margin:16px 0}#exRoot .ex-filters>*{flex:1;min-width:180px}#exRoot .ex-note{border-left:4px solid #c9a227;padding:12px;background:#fffbea;margin:14px 0}#exRoot .ex-text{white-space:pre-wrap;overflow-wrap:anywhere}#exRoot .ex-bar{height:9px;border-radius:5px;background:#e2e8f0;margin:8px 0 16px;overflow:hidden}</style><div class="card"><h2 id="exTitle"></h2><div id="exActions" style="display:flex;gap:10px;margin-top:12px;flex-wrap:wrap"></div></div><div id="exContent"><p>Loading...</p></div></div>');
+ document.getElementById('exTitle').textContent=title;
+ var actions=document.getElementById('exActions');
+ actions.appendChild(exButton('Executive Overview',exOverview));
+ actions.appendChild(exButton(exHR()?'Private Executive Reviews':'C-Suite',exCases));
+ return document.getElementById('exRoot');
+}
+async function exOverview(){
+ var token=++EX.token,root=exShell('Executive Overview'),role=APP.currentRole;
+ var host=root.querySelector('#exContent');host.innerHTML='';
+ var notice=document.createElement('p');notice.className='ex-note';notice.textContent='Read-only group overview. Private executive recommendations, comments and decisions are not included.';host.appendChild(notice);
+ var filters=document.createElement('div');filters.className='ex-filters';host.appendChild(filters);
+ var metrics=document.createElement('div');host.appendChild(metrics);metrics.textContent='Loading aggregate metrics...';
+ try{
+  var r=await _supabase.rpc('cms_executive_overview',{p_company:EX.company||null,p_department:EX.department||null});
+  if(r.error)throw new Error(r.error.message);
+  if(token!==EX.token||document.getElementById('exRoot')!==root||role!==APP.currentRole)return;
+  var d=r.data;
+  [['company','Company',d.filters.companies],['department','Department',d.filters.departments]].forEach(function(v){
+   var sel=document.createElement('select');sel.setAttribute('aria-label',v[1]);sel.add(new Option(v[1]+': All',''));
+   (v[2]||[]).slice().sort().forEach(x=>sel.add(new Option(x,x)));sel.value=EX[v[0]];
+   sel.onchange=()=>{EX[v[0]]=sel.value;exOverview();};filters.appendChild(sel);
+  });
+  filters.appendChild(exButton('Refresh',exOverview));
+  metrics.innerHTML='';var grid=document.createElement('div');grid.className='ex-grid';metrics.appendChild(grid);
+  [['Employees',d.employees],['Both assessments submitted',d.complete],['Awaiting one or both assessments',d.missing],['Overdue monthly reports',d.overdue_reports]].forEach(function(x){
+   var card=exPanel(x[0]);var n=document.createElement('div');n.className='ex-metric';n.textContent=x[1];card.appendChild(n);grid.appendChild(card);
+  });
+  var lower=document.createElement('div');lower.className='ex-grid';metrics.appendChild(lower);
+  var cov=exPanel('Company assessment coverage');lower.appendChild(cov);
+  (d.companies||[]).forEach(function(c,i){
+   var p=document.createElement('p');p.textContent=c.company+': '+c.complete+'/'+c.employees+' ('+c.coverage+'%)';cov.appendChild(p);
+   var bar=document.createElement('div');bar.className='ex-bar';var fill=document.createElement('div');fill.style.cssText='height:100%;background:'+['#4338ca','#0d9488','#7c3aed','#d97706'][i%4]+';width:'+Math.max(0,Math.min(100,Number(c.coverage)))+'%';bar.appendChild(fill);cov.appendChild(bar);
+  });
+  var score=exPanel('Current-role decision score');var n=document.createElement('div');n.className='ex-metric';n.textContent=d.current_score===null?'Awaiting assessments':d.current_score+'%';score.appendChild(n);
+  var note=document.createElement('p');note.textContent='70% Manager + 30% Self. '+d.scored_pairs+' complete, scorable pairs; incomplete pairs excluded. Latest submitted rounds, not a new reporting cycle.';score.appendChild(note);lower.appendChild(score);
+  var dev=exPanel('Development progress','Completed: '+d.development.completed+' | Open: '+d.development.open+' | Total plan rows: '+d.development.total);lower.appendChild(dev);
+  lower.appendChild(exPanel('Succession coverage','Not configured: a verified role-to-successor register is needed. No successor counts or promotion recommendations are inferred from private executive reviews.'));
+  var stamp=document.createElement('p');stamp.textContent='Updated '+new Date(d.as_of).toLocaleString()+' • Overdue means a monthly report due before today and not submitted.';metrics.appendChild(stamp);
+ }catch(e){metrics.textContent='Could not load Executive Overview: '+e.message;}
+}
+async function exCases(){
+ var token=++EX.token,root=exShell(exHR()?'Private Executive Reviews':'C-Suite'),role=APP.currentRole;
+ var host=root.querySelector('#exContent');
+ try{
+  var list=await exRPC('list');if(token!==EX.token||document.getElementById('exRoot')!==root||role!==APP.currentRole)return;
+  host.innerHTML='';
+  var note=document.createElement('p');note.className='ex-note';note.textContent=exHR()?'Only trusted HR/HOHR and each assigned executive can read that executive’s case. Original reports are not shared automatically.':'Only cases explicitly assigned to your signed-in account appear here. Other executives’ cases and decisions are not downloaded.';host.appendChild(note);
+  if(exHR())host.appendChild(exButton('Assign a new private case',()=>exAssign()));
+  if(!list.length)host.appendChild(exPanel('No assigned cases','Existing reports remain with HR/HOHR until explicitly assigned.'));
+  list.forEach(function(c){
+   var card=exPanel(c.employee_name,c.position_name+' | '+c.state);
+   if(exHR()){var p=document.createElement('p');p.textContent='Assigned to: '+c.assigned_to;card.appendChild(p);}
+   card.appendChild(exButton('Open private review',()=>exOpenCase(c.id)));host.appendChild(card);
+  });
+ }catch(e){host.textContent='Could not load private reviews: '+e.message;}
+}
+async function exOpenCase(id){
+ var token=++EX.token,root=exShell('Private executive case'),host=root.querySelector('#exContent');
+ try{
+  var c=await exRPC('get',{id});if(token!==EX.token||document.getElementById('exRoot')!==root)return;
+  EX.case=c;host.innerHTML='';
+  var card=exPanel(c.employee_name,c.position_name+' | '+c.state);host.appendChild(card);
+  var h=document.createElement('h3');h.textContent='HR / HOHR brief';card.appendChild(h);
+  var p=document.createElement('p');p.className='ex-text';p.textContent=c.brief;card.appendChild(p);
+  if(c.recommendation){card.appendChild(exPanel('Executive recommendation',c.recommendation));var comment=document.createElement('p');comment.className='ex-text';comment.textContent=c.comment||'';card.appendChild(comment);}
+  if(c.can_submit){
+   var sel=document.createElement('select');sel.id='exRecommendation';sel.add(new Option('Select recommendation',''));
+   ['Endorse promotion','Recommend development','Hold','Return to HR/HOHR'].forEach(s=>sel.add(new Option(s,s)));card.appendChild(sel);
+   var ta=document.createElement('textarea');ta.id='exRationale';ta.rows=5;ta.maxLength=10000;ta.placeholder='Private rationale for HR Admin and HOHR';ta.setAttribute('aria-label','Private rationale');card.appendChild(ta);
+   card.appendChild(exButton('Submit private recommendation',async()=>{
+    if(EX.busy)return;
+    if(!sel.value||!ta.value.trim()){showToast('Choose a recommendation and add a rationale.');return;}
+    if(!confirm('Submit this recommendation privately to HR Admin and HOHR?'))return;
+    EX.busy=true;try{await exRPC('submit',{id:c.id,version:c.version,recommendation:sel.value,comment:ta.value.trim()});showToast('Private recommendation submitted.');await exOpenCase(c.id);}catch(e){showToast(e.message);}finally{EX.busy=false;}
+   },'btn-primary'));
+  }
+  if(c.can_close&&exHR())card.appendChild(exButton('Close private case',async()=>{if(!confirm('Close this case? Its history is retained.'))return;try{await exRPC('close',{id:c.id,version:c.version});await exCases();}catch(e){showToast(e.message);}}));
+ }catch(e){host.textContent='Case unavailable: '+e.message;}
+}
+async function exAssign(reportId){
+ if(!exHR()){showToast('HR Admin or HOHR mode required.');return;}
+ var token=++EX.token,root=exShell('Assign a private executive case'),host=root.querySelector('#exContent');
+ try{
+  var people=await exRPC('members');
+  var reports=await _supabase.from('report_chain').select('id,employee_name,position').order('id',{ascending:false}).limit(100);
+  if(reports.error)throw new Error(reports.error.message);
+  if(token!==EX.token||document.getElementById('exRoot')!==root)return;
+  host.innerHTML='';var card=exPanel('New HR / HOHR brief','Nothing from another executive’s previous review is copied. Write a fresh brief with the relevant assessment facts and your HR recommendation.');host.appendChild(card);
+  var rep=document.createElement('select');rep.setAttribute('aria-label','Original HR report');rep.add(new Option('Select HR report (latest 100)',''));
+  (reports.data||[]).forEach(r=>rep.add(new Option(r.employee_name+' | '+r.position,String(r.id))));
+  if(reportId)rep.value=String(reportId);card.appendChild(rep);
+  var member=document.createElement('select');member.setAttribute('aria-label','Assigned executive');member.add(new Option('Select one executive',''));
+  people.forEach(m=>member.add(new Option(m.email,m.id)));card.appendChild(member);
+  if(!people.length)card.appendChild(exPanel('No verified executive accounts','A database administrator must add verified executive accounts to the private allowlist first.'));
+  var brief=document.createElement('textarea');brief.rows=8;brief.maxLength=20000;brief.placeholder='Write the HR/HOHR brief here. Do not paste another executive’s private comments.';card.appendChild(brief);
+  card.appendChild(exButton('Assign privately',async()=>{
+   if(EX.busy)return;if(!rep.value||!member.value||brief.value.trim().length<10){showToast('Select a report, one executive and write a brief.');return;}
+   if(!confirm('Share this new brief only with the selected executive and trusted HR/HOHR?'))return;
+   EX.busy=true;try{var r=await exRPC('assign',{report_id:rep.value,assigned_to:member.value,brief:brief.value.trim()});showToast('Private case assigned. No broadcast email sent.');await exOpenCase(r.id);}catch(e){showToast(e.message);}finally{EX.busy=false;}
+  },'btn-primary'));
+ }catch(e){host.textContent=e.message;}
+}
+// Separate navigation pages; no calls into the old executive dashboard.
+var exOldSetupNav=setupNav;
+setupNav=function(role){
+ if(role!=='csuite'){
+  exOldSetupNav(role);
+  if(role==='hr'||role==='hohr'){
+   var side=document.getElementById('sideNav');
+   if(side){var b=exButton('Private Executive Reviews',()=>navigateTo('ex-private'));b.style.margin='12px';side.appendChild(b);}
+  }
+  return;
+ }
+ document.body.classList.add('sb-mode');
+ var side=document.getElementById('sideNav');side.style.display='block';side.innerHTML='<div class="sb-brand"><h1>Kenafric CMS</h1><p>Executive workspace</p></div>';
+ [['Executive Overview','ex-overview'],['C-Suite','ex-private']].forEach(function(pair){
+  var b=exButton(pair[0],()=>navigateTo(pair[1]),'sb-item');b.style.width='100%';side.appendChild(b);
+ });
+ document.getElementById('mainNav').innerHTML='';
+ navigateTo('ex-overview');
+};
+var exOldLoadPage=loadPage;
+loadPage=function(id){
+ if(id==='ex-overview')return exOverview();
+ if(id==='ex-private'||id==='cs-reports')return exCases();
+ EX.token++;return exOldLoadPage(id);
+};
+var exOldPageLabel=getPageLabel;
+getPageLabel=function(id){return id==='ex-overview'?'Executive Overview':id==='ex-private'?'C-Suite':exOldPageLabel(id);};
+loadCSReports=exCases;
+// Stop the old all-C-Suite notification route when escalating.
+var exOldDecideChain=decideReportChain;
+decideReportChain=async function(id,decision){
+ if(decision==='Escalated')return exAssign(id);
+ return exOldDecideChain(id,decision);
+};
+decideCSReport=function(){showToast('Use the assigned private case in C-Suite.');exCases();};
+// Do not let legacy mapping screens stand in for a trusted recipient allowlist.
+var exOldSendReport=sendReportApproval;
+// Original HR reports remain HR-only. No legacy report content is copied to cases.
+
+</script>
+<script>
+/* Presentation-only executive refresh. Reuses existing privacy RPCs.
+ * Navy / indigo / teal, one navigation, clear empty and missing-data states.
+ * No sample numbers, permission changes, or private data in the overview.
+ */
+var XM_STYLE = `
+body.ex-modern{background:#f4f6fb}
+body.ex-modern #roleBanner{display:none!important}
+body.ex-modern .header{background:#fff;border-bottom:1px solid #e3e8f3;padding:14px 24px}
+body.ex-modern .header-name,body.ex-modern .hdr-btn{color:#172554}
+body.ex-modern .hdr-divider{background:#dce3f0}
+body.ex-modern #globalSearchBox{display:none!important}
+body.ex-modern .header-inner:before{content:"Workspace / Executive";color:#475569;font-size:14px}
+body.ex-modern #sideNav{background:linear-gradient(155deg,#10172c,#0b1633)}
+body.ex-modern #sideNav .xm-nav{display:flex;align-items:center;gap:12px;width:calc(100% - 24px);margin:8px 12px;padding:15px 14px;border:0;border-left:3px solid transparent;background:transparent;color:#c7d2e7;border-radius:10px;text-align:left;font:600 14px inherit;cursor:pointer}
+body.ex-modern #sideNav .xm-nav.active{background:#222f58;color:#fff;border-left-color:#dfb95b}
+body.ex-modern #sideNav .xm-nav:hover{background:#1d294a;color:white}
+body.ex-modern #sideNav .sb-brand{padding:20px}
+body.ex-modern #sideNav .sb-brand h1{font-size:23px}
+body.ex-modern .content{padding:28px;max-width:none}
+#exRoot{max-width:1320px;margin:0 auto;color:#172554;font-size:14px}
+#exRoot *{box-sizing:border-box}
+#exRoot h2{font-size:36px;line-height:1.15;letter-spacing:-1px;margin:8px 0 10px;color:#0f1731}
+#exRoot h3{font-size:17px;color:#172554;margin:0 0 14px}
+#exRoot p{line-height:1.6}
+#exRoot .xm-head{display:flex;justify-content:space-between;align-items:center;gap:16px;margin:12px 0 24px}
+#exRoot .xm-eyebrow{font-size:12px;letter-spacing:1.5px;color:#4338ca;font-weight:800}
+#exRoot .xm-sub{color:#64748b}
+#exRoot .xm-pill{border-radius:24px;background:#ececfc;color:#312e81;padding:10px 16px;font-size:13px;white-space:nowrap}
+#exRoot .card{border:1px solid #e1e6f1;border-radius:18px;box-shadow:0 3px 12px #17255408;padding:24px;margin:0 0 16px}
+#exRoot .xm-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+#exRoot .xm-grid>.card{margin:0}
+#exRoot .xm-filters{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px}
+#exRoot .xm-filters select{flex:1;min-width:190px;width:auto;background:#fff;padding:12px;border:1px solid #d6dded;border-radius:10px}
+#exRoot .btn{border-radius:10px;padding:11px 17px;font-size:14px;font-weight:700}
+#exRoot .btn-primary{background:#3730c4;color:white;box-shadow:0 4px 12px #4338ca22}
+#exRoot .btn-outline{border:1px solid #ccd5e8;color:#312e81;background:white}
+#exRoot textarea,#exRoot select{margin:8px 0;font-size:14px}
+#exRoot .xm-coverage{display:flex;align-items:center;gap:25px;min-height:220px}
+#exRoot .xm-ring{width:150px;height:150px;flex:none;border-radius:50%;display:grid;place-items:center;position:relative}
+#exRoot .xm-ring:before{content:"";position:absolute;inset:15px;border-radius:50%;background:white}
+#exRoot .xm-ring strong{position:relative;font-size:34px;color:#172554}
+#exRoot .xm-big{font-size:42px;line-height:1.2;font-weight:800;letter-spacing:-1.5px;color:#151e53}
+#exRoot .xm-score{background:linear-gradient(120deg,#f1f0ff,#fafaff)}
+#exRoot .xm-weights{display:flex;gap:12px;margin:16px 0}
+#exRoot .xm-weights span{background:#e5e4fc;border-radius:9px;padding:10px 14px}
+#exRoot .xm-fine{font-size:13px;color:#64748b;margin-top:12px}
+#exRoot .xm-company{display:grid;grid-template-columns:90px 1fr 58px;gap:14px;align-items:center;margin:18px 0}
+#exRoot .xm-bar{height:10px;border-radius:8px;background:#e6eaf3;overflow:hidden}
+#exRoot .xm-bar>div{height:100%;border-radius:8px;background:linear-gradient(90deg,#0891b2,#0d9488)}
+#exRoot .xm-stacked{display:flex;min-height:42px;border-radius:10px;overflow:hidden;background:#e5e4fc;margin:18px 0}
+#exRoot .xm-stacked>span{display:grid;place-items:center;padding:10px;font-size:13px}
+#exRoot .xm-warning{background:#fff7df;border-left:3px solid #e8b547;padding:12px;border-radius:8px;margin-top:12px}
+#exRoot .xm-footer{text-align:center;font-size:12px;color:#64748b;margin:20px 0}
+#exRoot .xm-empty{max-width:880px;margin:30px auto;padding:48px 36px;text-align:center}
+#exRoot .xm-empty h3{font-size:25px}
+#exRoot .xm-empty p{max-width:480px;margin:12px auto 24px;color:#64748b}
+#exRoot .xm-illustration{width:140px;height:140px;border-radius:50%;background:#eeedff;display:grid;place-items:center;margin:0 auto 25px}
+#exRoot .xm-process{display:flex;justify-content:space-around;gap:18px;border-top:1px solid #e1e6f1;margin-top:36px;padding-top:24px;font-size:13px;color:#475569}
+#exRoot .xm-case-top{display:flex;justify-content:space-between;gap:12px;align-items:center}
+#exRoot .ex-text{white-space:pre-wrap;overflow-wrap:anywhere}
+#exRoot .xm-case-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px}
+#exRoot .xm-case-grid .card{margin:0}
+#exRoot .xm-loading{padding:50px;text-align:center;color:#64748b}
+@media(max-width:850px){#exRoot .xm-grid{grid-template-columns:1fr}#exRoot h2{font-size:28px}#exRoot .xm-head{align-items:flex-start;flex-direction:column}#exRoot .xm-coverage{flex-wrap:wrap}body.ex-modern .content{padding:18px}#exRoot .xm-process{flex-direction:column}}
+@media(prefers-reduced-motion:no-preference){#exRoot{animation:xm-enter .2s ease-out}@keyframes xm-enter{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}}
+`;
+var xmStyle=document.createElement('style');xmStyle.textContent=XM_STYLE;document.head.appendChild(xmStyle);
+function xmActive(view){
+ document.body.classList.toggle('ex-modern',APP.currentRole==='csuite');
+ document.querySelectorAll('#sideNav [data-ex-view]').forEach(function(b){
+  var active=b.dataset.exView===view;b.classList.toggle('active',active);
+  if(active)b.setAttribute('aria-current','page');else b.removeAttribute('aria-current');
+ });
+}
+exShell=function(title){
+ var overview=title==='Executive Overview';xmActive(overview?'overview':'private');
+ setContent('<div id="exRoot"><header class="xm-head"><div><div class="xm-eyebrow">'+(overview?'GROUP-WIDE INSIGHTS':'YOUR PRIVATE REVIEWS')+'</div><h2 id="exTitle"></h2><p class="xm-sub">'+(overview?'Workforce clarity across all companies.':'Focused decisions. Confidential recommendations.')+'</p></div><span class="xm-pill">'+(overview?'Shared · Read-only':'Private access')+'</span></header><div id="exActions"></div><div id="exContent"><div class="xm-loading">Loading…</div></div></div>');
+ document.getElementById('exTitle').textContent=title;
+ // HR does not have the executive sidebar. Provide contextual, non-duplicated links.
+ if(exHR()){
+  var actions=document.getElementById('exActions');actions.style.marginBottom='16px';
+  actions.appendChild(exButton('Overview',exOverview));actions.appendChild(exButton('Private reviews',exCases));
+ }
+ return document.getElementById('exRoot');
+};
+function xmPanel(title){return exPanel(title);}
+function xmText(parent,text,cls){
+ var p=document.createElement('p');p.className=cls||'';p.textContent=text;parent.appendChild(p);return p;
+}
+function xmNumber(v){return Number.isFinite(Number(v))&&v!==null?Number(v):null;}
+function xmMetric(v,suffix){return v===null?'Not available':v+(suffix||'');}
+function xmEmpty(host){
+ var card=xmPanel('');card.classList.add('xm-empty');card.innerHTML='<div class="xm-illustration" aria-hidden="true"><svg width="100" height="90" viewBox="0 0 100 90" fill="none" stroke="#312e81" stroke-width="2"><path d="M12 25V17h25l10 10h35v46H12z"/><path d="M12 32h70"/><rect x="62" y="53" width="28" height="29" rx="5" fill="#fff"/><path d="M68 53v-8a8 8 0 0 1 16 0v8"/><circle cx="76" cy="65" r="2"/><path d="M76 67v6"/></svg></div><h3>No reviews assigned yet</h3><p>Reports will appear here when HR or HOHR assigns them to you.</p>';
+ card.appendChild(exButton('Open Executive Overview →',exOverview,'btn-primary'));
+ var refresh=document.createElement('div');refresh.style.marginTop='14px';refresh.appendChild(exButton('Refresh cases',exCases));card.appendChild(refresh);
+ var process=document.createElement('div');process.className='xm-process';
+ ['Assigned by HR / HOHR','Reviewed by you','Shared privately with HR / HOHR'].forEach(t=>{var span=document.createElement('span');span.textContent=t;process.appendChild(span);});
+ card.appendChild(process);host.appendChild(card);
+}
+exCases=async function(){
+ var token=++EX.token,role=APP.currentRole,root=exShell(exHR()?'Private Executive Reviews':'C-Suite'),host=root.querySelector('#exContent');
+ try{
+  var list=await exRPC('list');
+  if(token!==EX.token||document.getElementById('exRoot')!==root||role!==APP.currentRole)return;
+  host.innerHTML='';
+  if(exHR()){var tools=document.createElement('div');tools.style.marginBottom='20px';tools.appendChild(exButton('Assign a new private case',()=>exAssign(), 'btn-primary'));host.appendChild(tools);}
+  if(!list.length)xmEmpty(host);
+  else {
+   var toolbar=document.createElement('div');toolbar.className='xm-filters';xmText(toolbar,list.length+' assigned cases');toolbar.appendChild(exButton('Refresh',exCases));host.appendChild(toolbar);
+   var grid=document.createElement('div');grid.className='xm-case-grid';host.appendChild(grid);
+   list.forEach(function(c){
+    var card=xmPanel(c.employee_name);var state=document.createElement('span');state.className='xm-pill';state.textContent=c.state;card.appendChild(state);
+    xmText(card,c.position_name,'xm-sub');
+    if(exHR())xmText(card,'Assigned to: '+c.assigned_to,'xm-fine');
+    xmText(card,'Assigned '+new Date(c.created_at).toLocaleDateString(),'xm-fine');
+    card.appendChild(exButton('Open private review →',()=>exOpenCase(c.id),'btn-primary'));grid.appendChild(card);
+   });
+  }
+  xmText(host,exHR()?'Visible to trusted HR/HOHR and each case’s assigned executive.':'Other executives cannot see your recommendations or comments.','xm-footer');
+ }catch(e){
+  if(token!==EX.token||document.getElementById('exRoot')!==root)return;
+  host.innerHTML='';var error=xmPanel('Could not load your reviews');xmText(error,e.message);error.appendChild(exButton('Retry',exCases));host.appendChild(error);
+ }
+};
+exOverview=async function(){
+ var token=++EX.token,role=APP.currentRole,root=exShell('Executive Overview'),host=root.querySelector('#exContent');
+ try{
+  var r=await _supabase.rpc('cms_executive_overview',{p_company:EX.company||null,p_department:EX.department||null});
+  if(r.error)throw new Error(r.error.message);
+  if(token!==EX.token||document.getElementById('exRoot')!==root||role!==APP.currentRole)return;
+  var d=r.data;host.innerHTML='';
+  var filters=document.createElement('div');filters.className='xm-filters';host.appendChild(filters);
+  [['company','Company',d.filters.companies],['department','Department',d.filters.departments]].forEach(function(v){
+   var sel=document.createElement('select');sel.setAttribute('aria-label',v[1]);sel.add(new Option(v[1]+': All',''));
+   (v[2]||[]).slice().sort().forEach(x=>sel.add(new Option(x,x)));sel.value=EX[v[0]];
+   sel.onchange=()=>{EX[v[0]]=sel.value;exOverview();};filters.appendChild(sel);
+  });
+  var period=document.createElement('span');period.className='xm-pill';period.textContent='Latest submitted assessments';filters.appendChild(period);
+  filters.appendChild(exButton('↻ Refresh',exOverview));
+  var grid=document.createElement('div');grid.className='xm-grid';host.appendChild(grid);
+  var total=xmNumber(d.employees),complete=xmNumber(d.complete),pct=total>0&&complete!==null?Math.round(complete/total*100):null;
+  var coverage=xmPanel('');coverage.classList.add('xm-coverage');
+  var ring=document.createElement('div');ring.className='xm-ring';ring.style.background='conic-gradient(#0d9488 '+(pct===null?0:Math.min(100,pct))+'%,#ddf1ef 0)';
+  var ringText=document.createElement('strong');ringText.textContent=pct===null?'N/A':pct+'%';ring.appendChild(ringText);coverage.appendChild(ring);
+  var copy=document.createElement('div');var h=document.createElement('h3');h.textContent='Assessment coverage';copy.appendChild(h);
+  xmText(copy,xmMetric(complete)+' of '+xmMetric(total),'xm-big');xmText(copy,'employees • Both Self and Manager submitted','xm-sub');
+  xmText(copy,d.missing+' awaiting one or both assessments','xm-fine');coverage.appendChild(copy);grid.appendChild(coverage);
+  var score=xmPanel('Current-role decision score');score.classList.add('xm-score');
+  xmText(score,d.current_score===null?'Awaiting assessments':d.current_score+'%','xm-big');
+  xmText(score,d.scored_pairs+' complete, scorable pairs only','xm-sub');
+  var weights=document.createElement('div');weights.className='xm-weights';['Manager 70%','Self 30%'].forEach(t=>{var s=document.createElement('span');s.textContent=t;weights.appendChild(s);});score.appendChild(weights);
+  xmText(score,'Missing either assessment: Awaiting assessment','xm-fine');grid.appendChild(score);
+  var companies=xmPanel('Company coverage');grid.appendChild(companies);
+  if(!(d.companies||[]).length)xmText(companies,'No employees match these filters.','xm-sub');
+  (d.companies||[]).forEach(function(c){
+   var row=document.createElement('div');row.className='xm-company';
+   var label=document.createElement('strong');label.textContent=c.company;row.appendChild(label);
+   var bar=document.createElement('div');bar.className='xm-bar';bar.setAttribute('aria-label',c.company+': '+c.complete+' of '+c.employees+' complete');
+   var fill=document.createElement('div');fill.style.width=Math.max(0,Math.min(100,Number(c.coverage)||0))+'%';bar.appendChild(fill);row.appendChild(bar);
+   var value=document.createElement('span');value.textContent=c.coverage+'%';row.appendChild(value);companies.appendChild(row);
+   xmText(companies,c.complete+' of '+c.employees+' complete pairs','xm-fine');
+  });
+  var dev=xmPanel('Development progress');grid.appendChild(dev);xmText(dev,d.development.total+' plan rows','xm-sub');
+  if(Number(d.development.total)>0){
+   var stack=document.createElement('div');stack.className='xm-stacked';
+   [['Completed',d.development.completed,'#0d9488','white'],['Open',d.development.open,'#e5e4fc','#312e81']].forEach(function(x){
+    if(!Number(x[1]))return;var s=document.createElement('span');s.textContent=x[0]+' '+x[1];s.style.flex=String(x[1]);s.style.background=x[2];s.style.color=x[3];stack.appendChild(s);
+   });dev.appendChild(stack);
+  }else xmText(dev,'No development plans recorded for these filters.','xm-fine');
+  xmText(dev,d.overdue_reports+' overdue monthly reports','xm-warning');
+  xmText(dev,'Due before today and not yet submitted.','xm-fine');
+  var succession=xmPanel('Succession coverage');succession.style.marginTop='18px';
+  xmText(succession,'Successor register not configured');xmText(succession,'Add verified role-to-successor assignments to enable this view.','xm-sub');host.appendChild(succession);
+  xmText(host,'Private executive recommendations and decisions stay in C-Suite.','xm-footer');
+  xmText(host,'Updated '+new Date(d.as_of).toLocaleString()+' • Live aggregate data','xm-footer');
+ }catch(e){
+  if(token!==EX.token||document.getElementById('exRoot')!==root)return;
+  host.innerHTML='';var card=xmPanel('Overview unavailable');xmText(card,e.message);card.appendChild(exButton('Retry',exOverview));host.appendChild(card);
+ }
+};
+var xmPreviousSetup=setupNav;
+setupNav=function(role){
+ document.body.classList.toggle('ex-modern',role==='csuite');
+ if(role!=='csuite')return xmPreviousSetup(role);
+ document.body.classList.add('sb-mode');
+ var side=document.getElementById('sideNav');side.style.display='block';
+ side.innerHTML='<div class="sb-brand"><h1>Kenafric CMS</h1><p>EXECUTIVE WORKSPACE</p></div>';
+ [['▤','Executive Overview','ex-overview','overview'],['♙','C-Suite','ex-private','private']].forEach(function(p){
+  var b=document.createElement('button');b.type='button';b.className='xm-nav';b.dataset.exView=p[3];
+  var icon=document.createElement('span');icon.setAttribute('aria-hidden','true');icon.textContent=p[0];b.appendChild(icon);
+  var text=document.createElement('span');text.textContent=p[1];b.appendChild(text);b.onclick=()=>navigateTo(p[2]);side.appendChild(b);
+ });
+ var caption=document.createElement('p');caption.style.cssText='padding:30px 24px;color:#a5b4cf;font-size:12px';caption.textContent='Private executive workspace';side.appendChild(caption);
+ document.getElementById('mainNav').innerHTML='';navigateTo('ex-overview');
+};
+loadCSReports=exCases;
+
+</script>
+<script>
+/* Executive intelligence v2: vibrant detail, scoped private reviews, real data.
+ * All shared data comes from whitelisted database RPCs, not private reports.
+ * Figures use paired 70/30 competency percentages; unknown is not zero.
+ */
+var XI={tab:'snapshot',token:0,company:'',department:'',position:'',page:0,search:'',track:'',data:null};
+var xiCSS=document.createElement('style');
+xiCSS.textContent=`
+#exRoot .xi-hero{background:linear-gradient(115deg,#113a99,#271077);color:#fff;border-radius:20px;padding:26px;margin-bottom:20px}
+#exRoot .xi-hero h2{color:white}#exRoot .xi-hero p{color:#dae5ff}
+#exRoot .xi-tabs{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0 22px}
+#exRoot .xi-tabs button{background:#fff;border:1px solid #d8def0;color:#172554}
+#exRoot .xi-tabs button.active{background:#4338ca;color:#fff;border-color:#4338ca}
+#exRoot .xi-metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(185px,1fr));gap:14px;margin:18px 0}
+#exRoot .xi-metrics .card:nth-child(4n+1){background:#eef2ff;border-top:4px solid #2563eb}
+#exRoot .xi-metrics .card:nth-child(4n+2){background:#ecfdf5;border-top:4px solid #0d9488}
+#exRoot .xi-metrics .card:nth-child(4n+3){background:#f5f3ff;border-top:4px solid #7c3aed}
+#exRoot .xi-metrics .card:nth-child(4n){background:#fffbeb;border-top:4px solid #d97706}
+#exRoot .xi-metrics .card{margin:0}#exRoot .xi-number{font-size:30px;font-weight:800}
+#exRoot .xi-table{overflow:auto}#exRoot td,#exRoot th{font-size:13px;padding:12px;vertical-align:top}
+#exRoot .xi-scroll{max-height:500px;overflow:auto}#exRoot .xi-note{border-left:4px solid #7c3aed;padding:12px;background:#f5f3ff;margin:14px 0}
+#exRoot .xi-pager{display:flex;gap:10px;align-items:center;margin:16px 0}
+#exRoot details{padding:14px;background:#f8fafc;margin:10px 0;border-radius:10px}
+#exRoot summary{font-weight:700;cursor:pointer}#exRoot .xi-risk{color:#b45309;font-weight:700}
+#exRoot .xi-form{display:grid;gap:10px}#exRoot .xi-form label{font-size:14px}
+#exRoot .xi-scorebar{min-width:120px;display:flex;align-items:center;gap:10px}
+#exRoot .xi-scorebar i{height:8px;border-radius:8px;background:linear-gradient(90deg,#0d9488,#2563eb);display:block}
+`;
+document.head.appendChild(xiCSS);
+async function xiRPC(action,data){
+ var r=await _supabase.rpc('cms_executive_detail',{p_action:action,p_data:data||{}});
+ if(r.error)throw new Error(r.error.message);return r.data;
+}
+function xiScope(){return {company:XI.company,department:XI.department,position:XI.position,page:XI.page,search:XI.search,track:XI.track};}
+function xiNode(tag,text,cls){var n=document.createElement(tag);if(text!==undefined)n.textContent=text;if(cls)n.className=cls;return n;}
+function xiPct(v){return v===null||v===undefined?'Not assessed':v+'%';}
+function xiTable(host,headers,rows){
+ var wrap=xiNode('div',undefined,'xi-table'),table=document.createElement('table'),head=document.createElement('thead'),hr=document.createElement('tr'),body=document.createElement('tbody');
+ headers.forEach(x=>hr.appendChild(xiNode('th',x)));head.appendChild(hr);table.appendChild(head);
+ rows.forEach(function(row){var tr=document.createElement('tr');row.forEach(function(v){var td=document.createElement('td');if(v instanceof Node)td.appendChild(v);else td.textContent=v==null?'Not recorded':String(v);tr.appendChild(td);});body.appendChild(tr);});
+ table.appendChild(body);wrap.appendChild(table);host.appendChild(wrap);if(!rows.length)host.appendChild(xiNode('p','No matching records.','xm-fine'));return table;
+}
+function xiMetrics(host,list){
+ var grid=xiNode('div',undefined,'xi-metrics');list.forEach(function(x){var card=exPanel(x[0]);card.appendChild(xiNode('div',x[1]===null?'Not assessed':x[1],'xi-number'));if(x[2])card.appendChild(xiNode('p',x[2],'xm-fine'));grid.appendChild(card);});host.appendChild(grid);
+}
+var XI_TABS=[['snapshot','Group Snapshot'],['companies','Companies & Departments'],['succession','Succession & Critical Roles'],['talent','Talent Pools'],['development','Development Plans'],['competencies','Competency Rankings'],['frameworks','Competency Library'],['reports','Monthly Reports']];
+function xiHeader(){
+ var root=exShell('Executive Overview'),content=root.querySelector('#exContent');content.innerHTML='';
+ var header=root.querySelector('.xm-head');if(header)header.classList.add('xi-hero');
+ var nav=xiNode('div',undefined,'xi-tabs');XI_TABS.forEach(function(pair){var b=exButton(pair[1],()=>{XI.tab=pair[0];XI.page=0;xiOpen();});b.classList.toggle('active',XI.tab===pair[0]);nav.appendChild(b);});content.appendChild(nav);
+ var filters=xiNode('div',undefined,'xm-filters');filters.id='xiFilters';content.appendChild(filters);
+ var body=xiNode('div','Loading details…');body.id='xiBody';content.appendChild(body);
+ return {root,body,filters};
+}
+async function xiOpen(){
+ var token=++XI.token;EX.token++;var role=APP.currentRole,view=xiHeader();
+ try{
+  var d=await xiRPC('overview',xiScope());
+  if(token!==XI.token||role!==APP.currentRole||document.getElementById('exRoot')!==view.root)return;
+  XI.data=d;
+  [['company','Company',d.filters.companies],['department','Department',d.filters.departments],['position','Position',d.filters.positions]].forEach(function(v){
+   var sel=document.createElement('select');sel.setAttribute('aria-label',v[1]);sel.add(new Option(v[1]+': All',''));(v[2]||[]).slice().sort().forEach(x=>sel.add(new Option(x,x)));sel.value=XI[v[0]];
+   sel.onchange=()=>{XI[v[0]]=sel.value;XI.page=0;xiOpen();};view.filters.appendChild(sel);
+  });view.filters.appendChild(exButton('Refresh',()=>xiOpen()));
+  view.body.innerHTML='';
+  var active=()=>token===XI.token&&role===APP.currentRole&&document.getElementById('exRoot')===view.root;
+  if(XI.tab==='snapshot')xiSnapshot(view.body,d);
+  if(XI.tab==='competencies')xiRanking(view.body,d);
+  if(XI.tab==='companies'){
+   var card=exPanel('Company workforce scorecards');xiCompanyTable(card,d);view.body.appendChild(card);
+   await xiPeople(view.body,active);
+  }
+  if(XI.tab==='talent')await xiPeople(view.body,active,true);
+  if(XI.tab==='succession')xiSuccession(view.body,d);
+  if(XI.tab==='development')await xiDevelopment(view.body,active);
+  if(XI.tab==='frameworks')await xiFrameworks(view.body,active);
+  if(XI.tab==='reports')await xiReports(view.body,active);
+  if(active())view.body.appendChild(xiNode('p','Latest submitted assessment rounds • Updated '+new Date(d.as_of).toLocaleString()+' • Private decisions are excluded from shared views.','xm-footer'));
+ }catch(e){if(document.getElementById('exRoot')===view.root){view.body.textContent='Could not load this section: '+e.message;view.body.appendChild(exButton('Retry',xiOpen));}}
+}
+function xiExtremes(d){
+ var valid=d.ranking.filter(r=>r.score!==null&&r.assessed>0),hi=valid.length?Math.max(...valid.map(r=>Number(r.score))):null,lo=valid.length?Math.min(...valid.map(r=>Number(r.score))):null;
+ return {highest:valid.filter(r=>Number(r.score)===hi),lowest:valid.filter(r=>Number(r.score)===lo),hi,lo};
+}
+function xiSnapshot(host,d){
+ var uncovered=d.critical_roles.filter(r=>!r.ready_successors).length;
+ xiMetrics(host,[['Employees',d.employees],['Complete assessment pairs',d.complete_pairs],['People in development',d.development.people,'Unique people, not actions'],['Critical roles without ready nominees',uncovered,'Recorded occupied roles only']]);
+ var ex=xiExtremes(d);
+ xiMetrics(host,[['Current-role decision',xiPct(d.current_score),'70% Manager + 30% Self'],['Highest competency',xiPct(ex.hi),ex.highest.map(x=>x.competency).join(' / ')||'No paired scores'],['Lowest competency',xiPct(ex.lo),ex.lowest.map(x=>x.competency).join(' / ')||'No paired scores']]);
+ var card=exPanel('Who is ready for which position?');xiNomineeTable(card,d.succession);host.appendChild(card);
+ var company=exPanel('People in development by company');xiCompanyTable(company,d);host.appendChild(company);
+ xiRanking(host,d);
+}
+function xiCompanyTable(host,d){
+ xiTable(host,['Company','Employees','Complete pairs','Current score','People in development'],d.companies.map(c=>[c.company,c.employees,c.complete_pairs,xiPct(c.score),c.people_in_development]));
+}
+function xiRanking(host,d){
+ var card=exPanel('Competencies: highest to lowest');
+ card.appendChild(xiNode('p','Each person’s competency score = 70% Manager + 30% Self. Both are required. Risk = percentage of paired scores below 70%; missing assessments are excluded.','xi-note'));
+ var ranked=d.ranking.slice().sort((a,b)=>a.score===null?b.score===null?a.code.localeCompare(b.code):1:b.score===null?-1:Number(b.score)-Number(a.score)||a.code.localeCompare(b.code));
+ var prev=null,rank=0;
+ xiTable(card,['Rank','Competency','Score','Paired employees','Not paired','Below 70%','Risk %'],ranked.map(function(r,i){
+  var current=r.score===null?null:Number(r.score);
+  if(current!==null&&current!==prev)rank=i+1;prev=current;
+  return [current===null?'—':rank,r.competency,xiPct(r.score),r.assessed,Math.max(0,d.employees-r.assessed),r.score===null?'—':r.below_count,r.score===null?'Not assessed':r.below_pct+'%'];
+ }));host.appendChild(card);
+}
+async function xiPeople(host,active,talent){
+ var tools=xiNode('div',undefined,'xm-filters'),form=document.createElement('form'),search=document.createElement('input');
+ search.placeholder='Search employee name';search.value=XI.search;form.appendChild(search);var btn=exButton('Search',()=>{});btn.type='submit';form.appendChild(btn);form.onsubmit=e=>{e.preventDefault();XI.search=search.value.trim();XI.page=0;xiOpen();};tools.appendChild(form);
+ var track=document.createElement('select');track.add(new Option('All talent tracks',''));['Promotion Track','Succession Track','Talent Pipeline','Development Track'].forEach(x=>track.add(new Option(x,x)));track.value=XI.track;track.onchange=()=>{XI.track=track.value;XI.page=0;xiOpen();};tools.appendChild(track);host.appendChild(tools);
+ var r=await xiRPC('people',xiScope());if(!active())return;
+ var card=exPanel(talent?'Talent profiles':'Employees behind the totals',r.total+' matching employees');
+ xiTable(card,['Employee','Company','Department','Position','Track','Self','Manager','70/30','Details'],r.items.map(p=>[p.employee_name,p.company,p.department,p.position,p.talent_track||'No track',xiPct(p.self_score),xiPct(p.manager_score),xiPct(p.decision_score),exButton('Open profile',()=>xiProfile(p.employee_id))]));
+ host.appendChild(card);xiPager(host,r.items.length,r.total);
+}
+function xiPager(host,n,total){
+ var pager=xiNode('div',undefined,'xi-pager'),prev=exButton('Previous',()=>{XI.page--;xiOpen();}),next=exButton('Next',()=>{XI.page++;xiOpen();});
+ prev.disabled=XI.page===0;next.disabled=total!==undefined?(XI.page+1)*25>=total:n<25;
+ pager.appendChild(prev);pager.appendChild(xiNode('span','Page '+(XI.page+1)+' • 25 per page'));pager.appendChild(next);host.appendChild(pager);
+}
+async function xiProfile(id){
+ var token=++XI.token;var root=exShell('Employee talent profile'),host=root.querySelector('#exContent');
+ try{
+  var r=await xiRPC('profile',{employee_id:id});if(token!==XI.token||document.getElementById('exRoot')!==root)return;
+  host.innerHTML='';host.appendChild(exButton('← Back to overview',xiOpen));var e=r.employee;
+  var card=exPanel(e.employee_name,e.company+' / '+e.department+' / '+e.position);host.appendChild(card);
+  xiMetrics(card,[['Self',xiPct(e.self_score)],['Manager',xiPct(e.manager_score)],['Current decision',xiPct(e.decision_score),'70% Manager + 30% Self']]);
+  xiTable(card,['Competency','Self','Manager','70/30'],r.competencies.map(c=>[c.competency,xiPct(c.self_score),xiPct(c.manager_score),xiPct(c.decision_score)]));
+  var dev=exPanel('Development objectives');xiTable(dev,['Competency','Task','Action','Measure','Owner','Due','Status'],r.development.map(d=>[d.competency,d.task,d.action,d.measure,d.owner,d.end_date,d.status]));host.appendChild(dev);
+  var prospect=exPanel('Target-role assessment history');xiTable(prospect,['Target','Type','Round','Date','Experience rows'],r.prospective.map(p=>[p.target,p.type,p.round,p.date,p.experience_rows]));host.appendChild(prospect);
+  if(XI.data&&XI.data.reviewer)host.appendChild(exButton('Record succession nomination',()=>xiNominate(id),'btn-primary'));
+  host.appendChild(xiNode('p','Shared profile excludes private executive comments, raw evidence and personal contact details.','xm-fine'));
+ }catch(e){host.textContent=e.message;}
+}
+function xiNomineeTable(host,items){
+ xiTable(host,['Target company','Target department','Target position','Candidate','Current role','Readiness','Target date','Details'],items.map(n=>[n.target_company,n.target_department,n.target_position,n.candidate,n.current_position,n.readiness,n.target_date,exButton('View profile',()=>xiProfile(n.employee_id))]));
+}
+function xiSuccession(host,d){
+ var roles=exPanel('Critical role coverage');
+ xiTable(roles,['Company','Department','Position','Criticality','Ready nominees'],d.critical_roles.map(r=>[r.company,r.department,r.position,r.criticality,r.ready_successors]));
+ roles.appendChild(xiNode('p','Coverage uses occupied positions matched to the criticality registry. Vacant roles without an employee record are not counted.','xm-fine'));host.appendChild(roles);
+ var nominations=exPanel('Reviewed succession nominations');xiNomineeTable(nominations,d.succession);host.appendChild(nominations);
+ if(d.reviewer)host.appendChild(xiNode('p','Open an employee profile under Companies or Talent Pools to record/update a nomination. Ready now requires a reviewed target-role assessment and a human rationale.','xi-note'));
+}
+async function xiNominate(id){
+ if(!XI.data?.reviewer)return;
+ var company=prompt('Target company:',XI.company||'');if(company===null)return;
+ var department=prompt('Target department:',XI.department||'');if(department===null)return;
+ var position=prompt('Published target position:');if(!position)return;
+ var readiness=prompt('Readiness: Potential candidate / Assessment pending / Developing / Ready now','Potential candidate');if(!readiness)return;
+ var rationale=prompt('Shared HR-reviewed rationale (no private executive comments):');if(!rationale)return;
+ var date=prompt('Expected readiness date YYYY-MM-DD (optional):','');if(date===null)return;
+ if(!confirm('Save this succession nomination to the shared executive register?'))return;
+ try{await xiRPC('nominate',{employee_id:id,company,department,position,readiness,rationale,target_date:date});showToast('Nomination saved');XI.tab='succession';xiOpen();}catch(e){showToast(e.message);}
+}
+async function xiDevelopment(host,active){
+ var r=await xiRPC('development',xiScope());if(!active())return;
+ xiMetrics(host,[['People in active development',r.summary.people],['Distinct plan IDs',r.summary.plan_ids],['Action rows',r.summary.action_rows],['Overdue monthly updates',r.summary.overdue_reports]]);
+ var card=exPanel('Development actions');xiTable(card,['Employee','Company','Competency','Task / action','Measure','Owner','Due','Status','Profile'],r.items.map(d=>[d.employee_name,d.company,d.comp_name,(d.task||'')+' / '+(d.action||''),d.measure,d.responsible_party,d.end_date,d.status,exButton('Profile',()=>xiProfile(d.employee_id))]));host.appendChild(card);xiPager(host,r.items.length);
+}
+async function xiFrameworks(host,active){
+ var list=await xiRPC('frameworks',xiScope());if(!active())return;
+ host.appendChild(xiNode('p','Frameworks remain Department → Position. Company filtering does not split their content.','xi-note'));
+ list.forEach(p=>{
+  var details=document.createElement('details'),sum=document.createElement('summary');sum.textContent=(p.department||'Company-wide Core')+' / '+(p.position||'All positions')+' • '+(p.published?'Published':'Not published');details.appendChild(sum);
+  details.appendChild(xiNode('p',p.published_at?'Published '+new Date(p.published_at).toLocaleString():'Assessment access remains locked.'));
+  var groups=new Map();p.items.forEach(i=>{if(!groups.has(i.code))groups.set(i.code,[]);groups.get(i.code).push(i);});
+  groups.forEach((items,code)=>{details.appendChild(xiNode('h3',compNameOf(code)));items.forEach(i=>details.appendChild(xiNode('p',i.text+' • '+i.classification+(i.level?' • '+i.level:''))));});host.appendChild(details);
+ });
+}
+async function xiReports(host,active){
+ var list=await xiRPC('reports');if(!active())return;
+ var card=exPanel('Monthly report centre','Immutable capture-time reports. Capture during the reporting month; no backdated or reconstructed historical snapshots.');
+ if(XI.data.reviewer)card.appendChild(exButton('Capture shared monthly pack',()=>xiCapture(true),'btn-primary'));
+ else card.appendChild(exButton('Capture my private monthly report',()=>xiCapture(false),'btn-primary'));
+ card.appendChild(xiNode('p','One capture per month and scope. The shared pack includes workforce, rankings, succession and development summaries; private reports contain only the capturing executive’s own cases. Capture at month-end for a month-end record.','xi-note'));
+ xiTable(card,['Month','Scope','Captured at','Open'],list.map(r=>[r.month,r.scope,new Date(r.captured_at).toLocaleString(),exButton('Open / download',()=>xiReport(r.id))]));host.appendChild(card);
+}
+async function xiCapture(shared){
+ if(!confirm('Create the immutable '+(shared?'shared':'private')+' snapshot for the CURRENT month? It cannot be replaced.'))return;
+ try{var r=await xiRPC('capture_month',{shared});await xiReport(r.id);}catch(e){showToast(e.message);}
+}
+async function xiReport(id){
+ var token=++XI.token,root=exShell('Monthly report'),host=root.querySelector('#exContent');
+ try{
+  var report=await xiRPC('report',{id});if(token!==XI.token||document.getElementById('exRoot')!==root)return;host.innerHTML='';
+  var area=document.createElement('div');host.appendChild(area);area.appendChild(xiNode('h3',report.scope+' report • '+report.month));
+  area.appendChild(xiNode('p','Captured '+new Date(report.captured_at).toLocaleString()+'. Values are frozen as captured; this is not a reconstruction of the entire month.'));
+  if(report.scope==='Shared'){
+   xiSnapshot(area,report.payload);
+   var captures=await xiRPC('reports');
+   var older=captures.filter(x=>x.scope==='Shared'&&x.month<report.month).sort((a,b)=>b.month.localeCompare(a.month))[0];
+   if(token!==XI.token||document.getElementById('exRoot')!==root)return;
+   if(older){
+    var previous=await xiRPC('report',{id:older.id});
+    if(token!==XI.token||document.getElementById('exRoot')!==root)return;
+    var comparison=exPanel('Change since previous saved report',previous.month+' → '+report.month);
+    var metrics=[['Employees',report.payload.employees,previous.payload.employees],['Complete pairs',report.payload.complete_pairs,previous.payload.complete_pairs],['Current score',report.payload.current_score,previous.payload.current_score],['People in development',report.payload.development.people,previous.payload.development.people]];
+    xiTable(comparison,['Metric','Previous','Current','Change'],metrics.map(m=>[m[0],m[2],m[1],m[1]===null||m[2]===null?'Not comparable':Math.round((m[1]-m[2])*10)/10]));
+    area.prepend(comparison);
+   }else area.prepend(xiNode('p','No earlier shared snapshot exists for comparison.','xi-note'));
+  }else {
+   xiTable(area,['Employee','Position','State','Recommendation','Private rationale'],(report.payload.cases||[]).map(c=>[c.employee,c.position,c.state,c.recommendation,c.comment]));
+   (report.payload.cases||[]).forEach(c=>{var detail=document.createElement('details');detail.appendChild(xiNode('summary',c.employee+' • Private follow-up'));xiTable(detail,['Kind','Note','Due','State'],(c.updates||[]).map(u=>[u.kind,u.body,u.due_date,u.state]));area.appendChild(detail);});
+  }
+  var actions=xiNode('div',undefined,'xi-tabs');host.prepend(actions);
+  actions.appendChild(exButton('Print / Save PDF',()=>{
+   var w=window.open('','_blank');if(!w){showToast('Allow pop-ups to print.');return;}
+   w.document.write('<!doctype html><html><head><title>CMS Monthly Report</title><style>body{font:14px Arial;padding:24px}table{border-collapse:collapse;width:100%}td,th{border:1px solid #ddd;padding:8px}button{display:none}.xi-metrics{display:flex;gap:16px;flex-wrap:wrap}.card{margin:18px 0}.xi-number{font-size:24px}h3{color:#17315b}</style></head><body></body></html>');
+   w.document.body.appendChild(area.cloneNode(true));w.document.close();w.focus();w.print();
+  }));
+  actions.appendChild(exButton('Download data (JSON)',()=>{var blob=new Blob([JSON.stringify(report,null,2)],{type:'application/json'});var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='CMS-'+report.scope+'-'+report.month+'.json';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);}));
+ }catch(e){host.textContent=e.message;}
+}
+// Extend assigned case detail WITHOUT expanding the v1 assignment boundary.
+var xiOldOpenCase=exOpenCase;
+exOpenCase=async function(id){
+ XI.token++;
+ await xiOldOpenCase(id);
+ if(!EX.case||EX.case.id!==id)return;
+ var root=document.getElementById('exRoot');if(!root)return;
+ var host=root.querySelector('#exContent'),card=exPanel('Case evidence & private follow-up');host.appendChild(card);
+ try{
+  var r=await xiRPC('case_context',{case_id:id});if(document.getElementById('exRoot')!==root||EX.case.id!==id)return;
+  if(exHR())card.appendChild(exButton('Share / refresh assessment evidence',async()=>{
+   if(!confirm('Share this employee’s latest assessment evidence and development summary with THIS case’s assigned executive? No other executive comments will be copied.'))return;
+   try{await xiRPC('share_evidence',{case_id:id});exOpenCase(id);}catch(e){showToast(e.message);}
+  }));
+  if(r.evidence){
+   card.appendChild(xiNode('p','HR-shared snapshot: '+new Date(r.evidence.shared_at).toLocaleString(),'xi-note'));
+   var d=r.evidence.data,e=d.employee;
+   xiMetrics(card,[['Self',xiPct(e.self_score)],['Manager',xiPct(e.manager_score)],['Current decision',xiPct(e.decision_score),'70% Manager + 30% Self']]);
+   xiTable(card,['Competency','Self','Manager','70/30'],d.competencies.map(c=>[c.competency,xiPct(c.self_score),xiPct(c.manager_score),xiPct(c.decision_score)]));
+   var details=document.createElement('details');details.appendChild(xiNode('summary','Full assessment evidence and target-role details'));
+   xiTable(details,['Type / target','Competency','Experience','Evidence','Rating','HR review'],d.assessment_evidence.map(a=>[a.type+(a.target?' / '+a.target:''),a.competency,a.experience,a.evidence,a.rating,a.hr_status]));card.appendChild(details);
+   var dev=document.createElement('details');dev.appendChild(xiNode('summary','Development history'));xiTable(dev,['Competency','Task','Measure','Owner','Due','Status'],d.development.map(x=>[x.competency,x.task,x.measure,x.owner,x.due,x.status]));card.appendChild(dev);
+  }else card.appendChild(xiNode('p','HR has not yet shared assessment evidence for this private case. Request it below.','xi-note'));
+  xiTable(card,['Kind','Private note','Due','Status','Action'],r.updates.map(u=>[u.kind,u.body,u.due_date,u.state,u.kind==='Follow-up'&&u.state==='Open'?exButton('Mark completed',async()=>{try{await xiRPC('complete_followup',{case_id:id,id:u.id});exOpenCase(id);}catch(e){showToast(e.message);}}):'—']));
+  if(EX.case.state!=='Closed'){
+   var form=xiNode('div',undefined,'xi-form'),kind=document.createElement('select');['Clarification','Response','Follow-up'].forEach(s=>kind.add(new Option(s,s)));form.appendChild(kind);
+   var body=document.createElement('textarea');body.rows=3;body.placeholder='Private question, response or follow-up action';form.appendChild(body);
+   var due=document.createElement('input');due.type='date';due.setAttribute('aria-label','Optional due date');form.appendChild(due);
+   form.appendChild(exButton('Save private note',async()=>{
+    if(!body.value.trim())return;if(!confirm('Share this note with the assigned executive and HR/HOHR only?'))return;
+    try{await xiRPC('case_note',{case_id:id,kind:kind.value,body:body.value.trim(),due_date:due.value});exOpenCase(id);}catch(e){showToast(e.message);}
+   },'btn-primary'));card.appendChild(form);
+  }
+ }catch(e){card.appendChild(xiNode('p',e.message));}
+};
+var xiOldCases=exCases;
+exCases=async function(){
+ XI.token++;await xiOldCases();
+ var host=document.getElementById('exContent');if(!host)return;
+ var bar=xiNode('div',undefined,'xi-tabs');host.prepend(bar);
+ bar.appendChild(exButton('Compare my assigned cases',xiCompare));
+ bar.appendChild(exButton('Monthly reports',()=>{XI.tab='reports';xiOpen();}));
+};
+async function xiCompare(){
+ var token=++XI.token,root=exShell('Candidate comparison'),host=root.querySelector('#exContent');
+ try{
+  var list=await exRPC('list');if(token!==XI.token)return;host.innerHTML='';
+  host.appendChild(xiNode('p','Compare only cases you may access. Read scores against the same target position; different targets are not directly comparable.','xi-note'));
+  var a=document.createElement('select'),b=document.createElement('select');
+  [a,b].forEach(sel=>{sel.add(new Option('Choose assigned case',''));list.forEach(c=>sel.add(new Option(c.employee_name+' / '+c.position_name,c.id)));host.appendChild(sel);});
+  var result=document.createElement('div');result.className='xm-grid';
+  host.appendChild(exButton('Compare',async()=>{
+   if(!a.value||!b.value||a.value===b.value){showToast('Choose two different accessible cases.');return;}
+   try{
+    var vals=await Promise.all([a.value,b.value].map(async id=>({c:await exRPC('get',{id}),r:await xiRPC('case_context',{case_id:id})})));
+    if(document.getElementById('exRoot')!==root)return;result.innerHTML='';
+    vals.forEach(v=>{var card=exPanel(v.c.employee_name,v.c.position_name);if(v.r.evidence){var d=v.r.evidence.data;xiMetrics(card,[['Current 70/30',xiPct(d.employee.decision_score)]]);xiTable(card,['Competency','70/30'],d.competencies.map(c=>[c.competency,xiPct(c.decision_score)]));}else card.appendChild(xiNode('p','Awaiting HR-shared evidence'));result.appendChild(card);});
+   }catch(e){showToast(e.message);}
+  }));host.appendChild(result);
+ }catch(e){host.textContent=e.message;}
+}
+exOverview=xiOpen;
+var xiPreviousSetup=setupNav;
+setupNav=function(role){
+ xiPreviousSetup(role);
+ if(role==='csuite'){
+  var side=document.getElementById('sideNav');
+  XI_TABS.forEach(function(pair){
+   var b=exButton(pair[1],()=>{XI.tab=pair[0];XI.page=0;navigateTo('ex-overview');});
+   b.style.cssText='display:block;background:transparent;color:#c7d2fe;border:0;text-align:left;padding:9px 22px;width:100%;font-size:12px';side.appendChild(b);
+  });
+ }
+};
+
+</script>
+<script>
+/* Presentation and shared report extension for distinct criticality dimensions.
+ * Current-role and target-role categories never overwrite each other.
+ * Existing frozen monthly captures are not supplemented with today's values.
+ */
+var xcOldRPC=xiRPC;
+xiRPC=async function(action,data){
+ var result=await xcOldRPC(action,data);
+ if(action==='overview'&&!result.categories){
+  var scope=data||{};
+  var extra=await _supabase.rpc('cms_executive_categories',{
+   p_company:scope.company||null,p_department:scope.department||null,p_position:scope.position||null
+  });
+  if(extra.error)throw new Error('Category upgrade unavailable: '+extra.error.message);
+  result.categories=extra.data;
+ }
+ return result;
+};
+function xcTable(host,summary){
+ xiTable(host,['Category','People','Complete pairs','Completion','Current-role 70/30','People in development'],
+  summary.map(r=>[r.category,r.headcount,r.complete_pairs,
+   r.completion_pct===null?'Not assessed':r.completion_pct+'%',
+   xiPct(r.current_score),r.people_in_development]));
+}
+function xcRender(host,data){
+ var section=exPanel('Role criticality & assessment purpose');
+ section.classList.add('xc-section');
+ if(!data){
+  section.appendChild(xiNode('p','This saved report predates the criticality/purpose breakdown. Historical category values were not captured and will not be reconstructed from current records.','xi-note'));
+  host.appendChild(section);return;
+ }
+ section.appendChild(xiNode('p','Current-role criticality and target-role criticality are separate. Score columns always show current-role 70% Manager + 30% Self, not a target-role readiness score.','xi-note'));
+ var tools=xiNode('div',undefined,'xi-tabs');
+ var dimension=document.createElement('select');dimension.setAttribute('aria-label','Breakdown dimension');
+ ['All breakdowns','Current-role criticality','Target-role criticality','Assessment purpose'].forEach(x=>dimension.add(new Option(x,x)));
+ var purpose=document.createElement('select');purpose.setAttribute('aria-label','Assessment purpose in cross-tabulations');
+ ['All purposes','Promotion','Succession','Talent Pipeline','Development','Not recorded'].forEach(x=>purpose.add(new Option(x,x)));
+ tools.appendChild(dimension);tools.appendChild(purpose);section.appendChild(tools);
+ section.appendChild(xiNode('p','These controls filter the category tables below only. Company, Department and Position at the top filter the employee population for the whole overview.','xm-fine'));
+ var content=xiNode('div');section.appendChild(content);
+ function render(){
+  content.innerHTML='';
+  var chosen=dimension.value;
+  ['Current-role criticality','Target-role criticality','Assessment purpose'].forEach(function(dim){
+   if(chosen!=='All breakdowns'&&chosen!==dim)return;
+   var card=exPanel(dim);
+   xcTable(card,(data.summary||[]).filter(r=>r.dimension===dim));
+   if(dim==='Target-role criticality')card.appendChild(xiNode('p','Distinct people per category; someone nominated for multiple target categories may appear more than once across totals. Targets come from recorded succession nominations, not guessed promotion destinations.','xm-fine'));
+   if(dim==='Assessment purpose')card.appendChild(xiNode('p','Based on the employee’s recorded talent track. It is not a historical per-assessment purpose.','xm-fine'));
+   content.appendChild(card);
+  });
+  var byPurpose=r=>purpose.value==='All purposes'||r.purpose===purpose.value;
+  var current=exPanel('Current-role criticality × assessment purpose');
+  xiTable(current,['Current criticality','Purpose','People','Complete pairs','Current 70/30','In development'],
+   (data.current_by_purpose||[]).filter(byPurpose).map(r=>[r.current_criticality,r.purpose,r.headcount,r.complete_pairs,xiPct(r.current_score),r.people_in_development]));
+  content.appendChild(current);
+  var target=exPanel('Target-role criticality × assessment purpose');
+  xiTable(target,['Target criticality','Purpose','Unique people','Nominations','Complete current-role pairs'],
+   (data.target_by_purpose||[]).filter(byPurpose).map(r=>[r.target_criticality,r.purpose,r.headcount,r.nominations,r.complete_pairs]));
+  content.appendChild(target);
+  var companies=exPanel('Company breakdown by current criticality and purpose');
+  xiTable(companies,['Company','Current criticality','Purpose','People','Complete pairs','Current 70/30','In development'],
+   (data.company_by_category||[]).filter(byPurpose).map(r=>[r.company,r.current_criticality,r.purpose,r.headcount,r.complete_pairs,xiPct(r.current_score),r.people_in_development]));
+  content.appendChild(companies);
+  section.dataset.dimension=dimension.value;section.dataset.purpose=purpose.value;
+ }
+ dimension.onchange=render;purpose.onchange=render;render();
+ section.appendChild(xiNode('p','Not recorded includes blank or unrecognized values. Conflicting registry entries are shown as Conflicting records. Neither is treated as Non-Critical.','xi-note'));
+ host.appendChild(section);
+}
+var xcOldSnapshot=xiSnapshot;
+xiSnapshot=function(host,d){xcOldSnapshot(host,d);xcRender(host,d.categories);};
+// When viewing succession nominations, show current/target criticality separately
+// in a supplemental table using the already scoped category results.
+var xcOldSuccession=xiSuccession;
+xiSuccession=function(host,d){
+ xcOldSuccession(host,d);
+ var card=exPanel('Target-role criticality of recorded nominations');
+ var byId=new Map((d.succession||[]).map(n=>[n.employee_id+'|'+n.target_company+'|'+n.target_department+'|'+n.target_position,n]));
+ xiTable(card,['Candidate','Target company','Target department','Target position','Target criticality','Readiness'],
+  ((d.categories||{}).target_roles||[]).map(t=>{
+   var n=byId.get(t.employee_id+'|'+t.target_company+'|'+t.target_department+'|'+t.target_position);
+   return [n?n.candidate:'Candidate outside nomination filter',t.target_company,t.target_department,t.target_position,t.criticality,t.readiness];
+  }));
+ card.appendChild(xiNode('p','The category population uses employees’ current-role filters. The nomination table above uses target-role filters, so their populations can differ.','xm-fine'));
+ host.appendChild(card);
+};
+// Current user-requested executive header theme; no changes to other role themes.
+var xcStyle=document.createElement('style');
+xcStyle.textContent=`
+body.ex-modern .header{background:linear-gradient(110deg,#111B35,#29265E)!important;border-bottom:2px solid #C9AD72!important}
+body.ex-modern .header-name,body.ex-modern .hdr-btn{color:#fff!important}
+body.ex-modern .header-inner:before{color:#e2e8f0!important}
+body.ex-modern .hdr-divider{background:rgba(201,173,114,.5)!important}
+#exRoot .xc-section{border-top:4px solid #7c3aed}
+#exRoot .xc-section select{width:auto;min-width:240px;background:#fff;border-radius:10px}
+@media print{#exRoot .xc-section select,.xc-section .xi-tabs{display:none}}
+`;
+document.head.appendChild(xcStyle);
+
+</script>
 </body>
 </html>
