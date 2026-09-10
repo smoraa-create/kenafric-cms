@@ -766,6 +766,53 @@ if (id === 'hr-comp-approvals') return 'Competency Approvals & Validation';
 var map = {'emp-profile':'My Profile','emp-selfassess':'Self Assessment','emp-mgrview':'Manager Assessment','emp-gaps':'My Gaps','emp-strengths':'My Strengths','emp-devplans':'Development Plans','mgr-dashboard':'Dashboard','mgr-team':'My Team','mgr-prompool':'Promotion-Ready Pool','mgr-assess':'Assessment','mgr-details':'Assessment Details','mgr-gaps':'Team Gaps','mgr-devplans':'Development Plans','mgr-requests':'Requests','mgr-repappr':'Report Approvals','mgr-setcomp':'Set Competencies','mgr-comp':'Competency Library (View)','hohr-reports':'Report Approvals','hohr-comp':'Competency Library','cs-reports':'Executive Recommendations','hr-dashboard':'Dashboard','hr-kpi':'KPI Dashboard','hr-departments':'Departments','hr-companies':'Companies','hr-prompool':'Promotion-Ready Pool','hr-staff':'All Employees','hr-managers':'Line Managers','hr-review':'Assessment Review','hr-gaps':'Employee Gaps','hr-devplans':'Development Plans','hr-all':'All Assessments','hr-reports':'Reports','hr-repappr':'Report Approvals','hr-comp':'Competency Library','hr-redo':'Redo Requests','hr-positions':'Positions & Criticality'}
 return map[id] || '';
 }
+// Current-role decisions require both submissions; zero is a valid score.
+function currentRoleDecision(selfScore, managerScore, hasSelf, hasManager) {
+if (!hasSelf || !hasManager || selfScore == null || managerScore == null) return null;
+var s = Number(selfScore), m = Number(managerScore);
+if (!Number.isFinite(s) || !Number.isFinite(m)) return null;
+return Math.round((m * 0.70) + (s * 0.30));
+}
+function currentRoleWaiting(hasSelf, hasManager) {
+if (!hasSelf && !hasManager) return 'Awaiting Self and Manager Assessments';
+return !hasSelf ? 'Awaiting Self Assessment' : !hasManager ? 'Awaiting Manager Assessment' : 'Awaiting HR review';
+}
+function currentRoleScoreText(score) { return score === null ? 'Awaiting assessments' : score + '%'; }
+function currentRoleSummary(empId, results) {
+var rows = latestOnly((results || []).filter(function(r){return r.employee_id === empId;}));
+var hasS = rows.some(function(r){return r.type === 'Self';});
+var hasM = rows.some(function(r){return r.type === 'Manager';});
+if (!hasS || !hasM) return currentRoleWaiting(hasS,hasM);
+var fr = rows.map(function(r){return {'Employee ID':r.employee_id,'Competency Code':r.comp_code,'Type':r.type,'Ticked':r.ticked,'Evidence':r.evidence,'HR_Status':r.hr_status,'Rating':r.proficiency_rating};});
+var score = currentRoleDecision(calculateOverallScore(empId,'Self',fr),calculateOverallScore(empId,'Manager',fr),hasS,hasM);
+return 'Current Role Decision: ' + currentRoleScoreText(score) + ' (70% Manager + 30% Self)';
+}
+function pairedCurrentAverage(employees, stats) {
+var scores = (employees || []).map(function(e) {
+var r = stats[e.employee_id] || {};
+return currentRoleDecision(r.selfScore, r.mgrScore, r.hasS, r.hasM);
+}).filter(function(score){ return score !== null; });
+return scores.length ? Math.round(scores.reduce(function(a,b){return a+b;},0) / scores.length) : null;
+}
+async function requireCurrentRolePair(empId) {
+try {
+var results = await Promise.all([
+_supabase.from('assessments').select('id').eq('employee_id',empId).eq('type','Self').limit(1),
+_supabase.from('assessments').select('id').eq('employee_id',empId).eq('type','Manager').limit(1)
+]);
+if (results.some(function(r){return r.error;})) throw new Error('Could not verify assessments');
+var hasS = !!(results[0].data || []).length, hasM = !!(results[1].data || []).length;
+if (!hasS || !hasM) { showToast(currentRoleWaiting(hasS,hasM)); return false; }
+return true;
+} catch (e) { showToast('Could not verify both current-role assessments. Please retry.'); return false; }
+}
+async function requireReportPair(table,id) {
+try {
+var result = await _supabase.from(table).select('employee_id').eq('id',id).single();
+if (result.error || !result.data) throw new Error('Report unavailable');
+return await requireCurrentRolePair(result.data.employee_id);
+} catch (e) { showToast('Could not verify the report assessments. Please retry.'); return false; }
+}
 function showToast(msg) {
 var t = document.getElementById('toast');
 t.textContent = msg;
@@ -965,7 +1012,8 @@ if ((comp.code || '').indexOf('CC') === 0) core.push(entry); else functional.pus
 }
 strengths.sort((a, b) => b.pct - a.pct); gaps.sort((a, b) => a.pct - b.pct);
 var activePlans = (devPlans || []).filter(d => d.status !== 'Completed').length;
-var readiness = mgrScore > 0 ? getCurrentRoleReadiness(mgrScore) : null;
+var profileDecision = currentRoleDecision(selfScore, mgrScore, hasSelf, hasMgr);
+var readiness = profileDecision !== null ? getCurrentRoleReadiness(profileDecision) : null;
 var initials = (function(n){ var p = (n || '').split(' '); return p.length >= 2 ? p[0].charAt(0) + p[1].charAt(0) : (n || '?').charAt(0); })(emp.employee_name);
 var profPhoto = '';
 try { const { data: pr } = await _supabase.from('user_profiles').select('photo').ilike('email', APP.user.email).limit(1); profPhoto = (pr && pr.length && pr[0].photo) ? pr[0].photo : ''; } catch (e) {}
@@ -1004,24 +1052,24 @@ html += '<div class="card"><div style="display:flex;justify-content:space-betwee
 html += '<div><div class="card-title" style="margin-bottom:2px">Competency Scores</div><div style="font-size:11px;color:var(--gray-500)">Overall weighted assessment results</div></div>';
 if (!released && hasMgr) html += '<span class="badge badge-purple">🔒 Manager results visible after HR review</span>';
 else if (!released && hasMgr) html += '<span class="badge badge-purple">🔒 Manager results visible after HR review</span>';
-else if (readiness) { var rc = mgrScore >= 81 ? 'success' : mgrScore >= 71 ? 'info' : mgrScore >= 61 ? 'warning' : 'danger'; html += '<span class="badge badge-' + rc + '">' + escapeHtml(readiness.label) + '</span>'; }
+else if (readiness) { var rc = profileDecision >= 81 ? 'success' : profileDecision >= 71 ? 'info' : profileDecision >= 61 ? 'warning' : 'danger'; html += '<span class="badge badge-' + rc + '">' + escapeHtml(readiness.label) + '</span>'; }
 else html += '<span class="badge badge-warning">Not Yet Assessed</span>';
 html += '</div>';
 var hasAvg = hasSelf && hasMgr;
-var avgScore = hasAvg ? Math.round((selfScore + mgrScore) / 2) : 0;
+var avgScore = currentRoleDecision(selfScore, mgrScore, hasSelf, hasMgr);
 var mgrRowsRaw = (allResults || []).filter(function(r){ return r.type === 'Manager'; });
 var hrReviewed = mgrRowsRaw.length > 0 && mgrRowsRaw.some(function(r){ return r.hr_status === 'Approved'; }) && !mgrRowsRaw.some(function(r){ return r.ticked && (r.hr_status === '' || r.hr_status === 'Pending'); });
-var passedCurrent = hasMgr && hrReviewed && mgrScore >= 81;
+var passedCurrent = hasAvg && hrReviewed && avgScore >= 81;
 var released = assessmentReleased(allResults || []);
 var hasAvg = hasSelf && hasMgr;
-var avgScore = hasAvg ? Math.round((selfScore + mgrScore) / 2) : 0;
+var avgScore = currentRoleDecision(selfScore, mgrScore, hasSelf, hasMgr);
 var hasPS = formattedResults.some(r => r['Type'] === 'Prospective Self');
 var psScore = hasPS ? calculateOverallScore(emp.employee_id, 'Prospective Self', formattedResults) : 0;
 var psAvg = (hasPS && hasProsp) ? Math.round((psScore + prospScore) / 2) : 0;
 html += '<div class="score-rings" style="margin:24px 0 8px">';
 html += bigRing(selfScore, '#2563eb', 'Self Assessment', 'Your own rating', hasSelf);
 html += bigRing(mgrScore, '#059669', 'Manager (Current)', (released ? escapeHtml(emp.manager || 'Manager') + '&#39;s rating' : '🔒 Visible once HR Admin reviews both assessments'), hasMgr && released);
-html += bigRing(avgScore, '#ea580c', 'Final Average', 'Self + Manager ÷ 2', hasAvg && released);
+html += bigRing(avgScore === null ? 0 : avgScore, '#ea580c', 'Current Role Decision', hasAvg ? '70% Manager + 30% Self' : currentRoleWaiting(hasSelf, hasMgr), hasAvg && released);
 html += bigRing(psScore, '#0ea5e9', 'Prospective (Self)', 'Unlocked at 80%+ average', hasPS);
 html += bigRing(prospScore, '#7c3aed', 'Prospective (Manager)', 'Manager-rated', hasProsp);
 html += bigRing(psAvg, '#9333ea', 'Prospective Average', 'Prospective Self + Manager ÷ 2', hasPS && hasProsp);
@@ -1541,7 +1589,7 @@ var pRole = pmRows.length ? (pmRows[0].prospective_role || '') : (psRows.length 
 html += '<tr><td><div style="display:flex;align-items:center;gap:8px"><div style="width:28px;height:28px;border-radius:50%;background:var(--primary-light);color:var(--primary);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:10px;flex:none;overflow:hidden">' + (t.photo ? '<img src="' + t.photo + '" alt="" style="width:100%;height:100%;object-fit:cover;display:block">' : escapeHtml(initials(t.name))) + '</div><strong style="text-transform:uppercase;letter-spacing:0.2px;white-space:nowrap">' + escapeHtml(t.name) + '</strong><span style="font-size:10px;color:var(--gray-500);white-space:nowrap">' + escapeHtml(t.position) + ', ' + escapeHtml(t.company || '') + '</span></div></td>';
 html += '<td>' + (t.released ? (t.hasSelf ? '<strong>' + t.selfScore + '%</strong>' : '—') : (t.hasSelf ? '🔒' : '—')) + '</td>';
 html += '<td>' + (t.hasMgr ? '<strong>' + t.mgrScore + '%</strong>' : '—') + '</td>';
-html += '<td>' + ((t.released && t.hasSelf && t.hasMgr) ? '<strong style="color:' + (Math.round((t.selfScore + t.mgrScore) / 2) >= 80 ? 'var(--green)' : 'var(--primary)') + '">' + Math.round((t.selfScore + t.mgrScore) / 2) + '%</strong>' : (t.hasSelf ? '🔒' : '—')) + '</td>';
+html += '<td>' + ((t.released && t.hasSelf && t.hasMgr) ? '<strong>' + currentRoleDecision(t.selfScore, t.mgrScore, t.hasSelf, t.hasMgr) + '%</strong>' : escapeHtml(currentRoleWaiting(t.hasSelf, t.hasMgr))) + '</td>';
 html += '<td>' + (psScore !== null ? '<strong style="color:#0ea5e9">' + psScore + '%</strong>' : '—') + '</td>';
 html += '<td>' + (pmScore !== null ? '<strong style="color:var(--purple)">' + pmScore + '%</strong>' : '—') + '</td>';
 html += '<td>' + (pAvg !== null ? '<strong style="color:var(--orange)">' + pAvg + '%</strong>' : '—') + '</td>';
@@ -1605,7 +1653,7 @@ var fmtM = latestOnly(mRows).map(function(r){ return { 'Employee ID': r.employee
 var mgrScore = mgrDone ? calculateOverallScore(empId, 'Manager', fmtM) : 0;
 var fmtS = latestOnly((allResults || []).filter(function(r){ return r.employee_id === empId && r.type === 'Self'; })).map(function(r){ return { 'Employee ID': r.employee_id, 'Competency Code': r.comp_code, 'Type': r.type, 'Ticked': r.ticked, 'Evidence': r.evidence, 'HR_Status': r.hr_status, 'Rating': r.proficiency_rating }; });
 var selfScoreT = selfDone ? calculateOverallScore(empId, 'Self', fmtS) : 0;
-var finalAvgT = (selfDone && mgrDone) ? Math.round((selfScoreT + mgrScore) / 2) : 0;
+var finalAvgT = currentRoleDecision(selfScoreT, mgrScore, selfDone, mgrDone);
 var prospDone = pRows.length > 0;
 var fmtP = latestOnly(pRows).map(function(r){ return { 'Employee ID': r.employee_id, 'Competency Code': r.comp_code, 'Type': r.type, 'Ticked': r.ticked, 'Evidence': r.evidence, 'HR_Status': r.hr_status, 'Rating': r.proficiency_rating }; });
 var prospScore = prospDone ? calculateOverallScore(empId, 'Prospective', fmtP) : 0;
@@ -1613,7 +1661,7 @@ team.push({
 id: empId, name: emp.employee_name, email: emp.email, position: emp.position,
 department: emp.department, company: emp.company, selfDone: selfDone, mgrDone: mgrDone,
 hrReviewed: hrReviewed, mgrScore: mgrScore, finalAvg: finalAvgT, prospDone: prospDone, prospScore: prospScore, prospRole: pRows.length ? (pRows[pRows.length - 1].prospective_role || '') : '',
-readiness: mgrDone ? getCurrentRoleReadiness(mgrScore).label : ''
+readiness: finalAvgT !== null ? getCurrentRoleReadiness(finalAvgT).label : currentRoleWaiting(selfDone,mgrDone)
 });
 }
 }
@@ -1624,21 +1672,23 @@ html += '<td>' + escapeHtml(t.position) + '</td>';
 html += '<td>' + (t.selfDone ? '<span class="badge badge-success">Done</span>' : '<span class="badge badge-warning">Pending</span>') + '</td>';
 html += '<td>';
 if (!t.mgrDone) {
-html += '<span class="badge badge-warning">Not Assessed</span>';
+html += '<span class="badge badge-warning">' + currentRoleWaiting(t.selfDone,t.mgrDone) + '</span>';
+} else if (!t.selfDone) {
+html += '<span class="badge badge-warning">Awaiting Self Assessment</span>';
 } else if (!t.hrReviewed) {
 html += '<span class="badge badge-purple">Awaiting HR Admin Approval</span>';
 } else {
-html += '<span style="font-weight:700;color:' + (t.mgrScore>=81?'var(--green)':t.mgrScore>=71?'var(--primary)':t.mgrScore>=61?'var(--orange)':'var(--red)') + '">' + t.mgrScore + '%</span><br>';
-html += '<span class="badge badge-' + (t.mgrScore>=81?'success':t.mgrScore>=71?'info':t.mgrScore>=61?'warning':'danger') + '">' + escapeHtml(t.readiness) + '</span>';
+html += '<strong>' + currentRoleScoreText(t.finalAvg) + '</strong><br><small>70% Manager + 30% Self</small><br>';
+html += '<span class="badge badge-info">' + escapeHtml(t.readiness) + '</span>';
 var dec = decisionMap[t.id];
 var decFinal = dec && (String(dec.status).indexOf('Approved') === 0 || String(dec.status).indexOf('Endorsed') === 0) ? dec.status : '';
 var rec = '';
 if (decFinal) rec = '🏛 Organizational decision: ' + decFinal;
-else if (t.mgrScore >= 81) {
+else if (t.finalAvg >= 80) {
 if (t.prospDone) rec = t.prospScore >= 81 ? 'Recommend for Promotion' : 'Develop: ' + getProspectiveReadiness(t.prospScore).label;
 else rec = 'Next: Assess Prospective Role';
 } else {
-rec = 'Develop: ' + getCurrentRoleReadiness(t.mgrScore).detail;
+rec = 'Develop: ' + getCurrentRoleReadiness(t.finalAvg).detail;
 }
 html += '<div style="font-size:10px;margin-top:4px;color:' + (decFinal ? 'var(--primary)' : 'var(--gray-600)') + ';font-weight:' + (decFinal ? '700' : '400') + '">' + escapeHtml(rec) + '</div>';
 }
@@ -1773,11 +1823,21 @@ var mgrScore = mgrRows.length ? calculateOverallScore(empId, 'Manager', frM) : 0
 var selfRowsL = latestOnly((allResults || []).filter(function(r){ return r.type === 'Self'; }));
 var frS = selfRowsL.map(function(r){ return { 'Employee ID': r.employee_id, 'Competency Code': r.comp_code, 'Type': r.type, 'Ticked': r.ticked, 'Evidence': r.evidence, 'HR_Status': r.hr_status, 'Rating': r.proficiency_rating }; });
 var selfScoreL = selfRowsL.length ? calculateOverallScore(empId, 'Self', frS) : 0;
-var finalAvg = (selfRowsL.length && mgrRows.length) ? Math.round((selfScoreL + mgrScore) / 2) : 0;
+var hasBothCurrent = selfRowsL.length > 0 && mgrRows.length > 0;
+
+var finalAvg = currentRoleDecision(selfScoreL, mgrScore, selfRowsL.length > 0, mgrRows.length > 0);
+
+var currentDecisionText = hasBothCurrent
+  ? 'Current Role Decision Score: ' + finalAvg + '% (70% Manager + 30% Self)'
+  : !selfRowsL.length && !mgrRows.length
+    ? 'Awaiting Self and Manager Assessments'
+    : !selfRowsL.length
+      ? 'Awaiting Self Assessment'
+      : 'Awaiting Manager Assessment';
 var hrReviewed = mgrRows.length > 0 && mgrRows.some(function(r){ return r.hr_status === 'Approved'; }) && !mgrRows.some(function(r){ return r.ticked && (r.hr_status === '' || r.hr_status === 'Pending'); });
 var canCurrent = (!mgrRows.length) || (curReq && curReq.status === 'Approved');
 APP._canCurrent = canCurrent; APP._curReqStatus = curReq ? curReq.status : '';
-var prospUnlocked = mgrRows.length > 0 && hrReviewed && finalAvg >= 80;
+var prospUnlocked = hasBothCurrent && hrReviewed && finalAvg >= 80;
 var canProsp = prospUnlocked && ((!prospRows.length) || (prospReq && prospReq.status === 'Approved'));
 var html = '<div class="card"><div class="card-title">New Assessment — ' + escapeHtml(emp.employee_name) + ' (' + escapeHtml(emp.position) + ')</div>';
 html += '<div class="form-group"><label>Choose assessment type</label><select id="assessTypeSel" onchange="buildAssessForm(\'' + empId + '\')"><option value="">-- Select --</option>';
@@ -1790,10 +1850,19 @@ if (mgrRows.length && !canCurrent) {
 if (curReq && curReq.status === 'Pending') html += '<p style="margin-top:6px"><span class="badge badge-warning">Redo request pending HR approval</span></p>';
 else html += '<p style="font-size:12px;color:var(--gray-500);margin-top:6px">Current role already assessed — select "Current Role Assessment" above to request permission to redo.</p>'
 }
-if (mgrRows.length && !prospUnlocked) html += '<p style="font-size:12px;color:var(--gray-500);margin-top:8px">Prospective assessment unlocks after HR Admin review and a FINAL AVERAGE (Self + Manager ÷ 2) of 80%+ (current final average: ' + finalAvg + '%).</p>';
-if (prospUnlocked && prospRows.length && prospReq && prospReq.status === 'Approved') html += '<p style="font-size:12px;color:var(--green);background:var(--green-light);padding:8px;border-radius:6px;margin-top:8px">HR approved a prospective reassessment — choose Prospective Role Assessment above.</p>';
+html += '<p style="font-size:12px;margin-top:8px">'
+  + currentDecisionText
+  + '</p>';
+
+if (hasBothCurrent && !prospUnlocked) {
+  html += '<p style="font-size:12px;color:var(--gray-500);margin-top:8px">'
+    + 'Prospective assessment requires HR review and a current-role '
+    + 'decision score of 80% or above.'
+    + '</p>';
+}
+if (prospUnlocked && prospRows.length && prospReq && prospReq.status === 'Approved') html += '<p>HR approved a prospective reassessment.</p>';
 if (prospUnlocked && prospRows.length && !canProsp) {
-if (prospReq && prospReq.status === 'Pending') html += '<p style="margin-top:6px"><span class="badge badge-warning">Prospective redo request pending HR approval</span></p>';
+if (prospReq && prospReq.status === 'Pending') html += '<p>Redo request pending HR approval</p>';
 else html += '<p style="font-size:12px;color:var(--gray-500);margin-top:6px">Prospective already assessed. To reassess, you need HR Admin approval.</p>' + redoBox('Prospective', empId, emp.employee_name);
 }
 html += '</div><div id="assessTypeForm"></div>';
@@ -3361,6 +3430,7 @@ _supabase.from('dp_reports').update({ remind_sent: true }).eq('id', r.id);
 });
 }
 async function sendReportApproval(empId) {
+if (!await requireCurrentRolePair(empId)) return;
 const { data: emp } = await _supabase.from('employees').select('*').eq('employee_id', empId).single();
 if (!emp) { showToast('Employee not found'); return; }
 const { data: dup } = await _supabase.from('report_approvals').select('id').eq('employee_id', empId).eq('status', 'Pending').limit(1);
@@ -3406,6 +3476,7 @@ html += '</div>';
 setContent(html);
 }
 async function decideReportApproval(id, decision) {
+if (!await requireReportPair('report_approvals',id)) return;
 var c = document.getElementById('rac-' + id);
 var comment = c ? c.value.trim() : '';
 if (decision === 'Changes' && !comment) { showToast('Comment required when requesting changes'); return; }
@@ -3428,6 +3499,7 @@ showToast('Decision saved — notifications sent');
 loadReportApprovals();
 }
 async function sendReportApproval(empId) {
+if (!await requireCurrentRolePair(empId)) return;
 const { data: emp } = await _supabase.from('employees').select('*').eq('employee_id', empId).single();
 if (!emp) { showToast('Employee not found'); return; }
 const { data: dup } = await _supabase.from('report_approvals').select('id').eq('employee_id', empId).eq('status', 'Pending').limit(1);
@@ -3480,6 +3552,7 @@ html += '</div>';
 setContent(html);
 }
 async function decideReportApproval(id, decision) {
+if (!await requireReportPair('report_approvals',id)) return;
 var c = document.getElementById('rac-' + id);
 var comment = c ? c.value.trim() : '';
 if (decision === 'Changes' && !comment) { showToast('Comment required when requesting changes'); return; }
@@ -3514,7 +3587,7 @@ var hasP = fr.some(function(r){ return r['Type'] === 'Prospective'; });
 var hasPS = fr.some(function(r){ return r['Type'] === 'Prospective Self'; });
 var selfScore = hasS ? calculateOverallScore(empId, 'Self', fr) : 0;
 var mgrScore = hasM ? calculateOverallScore(empId, 'Manager', fr) : 0;
-var avgScore = (hasS && hasM) ? Math.round((selfScore + mgrScore) / 2) : 0;
+var avgScore = currentRoleDecision(selfScore, mgrScore, hasS, hasM);
 var psScore = hasPS ? calculateOverallScore(empId, 'Prospective Self', fr) : 0;
 var prospScore = hasP ? calculateOverallScore(empId, 'Prospective', fr) : 0;
 var psAvg = (hasPS && hasP) ? Math.round((psScore + prospScore) / 2) : 0;
@@ -3527,7 +3600,7 @@ var csPS = calculateCompetencyScore(empId, comp.code, 'Prospective Self', fr);
 var csP = calculateCompetencyScore(empId, comp.code, 'Prospective', fr);
 if (csS.total + csM.total + csPS.total + csP.total === 0) continue;
 var s = hohrPct(csS), m = hohrPct(csM), ps = hohrPct(csPS), pm = hohrPct(csP);
-compRows.push({ name: comp.competency, s: s, m: m, a: (s !== null && m !== null) ? Math.round((s + m) / 2) : null, ps: ps, pm: pm, pa: (ps !== null && pm !== null) ? Math.round((ps + pm) / 2) : null });
+compRows.push({ name: comp.competency, s: s, m: m, a: currentRoleDecision(s, m, s !== null, m !== null), ps: ps, pm: pm, pa: (ps !== null && pm !== null) ? Math.round((ps + pm) / 2) : null });
 }
 function sg(type) { var st = []; var gp = []; for (var k = 0; k < APP.competencies.length; k++) { var c2 = APP.competencies[k]; var cs = calculateCompetencyScore(empId, c2.code, type, fr); if (cs.total > 0) { var p = Math.round((cs.score / 5) * 100); if (p >= 70) st.push('• ' + c2.competency + ' (' + p + '%)'); else if (p > 0) gp.push('• ' + c2.competency + ' (' + p + '%)'); } } return { st: st, gp: gp }; }
 var cur = sg('Manager'); var pros = sg('Prospective');
@@ -3543,7 +3616,8 @@ var TDL = 'style="border:1px solid #999;padding:4px"';
 function cell(v){ return v === null ? '—' : v + '%'; }
 var h = '<div style="text-align:center;border-bottom:3px solid #333;padding-bottom:8px;margin-bottom:12px"><div style="font-size:20px;font-weight:bold">KENAFRIC GROUP — COMPETENCY ASSESSMENT REPORT</div><div style="font-size:11px;color:#555">Confidential — Head of HR decision document</div></div>';
 h += '<p style="font-size:12px"><strong>' + esc(d.emp.employee_name) + '</strong> | ' + esc(d.emp.position) + ' | ' + esc(d.emp.department || '') + ' | ' + esc(d.emp.company || '') + ' | Line Manager: ' + esc(d.emp.manager || 'N/A') + ' | Generated: ' + new Date().toLocaleDateString('en-GB') + '</p>';
-h += '<table style="width:100%;border-collapse:collapse;font-size:12px;margin:8px 0"><tr><th ' + TB + '>Self (Current)</th><th ' + TB + '>Manager (Current)</th><th ' + TB + '>Final Average</th><th ' + TB + '>Prospective (Self)</th><th ' + TB + '>Prospective (Manager)</th><th ' + TB + '>Prospective Average</th></tr>';
+h += '<p><strong>Current-role decisions: 70% Manager + 30% Self. Both assessments are required.</strong></p>';
+h += '<table style="width:100%;border-collapse:collapse;font-size:12px;margin:8px 0"><tr><th ' + TB + '>Self (Current)</th><th ' + TB + '>Manager (Current)</th><th ' + TB + '>Current Decision Score</th><th ' + TB + '>Prospective (Self)</th><th ' + TB + '>Prospective (Manager)</th><th ' + TB + '>Prospective Average</th></tr>';
 h += '<tr><td ' + TD + '><strong>' + (d.hasS ? d.selfScore + '%' : '—') + '</strong></td><td ' + TD + '><strong>' + (d.hasM ? d.mgrScore + '%' : '—') + '</strong></td><td ' + TD + '><strong>' + ((d.hasS && d.hasM) ? d.avgScore + '%' : '—') + '</strong></td><td ' + TD + '><strong>' + (d.hasPS ? d.psScore + '%' : '—') + '</strong></td><td ' + TD + '><strong>' + (d.hasP ? d.prospScore + '%' : '—') + '</strong></td><td ' + TD + '><strong>' + ((d.hasPS && d.hasP) ? d.psAvg + '%' : '—') + '</strong></td></tr></table>';
 h += '<table style="width:100%;border-collapse:collapse;font-size:11px;margin:8px 0"><tr><th ' + TB + '>Competency</th><th ' + TB + '>Self</th><th ' + TB + '>Manager</th><th ' + TB + '>Average</th><th ' + TB + '>Prosp Self</th><th ' + TB + '>Prosp Mgr</th><th ' + TB + '>Prosp Avg</th></tr>';
 d.compRows.forEach(function(r){ h += '<tr><td ' + TDL + '>' + esc(r.name) + '</td><td ' + TD + '>' + cell(r.s) + '</td><td ' + TD + '>' + cell(r.m) + '</td><td ' + TD + '>' + cell(r.a) + '</td><td ' + TD + '>' + cell(r.ps) + '</td><td ' + TD + '>' + cell(r.pm) + '</td><td ' + TD + '>' + cell(r.pa) + '</td></tr>'; });
@@ -3592,7 +3666,8 @@ html += '<p style="font-size:12px;color:var(--gray-500)">' + escapeHtml(d.emp.po
 html += '<div class="card-subtitle" style="margin-top:10px">CURRENT ROLE</div><div class="score-rings">';
 if (d.hasS) html += makeRing(d.selfScore, '#2563eb', 'Self (Current)');
 if (d.hasM) html += makeRing(d.mgrScore, '#059669', 'Manager (Current)');
-if (d.hasS && d.hasM) html += makeRing(d.avgScore, '#ea580c', 'Final Average');
+if (d.hasS && d.hasM) html += makeRing(d.avgScore, '#ea580c', 'Current Decision (70/30)');
+else html += '<p>' + currentRoleWaiting(d.hasS,d.hasM) + '</p>';
 html += '</div>';
 if (d.hasPS || d.hasP) {
 html += '<div class="card-subtitle">PROSPECTIVE ROLE</div><div class="score-rings">';
@@ -3621,6 +3696,7 @@ box.innerHTML = html;
 if (d.ex && d.ex.suggested_path) { var psSel = document.getElementById('hohrPath'); var found = false; for (var oi = 0; oi < psSel.options.length; oi++) { if (psSel.options[oi].text === d.ex.suggested_path) { found = true; break; } } if (!found) { var no = document.createElement('option'); no.text = d.ex.suggested_path; psSel.add(no); } psSel.value = d.ex.suggested_path; }
 }
 async function saveHOHRReport(empId, draftOnly) {
+if (!draftOnly && !await requireCurrentRolePair(empId)) return;
 var s = document.getElementById('hohrStrengths').value;
 var g = document.getElementById('hohrGaps').value;
 var rec = document.getElementById('hohrRec').value;
@@ -3852,6 +3928,7 @@ html += '</div></div>';
 setContent(html);
 }
 async function decideReportChain(id, decision) {
+if (!await requireReportPair('report_chain',id)) return;
 var c = document.getElementById('rcc-' + id); var comment = c ? c.value.trim() : '';
 if (decision === 'Returned' && !comment) { showToast('Comment required when returning'); return; }
 const { data: r } = await _supabase.from('report_chain').select('*').eq('id', id).single();
@@ -3946,7 +4023,7 @@ var totalAssessed = assessedList.length;
 var mgrAvg = totalAssessed ? Math.round(assessedList.reduce(function(a,e){ return a + empStats[e.employee_id].mgrScore; }, 0) / totalAssessed) : 0;
 var selfList = assessedList.filter(function(e){ return empStats[e.employee_id].hasS; });
 var empAvg = selfList.length ? Math.round(selfList.reduce(function(a,e){ return a + empStats[e.employee_id].selfScore; }, 0) / selfList.length) : 0;
-var finalAvg = selfList.length ? Math.round((empAvg + mgrAvg) / 2) : mgrAvg;
+var finalAvg = pairedCurrentAverage(assessedList, empStats);
 var dist = { a: 0, b: 0, c: 0, d: 0 };
 assessedList.forEach(function(e){ var s = empStats[e.employee_id].mgrScore; if (s >= 81) dist.a++; else if (s >= 71) dist.b++; else if (s >= 61) dist.c++; else dist.d++; });
 function pctOf(n){ return totalAssessed ? Math.round((n / totalAssessed) * 100) : 0; }
@@ -3986,7 +4063,7 @@ html += '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(2
 html += '<div class="cs-stat"><div class="lbl">Total Assessed</div><div class="num" style="color:var(--primary)">' + totalAssessed + '</div><div class="sub" style="color:var(--green)">' + (empRows.length ? Math.round((totalAssessed / empRows.length) * 100) : 0) + '% of staff</div></div>';
 html += '<div class="cs-stat"><div class="lbl">Employee Average</div><div class="num" style="color:#2563eb">' + empAvg + '%</div><div class="sub" style="color:var(--gray-500)">Self-assessment average</div></div>';
 html += '<div class="cs-stat"><div class="lbl">Manager Average</div><div class="num" style="color:var(--green)">' + mgrAvg + '%</div><div class="sub" style="color:var(--gray-500)">Manager-rated average</div></div>';
-html += '<div class="cs-stat"><div class="lbl">Final Average</div><div class="num" style="color:var(--orange)">' + finalAvg + '%</div><div class="sub" style="color:var(--gray-500)">(Employee + Manager) ÷ 2</div></div>';
+html += '<div class="cs-stat"><div class="lbl">Current Role Decision Average</div><div class="num" style="color:var(--orange)">' + currentRoleScoreText(finalAvg) + '</div><div class="sub" style="color:var(--gray-500)">70% Manager + 30% Self; ' + selfList.length + ' complete pairs. Incomplete pairs excluded.</div></div>';
 html += '<div class="cs-stat"><div class="lbl">Succession Ready</div><div class="num" style="color:var(--orange)">' + succReady + '%</div><div class="sub" style="color:' + (succReady >= 40 ? 'var(--green)' : 'var(--red)') + '">' + (succReady - 40) + '% vs target (40%)</div></div>';
 html += '<div class="cs-stat"><div class="lbl">Critical Gaps</div><div class="num" style="color:var(--purple)">' + gapRows.filter(function(g){ return g.pct > 0; }).length + '</div><div class="sub" style="color:var(--gray-500)">Competencies below threshold</div></div>';
 html += '</div>';
@@ -4053,10 +4130,10 @@ var compColors = ['#4338ca','#0d9488','#7c3aed','#ea580c','#2563eb','#db2777']; 
 Object.keys(compAgg).sort(function(a,b){ return (compAgg[b].s / compAgg[b].t) - (compAgg[a].s / compAgg[a].t); }).forEach(function(c){
 var mgrAvgC = Math.round(compAgg[c].s / compAgg[c].t);
 var empAvgC = compAgg[c].st ? Math.round(compAgg[c].ss / compAgg[c].st) : null;
-var finAvgC = empAvgC !== null ? Math.round((empAvgC + mgrAvgC) / 2) : mgrAvgC;
-var w = finAvgC;
+var finAvgC = pairedCurrentAverage(assessedList.filter(function(e){ return companyOf[e.employee_id] === c; }), empStats);
+var w = finAvgC === null ? 0 : finAvgC;
 var col = compColors[ci2++ % compColors.length];
-html += '<div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--gray-100);flex-wrap:wrap"><span style="width:8px;height:8px;border-radius:50%;background:' + col + ';flex:none"></span><span style="flex:1;font-size:12px;font-weight:700">' + escapeHtml(c) + '</span><span style="font-size:11px;color:var(--gray-500)">' + compAgg[c].t + ' assessed</span><span style="font-size:11px;font-weight:700;color:#2563eb">Employee ' + (empAvgC !== null ? empAvgC + '%' : '—') + '</span><span style="font-size:11px;font-weight:700;color:var(--green)">Manager ' + mgrAvgC + '%</span><span style="font-size:12px;font-weight:800;color:' + col + '">Final ' + finAvgC + '%</span><div style="width:110px;height:5px;background:var(--gray-200);border-radius:3px;overflow:hidden;flex:none"><div style="width:' + w + '%;height:100%;background:' + col + '"></div></div></div>';
+html += '<div class="exp-item"><strong>' + escapeHtml(c) + '</strong><p>Manager: ' + mgrAvgC + '% | Self: ' + (empAvgC === null ? 'Awaiting' : empAvgC + '%') + '</p><p>Current-role decision average: ' + currentRoleScoreText(finAvgC) + ' (' + compAgg[c].st + ' complete pairs; 70% Manager + 30% Self)</p></div>';
 });
 if (!Object.keys(compAgg).length) html += '<p style="font-size:12px;color:var(--gray-500);margin-top:10px">No assessed staff yet.</p>';
 html += '</div></div>';
@@ -4074,6 +4151,7 @@ document.querySelectorAll('.cs-pill').forEach(function(p){ p.classList.toggle('a
 document.querySelectorAll('.cs-section').forEach(function(s){ s.style.display = (s.getAttribute('data-tab') === name) ? '' : 'none'; });
 }
 async function decideReportChain(id, decision) {
+if (!await requireReportPair('report_chain',id)) return;
 var c = document.getElementById('rcc-' + id); var comment = c ? c.value.trim() : '';
 if (decision === 'Returned' && !comment) { showToast('Comment required when returning'); return; }
 const { data: r } = await _supabase.from('report_chain').select('*').eq('id', id).single();
@@ -4142,7 +4220,7 @@ var totalAssessed = assessedList.length;
 var mgrAvg = totalAssessed ? Math.round(assessedList.reduce(function(a,e){ return a + empStats[e.employee_id].mgrScore; }, 0) / totalAssessed) : 0;
 var selfList = assessedList.filter(function(e){ return empStats[e.employee_id].hasS; });
 var empAvg = selfList.length ? Math.round(selfList.reduce(function(a,e){ return a + empStats[e.employee_id].selfScore; }, 0) / selfList.length) : 0;
-var finalAvg = selfList.length ? Math.round((empAvg + mgrAvg) / 2) : mgrAvg;
+var finalAvg = pairedCurrentAverage(assessedList, empStats);
 var dist = { a: 0, b: 0, c: 0, d: 0 };
 assessedList.forEach(function(e){ var s = empStats[e.employee_id].mgrScore; if (s >= 81) dist.a++; else if (s >= 71) dist.b++; else if (s >= 61) dist.c++; else dist.d++; });
 function pctOf(n){ return totalAssessed ? Math.round((n / totalAssessed) * 100) : 0; }
@@ -4182,7 +4260,7 @@ html += '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(2
 html += '<div class="cs-stat"><div class="lbl">Total Assessed</div><div class="num" style="color:var(--primary)">' + totalAssessed + '</div><div class="sub" style="color:var(--green)">' + (empRows.length ? Math.round((totalAssessed / empRows.length) * 100) : 0) + '% of staff</div></div>';
 html += '<div class="cs-stat"><div class="lbl">Employee Average</div><div class="num" style="color:#2563eb">' + empAvg + '%</div><div class="sub" style="color:var(--gray-500)">Self-assessment average</div></div>';
 html += '<div class="cs-stat"><div class="lbl">Manager Average</div><div class="num" style="color:var(--green)">' + mgrAvg + '%</div><div class="sub" style="color:var(--gray-500)">Manager-rated average</div></div>';
-html += '<div class="cs-stat"><div class="lbl">Final Average</div><div class="num" style="color:var(--orange)">' + finalAvg + '%</div><div class="sub" style="color:var(--gray-500)">(Employee + Manager) ÷ 2</div></div>';
+html += '<div class="cs-stat"><div class="lbl">Current Role Decision Average</div><div class="num" style="color:var(--orange)">' + currentRoleScoreText(finalAvg) + '</div><div class="sub" style="color:var(--gray-500)">70% Manager + 30% Self; ' + selfList.length + ' complete pairs. Incomplete pairs excluded.</div></div>';
 html += '<div class="cs-stat"><div class="lbl">Succession Ready</div><div class="num" style="color:var(--orange)">' + succReady + '%</div><div class="sub" style="color:' + (succReady >= 40 ? 'var(--green)' : 'var(--red)') + '">' + (succReady - 40) + '% vs target (40%)</div></div>';
 html += '<div class="cs-stat"><div class="lbl">Critical Gaps</div><div class="num" style="color:var(--purple)">' + gapRows.filter(function(g){ return g.pct > 0; }).length + '</div><div class="sub" style="color:var(--gray-500)">Competencies below threshold</div></div>';
 html += '</div>';
@@ -4249,10 +4327,10 @@ var compColors = ['#4338ca','#0d9488','#7c3aed','#ea580c','#2563eb','#db2777']; 
 Object.keys(compAgg).sort(function(a,b){ return (compAgg[b].s / compAgg[b].t) - (compAgg[a].s / compAgg[a].t); }).forEach(function(c){
 var mgrAvgC = Math.round(compAgg[c].s / compAgg[c].t);
 var empAvgC = compAgg[c].st ? Math.round(compAgg[c].ss / compAgg[c].st) : null;
-var finAvgC = empAvgC !== null ? Math.round((empAvgC + mgrAvgC) / 2) : mgrAvgC;
-var w = finAvgC;
+var finAvgC = pairedCurrentAverage(assessedList.filter(function(e){ return companyOf[e.employee_id] === c; }), empStats);
+var w = finAvgC === null ? 0 : finAvgC;
 var col = compColors[ci2++ % compColors.length];
-html += '<div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--gray-100);flex-wrap:wrap"><span style="width:8px;height:8px;border-radius:50%;background:' + col + ';flex:none"></span><span style="flex:1;font-size:12px;font-weight:700">' + escapeHtml(c) + '</span><span style="font-size:11px;color:var(--gray-500)">' + compAgg[c].t + ' assessed</span><span style="font-size:11px;font-weight:700;color:#2563eb">Employee ' + (empAvgC !== null ? empAvgC + '%' : '—') + '</span><span style="font-size:11px;font-weight:700;color:var(--green)">Manager ' + mgrAvgC + '%</span><span style="font-size:12px;font-weight:800;color:' + col + '">Final ' + finAvgC + '%</span><div style="width:110px;height:5px;background:var(--gray-200);border-radius:3px;overflow:hidden;flex:none"><div style="width:' + w + '%;height:100%;background:' + col + '"></div></div></div>';
+html += '<div class="exp-item"><strong>' + escapeHtml(c) + '</strong><p>Manager: ' + mgrAvgC + '% | Self: ' + (empAvgC === null ? 'Awaiting' : empAvgC + '%') + '</p><p>Current-role decision average: ' + currentRoleScoreText(finAvgC) + ' (' + compAgg[c].st + ' complete pairs; 70% Manager + 30% Self)</p></div>';
 });
 if (!Object.keys(compAgg).length) html += '<p style="font-size:12px;color:var(--gray-500);margin-top:10px">No assessed staff yet.</p>';
 html += '</div></div>';
@@ -4266,6 +4344,7 @@ html += '<p style="font-size:11px;color:var(--gray-500);margin-top:10px">Direct 
 setContent(html);
 }
 async function finalizeReport(id) {
+if (!await requireReportPair('report_chain',id)) return;
 var c = document.getElementById('fin-' + id);
 var comment = c ? c.value.trim() : '';
 const { data: r } = await _supabase.from('report_chain').select('*').eq('id', id).single();
@@ -4287,6 +4366,7 @@ showToast('✅ Finalized — HR Admin and Line Manager notified (employee not no
 loadHOHRReports();
 }
 async function decideCSReport(id, decision) {
+if (!await requireReportPair('report_chain',id)) return;
 var c = document.getElementById('csc-' + id); var comment = c ? c.value.trim() : '';
 const { data: r } = await _supabase.from('report_chain').select('*').eq('id', id).single();
 if (!r) return;
@@ -4652,6 +4732,7 @@ h += '<p style="font-size:12px">Suggested path: <strong>' + escapeHtml(r.suggest
 box.innerHTML = h;
 }
 async function sendDraftToHOHR(id) {
+if (!await requireReportPair('report_chain',id)) return;
 const { data: r } = await _supabase.from('report_chain').select('*').eq('id', id).single();
 if (!r) return;
 if (r.status === 'Pending' || r.status === 'Escalated') { showToast('Already with ' + r.stage); return; }
@@ -4701,7 +4782,7 @@ html += '<tr><td style="font-size:11px;white-space:nowrap"><strong>' + escapeHtm
 html += '<td style="font-size:11px">' + escapeHtml(emp.position) + '</td>';
 html += '<td>' + (sS !== null ? '<strong>' + sS + '%</strong>' : '<span style="color:var(--gray-400)">—</span>') + '</td>';
 html += '<td>' + (sM !== null ? '<strong>' + sM + '%</strong>' : '<span style="color:var(--gray-400)">—</span>') + '</td>';
-html += '<td>' + ((sS !== null && sM !== null) ? '<strong style="color:' + (Math.round((sS + sM) / 2) >= 80 ? 'var(--green)' : 'var(--primary)') + '">' + Math.round((sS + sM) / 2) + '%</strong>' : '<span style="color:var(--gray-400)">—</span>') + '</td>';
+html += '<td>' + ((sS !== null && sM !== null) ? '<strong>' + currentRoleDecision(sS, sM, true, true) + '%</strong>' : escapeHtml(currentRoleWaiting(hasS, hasM))) + '</td>';
 html += '<td>' + (sPS !== null ? '<strong style="color:var(--purple)">' + sPS + '%</strong>' : '<span style="color:var(--gray-400)">—</span>') + '</td>';
 html += '<td>' + (sP !== null ? '<strong>' + sP + '%</strong>' : '<span style="color:var(--gray-400)">—</span>') + '</td>';
 html += '<td>' + (sPA !== null ? '<strong style="color:var(--orange)">' + sPA + '%</strong>' : '<span style="color:var(--gray-400)">—</span>') + '</td>';
@@ -4713,6 +4794,7 @@ setContent(html);
 if (APP.hrAllTarget) { var t = APP.hrAllTarget; APP.hrAllTarget = null; loadHRAllDetail(t); }
 }
 function decisionBadge(empId, sS, sM, sPS, sP, sPA, decisionOf) {
+if (sS === null || sM === null) return '<span class="badge badge-warning">' + currentRoleWaiting(sS !== null, sM !== null) + '</span>';
 var org = (decisionOf || {})[empId] || '';
 if (org && org !== 'Draft') {
 if (org === 'Pending') return '<span class="badge badge-warning">📋 In HOHR review</span>';
@@ -4727,7 +4809,7 @@ if (sPA >= 61) return '<span class="badge badge-warning">📚 IDP 12 months</spa
 return '<span class="badge badge-danger">⚠️ Performance plan</span>';
 }
 if (sS !== null && sM !== null) {
-var fa = Math.round((sS + sM) / 2);
+var fa = currentRoleDecision(sS, sM, true, true);
 if (fa >= 80) return '<span class="badge badge-purple">🎯 Assess prospective role</span>';
 if (fa >= 71) return '<span class="badge badge-info">🌱 Refine — reassess in 6m</span>';
 if (fa >= 61) return '<span class="badge badge-warning">📚 Development plan</span>';
@@ -4754,6 +4836,7 @@ if (chain && chain.length) html += '<div style="margin-top:6px"><span class="bad
 html += '<div class="score-rings">';
 if (hasS) html += makeRing(calculateOverallScore(empId, 'Self', fr), '#3b82f6', 'Self (latest)');
 if (hasM) html += makeRing(calculateOverallScore(empId, 'Manager', fr), '#059669', 'Manager (latest)');
+html += '<p>' + escapeHtml(currentRoleSummary(empId,allResults)) + '</p>';
 if (hasP) html += makeRing(calculateOverallScore(empId, 'Prospective', fr), '#7c3aed', 'Prospective (latest)');
 var hasPSd = fr.some(function(r){ return r['Type'] === 'Prospective Self'; });
 if (hasPSd && hasP) html += makeRing(Math.round((calculateOverallScore(empId, 'Prospective Self', fr) + calculateOverallScore(empId, 'Prospective', fr)) / 2), '#9333ea', 'Prospective Avg');
@@ -4811,7 +4894,7 @@ if (psRows.length) out.psScore = calculateOverallScore(empId, 'Prospective Self'
 if (!selfRows.length || !mgrRows.length) return out;
 var hrDone = mgrRows.some(function(r){ return r.hr_status === 'Approved'; }) && !mgrRows.some(function(r){ return r.ticked && (r.hr_status === '' || r.hr_status === 'Pending'); });
 if (!hrDone) return out;
-var avg = Math.round((calculateOverallScore(empId, 'Self', fr) + calculateOverallScore(empId, 'Manager', fr)) / 2);
+var avg = currentRoleDecision(calculateOverallScore(empId, 'Self', fr), calculateOverallScore(empId, 'Manager', fr), selfRows.length > 0, mgrRows.length > 0);
 out.avg = avg;
 out.open = avg >= 80;
 return out;
@@ -5315,11 +5398,11 @@ function kaiLocal(q) {
   function has(w) { return s.indexOf(w) >= 0; }
   if (has('hello') || has('hi ') || s === 'hi' || has('hey')) return 'Hello! Ask me anything about Kenafric CMS.';
   if (has('procedure') || has('process') || has('steps') || (has('how') && has('assessment'))) return 'The assessment process: 1) Employee does Self Assessment (tick experiences, evidence, rate 1-5, attach proof). 2) Line Manager does Current Role assessment. 3) HR Admin reviews each experience (Approve/Return/Disapprove). 4) Scores release when all decisions are done. 5) Final Average of 80%+ unlocks Prospective; 81%+ enters Promotion-Ready Pool.';
-  if (has('promotion') || has('prospective') || has('80%') || has('81')) return 'Promotion path: 1) HR Admin review completed. 2) Final Average (Self + Manager / 2) at 80%+ unlocks Prospective. 3) Score 81%+ on Prospective to enter the Promotion-Ready Pool.';
+  if (has('promotion') || has('prospective') || has('80%') || has('81')) return 'Both current-role assessments are required. After HR review, the current-role decision score (70% Manager + 30% Self) at 80%+ unlocks Prospective. Prospective scoring is unchanged.';
   if (has('redo') || has('re-assess') || has('reassess')) return 'Redo requests: Open Assessment, choose "Current Role Assessment", send a redo request with your reason. HR Admin approves it and the form unlocks for a new round.';
   if (has('approv') && (kaiGetRole() === 'HR Admin' || kaiGetRole() === 'Head of HR')) return 'Assessment Review: Pick the employee, then Approve, Return, or Disapprove each experience. When all decisions are done, scores release automatically.';
   if (has('approv')) return 'Your scores will be visible once HR Admin completes the review of all experiences. Hang tight!';
-  if (has('calculat') || (has('score') && has('how'))) return 'Scoring: Each ticked experience earns (rating / 5) x tier weight. Tiers: Critical (highest), Important, Value-Add. Competency weights: Core 7% each, Functional 12/12/12/12/8/8/8. Final Average = (Self + Manager) / 2.';
+  if (has('calculat') || (has('score') && has('how'))) return 'Current-role decision score = 70% Manager + 30% Self. Both submissions are required; no manager-only fallback. Experience scoring, competency weights and prospective scoring are unchanged.';
   if (has('see my') || has('locked') || has('visible') || has('who can')) return 'You see your own Self score always. Manager scores and Final Average unlock only after HR Admin approves/disapproves ALL experiences. HR Admin and Head of HR see everything.';
   if (has('gap')) return 'Gaps are competencies below 70% in your manager assessment. Strengths are 70%+. They appear once your report is released by HR.';
   if (has('development') || has('idp') || has('plan')) return 'Development Plans: Your manager builds them from your gaps. HR approves. Progress is tracked monthly with due dates.';
@@ -5365,7 +5448,7 @@ async function kaiAnswer(q) {
     + 'ROLES & THEMES: Employee (blue), Line Manager (teal), HR Admin (indigo), Head of HR (gold), C-Suite (navy/gold).\n'
     + 'SELF ASSESSMENT: employee ticks experiences, writes evidence, rates 1-5, attaches proof; one submission; a redo needs an HR-approved redo request.\n'
     + 'MANAGER ASSESSMENT: manager assesses the current role; if already assessed, select "Current Role Assessment" and send a redo request — the form unlocks when HR Admin approves.\n'
-    + 'PROSPECTIVE: unlocks after HR review + FINAL AVERAGE (Self + Manager ÷ 2) ≥ 80%; prospective position must be same level or higher, never the current role; 81%+ on prospective joins the Promotion-Ready Pool.\n'
+    + 'PROSPECTIVE: unlocks after both current-role assessments and HR review, with current-role decision score (70% Manager + 30% Self) >= 80%; prospective position must be same level or higher, never the current role. Prospective scoring remains unchanged.\n'
     + 'SCORING: experiences tiered Critical / Important / Value-Add; points = rating ÷ 5 × tier weight; competency weights total 100% (Core 7% each; Functional 12/12/12/12/8/8/8). Readiness: 81%+ Strong Performer / promotion-eligible; 71-80 Proficient; 61-70 Developing; 51-60 Below Expectations; lower = Critical Gap. Strengths ≥ 70%; Gaps < 70%.\n'
     + 'VISIBILITY: employees & managers see scores only after HR Admin approves/disapproves ALL Self + Manager experiences and completed returns (locked before that). HR Admin & Head of HR see everything.\n'
     + 'HR ADMIN: Assessment Review (approve/return/disapprove each experience), Redo Requests, staff add/delete, competency library, positions & criticality registry, PDF/Excel/Email exports.\n'
@@ -5881,6 +5964,26 @@ return out;
 function frameworkApproved(row) {
 return String(row.approval_status || '').trim().toLowerCase() === 'approved';
 }
+// Shared display order. Sort copies, never the assessment/draft source arrays.
+function competencyDisplayRank(code) {
+var order = ['FC001','FC002','FC003','FC004','FC005','PC001','LC001'];
+var index = order.indexOf(String(code || '').trim().toUpperCase());
+if (index >= 0) return index;
+return String(code || '').trim().toUpperCase().indexOf('CC') === 0 ? 8 : 7;
+}
+function compareCompetencyDisplay(a, b) {
+var rank = competencyDisplayRank(a) - competencyDisplayRank(b);
+if (rank) return rank;
+if (a === b) return 0;
+var all = APP.competencies || [];
+var ai = all.findIndex(function(c){ return c.code === a; });
+var bi = all.findIndex(function(c){ return c.code === b; });
+if (ai >= 0 && bi >= 0) return ai - bi;
+return String(a || '').localeCompare(String(b || ''), undefined, {numeric:true});
+}
+function orderedCompetencies() {
+return (APP.competencies || []).slice().sort(function(a,b){ return compareCompetencyDisplay(a.code,b.code); });
+}
 function frameworkHR() {
 return !!(APP.user && APP.user.modes && APP.user.modes.isAdmin && APP.currentRole === 'hr');
 }
@@ -5899,7 +6002,7 @@ var data = await Promise.all([allRows('competencies'), allRows('experiences')]);
 APP.competencies = data[0]; APP.experiences = data[1];
 }
 function frameworkRows(review) {
-return (APP.experiences || []).filter(function(x){ return review ? !frameworkApproved(x) : frameworkApproved(x); });
+return (APP.experiences || []).filter(function(x){ return review ? !frameworkApproved(x) : frameworkApproved(x); }).sort(function(a,b){ return compareCompetencyDisplay(a.comp_code,b.comp_code); });
 }
 async function loadHRComp() { return openFrameworkPage(false); }
 async function loadHRCompApprovals() { return openFrameworkPage(true); }
@@ -5940,19 +6043,41 @@ function renderFrameworkRows() {
 var page = document.getElementById('frameworkPage'); if (!page || !frameworkHR()) return;
 var review = page.dataset.review === 'true';
 var dep = document.getElementById('fwDep').value, pos = document.getElementById('fwPos').value;
-var rows = frameworkRows(review).filter(function(x){ return (!dep || sameText(x.department, dep)) && (!pos || sameText(x.position_name, pos)); });
+var rows = frameworkRows(review).filter(function(x){ return String(x.comp_code || '').toUpperCase().indexOf('CC') === 0 || ((!dep || sameText(x.department, dep)) && (!pos || sameText(x.position_name, pos))); });
 var h = '<p style="font-weight:700;margin-bottom:12px">' + rows.length + (review ? ' experiences awaiting review' : ' approved experiences') + '</p>';
 if (!rows.length) h += '<p>' + (review ? 'Nothing awaiting review for these filters.' : 'No approved experiences for these filters yet.') + '</p>';
+var groups = new Map();
 rows.forEach(function(x) {
-var meta = (APP.competencies || []).find(function(c){ return c.code === x.comp_code; });
+if (!groups.has(x.comp_code)) groups.set(x.comp_code, []);
+groups.get(x.comp_code).push(x);
+});
+Array.from(groups.keys()).sort(compareCompetencyDisplay).forEach(function(code) {
+var meta = (APP.competencies || []).find(function(c){ return c.code === code; });
+h += '<section class="competency-block"><div class="competency-header" style="gap:12px;flex-wrap:wrap"><strong class="competency-name">' + escapeHtml(meta ? meta.competency : code) + '</strong>';
+if (meta) h += '<span class="competency-cat">' + escapeHtml(meta.category || '') + ' | Competency weight: ' + weightPct(meta.weight) + '%</span>';
+h += '</div>';
+var scopes = new Map();
+groups.get(code).forEach(function(x) {
+var key = JSON.stringify([(x.department || '').trim().toUpperCase(), (x.position_name || '').trim().toUpperCase()]);
+if (!scopes.has(key)) scopes.set(key, []);
+scopes.get(key).push(x);
+});
+scopes.forEach(function(experiences) {
+var first = experiences[0];
+h += '<p style="margin:12px 0 8px;color:var(--gray-600);font-weight:600">' + escapeHtml(first.department || 'Company-wide Core') + ' · ' + escapeHtml(first.position_name || 'All positions') + '</p>';
+experiences.forEach(function(x) {
 var id = Number(x.id); if (!Number.isSafeInteger(id)) return;
-h += '<div class="competency-block"><div class="competency-header"><strong>' + escapeHtml(meta ? meta.competency : x.comp_code) + '</strong><span class="badge ' + (review ? 'badge-warning' : 'badge-success') + '">' + (review ? 'Needs HR review' : 'Approved') + '</span></div>';
-h += '<p style="margin-bottom:8px;color:var(--gray-600)">' + escapeHtml(x.department || 'Company-wide Core') + ' · ' + escapeHtml(x.position_name || x.competency_level || 'All positions') + (meta ? ' | ' + escapeHtml(meta.category || '') + ' | ' + weightPct(meta.weight) + '%' : '') + '</p>';
+h += '<div class="exp-item">';
 h += '<div class="exp-text" style="font-size:14px">' + escapeHtml(x.experience_text || '') + ' ' + getClassificationBadge(x.classification) + '</div>';
+if (x.competency_level) h += '<span class="badge badge-info">' + escapeHtml(x.competency_level) + '</span> ';
+h += '<span class="badge ' + (review ? 'badge-warning' : 'badge-success') + '">' + (review ? 'Needs HR review' : 'Approved') + '</span>';
 if (review) {
 h += '<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:12px"><button type="button" class="btn btn-outline" onclick="editFrameworkReview(' + id + ')">Edit</button><button type="button" class="btn btn-outline" onclick="aiValidateExpById(' + id + ')">AI Validation</button><button type="button" class="btn btn-outline" onclick="aiRefineExpById(' + id + ')">AI Refine</button><button type="button" class="btn btn-success" onclick="approveFrameworkReview(' + id + ')">Approve</button></div><div id="expai-' + id + '" aria-live="polite"></div>';
 }
 h += '</div>';
+});
+});
+h += '</section>';
 });
 document.getElementById('fwRows').innerHTML = h;
 }
@@ -6075,7 +6200,7 @@ html += '<div class="card"><div class="card-title">Position Competencies — ' +
 var codes = [];
 posExps.forEach(function(x){ if (codes.indexOf(x.comp_code) === -1) codes.push(x.comp_code); });
 if (!codes.length) html += '<p style="color:var(--gray-500)">No position competencies yet.</p>';
-codes.forEach(function(code) {
+codes.sort(compareCompetencyDisplay).forEach(function(code) {
 var meta = APP.competencies.find(function(c){ return c.code === code; }) || {};
 html += compCardMgr(meta, code, posExps.filter(function(x){ return x.comp_code === code; }));
 });
@@ -6551,7 +6676,7 @@ html += '<p style="font-size:11px;color:var(--gray-500);margin-bottom:8px">You m
 var codes = [];
 posExps.forEach(function(x){ if (codes.indexOf(x.comp_code) === -1) codes.push(x.comp_code); });
 if (!codes.length) html += '<p style="color:var(--gray-500)">No position competencies yet.</p>';
-codes.forEach(function(code) {
+codes.sort(compareCompetencyDisplay).forEach(function(code) {
 var meta = APP.competencies.find(function(c){ return c.code === code; }) || {};
 html += compCardHOHR(meta, code, posExps.filter(function(x){ return x.comp_code === code; }), false);
 });
@@ -6685,7 +6810,7 @@ var dep = (document.getElementById('mgrSetDep') || {}).value || (APP.mgrDep || '
 APP.mgrDep = dep;
 var html = '<div class="card"><div class="card-title">Set Experiences — ' + escapeHtml(pos) + ' (' + escapeHtml(dep) + ')</div>';
 html += '<p style="font-size:11px;color:var(--gray-500);margin-bottom:10px">Competency <strong>names, codes and weights are constant</strong> (owned by HR). Under each competency below, type the experiences your role needs and choose <strong>Critical / Important / Value-Add</strong>. They save immediately with an <span class="badge badge-warning">⏳ Awaiting HR Approval</span> badge; HR Admin or Head of HR approves them before they go live in assessments. Minimums: Analytical Thinking, Judgement & Decision Making, Planning, Execution = 3; Continuous Learning, People Skills, Leadership = 2.</p>';
-APP.competencies.filter(function(c){ return (c.code || '').indexOf('CC') !== 0; }).forEach(function(meta) {
+orderedCompetencies().filter(function(c){ return (c.code || '').indexOf('CC') !== 0; }).forEach(function(meta) {
 var exps = (APP.experiences || []).filter(function(x){ return x.comp_code === meta.code && sameText(x.department, dep) && sameText(x.position_name, pos); });
 html += mgrSetCard(meta, exps);
 });
@@ -6810,7 +6935,7 @@ return '<div style="display:flex;gap:8px;margin:8px 0;align-items:flex-start;fle
 function renderMgrSetBlocks(dep, pos) {
 var holder = document.getElementById('mgrSetBlocks'); if (!holder) return;
 var html = '';
-APP.competencies.filter(function(c){ return (c.code || '').indexOf('CC') !== 0; }).forEach(function(meta) {
+orderedCompetencies().filter(function(c){ return (c.code || '').indexOf('CC') !== 0; }).forEach(function(meta) {
 var code = meta.code;
 var existing = (APP.experiences || []).filter(function(x){ return x.comp_code === code && sameText(x.department, dep) && sameText(x.position_name, pos); });
 var min = compMinExps(meta.competency);
@@ -7066,6 +7191,8 @@ t += '<tr><td><strong>Employee</strong></td><td colspan="8">' + escapeHtml(emp.e
 t += '<tr><td><strong>Position</strong></td><td colspan="8">' + escapeHtml(emp.position) + ' | ' + escapeHtml(emp.department || '') + ' | ' + escapeHtml(emp.company || '') + '</td></tr>';
 t += '<tr><td><strong>Line Manager</strong></td><td colspan="8">' + escapeHtml(emp.manager || 'N/A') + '</td></tr>';
 t += '<tr><td><strong>Generated</strong></td><td colspan="8">' + new Date().toLocaleDateString('en-GB') + '</td></tr></table><br>';
+t += '<table><tr><td colspan="5">' + escapeHtml(currentRoleSummary(empId, rows)) + '</td></tr></table>';
+t += '<p>Individual assessment scores below are diagnostic; they are not the combined current-role decision.</p>';
 t += '<table><tr><th>Assessment</th><th>Round</th><th>Date</th><th>Score</th><th>Readiness</th></tr>';
 types.forEach(function(type) {
 var trs = rows.filter(function(r){ return r.type === type; });
@@ -7109,8 +7236,8 @@ var sP = hasP ? calculateOverallScore(emp.employee_id, 'Prospective', fr) : null
 t += '<tr><td>' + escapeHtml(emp.employee_name) + '</td><td>' + escapeHtml(emp.position) + '</td><td>' + escapeHtml(emp.company || '') + '</td>';
 var hasPS = fr.some(function(r){ return r['Type'] === 'Prospective Self'; });
 var sPS = hasPS ? calculateOverallScore(emp.employee_id, 'Prospective Self', fr) : null;
-t += '<td>' + (hasS ? sS + '%' : '') + '</td><td>' + (hasM ? sM + '%' : '') + '</td><td>' + ((hasS && hasM) ? Math.round((sS + sM) / 2) + '%' : '') + '</td><td>' + (hasPS ? sPS + '%' : '') + '</td><td>' + (hasP ? sP + '%' : '') + '</td><td>' + ((hasPS && hasP) ? Math.round((sPS + sP) / 2) + '%' : '') + '</td>';
-t += '<td>' + (hasM ? escapeHtml(getCurrentRoleReadiness(sM).label) : '') + '</td><td>' + (hasP ? escapeHtml(getProspectiveReadiness(sP).label) : '') + '</td></tr>';
+t += '<td>' + (hasS ? sS + '%' : '') + '</td><td>' + (hasM ? sM + '%' : '') + '</td><td>' + ((hasS && hasM) ? currentRoleDecision(sS,sM,hasS,hasM) + '%' : currentRoleWaiting(hasS,hasM)) + '</td><td>' + (hasPS ? sPS + '%' : '') + '</td><td>' + (hasP ? sP + '%' : '') + '</td><td>' + ((hasPS && hasP) ? Math.round((sPS + sP) / 2) + '%' : '') + '</td>';
+t += '<td>' + ((hasS && hasM) ? escapeHtml(getCurrentRoleReadiness(currentRoleDecision(sS,sM,hasS,hasM)).label) : currentRoleWaiting(hasS,hasM)) + '</td><td>' + (hasP ? escapeHtml(getProspectiveReadiness(sP).label) : '') + '</td></tr>';
 });
 t += '</table>';
 downloadXLS('Kenafric_All_Assessments_' + new Date().toISOString().slice(0,10) + '.xls', t);
@@ -7140,7 +7267,7 @@ var html = '<html><head><title>Assessment Report - ' + escapeHtml(emp.employee_n
 '</style></head><body>';
 html += '<h1>Kenafric CMS — Competency Assessment Report</h1>';
 html += '<p class="meta"><strong>' + escapeHtml(emp.employee_name) + '</strong> | ' + escapeHtml(emp.position) + ' | ' + escapeHtml(emp.department || '') + ' | ' + escapeHtml(emp.company || '') + '<br>Line Manager: ' + escapeHtml(emp.manager || 'N/A') + ' | Generated: ' + new Date().toLocaleDateString('en-GB') + '</p>';
-html += '<h2>Summary</h2><table><tr><th>Assessment</th><th>Round</th><th>Date</th><th>Score</th><th>Readiness</th></tr>';
+html += '<h2>Summary</h2><p><strong>' + escapeHtml(currentRoleSummary(empId, rows)) + '</strong></p><p>Individual assessment scores below are diagnostic, not the combined current-role decision.</p><table><tr><th>Assessment</th><th>Round</th><th>Date</th><th>Score</th><th>Readiness</th></tr>';
 types.forEach(function(type) {
 var trs = rows.filter(function(r){ return r.type === type; });
 var rounds = {};
@@ -7195,6 +7322,8 @@ L.push('Line Manager: ' + (emp.manager||'N/A'));
 L.push('Generated: ' + new Date().toLocaleDateString('en-GB'));
 L.push('');
 L.push('=== SUMMARY ===');
+L.push(currentRoleSummary(empId, rows));
+L.push('Individual assessment scores below are diagnostic, not the combined current-role decision.');
 types.forEach(function(type) {
 var trs = rows.filter(function(r){ return r.type === type; });
 var rounds = {};
