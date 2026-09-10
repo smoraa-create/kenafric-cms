@@ -349,9 +349,7 @@ body.role-csuite .cs-pill.active{background:#12365c;border-color:#c9a227;}
 </div>
 <div class="pchat-thread">
 <div class="pchat-msgs" id="pchatMsgs"><p style="font-size:11px;color:var(--gray-500);padding:10px">Select a colleague to start chatting.</p></div>
-<div class="pchat-input"><input id="pchatText" placeholder="Type a message..." onkeydown="if(event.key==='Enter')sendPChat()"><button class="btn btn-primary" onclick="sendPChat()">Send</button></div>
-}
-</div>
+<div class="pchat-input"><input id="pchatText" placeholder="Type a message..." onkeydown="if(event.key==='Enter')sendPChat()"><button class="btn btn-primary" </div>
 </div>
 </div>
 <script>
@@ -7315,20 +7313,6 @@ async function dismissAiFlag(i){
   appendAiValidationCard();
 }
 function sevBadge(s){ s=(s||'low').toLowerCase(); return s==='high'?'badge-danger':(s==='medium'?'badge-warning':'badge-info'); }
-function aiFlagsCardHTML(dep,pos,flags){
-  window._aiFlagLastList=flags;
-  var order={high:0,medium:1,low:2};
-  var open=flags.filter(function(f){ return f.status!=='Dismissed'; }).sort(function(a,b){ return (order[a.severity]||3)-(order[b.severity]||3); });
-  var dism=flags.filter(function(f){ return f.status==='Dismissed'; });
-  var last=(window._aiFlagLastRunMap||{})[dep+'|'+pos] || (flags.length?flags[0].checked_date:'');
-  var h='<div class="card" id="aiFlagCard"><div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap"><div><div class="card-title" style="margin-bottom:2px">🤖 AI Framework Validation — flags only (never edits)</div><div style="font-size:11px;color:var(--gray-500)">Rule checks (minimums, weights, duplicates, format) + AI quality audit. Competencies, weights and experiences are NEVER modified — issues are raised here for HR Admin / Head of HR to decide. Last run: '+(last||'not run yet')+'</div></div><button class="btn btn-primary" onclick="runAiValidation(\''+escapeHtml(dep)+'\',\''+escapeHtml(pos)+'\')">'+(flags.length?'🔄 Re-run AI Validation':'🤖 Run AI Validation')+'</button></div>';
-  if (!flags.length) h+='<p style="font-size:12px;color:var(--green);margin-top:8px">No flags raised'+(last?' — framework validated as compliant ✓':' — run the validation to check this framework.')+'</p>';
-  open.forEach(function(f){ var i=flags.indexOf(f);
-    h+='<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;border:1px solid var(--gray-200);border-left:4px solid '+(f.severity==='high'?'#dc2626':f.severity==='medium'?'#ea580c':'#2563eb')+';border-radius:6px;padding:8px 10px;margin:6px 0;font-size:12px"><span><span class="badge '+sevBadge(f.severity)+'">'+escapeHtml(f.severity||'low')+'</span> <strong>'+escapeHtml(f.check_type||'')+'</strong> <span style="color:var(--gray-500)">· '+escapeHtml(f.comp_code||'')+'</span><div style="margin-top:3px;color:var(--gray-700)">'+escapeHtml(f.message||'')+'</div></span><button class="btn btn-sm btn-outline" style="flex:none" onclick="dismissAiFlag('+i+')">Dismiss</button></div>';
-  });
-if (dism.length) h += '<div style="font-size:11px;color:var(--gray-500);margin-top:8px;border-top:1px dashed var(--gray-200);padding-top:6px"><span style="cursor:pointer;font-weight:700" onclick="var d=document.getElementById(\'aiFlagsDism\');d.style.display=(d.style.display===\'none\'?\'block\':\'none\');">🗑 ' + dism.length + ' dismissed flag(s) — tap to view / hide</span><div id="aiFlagsDism" style="display:none;max-height:160px;overflow:auto;margin-top:6px">' + dism.map(function(f){ return '<div style="font-size:10px;color:var(--gray-500);padding:2px 0;border-bottom:1px solid var(--gray-100)"><strong>' + escapeHtml(f.check_type || '') + '</strong> — ' + escapeHtml((f.message || '').slice(0, 90)) + '</div>'; }).join('') + '</div></div>';
-  return h+'</div>';
-}
 async function appendAiValidationCard(){
   if (!aiValRoles()) return;
   var depEl=document.getElementById('compDep')||document.getElementById('hohrCompDep');
