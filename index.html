@@ -5907,7 +5907,7 @@ exps.forEach(function(x) {
 var pend = (x.approval_status || 'Approved') === 'Pending';
 h += '<div class="exp-item"><div class="exp-text">' + escapeHtml(x.experience_text) + ' ' + getClassificationBadge(x.classification) + aiNoteBadgeExp(x.ai_note) + '</div>';
 h += expAiButtons('x' + x.id, meta.competency, x.id);
-h += '<div style="margin-top:4px;display:flex;gap:6px"><button class="btn btn-sm btn-outline" onclick="editExperience(' + x.id + ')">Edit</button><button class="btn btn-sm btn-danger" onclick="deleteExperience(' + x.id + ')">Delete</button></div></div>';
+h += '<div style="margin-top:4px;display:flex;gap:6px"><button class="btn btn-sm btn-outline" onclick="editExperience(' + x.id + ')">Edit</button><button class="btn btn-sm btn-danger" onclick="deleteExperience(' + x.id + ')">Delete</button></div>' + expAiBtns(x) + '</div>';
 });
 h += '</div>';
 return h;
@@ -6175,7 +6175,7 @@ exps.forEach(function(x) {
 var pend = (x.approval_status || 'Approved') === 'Pending';
 h += '<div class="exp-item"><div class="exp-text">' + escapeHtml(x.experience_text) + ' ' + getClassificationBadge(x.classification) + (isCore ? ' <span class="badge badge-info">' + escapeHtml(x.competency_level || '') + '</span>' : '') + (pend ? ' <span class="badge badge-warning">⏳ Awaiting HR Approval</span>' : '') + aiNoteBadgeExp(x.ai_note) + '</div>';
 h += expAiButtons('x' + x.id, meta.competency, x.id);
-if (canExp && (canComp || pend)) h += '<div style="margin-top:4px;display:flex;gap:6px">' + (pend && canComp && typeof approveExperience === 'function' ? '<button class="btn btn-sm btn-success" onclick="approveExperience(' + x.id + ')">Approve</button>' : '') + '<button class="btn btn-sm btn-outline" onclick="editExperience(' + x.id + ')">Edit</button><button class="btn btn-sm btn-danger" onclick="deleteExperience(' + x.id + ')">Delete</button></div>';
+if (canExp) h += expAiBtns(x);
 h += '</div>';
 });
 if (canExp && !isCore) h += '<div style="margin-top:8px"><button class="btn btn-sm btn-success" onclick="showAddExpFor(\'' + escapeHtml(code) + '\',false)">+ Add Experience</button><div id="addexp-' + escapeHtml(code) + '"></div></div>';
@@ -6249,6 +6249,40 @@ _supabase.from('user_profiles').select('email').eq('role', 'HR_ADMIN').then(func
 });
 }
 function isHRRole(){ return !!(APP.user && (APP.user.modes.isAdmin || APP.user.modes.isHOHR)); }
+/* ===== Per-experience AI Validate & Refine ===== */
+function expAiBtns(x){
+return '<div style="margin-top:4px;display:flex;gap:6px;flex-wrap:wrap"><button type="button" class="btn btn-sm btn-outline" onclick="aiValidateExpById(' + x.id + ')">🤖 Validate</button><button type="button" class="btn btn-sm btn-outline" onclick="aiRefineExpById(' + x.id + ')">✍️ Refine</button></div><div id="expai-' + x.id + '"></div>';
+}
+async function aiValidateExpById(id){
+var row = (APP.experiences || []).find(function(x){ return x.id === id; }); if (!row) return;
+var out = document.getElementById('expai-' + id); if (out) out.innerHTML = '<div style="font-size:11px;color:var(--primary);margin-top:4px">🤖 AI is checking this experience...</div>';
+var prompt = 'You are an HR competency quality auditor. Competency: "' + compNameOf(row.comp_code) + '". Experience statement: "' + (row.experience_text || '') + '". Classification: "' + (row.classification || '') + '". Check: (1) starts with "Has " and is past tense; (2) observable, specific behaviour; (3) measurable / evidence-able; (4) relevant to the competency. Return ONLY valid JSON: {"ok":true,"note":"one short sentence"} or {"ok":false,"note":"one short sentence reason"}. No markdown.';
+try {
+var t = await callAI(prompt, true); if (!t) { if (out) out.innerHTML = ''; showToast('AI unavailable — try again'); return; }
+var s = t.indexOf('{'), e = t.lastIndexOf('}'); if (s >= 0 && e > s) t = t.slice(s, e + 1);
+var o = JSON.parse(t);
+if (out) out.innerHTML = '<div style="font-size:11px;margin-top:4px;padding:6px 8px;border-radius:6px;background:' + (o.ok ? 'var(--green-light)' : 'var(--orange-light)') + ';color:' + (o.ok ? 'var(--green)' : 'var(--orange)') + '">' + (o.ok ? '✅ ' : '⚠️ ') + escapeHtml(o.note || '') + '</div>';
+} catch (err) { if (out) out.innerHTML = ''; showToast('AI validate failed: ' + err.message); }
+}
+async function aiRefineExpById(id){
+var row = (APP.experiences || []).find(function(x){ return x.id === id; }); if (!row) return;
+var out = document.getElementById('expai-' + id); if (out) out.innerHTML = '<div style="font-size:11px;color:var(--primary);margin-top:4px">✍️ AI is refining this experience...</div>';
+var prompt = 'You are a professional HR writing assistant. Competency: "' + compNameOf(row.comp_code) + '". Rewrite this experience statement to be clearer, specific, past tense and starting with "Has ": "' + (row.experience_text || '') + '". STRICT: keep the same meaning and facts; only improve wording; under 200 characters. Return ONLY valid JSON: {"refined":"..."}. No markdown.';
+try {
+var t = await callAI(prompt, true); if (!t) { if (out) out.innerHTML = ''; showToast('AI unavailable — try again'); return; }
+var s = t.indexOf('{'), e = t.lastIndexOf('}'); if (s >= 0 && e > s) t = t.slice(s, e + 1);
+var o = JSON.parse(t); if (!o.refined) { if (out) out.innerHTML = ''; showToast('AI returned nothing usable'); return; }
+window['_expref_' + id] = o.refined;
+if (out) out.innerHTML = '<div style="font-size:11px;margin-top:4px;padding:6px 8px;border-radius:6px;background:var(--primary-light);color:var(--primary-dark)"><strong>✍️ Suggested wording:</strong> ' + escapeHtml(o.refined) + '<div style="display:flex;gap:6px;margin-top:4px"><button type="button" class="btn btn-sm btn-primary" onclick="applyExpRefine(' + id + ')">Use this version</button><button type="button" class="btn btn-sm btn-outline" onclick="document.getElementById(\'expai-' + id + '\').innerHTML=\'\'">Keep mine</button></div></div>';
+} catch (err) { if (out) out.innerHTML = ''; showToast('AI refine failed: ' + err.message); }
+}
+async function applyExpRefine(id){
+var txt = window['_expref_' + id]; if (!txt) return;
+const { error } = await _supabase.from('experiences').update({ experience_text: txt }).eq('id', id);
+if (error) { showToast(error.message); return; }
+showToast('Refined wording saved');
+await refreshCompData(); reloadCompView();
+}
 function approvalBadge(x){ return ((x.approval_status || 'Approved') === 'Pending') ? ' <span class="badge badge-warning">⏳ Awaiting HR Approval</span>' : ''; }
 async function approveExperience(id) {
 if (!APP.user.modes.isAdmin) { showToast('Only HR Admin can approve experiences'); return; }
@@ -6263,7 +6297,7 @@ var pend = (APP.experiences || []).filter(function(x){ return (x.approval_status
 if (!pend.length) return '';
 var h = '<div class="card"><div class="card-title">⏳ Pending Experience Approvals (' + pend.length + ')</div><p style="font-size:11px;color:var(--gray-500);margin-bottom:8px">Manager-saved experiences sit here until you approve them. Approved items go live in assessment forms immediately.</p>';
 pend.forEach(function(x){
-h += '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;border:1px solid var(--gray-200);border-radius:6px;padding:6px 10px;margin:0 0 6px;font-size:12px"><span><strong>' + escapeHtml(compNameOf(x.comp_code)) + '</strong> — ' + escapeHtml(x.experience_text) + ' <span class="badge badge-important">' + escapeHtml(x.classification || '') + '</span><div style="font-size:10px;color:var(--gray-500)">' + escapeHtml(x.position_name || 'Core') + ' · ' + escapeHtml(x.department || '—') + '</div></span><span style="display:flex;gap:6px;flex:none"><button class="btn btn-sm btn-success" onclick="approveExperience(' + x.id + ')">Approve</button><button class="btn btn-sm btn-danger" onclick="deleteExperience(' + x.id + ')">Delete</button></span></div>';
+h += '<div style="border:1px solid var(--gray-200);border-radius:6px;margin:0 0 6px"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px;padding:6px 10px;font-size:12px"><span><strong>' + escapeHtml(compNameOf(x.comp_code)) + '</strong> — ' + escapeHtml(x.experience_text) + ' <span class="badge badge-important">' + escapeHtml(x.classification || '') + '</span><div style="font-size:10px;color:var(--gray-500)">' + escapeHtml(x.position_name || 'Core') + ' · ' + escapeHtml(x.department || '—') + '</div></span><span style="display:flex;gap:6px;flex:none"><button class="btn btn-sm btn-success" onclick="approveExperience(' + x.id + ')">Approve</button><button class="btn btn-sm btn-danger" onclick="deleteExperience(' + x.id + ')">Delete</button></span></div><div style="padding:0 10px 8px">' + expAiBtns(x) + '</div></div>';
 });
 h += '</div>';
 return h;
@@ -6273,7 +6307,7 @@ var h = '<div class="competency-block"><div class="competency-header"><span clas
 exps.forEach(function(x) {
 h += '<div class="exp-item"><div class="exp-text">' + escapeHtml(x.experience_text) + ' ' + getClassificationBadge(x.classification) + (isCore ? ' <span class="badge badge-info">' + escapeHtml(x.competency_level || '') + '</span>' : '') + aiNoteBadgeExp(x.ai_note) + '</div>';
 h += expAiButtons('x' + x.id, meta.competency, x.id);
-h += '<div style="margin-top:4px;display:flex;gap:6px"><button class="btn btn-sm btn-outline" onclick="hohrEditExperience(' + x.id + ')">Edit</button><button class="btn btn-sm btn-danger" onclick="hohrDeleteExperience(' + x.id + ')">Delete</button></div></div>';
+h += '<div style="margin-top:4px;display:flex;gap:6px"><button class="btn btn-sm btn-outline" onclick="hohrEditExperience(' + x.id + ')">Edit</button><button class="btn btn-sm btn-danger" onclick="hohrDeleteExperience(' + x.id + ')">Delete</button></div>' + expAiBtns(x) + '</div>';
 });
 h += '</div>';
 return h;
@@ -6527,7 +6561,7 @@ exps.forEach(function(x) {
 var pend = (x.approval_status || 'Approved') === 'Pending';
 h += '<div class="exp-item"><div class="exp-text">' + escapeHtml(x.experience_text) + ' ' + getClassificationBadge(x.classification) + (pend ? ' <span class="badge badge-warning">⏳ Awaiting HR Approval</span>' : '') + aiNoteBadgeExp(x.ai_note) + '</div>';
 h += expAiButtons('x' + x.id, meta.competency, x.id);
-if (pend) h += '<div style="margin-top:4px;display:flex;gap:6px"><button class="btn btn-sm btn-outline" onclick="editExperience(' + x.id + ')">Edit</button><button class="btn btn-sm btn-danger" onclick="deleteExperience(' + x.id + ')">Delete</button></div>';
+if (pend) h += '<div style="margin-top:4px;display:flex;gap:6px"><button class="btn btn-sm btn-outline" onclick="editExperience(' + x.id + ')">Edit</button><button class="btn btn-sm btn-danger" onclick="deleteExperience(' + x.id + ')">Delete</button></div>' + expAiBtns(x) + '</div>';
 h += '</div>';
 });
 h += '<div style="border-top:1px solid var(--gray-200);margin-top:8px;padding-top:8px"><div class="form-group"><textarea id="mseText-' + escapeHtml(meta.code) + '" rows="2" placeholder="Has ... (past tense, observable, starts with Has)"></textarea></div>';
