@@ -684,6 +684,7 @@ pages = [{id:'cs-reports',label:'Executive Recommendations'}];
 else if (role === 'hr') {
 pages = [{id:'hr-dashboard',label:'Dashboard'},{id:'hr-kpi',label:'KPI Dashboard'},{id:'hr-managers',label:'Line Managers'},{id:'hr-departments',label:'Departments'},{id:'hr-companies',label:'Companies'},{id:'hr-prompool',label:'Promotion-Ready Pool'},{id:'hr-staff',label:'All Employees'},{id:'hr-review',label:'Assessment Review'},{id:'hr-gaps',label:'Employee Gaps'},{id:'hr-devplans',label:'Development Plans'},{id:'hr-all',label:'All Assessments'},{id:'hr-reports',label:'Reports'},{id:'hr-repappr',label:'Report Approvals'},{id:'hr-positions',label:'Positions & Criticality'},{id:'hr-comp',label:'Competency Library'},{id:'hr-redo',label:'Redo Requests'}];
 }
+if (role === 'hr') pages.push({id:'hr-comp-approvals',label:'Competency Approvals & Validation'});
 if (role === 'hr' || role === 'manager' || role === 'hohr') {
 document.body.classList.add('sb-mode');
 sb.style.display = 'block';
@@ -724,6 +725,8 @@ sections = [
 {t:'Approvals & Setup', ids:['mgr-setcomp','mgr-repappr','mgr-comp']}
 ];
 }
+if (role === 'hr') sections[0].ids.push('hr-comp-approvals');
+icons['hr-comp-approvals'] = '✅';
 var brandSub = (role === 'hr') ? 'Competency System' : (role === 'hohr') ? 'Head of HR' : 'Manager View';
 var h = '<div class="sb-brand"><h1>Kenafric <span class="brand-accent">CMS</span></h1><p>' + brandSub + '</p></div>';
 sections.forEach(function(s){
@@ -759,6 +762,7 @@ loadPage(pageId);
 document.querySelectorAll('.sb-item').forEach(function(b) { b.classList.toggle('active', b.getAttribute('data-page') === pageId); });
 }
 function getPageLabel(id) {
+if (id === 'hr-comp-approvals') return 'Competency Approvals & Validation';
 var map = {'emp-profile':'My Profile','emp-selfassess':'Self Assessment','emp-mgrview':'Manager Assessment','emp-gaps':'My Gaps','emp-strengths':'My Strengths','emp-devplans':'Development Plans','mgr-dashboard':'Dashboard','mgr-team':'My Team','mgr-prompool':'Promotion-Ready Pool','mgr-assess':'Assessment','mgr-details':'Assessment Details','mgr-gaps':'Team Gaps','mgr-devplans':'Development Plans','mgr-requests':'Requests','mgr-repappr':'Report Approvals','mgr-setcomp':'Set Competencies','mgr-comp':'Competency Library (View)','hohr-reports':'Report Approvals','hohr-comp':'Competency Library','cs-reports':'Executive Recommendations','hr-dashboard':'Dashboard','hr-kpi':'KPI Dashboard','hr-departments':'Departments','hr-companies':'Companies','hr-prompool':'Promotion-Ready Pool','hr-staff':'All Employees','hr-managers':'Line Managers','hr-review':'Assessment Review','hr-gaps':'Employee Gaps','hr-devplans':'Development Plans','hr-all':'All Assessments','hr-reports':'Reports','hr-repappr':'Report Approvals','hr-comp':'Competency Library','hr-redo':'Redo Requests','hr-positions':'Positions & Criticality'}
 return map[id] || '';
 }
@@ -925,6 +929,7 @@ case 'hr-reports': loadHRReportsHub(); break;
 case 'hr-repappr': loadReportApprovals(); break;
 case 'hr-positions': loadHRPositions(); break;
 case 'hr-comp': loadHRComp(); break;
+case 'hr-comp-approvals': loadHRCompApprovals(); break;
 }
 }
 async function loadEmployeeProfile() {
@@ -1105,7 +1110,7 @@ for (var i = 0; i < APP.experiences.length; i++) {
 var row = APP.experiences[i];
 var code = row.comp_code;
 if (!code) continue;
-if ((row.approval_status || 'Approved') === 'Pending') continue;
+if (!frameworkApproved(row)) continue;
 if (code.indexOf('CC') === 0) {
 if ((row.competency_level || '').trim() === ml && row.experience_text) {
 if (!result[code]) result[code] = [];
@@ -1746,6 +1751,9 @@ async function loadAssessEmp() {
 var empId = document.getElementById('assessEmp').value;
 if (!empId) { document.getElementById('assessForm').innerHTML = ''; return; }
 document.getElementById('assessForm').innerHTML = '<div class="loading"><div class="spinner"></div></div>';
+try { await fetchFrameworkForReview(); }
+catch (err) { showToast('Could not refresh approved experiences. Reselect the employee to retry.'); return; }
+if (!document.getElementById('assessEmp') || document.getElementById('assessEmp').value !== empId) return;
 const { data: emp } = await _supabase.from('employees').select('*').eq('employee_id', empId).single();
 const { data: allResults } = await _supabase.from('assessments').select('*').eq('employee_id', empId);
 var mgrRows = (allResults || []).filter(function(r){ return r.type === 'Manager'; });
@@ -5867,7 +5875,144 @@ var m = window._posRegByDep || {}; var out = {};
 Object.keys(m).forEach(function(k){ if (sameText(k, dep)) out = m[k]; });
 return out;
 }
-async function loadHRComp() {
+/* HR framework split: approved catalogue and a separate review workbench.
+   Retains the app's typography and indigo buttons; green means approved.
+   One row is one experience. No copies, automatic approvals or deletes. */
+function frameworkApproved(row) {
+return String(row.approval_status || '').trim().toLowerCase() === 'approved';
+}
+function frameworkHR() {
+return !!(APP.user && APP.user.modes && APP.user.modes.isAdmin && APP.currentRole === 'hr');
+}
+async function fetchFrameworkForReview() {
+async function allRows(table) {
+var rows = [], start = 0;
+while (true) {
+var result = await _supabase.from(table).select('*').order('id').range(start, start + 499);
+if (result.error) throw result.error;
+rows = rows.concat(result.data || []);
+if (!result.data || result.data.length < 500) return rows;
+start += 500;
+}
+}
+var data = await Promise.all([allRows('competencies'), allRows('experiences')]);
+APP.competencies = data[0]; APP.experiences = data[1];
+}
+function frameworkRows(review) {
+return (APP.experiences || []).filter(function(x){ return review ? !frameworkApproved(x) : frameworkApproved(x); });
+}
+async function loadHRComp() { return openFrameworkPage(false); }
+async function loadHRCompApprovals() { return openFrameworkPage(true); }
+async function openFrameworkPage(review) {
+if (!frameworkHR()) { showToast('Only HR Admin can open this page'); return; }
+var title = review ? 'Competency Approvals & Validation' : 'Competency Library';
+setContent('<div id="frameworkPage" data-review="' + review + '" class="card"><div class="card-title">' + title + '</div><p>Loading the latest framework...</p></div>');
+var page = document.getElementById('frameworkPage');
+try { await fetchFrameworkForReview(); }
+catch (err) { if (document.getElementById('frameworkPage') === page) page.innerHTML = '<p>Could not load the framework. Please reopen this page to retry.</p>'; return; }
+if (document.getElementById('frameworkPage') !== page || !frameworkHR()) return;
+page.innerHTML = '<div class="card-title">' + title + '</div><p style="margin-bottom:14px">' +
+(review ? 'Review manager-submitted experiences here. AI checks wording; HR makes the approval decision.' : 'Approved experiences only. These statements are available for assessment at the matching position or core level.') +
+'</p><div style="display:flex;gap:12px;flex-wrap:wrap"><div style="flex:1;min-width:180px"><label for="fwDep">Department</label><select id="fwDep" onchange="frameworkDepartmentChanged()"></select></div><div style="flex:1;min-width:180px"><label for="fwPos">Position</label><select id="fwPos" onchange="renderFrameworkRows()"></select></div><button type="button" class="btn btn-outline" onclick="refreshFrameworkPage()">Refresh</button></div>' +
+(review ? '<p style="margin-top:12px">Items without an approval status also require review. No experience is approved automatically.</p><button type="button" class="btn btn-primary" style="margin-top:12px" onclick="showPromptManager()">Prompt Manager</button><div id="compTaskList"></div>' : '') +
+'<div id="fwRows" style="margin-top:18px"></div>';
+populateFrameworkFilters('', '');
+if (review) loadCompTaskList();
+}
+function frameworkOptions(values, label, chosen) {
+var unique = Array.from(new Set(values.filter(Boolean))).sort();
+return '<option value="">' + label + '</option>' + unique.map(function(x) {
+return '<option value="' + escapeHtml(x) + '"' + (x === chosen ? ' selected' : '') + '>' + escapeHtml(x) + '</option>';
+}).join('');
+}
+function populateFrameworkFilters(dep, pos) {
+var page = document.getElementById('frameworkPage'); if (!page) return;
+var rows = frameworkRows(page.dataset.review === 'true');
+document.getElementById('fwDep').innerHTML = frameworkOptions(rows.map(function(x){ return (x.department || '').trim(); }), 'All departments (including Core)', dep);
+dep = document.getElementById('fwDep').value;
+document.getElementById('fwPos').innerHTML = frameworkOptions(rows.filter(function(x){ return !dep || sameText(x.department, dep); }).map(function(x){ return (x.position_name || '').trim(); }), 'All positions (including Core)', pos);
+renderFrameworkRows();
+}
+function frameworkDepartmentChanged() {
+populateFrameworkFilters(document.getElementById('fwDep').value, '');
+}
+function renderFrameworkRows() {
+var page = document.getElementById('frameworkPage'); if (!page || !frameworkHR()) return;
+var review = page.dataset.review === 'true';
+var dep = document.getElementById('fwDep').value, pos = document.getElementById('fwPos').value;
+var rows = frameworkRows(review).filter(function(x){ return (!dep || sameText(x.department, dep)) && (!pos || sameText(x.position_name, pos)); });
+var h = '<p style="font-weight:700;margin-bottom:12px">' + rows.length + (review ? ' experiences awaiting review' : ' approved experiences') + '</p>';
+if (!rows.length) h += '<p>' + (review ? 'Nothing awaiting review for these filters.' : 'No approved experiences for these filters yet.') + '</p>';
+rows.forEach(function(x) {
+var meta = (APP.competencies || []).find(function(c){ return c.code === x.comp_code; });
+var id = Number(x.id); if (!Number.isSafeInteger(id)) return;
+h += '<div class="competency-block"><div class="competency-header"><strong>' + escapeHtml(meta ? meta.competency : x.comp_code) + '</strong><span class="badge ' + (review ? 'badge-warning' : 'badge-success') + '">' + (review ? 'Needs HR review' : 'Approved') + '</span></div>';
+h += '<p style="margin-bottom:8px;color:var(--gray-600)">' + escapeHtml(x.department || 'Company-wide Core') + ' · ' + escapeHtml(x.position_name || x.competency_level || 'All positions') + (meta ? ' | ' + escapeHtml(meta.category || '') + ' | ' + weightPct(meta.weight) + '%' : '') + '</p>';
+h += '<div class="exp-text" style="font-size:14px">' + escapeHtml(x.experience_text || '') + ' ' + getClassificationBadge(x.classification) + '</div>';
+if (review) {
+h += '<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:12px"><button type="button" class="btn btn-outline" onclick="editFrameworkReview(' + id + ')">Edit</button><button type="button" class="btn btn-outline" onclick="aiValidateExpById(' + id + ')">AI Validation</button><button type="button" class="btn btn-outline" onclick="aiRefineExpById(' + id + ')">AI Refine</button><button type="button" class="btn btn-success" onclick="approveFrameworkReview(' + id + ')">Approve</button></div><div id="expai-' + id + '" aria-live="polite"></div>';
+}
+h += '</div>';
+});
+document.getElementById('fwRows').innerHTML = h;
+}
+async function refreshFrameworkPage() {
+var page = document.getElementById('frameworkPage'); if (!page || !frameworkHR()) return;
+var dep = document.getElementById('fwDep') ? document.getElementById('fwDep').value : '';
+var pos = document.getElementById('fwPos') ? document.getElementById('fwPos').value : '';
+try {
+await fetchFrameworkForReview();
+if (document.getElementById('frameworkPage') !== page) return;
+populateFrameworkFilters(dep, pos);
+} catch (err) { showToast('Could not refresh the framework. Please try again.'); }
+}
+var frameworkBusy = new Set();
+async function saveFrameworkReview(id, values) {
+if (!frameworkHR()) { showToast('Only HR Admin can review experiences'); return false; }
+var row = (APP.experiences || []).find(function(x){ return x.id === id; });
+if (!row || frameworkApproved(row)) { showToast('This item is no longer pending. Refresh the page.'); return false; }
+if (frameworkBusy.has(id)) return false;
+frameworkBusy.add(id);
+try {
+var query = _supabase.from('experiences').update(values).eq('id', id);
+['approval_status','experience_text','classification','comp_code','department','position_name','competency_level'].forEach(function(key) {
+query = row[key] == null ? query.is(key, null) : query.eq(key, row[key]);
+});
+var result = await query.select('id');
+if (result.error) throw result.error;
+if (!result.data || !result.data.length) { showToast('This experience changed elsewhere. Refresh and review it again.'); return false; }
+Object.assign(row, values);
+showToast(values.approval_status === 'Approved' ? 'Approved: now in the Library and available for assessments.' : 'Saved for HR review.');
+await refreshFrameworkPage();
+return true;
+} catch (err) { showToast('Could not save: ' + (err.message || 'Please retry.')); return false; }
+finally { frameworkBusy.delete(id); }
+}
+async function editFrameworkReview(id) {
+if (!frameworkHR()) return;
+var row = (APP.experiences || []).find(function(x){ return x.id === id; });
+if (!row || frameworkApproved(row)) return;
+var text = prompt('Edit experience statement:', row.experience_text || '');
+if (text === null) return;
+if (!text.trim()) { showToast('Experience text cannot be empty'); return; }
+var cls = prompt('Classification: Must-Have (Critical), Important (Performance Enhancing), or Value-Add (Developmental)', row.classification || '');
+if (cls === null) return;
+if (!cls.trim()) { showToast('Classification is required'); return; }
+await saveFrameworkReview(id, {experience_text:text.trim(),classification:cls.trim()});
+}
+async function approveFrameworkReview(id) {
+var row = (APP.experiences || []).find(function(x){ return x.id === id; });
+if (!row || !frameworkHR()) return;
+if (!(row.experience_text || '').trim() || !(APP.competencies || []).some(function(c){ return c.code === row.comp_code; })) { showToast('The experience needs text and a valid competency before approval.'); return; }
+await saveFrameworkReview(id, {approval_status:'Approved'});
+}
+// Compatibility for existing editor callbacks outside the new workbench.
+async function loadCompPositions() { return legacyLoadCompPositions(); }
+async function loadCompDetail() {
+if (document.getElementById('frameworkPage')) return refreshFrameworkPage();
+if (document.getElementById('compContent')) return legacyLoadCompDetail();
+}
+async function legacyLoadHRComp() {
 setContent('<div class="loading"><div class="spinner"></div>Loading...</div>');
 const { data: emps } = await _supabase.from('employees').select('department, position');
 var deps = {};
@@ -5883,7 +6028,7 @@ html += '<button class="btn btn-outline" onclick="showAddCompetency()">+ Add Com
 setContent(html);
 loadCompTaskList();
 }
-async function loadCompPositions() {
+async function legacyLoadCompPositions() {
 window._coreLevel = null;
 var dep = document.getElementById('compDep').value;
 var sel = document.getElementById('compPos');
@@ -5919,7 +6064,7 @@ h += '<div class="form-group"><label>Competency</label><select id="newExpCode-' 
 h += '<button class="btn btn-primary" onclick="saveNewExperience(\'' + mode + '\')">Save Experience</button></div>';
 return h;
 }
-async function loadCompDetail() {
+async function legacyLoadCompDetail() {
 var dep = document.getElementById('compDep').value;
 var pos = document.getElementById('compPos').value;
 var box = document.getElementById('compContent');
@@ -6226,7 +6371,7 @@ h += '</div>';
 h += '<div style="margin-top:4px;display:flex;gap:6px"><button class="btn btn-sm btn-outline" onclick="aiValidateExp(\'x' + x.id + '\',' + x.id + ',\'\')">🤖 Validate</button><button class="btn btn-sm btn-outline" onclick="aiRefineExp(\'x' + x.id + '\',' + x.id + ',\'\')">✍️ Refine</button></div>';
 return h;
 }
-function reloadCompView() { if (document.getElementById('compContent')) loadCompDetail(); else if (document.getElementById('mgrCompContent')) loadMgrSetCompDetail(); else if (document.getElementById('mgrLibContent')) loadMgrCompDetail(); }
+function reloadCompView() { if (document.getElementById('frameworkPage')) return refreshFrameworkPage(); if (document.getElementById('compContent')) loadCompDetail(); else if (document.getElementById('mgrCompContent')) loadMgrSetCompDetail(); else if (document.getElementById('mgrLibContent')) loadMgrCompDetail(); }
 function compCardRO(meta, exps, isCore) {
 var h = '<div class="competency-block"><div class="competency-header"><span class="competency-name">' + escapeHtml(meta.competency || meta.code) + '</span><span class="competency-cat">' + escapeHtml(meta.category || '') + ' | ' + weightPct(meta.weight) + '%</span></div>';
 exps.forEach(function(x) {
@@ -6276,6 +6421,10 @@ if (out) out.innerHTML = '<div style="font-size:11px;margin-top:4px;padding:6px 
 }
 async function applyExpRefine(id){
 var txt = window['_expref_' + id]; if (!txt) return;
+if (document.getElementById('frameworkPage')) {
+if (await saveFrameworkReview(id, {experience_text:txt})) delete window['_expref_' + id];
+return;
+}
 const { error } = await _supabase.from('experiences').update({ experience_text: txt }).eq('id', id);
 if (error) { showToast(error.message); return; }
 showToast('Refined wording saved');
