@@ -3054,7 +3054,7 @@ document.getElementById('hrRevContent').innerHTML = '<div class="loading"><div c
 const { data: allResultsRaw } = await _supabase.from('assessments').select('*').eq('employee_id', id).in('type', ['Self', 'Manager', 'Prospective Self', 'Prospective']);
 var allResults = latestOnly(allResultsRaw || []);
 var html = roundTable(allResultsRaw || [], 'Self') + roundTable(allResultsRaw || [], 'Manager') + roundTable(allResultsRaw || [], 'Prospective Self') + roundTable(allResultsRaw || [], 'Prospective');
-html += '<div class="card"><div style="font-size:13px;margin-bottom:12px"><strong>' + escapeHtml(emp.employee_name) + '</strong> | ' + escapeHtml(emp.position) + ' | ' + escapeHtml(emp.company) + '</div><button class="btn btn-sm btn-success" onclick="aiReviewPending(\'' + id + '\')">✍️AI Relevance Check — review all evidence before approving</button></div>';
+html += '<div class="card"><div style="font-size:13px;margin-bottom:4px"><strong>' + escapeHtml(emp.employee_name) + '</strong> | ' + escapeHtml(emp.position) + ' | ' + escapeHtml(emp.company) + '</div><div style="font-size:11px;color:var(--gray-500)">🤖 Per‑experience AI: press <strong>Validate</strong> to check ONE evidence for relevance, or <strong>Refine</strong> to get an improved wording (facts unchanged) you can copy into a return comment. The AI chip on each row shows its status.</div></div>';
 ['Self', 'Manager', 'Prospective Self', 'Prospective'].forEach(function(type) {
 var typeRows = allResults.filter(function(r){ return r.type === type; });
 if (!typeRows.length) return;
@@ -3073,14 +3073,16 @@ if (locked) {
 var ok = exp.hr_status === 'Approved';
 html += '<div class="exp-item ' + (ok ? 'ticked' : 'disapproved') + '"><div class="exp-text">' + escapeHtml(exp.experience_text || ('Experience ' + (exp.experience_index+1))) + ' ' + getClassificationBadge(exp.classification) + (notDemo ? ' <span class="badge badge-warning">Not Yet Demonstrated</span>' : '') + '</div>';
 if (exp.ticked && hasEvidence) html += '<div class="exp-evidence mgr-evidence"><strong>Evidence:</strong> ' + escapeHtml(exp.evidence) + '</div>';
-html += '<div style="margin-top:6px"><span class="badge ' + (ok ? 'badge-success' : 'badge-danger') + '">' + escapeHtml(exp.hr_status) + '</span></div>';
+html += '<div style="margin-top:6px"><span class="badge ' + (ok ? 'badge-success' : 'badge-danger') + '">' + escapeHtml(exp.hr_status) + '</span> ' + aiNoteBadge(exp.ai_note) + '</div>';
 if (exp.hr_comment) html += '<div style="font-size:11px;color:var(--gray-500);margin-top:6px">Comment: ' + escapeHtml(exp.hr_comment) + '</div>';
 html += '</div>';
 } else {
 html += '<div class="exp-item ' + (returned ? 'returned' : (exp.ticked && hasEvidence ? 'ticked' : '')) + '"><div class="exp-text">' + escapeHtml(exp.experience_text || ('Experience ' + (exp.experience_index+1))) + ' ' + getClassificationBadge(exp.classification) + (notDemo ? ' <span class="badge badge-warning">Not Yet Demonstrated</span>' : '') + '</div>';
 if (exp.ticked && hasEvidence) html += '<div class="exp-evidence mgr-evidence"><strong>Evidence:</strong> ' + escapeHtml(exp.evidence) + '</div>';
 if (exp.ticked && !hasEvidence) html += '<div style="font-size:11px;color:var(--red);margin-top:4px">Ticked but no evidence — will not count until evidence is added.</div>';
-if (exp.ai_note) { var aiGood = exp.ai_note.indexOf('Relevant ✓') >= 0; html += '<div style="font-size:11px;color:' + (aiGood ? 'var(--green)' : 'var(--orange)') + ';background:' + (aiGood ? 'var(--green-light)' : 'var(--orange-light)') + ';padding:6px 8px;border-radius:4px;margin-top:4px">' + (aiGood ? '✅ ' : '⚠️ ') + escapeHtml(exp.ai_note) + (aiGood ? '' : ' — HR decides: approve anyway or return.') + '</div>'; }
+if (exp.ticked && hasEvidence) {
+html += '<div style="margin-top:6px;display:flex;gap:6px;align-items:center;flex-wrap:wrap">' + aiNoteBadge(exp.ai_note) + '<button type="button" class="btn btn-sm btn-outline" onclick="aiValidateOne(' + exp.id + ')">🤖 Validate</button><button type="button" class="btn btn-sm btn-outline" onclick="aiRefineOne(' + exp.id + ')">✍️ Refine</button></div><div id="airef-' + exp.id + '"></div>';
+} else if (exp.ai_note) { html += '<div style="margin-top:4px">' + aiNoteBadge(exp.ai_note) + '</div>'; }
 if (exp.ticked) {
 html += '<div class="review-actions"><select id="hrs-' + type + '-' + i + '-' + ei + '" onchange="toggleHRComment(this,\'hrc-' + type + '-' + i + '-' + ei + '\')" style="width:auto;padding:4px 8px;font-size:11px"><option value="Approved">Approve</option><option value="Disapproved">Disapprove</option>' + (type === 'Self' ? '' : '<option value="Returned"' + (returned ? ' selected' : '') + '>Return</option>') + '</select>';
 html += '<input id="hrc-' + type + '-' + i + '-' + ei + '" placeholder="Comment required for Disapprove/Return" style="width:auto;flex:1;padding:4px 8px;font-size:11px;' + (returned ? '' : 'display:none') + '" value="' + escapeHtml(returned ? exp.hr_comment : '') + '"></div>';
@@ -5903,8 +5905,9 @@ function compCard(meta, code, exps, isCore) {
 var h = '<div class="competency-block"><div class="competency-header"><span class="competency-name">' + escapeHtml(meta.competency || code) + '</span><span class="competency-cat">' + escapeHtml(meta.category || '') + ' | ' + weightPct(meta.weight) + '% <button class="btn btn-sm btn-outline" onclick="editCompetency(\'' + escapeHtml(code) + '\')">Edit</button> <button class="btn btn-sm btn-danger" onclick="deleteCompetency(\'' + escapeHtml(code) + '\')">Del</button></span></div>';
 exps.forEach(function(x) {
 var pend = (x.approval_status || 'Approved') === 'Pending';
-h += '<div class="exp-item"><div class="exp-text">' + escapeHtml(x.experience_text) + ' ' + getClassificationBadge(x.classification) + approvalBadge(x) + '</div>';
-h += '<div style="margin-top:4px;display:flex;gap:6px">' + (pend ? '<button class="btn btn-sm btn-success" onclick="approveExperience(' + x.id + ')">Approve</button>' : '') + '<button class="btn btn-sm btn-outline" onclick="editExperience(' + x.id + ')">Edit</button><button class="btn btn-sm btn-danger" onclick="deleteExperience(' + x.id + ')">Delete</button></div></div>';
+h += '<div class="exp-item"><div class="exp-text">' + escapeHtml(x.experience_text) + ' ' + getClassificationBadge(x.classification) + aiNoteBadgeExp(x.ai_note) + '</div>';
+h += expAiButtons('x' + x.id, meta.competency, x.id);
+h += '<div style="margin-top:4px;display:flex;gap:6px"><button class="btn btn-sm btn-outline" onclick="editExperience(' + x.id + ')">Edit</button><button class="btn btn-sm btn-danger" onclick="deleteExperience(' + x.id + ')">Delete</button></div></div>';
 });
 h += '</div>';
 return h;
@@ -5927,7 +5930,7 @@ var box = document.getElementById('compContent');
 if (!dep || !pos) { box.innerHTML = ''; return; }
 const { data: appr } = await _supabase.from('comp_approvals').select('*').eq('department', dep).eq('position_name', pos).order('id', { ascending: false }).limit(1);
 var ap = appr && appr.length ? appr[0] : null;
-var html = '<div class="card"><div style="display:flex;justify-content:space-between;align-items:center;gap:10px"><div><div class="card-title" style="margin-bottom:4px">Approval Status</div>';
+var html = pendingExpsCard() + '<div class="card"><div style="display:flex;justify-content:space-between;align-items:center;gap:10px"><div><div class="card-title" style="margin-bottom:4px">Approval Status</div>';
 if (!ap) html += '<span class="badge badge-warning">Not sent for approval</span>';
 else if (ap.status === 'Pending') html += '<span class="badge badge-purple">Pending approval from ' + escapeHtml(ap.assigned_to || 'manager') + ' (sent ' + escapeHtml(ap.requested_date || '') + ')</span>';
 else if (ap.status === 'Approved') html += '<span class="badge badge-success">Approved by ' + escapeHtml(ap.decided_by || 'manager') + ' on ' + escapeHtml(ap.decided_date || '') + '</span>';
@@ -6033,9 +6036,10 @@ h += '<button class="btn btn-primary" onclick="saveCompetency()">Save Competency
 box.innerHTML = h + box.innerHTML;
 }
 function notifyHOHRCompChange(action, detail) {
+if (APP.user.modes.isAdmin) return;
 var NL = String.fromCharCode(10);
-_supabase.from('user_profiles').select('email').eq('role', 'HEAD_HR').then(function(res){
-(res.data || []).forEach(function(u){ sendCMSemail(u.email, 'Competency Library Update: ' + action, detail + NL + 'You can view the full framework under Competency Library in the CMS: ' + APP_LINK); });
+_supabase.from('user_profiles').select('email').eq('role', 'HR_ADMIN').then(function(res){
+(res.data || []).forEach(function(u){ sendCMSemail(u.email, 'Competency Library Update: ' + action, detail + NL + 'You are the approver — review and approve under Competency Library in the CMS: ' + APP_LINK); });
 });
 }
 async function saveCompetency() {
@@ -6100,6 +6104,67 @@ sendCMSemail(e.manager_email, 'CC: ' + pos + ' Competency Framework (for your in
 showToast('Sent for approval');
 loadCompDetail();
 }
+function aiNoteBadgeExp(note){
+note = (note || '').toString(); if (!note) return '';
+if (note.indexOf('OK ✓') >= 0 || note.indexOf('Relevant ✓') >= 0) return ' <span class="badge badge-success">🤖 AI: OK</span>';
+return ' <span class="badge badge-warning">🤖 ' + escapeHtml(note.replace('AI: ','')) + '</span>';
+}
+function expAiButtons(ref, compName, savedId){
+var cn = escapeHtml(compName || '');
+return '<div style="margin-top:4px;display:flex;gap:6px;flex-wrap:wrap"><button type="button" class="btn btn-sm btn-outline" onclick="aiValidateExp(\'' + ref + '\',' + (savedId || 'null') + ',\'' + cn + '\')">🤖 Validate</button><button type="button" class="btn btn-sm btn-outline" onclick="aiRefineExp(\'' + ref + '\',' + (savedId || 'null') + ',\'' + cn + '\')">✍️ Refine</button></div><div id="aiout-' + ref + '"></div>';
+}
+function expTextOf(ref, savedId){
+if (savedId) { var row = (APP.experiences || []).find(function(x){ return x.id === savedId; }); return row ? (row.experience_text || '') : ''; }
+var el = document.getElementById(ref); return el ? (el.value || '') : '';
+}
+async function aiValidateExp(ref, savedId, compName){
+var text = expTextOf(ref, savedId).trim();
+if (!text) { showToast('Nothing to validate — write the experience first'); return; }
+var out = document.getElementById('aiout-' + ref); if (out) out.innerHTML = '<div style="font-size:11px;color:var(--primary);margin-top:4px">🤖 AI is checking...</div>';
+var prompt = 'You are an HR competency quality auditor. Competency: "' + compName + '". Experience statement: "' + text + '". Check: (1) starts with "Has " and is past tense, (2) observable and specific behaviour, (3) measurable / evidence-able. Return ONLY valid JSON: {"ok":true,"note":"one short sentence"} or {"ok":false,"note":"one short sentence reason"}. No markdown.';
+try {
+var t = await callAI(prompt, true);
+if (!t) { if (out) out.innerHTML = ''; showToast('AI unavailable — try again'); return; }
+var clean = t; var s = clean.indexOf('{'); var e2 = clean.lastIndexOf('}');
+if (s >= 0 && e2 > s) clean = clean.substring(s, e2 + 1);
+var o = JSON.parse(clean);
+var note = o.ok ? 'AI: OK ✓' : ('AI: ' + (o.note || 'review needed'));
+if (out) out.innerHTML = '<div style="font-size:11px;margin-top:4px;padding:6px 8px;border-radius:6px;background:' + (o.ok ? 'var(--green-light)' : 'var(--orange-light)') + ';color:' + (o.ok ? 'var(--green)' : 'var(--orange)') + '">' + (o.ok ? '✅ ' : '⚠️ ') + escapeHtml(o.note || '') + '</div>';
+if (savedId) { await _supabase.from('experiences').update({ ai_note: note }).eq('id', savedId); await refreshCompData(); }
+} catch (err) { if (out) out.innerHTML = ''; showToast('AI validate failed: ' + err.message); }
+}
+async function aiRefineExp(ref, savedId, compName){
+var text = expTextOf(ref, savedId).trim();
+if (!text) { showToast('Write the experience first, then refine'); return; }
+var out = document.getElementById('aiout-' + ref); if (out) out.innerHTML = '<div style="font-size:11px;color:var(--primary);margin-top:4px">✍️ AI is refining...</div>';
+var prompt = 'You are a professional HR writing assistant. Competency: "' + compName + '". Rewrite this experience statement to be clearer, specific, past tense and starting with "Has ": "' + text + '". STRICT: keep the same meaning and facts; only improve wording; under 200 characters. Return ONLY valid JSON: {"refined":"..."}. No markdown.';
+try {
+var t = await callAI(prompt, true);
+if (!t) { if (out) out.innerHTML = ''; showToast('AI unavailable — try again'); return; }
+var clean = t; var s = clean.indexOf('{'); var e2 = clean.lastIndexOf('}');
+if (s >= 0 && e2 > s) clean = clean.substring(s, e2 + 1);
+var o = JSON.parse(clean);
+if (!o.refined) { if (out) out.innerHTML = ''; showToast('AI returned nothing usable'); return; }
+window['_refexp_' + ref] = o.refined;
+if (out) out.innerHTML = '<div style="font-size:11px;margin-top:4px;padding:6px 8px;border-radius:6px;background:var(--primary-light);color:var(--primary-dark)"><strong>✍️ Refined:</strong> ' + escapeHtml(o.refined) + '<div style="display:flex;gap:6px;margin-top:4px"><button type="button" class="btn btn-sm btn-primary" onclick="applyRefinedExp(\'' + ref + '\',' + (savedId || 'null') + ')">Use this version</button><button type="button" class="btn btn-sm btn-outline" onclick="document.getElementById(\'aiout-' + ref + '\').innerHTML=\'\'">Keep mine</button></div></div>';
+} catch (err) { if (out) out.innerHTML = ''; showToast('AI refine failed: ' + err.message); }
+}
+async function applyRefinedExp(ref, savedId){
+var txt = window['_refexp_' + ref]; if (!txt) return;
+if (savedId) {
+const { error } = await _supabase.from('experiences').update({ experience_text: txt }).eq('id', savedId);
+if (error) { showToast(error.message); return; }
+notifyHOHRCompChange('Experience refined with AI', 'An experience (id ' + savedId + ') was AI-refined by ' + APP.user.name + '.');
+await refreshCompData();
+if (document.getElementById('compContent')) loadCompDetail();
+else if (document.getElementById('hohrCompContent')) loadHOHRCompDetail();
+else if (document.getElementById('mgrCompContent')) { if (typeof loadMgrSetCompDetail === 'function') loadMgrSetCompDetail(); else loadMgrCompDetail(); }
+} else {
+var el = document.getElementById(ref); if (el) el.value = txt;
+var out = document.getElementById('aiout-' + ref); if (out) out.innerHTML = '';
+showToast('Refined text applied — review then save');
+}
+}
 function compCardFull(meta, code, exps, isCore, role) {
 var canComp = (role === 'hr');
 var canExp = canComp || (role === 'mgr') || (role === 'mgr-set');
@@ -6108,7 +6173,8 @@ if (canComp) h += ' <button class="btn btn-sm btn-outline" onclick="editCompeten
 h += '</span></div>';
 exps.forEach(function(x) {
 var pend = (x.approval_status || 'Approved') === 'Pending';
-h += '<div class="exp-item"><div class="exp-text">' + escapeHtml(x.experience_text) + ' ' + getClassificationBadge(x.classification) + (isCore ? ' <span class="badge badge-info">' + escapeHtml(x.competency_level || '') + '</span>' : '') + (pend ? ' <span class="badge badge-warning">⏳ Awaiting HR Approval</span>' : '') + '</div>';
+h += '<div class="exp-item"><div class="exp-text">' + escapeHtml(x.experience_text) + ' ' + getClassificationBadge(x.classification) + (isCore ? ' <span class="badge badge-info">' + escapeHtml(x.competency_level || '') + '</span>' : '') + (pend ? ' <span class="badge badge-warning">⏳ Awaiting HR Approval</span>' : '') + aiNoteBadgeExp(x.ai_note) + '</div>';
+h += expAiButtons('x' + x.id, meta.competency, x.id);
 if (canExp && (canComp || pend)) h += '<div style="margin-top:4px;display:flex;gap:6px">' + (pend && canComp && typeof approveExperience === 'function' ? '<button class="btn btn-sm btn-success" onclick="approveExperience(' + x.id + ')">Approve</button>' : '') + '<button class="btn btn-sm btn-outline" onclick="editExperience(' + x.id + ')">Edit</button><button class="btn btn-sm btn-danger" onclick="deleteExperience(' + x.id + ')">Delete</button></div>';
 h += '</div>';
 });
@@ -6149,6 +6215,19 @@ h += '<div style="margin-top:4px;display:flex;gap:6px"><button class="btn btn-sm
 h += '</div>';
 return h;
 }
+function expFlagRow(x){
+var fl = (window._compFlags || []).filter(function(f){ return f.ref_id === x.id; });
+var h = '';
+if (fl.length) {
+h += '<div style="margin:4px 0">';
+fl.forEach(function(f){
+h += '<div style="display:flex;justify-content:space-between;gap:8px;align-items:center;border-left:3px solid ' + (String(f.severity).toUpperCase()==='HIGH'?'#dc2626':String(f.severity).toUpperCase()==='MEDIUM'?'#ea580c':'#2563eb') + ';background:var(--gray-50);padding:4px 8px;margin:3px 0;font-size:10px"><span><span class="badge badge-danger">' + escapeHtml(f.severity || '') + '</span> <strong>' + escapeHtml(f.check_type || '') + '</strong> · ' + escapeHtml(f.comp_code || '') + '<div style="color:var(--gray-600)">[AI] ' + escapeHtml(f.message || '') + '</div></span><button class="btn btn-sm btn-outline" onclick="dismissAiFlag(' + f.id + ')">Dismiss</button></div>';
+});
+h += '</div>';
+}
+h += '<div style="margin-top:4px;display:flex;gap:6px"><button class="btn btn-sm btn-outline" onclick="aiValidateExp(\'x' + x.id + '\',' + x.id + ',\'\')">🤖 Validate</button><button class="btn btn-sm btn-outline" onclick="aiRefineExp(\'x' + x.id + '\',' + x.id + ',\'\')">✍️ Refine</button></div>';
+return h;
+}
 function reloadCompView() { if (document.getElementById('compContent')) loadCompDetail(); else if (document.getElementById('mgrCompContent')) loadMgrSetCompDetail(); else if (document.getElementById('mgrLibContent')) loadMgrCompDetail(); }
 function compCardRO(meta, exps, isCore) {
 var h = '<div class="competency-block"><div class="competency-header"><span class="competency-name">' + escapeHtml(meta.competency || meta.code) + '</span><span class="competency-cat">' + escapeHtml(meta.category || '') + ' | ' + weightPct(meta.weight) + '%</span></div>';
@@ -6172,14 +6251,14 @@ _supabase.from('user_profiles').select('email').eq('role', 'HR_ADMIN').then(func
 function isHRRole(){ return !!(APP.user && (APP.user.modes.isAdmin || APP.user.modes.isHOHR)); }
 function approvalBadge(x){ return ((x.approval_status || 'Approved') === 'Pending') ? ' <span class="badge badge-warning">⏳ Awaiting HR Approval</span>' : ''; }
 async function approveExperience(id) {
-if (!isHRRole()) { showToast('Only HR Admin / Head of HR can approve'); return; }
+if (!APP.user.modes.isAdmin) { showToast('Only HR Admin can approve experiences'); return; }
 const { error } = await _supabase.from('experiences').update({ approval_status: 'Approved' }).eq('id', id);
 if (error) { showToast(error.message); return; }
 showToast('✅ Approved — now live in assessments');
 await refreshCompData(); reloadCompView();
 }
 function pendingExpsCard() {
-if (!isHRRole()) return '';
+if (!APP.user.modes.isAdmin) return '';
 var pend = (APP.experiences || []).filter(function(x){ return (x.approval_status || 'Approved') === 'Pending'; });
 if (!pend.length) return '';
 var h = '<div class="card"><div class="card-title">⏳ Pending Experience Approvals (' + pend.length + ')</div><p style="font-size:11px;color:var(--gray-500);margin-bottom:8px">Manager-saved experiences sit here until you approve them. Approved items go live in assessment forms immediately.</p>';
@@ -6192,7 +6271,8 @@ return h;
 function compCardHOHR(meta, code, exps, isCore) {
 var h = '<div class="competency-block"><div class="competency-header"><span class="competency-name">' + escapeHtml(meta.competency || code) + '</span><span class="competency-cat">' + escapeHtml(meta.category || '') + ' | ' + weightPct(meta.weight) + '% <button class="btn btn-sm btn-outline" onclick="hohrEditCompetency(\'' + escapeHtml(code) + '\')">Edit</button> <button class="btn btn-sm btn-danger" onclick="hohrDeleteCompetency(\'' + escapeHtml(code) + '\')">Del</button></span></div>';
 exps.forEach(function(x) {
-h += '<div class="exp-item"><div class="exp-text">' + escapeHtml(x.experience_text) + ' ' + getClassificationBadge(x.classification) + (isCore ? ' <span class="badge badge-info">' + escapeHtml(x.competency_level || '') + '</span>' : '') + '</div>';
+h += '<div class="exp-item"><div class="exp-text">' + escapeHtml(x.experience_text) + ' ' + getClassificationBadge(x.classification) + (isCore ? ' <span class="badge badge-info">' + escapeHtml(x.competency_level || '') + '</span>' : '') + aiNoteBadgeExp(x.ai_note) + '</div>';
+h += expAiButtons('x' + x.id, meta.competency, x.id);
 h += '<div style="margin-top:4px;display:flex;gap:6px"><button class="btn btn-sm btn-outline" onclick="hohrEditExperience(' + x.id + ')">Edit</button><button class="btn btn-sm btn-danger" onclick="hohrDeleteExperience(' + x.id + ')">Delete</button></div></div>';
 });
 h += '</div>';
@@ -6260,7 +6340,7 @@ var deps = {};
 const { data: emps } = await _supabase.from('employees').select('department');
 (emps || []).forEach(function(e){ if (e.department) deps[e.department] = true; });
 var html = '<div class="card"><div class="card-title">Competency Library</div>';
-html += '<p style="font-size:12px;color:var(--gray-500);margin-bottom:12px">View all department competency frameworks. You receive an email automatically whenever HR uploads or updates competencies.</p>';
+html += '<p style="font-size:12px;color:var(--gray-500);margin-bottom:12px">View all department competency frameworks. Experience approvals are handled by HR Admin; Head of HR keeps edit rights, with every change automatically notified to HR Admin.</p>';
 html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px"><div class="form-group"><label>Department</label><select id="hohrCompDep" onchange="loadHOHRCompPositions()"><option value="">-- Select --</option>' + Object.keys(deps).sort().map(function(d){ return '<option>' + escapeHtml(d) + '</option>'; }).join('') + '</select></div>';
 html += '<div class="form-group"><label>Position</label><select id="hohrCompPos" onchange="loadHOHRCompDetail()"><option value="">-- Select --</option></select></div></div>';
 html += '<button class="btn btn-primary" onclick="showPromptManager()">📤 Prompt Manager to Set Competencies</button></div><div id="compTaskList"></div><div id="hohrCompContent"></div>';
@@ -6285,7 +6365,7 @@ var pos = document.getElementById('hohrCompPos').value;
 var box = document.getElementById('hohrCompContent');
 if (!dep || !pos) { box.innerHTML = ''; return; }
 var posExps = (APP.experiences || []).filter(function(x){ return sameText(x.department, dep) && sameText(x.position_name, pos) && (x.comp_code || '').indexOf('CC') !== 0; });
-var html = pendingExpsCard() + '<div class="card"><div class="card-title">Position Competencies — ' + escapeHtml(pos) + ' (' + escapeHtml(dep) + ')</div>';
+var html = '<div class="card"><div class="card-title">Position Competencies — ' + escapeHtml(pos) + ' (' + escapeHtml(dep) + ')</div>';
 html += '<p style="font-size:11px;color:var(--gray-500);margin-bottom:8px">You may edit or delete below — every change automatically notifies HR Admin with exactly what changed.</p>';
 var codes = [];
 posExps.forEach(function(x){ if (codes.indexOf(x.comp_code) === -1) codes.push(x.comp_code); });
@@ -6445,12 +6525,14 @@ var h = '<div class="competency-block"><div class="competency-header"><span clas
 if (min > 0) h += '<div style="font-size:10px;font-weight:800;margin-bottom:6px;color:' + (exps.length >= min ? 'var(--green)' : 'var(--red)') + '">MINIMUM ' + min + ' EXPERIENCES — currently ' + exps.length + '</div>';
 exps.forEach(function(x) {
 var pend = (x.approval_status || 'Approved') === 'Pending';
-h += '<div class="exp-item"><div class="exp-text">' + escapeHtml(x.experience_text) + ' ' + getClassificationBadge(x.classification) + (pend ? ' <span class="badge badge-warning">⏳ Awaiting HR Approval</span>' : '') + '</div>';
+h += '<div class="exp-item"><div class="exp-text">' + escapeHtml(x.experience_text) + ' ' + getClassificationBadge(x.classification) + (pend ? ' <span class="badge badge-warning">⏳ Awaiting HR Approval</span>' : '') + aiNoteBadgeExp(x.ai_note) + '</div>';
+h += expAiButtons('x' + x.id, meta.competency, x.id);
 if (pend) h += '<div style="margin-top:4px;display:flex;gap:6px"><button class="btn btn-sm btn-outline" onclick="editExperience(' + x.id + ')">Edit</button><button class="btn btn-sm btn-danger" onclick="deleteExperience(' + x.id + ')">Delete</button></div>';
 h += '</div>';
 });
 h += '<div style="border-top:1px solid var(--gray-200);margin-top:8px;padding-top:8px"><div class="form-group"><textarea id="mseText-' + escapeHtml(meta.code) + '" rows="2" placeholder="Has ... (past tense, observable, starts with Has)"></textarea></div>';
 h += '<div class="form-group"><label>Classification</label><select id="mseClass-' + escapeHtml(meta.code) + '"><option>Must-Have (Critical)</option><option>Important (Performance Enhancing)</option><option>Value-Add (Developmental)</option></select></div>';
+h += expAiButtons('mseText-' + escapeHtml(meta.code), meta.competency, null);
 h += '<button class="btn btn-sm btn-primary" onclick="saveMgrExp(\'' + escapeHtml(meta.code) + '\')">+ Add Experience</button></div>';
 h += '</div>';
 return h;
@@ -6541,7 +6623,8 @@ renderMgrSetBlocks(dep, pos);
 restoreMgrSetDraft(dep, pos);
 }
 function mgrSlotRow(code, idx) {
-return '<div style="display:flex;gap:8px;margin:8px 0;align-items:flex-start"><textarea id="mset-' + code + '-' + idx + '" rows="2" placeholder="Has ... (past tense, observable, starts with Has)" style="flex:1"></textarea><select id="msetc-' + code + '-' + idx + '" style="width:200px;flex:none"><option value="Must-Have (Critical)">🔴 Critical</option><option value="Important (Performance)" selected>🟠 Important</option><option value="Value-Add (Developmental)">🟢 Value-Add</option></select></div>';
+var ref = 'mset-' + code + '-' + idx;
+return '<div style="display:flex;gap:8px;margin:8px 0;align-items:flex-start;flex-wrap:wrap"><textarea id="' + ref + '" rows="2" placeholder="Has ... (past tense, observable, starts with Has)" style="flex:1;min-width:200px"></textarea><select id="msetc-' + code + '-' + idx + '" style="width:200px;flex:none"><option value="Must-Have (Critical)">🔴 Critical</option><option value="Important (Performance)" selected>🟠 Important</option><option value="Value-Add (Developmental)">🟢 Value-Add</option></select><div style="width:100%">' + expAiButtons(ref, compNameOf(code), null) + '</div></div>';
 }
 function renderMgrSetBlocks(dep, pos) {
 var holder = document.getElementById('mgrSetBlocks'); if (!holder) return;
@@ -6555,7 +6638,9 @@ html += '<div class="competency-block"><div class="competency-header"><span clas
 if (min > 0) html += '<div style="font-size:10px;font-weight:800;margin-bottom:6px;color:' + (existing.length >= min ? 'var(--green)' : 'var(--red)') + '">REQUIRED ' + min + ' EXPERIENCES — already saved: ' + existing.length + ' | to fill now: ' + req + '</div>';
 existing.forEach(function(x){
 var pend = (x.approval_status || 'Approved') === 'Pending';
-html += '<div class="exp-item ' + (pend ? 'returned' : 'ticked') + '"><div class="exp-text">' + escapeHtml(x.experience_text) + ' ' + getClassificationBadge(x.classification) + (pend ? ' <span class="badge badge-warning">⏳ Awaiting HR Approval</span>' : ' <span class="badge badge-success">Approved</span>') + '</div>' + (pend ? '<div style="margin-top:4px"><button class="btn btn-sm btn-danger" onclick="deleteExperience(' + x.id + ')">Delete</button></div>' : '') + '</div>';
+html += '<div class="exp-item ' + (pend ? 'returned' : 'ticked') + '"><div class="exp-text">' + escapeHtml(x.experience_text) + ' ' + getClassificationBadge(x.classification) + (pend ? ' <span class="badge badge-warning">⏳ Awaiting HR Approval</span>' : ' <span class="badge badge-success">Approved</span>') + aiNoteBadgeExp(x.ai_note) + '</div>';
+html += expAiButtons('x' + x.id, meta.competency, x.id);
+html += (pend ? '<div style="margin-top:4px"><button class="btn btn-sm btn-danger" onclick="deleteExperience(' + x.id + ')">Delete</button></div>' : '') + '</div>';
 });
 html += '<div id="msetslots-' + code + '" data-req="' + req + '">';
 for (var i = 0; i < req; i++) html += mgrSlotRow(code, i);
@@ -6628,8 +6713,7 @@ const { error } = await _supabase.from('experiences').insert(rows);
 if (error) { showToast(error.message); return; }
 localStorage.removeItem('mgrset_' + dep + '_' + pos);
 await refreshCompData();
-notifyHR('Competency Framework Submitted: ' + pos + ' (' + dep + ')', APP.user.name + ' submitted ' + rows.length + ' experiences for ' + pos + ' (' + dep + '). They are awaiting your approval in the CMS: ' + APP_LINK);
-_supabase.from('user_profiles').select('email').eq('role', 'HEAD_HR').then(function(res){ (res.data || []).forEach(function(u){ sendCMSemail(u.email, 'Competency Framework Submitted: ' + pos + ' (' + dep + ')', APP.user.name + ' submitted ' + rows.length + ' experiences awaiting approval: ' + APP_LINK); }); });
+notifyHR('Competency Framework Submitted: ' + pos + ' (' + dep + ')', APP.user.name + ' submitted ' + rows.length + ' experiences for ' + pos + ' (' + dep + '). You are the approver — review them under Competency Library in the CMS: ' + APP_LINK);
 showToast('✅ Submitted to HR for approval');
 completeCompTasksFor(dep, pos);
 loadMgrCompDetail();
@@ -6674,6 +6758,53 @@ await _supabase.from('assessments').update({ ai_note: 'AI pre-check: ' + (flags[
 }
 notifyHR('AI Evidence Pre-Check: ' + flags.length + ' item(s) flagged', 'The AI pre-check flagged ' + flags.length + ' evidence item(s) as weak/vague in the latest ' + ticked[0].type + ' assessment for ' + ticked[0].employee_name + '. Nothing was rejected automatically — please review and decide: ' + APP_LINK);
 } catch (err) { console.log('AI check skipped: ' + err.message); }
+}
+function aiNoteBadge(note){
+note = (note || '').toString();
+if (!note) return '<span class="badge" style="background:var(--gray-100);color:var(--gray-600)">🤖 AI: not checked</span>';
+if (note.indexOf('Relevant ✓') >= 0) return '<span class="badge badge-success">🤖 AI: Relevant ✓</span>';
+return '<span class="badge badge-warning">🤖 ' + escapeHtml(note.replace(/^AI:\s*/, '')) + '</span>';
+}
+async function aiValidateOne(id) {
+const { data: row } = await _supabase.from('assessments').select('*').eq('id', id).single();
+if (!row) { showToast('Experience not found'); return; }
+if (!row.ticked || !(row.evidence || '').trim()) { showToast('Nothing to validate — not ticked or no evidence'); return; }
+showToast('🤖 AI is checking this experience only...');
+var prompt = 'You are an HR quality auditor. Experience: "' + (row.experience_text || '') + '" (competency: ' + (row.comp_name || row.comp_code) + '; classification: ' + (row.classification || '') + '). Evidence submitted: "' + (row.evidence || '') + '". Judge whether the evidence is RELEVANT and specific enough (real actions, numbers, dates, people or results) or WEAK/VAGUE/IRRELEVANT. Return ONLY valid JSON: {"ok":true,"note":"one short sentence"} or {"ok":false,"note":"one short sentence reason"}. No markdown.';
+var t = await callAI(prompt, true);
+if (!t) { showToast('AI unavailable — try again'); return; }
+var clean = t; var s = clean.indexOf('{'); var e2 = clean.lastIndexOf('}');
+if (s >= 0 && e2 > s) clean = clean.substring(s, e2 + 1);
+var note = ''; var okFlag = false;
+try { var o = JSON.parse(clean); okFlag = !!o.ok; note = o.ok ? 'AI: Relevant ✓' : ('AI: Possibly IRRELEVANT/weak — ' + (o.note || 'review carefully')); } catch (err) { note = 'AI: ' + (t || '').slice(0, 140); }
+const { error } = await _supabase.from('assessments').update({ ai_note: note }).eq('id', id);
+if (error) { showToast(error.message); return; }
+showToast(okFlag ? '🤖 AI: Relevant ✓' : '🤖 AI flagged this evidence — review before approving');
+loadHRRevEmp(window._hrRevLast || row.employee_id);
+}
+async function aiRefineOne(id) {
+const { data: row } = await _supabase.from('assessments').select('*').eq('id', id).single();
+if (!row) { showToast('Experience not found'); return; }
+if (!(row.evidence || '').trim()) { showToast('No evidence to refine'); return; }
+showToast('✍️ AI is drafting an improved version...');
+var prompt = 'You are a professional HR writing assistant. Experience: "' + (row.experience_text || '') + '". Current evidence: "' + (row.evidence || '') + '". Rewrite it clearer, more specific and professional (Action + Result style). STRICT RULES: keep every fact exactly as given (numbers, dates, names, actions); only improve structure, grammar and phrasing; do NOT invent new facts; keep under 600 characters. Return ONLY valid JSON: {"refined":"..."}. No markdown.';
+var t = await callAI(prompt, true);
+if (!t) { showToast('AI unavailable — try again'); return; }
+var clean = t; var s = clean.indexOf('{'); var e2 = clean.lastIndexOf('}');
+if (s >= 0 && e2 > s) clean = clean.substring(s, e2 + 1);
+var refined = '';
+try { refined = (JSON.parse(clean).refined || ''); } catch (err) { refined = (t || '').trim(); }
+if (!refined) { showToast('AI returned nothing usable'); return; }
+window['_refined_' + id] = refined;
+var box = document.getElementById('airef-' + id);
+if (box) box.innerHTML = '<div style="margin-top:6px;font-size:11px;padding:8px;border-radius:6px;background:var(--primary-light);color:var(--primary-dark)"><strong>✍️ AI suggested evidence (facts unchanged):</strong><div style="white-space:pre-wrap;margin:4px 0;color:var(--gray-700)">' + escapeHtml(refined) + '</div><div style="display:flex;gap:6px"><button type="button" class="btn btn-sm btn-primary" onclick="copyRefined(' + id + ')">📋 Copy for return comment</button><button type="button" class="btn btn-sm btn-outline" onclick="document.getElementById(\'airef-' + id + '\').innerHTML=\'\'">Close</button></div></div>';
+}
+function copyRefined(id) {
+var txt = window['_refined_' + id] || '';
+if (!txt) return;
+var ta = document.createElement('textarea'); ta.value = txt; document.body.appendChild(ta); ta.select();
+try { document.execCommand('copy'); showToast('📋 Copied — paste into the return comment'); } catch (e) { showToast('Copy failed — select the text manually'); }
+document.body.removeChild(ta);
 }
 async function aiReviewPending(empId) {
 if (!OPENROUTER_KEY || OPENROUTER_KEY.indexOf('PASTE') !== -1) { showToast('Please add your OpenRouter API key in the code'); return; }
@@ -7161,7 +7292,7 @@ function aiFlagsCardHTML(dep,pos,flags){
   open.forEach(function(f){ var i=flags.indexOf(f);
     h+='<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;border:1px solid var(--gray-200);border-left:4px solid '+(f.severity==='high'?'#dc2626':f.severity==='medium'?'#ea580c':'#2563eb')+';border-radius:6px;padding:8px 10px;margin:6px 0;font-size:12px"><span><span class="badge '+sevBadge(f.severity)+'">'+escapeHtml(f.severity||'low')+'</span> <strong>'+escapeHtml(f.check_type||'')+'</strong> <span style="color:var(--gray-500)">· '+escapeHtml(f.comp_code||'')+'</span><div style="margin-top:3px;color:var(--gray-700)">'+escapeHtml(f.message||'')+'</div></span><button class="btn btn-sm btn-outline" style="flex:none" onclick="dismissAiFlag('+i+')">Dismiss</button></div>';
   });
-  if (dism.length) h+='<div style="font-size:11px;color:var(--gray-400);margin-top:6px">'+dism.length+' dismissed flag(s): '+dism.map(function(f){ return escapeHtml((f.check_type||'')+' — '+(f.message||'').slice(0,60)); }).join(' · ')+'</div>';
+if (dism.length) h += '<div style="font-size:11px;color:var(--gray-500);margin-top:8px;border-top:1px dashed var(--gray-200);padding-top:6px"><span style="cursor:pointer;font-weight:700" onclick="var d=document.getElementById(\'aiFlagsDism\');d.style.display=(d.style.display===\'none\'?\'block\':\'none\');">🗑 ' + dism.length + ' dismissed flag(s) — tap to view / hide</span><div id="aiFlagsDism" style="display:none;max-height:160px;overflow:auto;margin-top:6px">' + dism.map(function(f){ return '<div style="font-size:10px;color:var(--gray-500);padding:2px 0;border-bottom:1px solid var(--gray-100)"><strong>' + escapeHtml(f.check_type || '') + '</strong> — ' + escapeHtml((f.message || '').slice(0, 90)) + '</div>'; }).join('') + '</div></div>';
   return h+'</div>';
 }
 async function appendAiValidationCard(){
