@@ -1,5 +1,3 @@
-
-
 <!DOCTYPE html>
 <html>
 <head>
@@ -5926,15 +5924,7 @@ var dep = document.getElementById('compDep').value;
 var pos = document.getElementById('compPos').value;
 var box = document.getElementById('compContent');
 if (!dep || !pos) { box.innerHTML = ''; return; }
-const { data: appr } = await _supabase.from('comp_approvals').select('*').eq('department', dep).eq('position_name', pos).order('id', { ascending: false }).limit(1);
-var ap = appr && appr.length ? appr[0] : null;
-var html = pendingExpsCard() + '<div class="card"><div style="display:flex;justify-content:space-between;align-items:center;gap:10px"><div><div class="card-title" style="margin-bottom:4px">Approval Status</div>';
-if (!ap) html += '<span class="badge badge-warning">Not sent for approval</span>';
-else if (ap.status === 'Pending') html += '<span class="badge badge-purple">Pending approval from ' + escapeHtml(ap.assigned_to || 'manager') + ' (sent ' + escapeHtml(ap.requested_date || '') + ')</span>';
-else if (ap.status === 'Approved') html += '<span class="badge badge-success">Approved by ' + escapeHtml(ap.decided_by || 'manager') + ' on ' + escapeHtml(ap.decided_date || '') + '</span>';
-else html += '<span class="badge badge-danger">Changes requested by ' + escapeHtml(ap.decided_by || 'manager') + '</span>';
-if (ap && ap.comment) html += '<div style="font-size:12px;color:var(--gray-600);margin-top:6px"><strong>Manager comment:</strong> ' + escapeHtml(ap.comment) + '</div>';
-html += '</div><button class="btn btn-primary" onclick="showSendApproval()">Send for Approval</button></div></div>';
+var html = '';
 var posExps = (APP.experiences || []).filter(function(x){ return sameText(x.department, dep) && sameText(x.position_name, pos) && (x.comp_code || '').indexOf('CC') !== 0; });
 html += '<div class="card"><div class="card-title">Position Competencies — ' + escapeHtml(pos) + '</div>';
 var codes = [];
@@ -6172,7 +6162,6 @@ h += '</span></div>';
 exps.forEach(function(x) {
 var pend = (x.approval_status || 'Approved') === 'Pending';
 h += '<div class="exp-item"><div class="exp-text">' + escapeHtml(x.experience_text) + ' ' + getClassificationBadge(x.classification) + (isCore ? ' <span class="badge badge-info">' + escapeHtml(x.competency_level || '') + '</span>' : '') + (pend ? ' <span class="badge badge-warning">⏳ Awaiting HR Approval</span>' : '') + aiNoteBadgeExp(x.ai_note) + '</div>';
-h += expAiButtons('x' + x.id, meta.competency, x.id);
 if (canExp) h += expAiBtns(x);
 h += '</div>';
 });
@@ -6205,10 +6194,21 @@ await refreshCompData();
 reloadCompView();
 }
 function compCardMgr(meta, code, exps) {
+var canReview = !!(APP.user && APP.user.modes && APP.user.modes.isAdmin && APP.currentRole === 'hr');
 var h = '<div class="competency-block"><div class="competency-header"><span class="competency-name">' + escapeHtml(meta.competency || code) + '</span><span class="competency-cat">' + escapeHtml(meta.category || '') + ' | ' + weightPct(meta.weight) + '% <button class="btn btn-sm btn-outline" onclick="editCompetency(\'' + escapeHtml(code) + '\')">Edit</button></span></div>';
 exps.forEach(function(x) {
-h += '<div class="exp-item"><div class="exp-text">' + escapeHtml(x.experience_text) + ' ' + getClassificationBadge(x.classification) + '</div>';
-h += '<div style="margin-top:4px;display:flex;gap:6px"><button class="btn btn-sm btn-outline" onclick="editExperience(' + x.id + ')">Edit</button><button class="btn btn-sm btn-danger" onclick="deleteExperience(' + x.id + ')">Delete</button></div></div>';
+var pending = (x.approval_status || 'Approved') === 'Pending';
+h += '<div class="exp-item"><div class="exp-text">' + escapeHtml(x.experience_text) + ' ' + getClassificationBadge(x.classification) + (pending ? ' <span class="badge badge-warning">Awaiting HR Approval</span>' : '') + '</div>';
+h += '<div style="margin-top:4px;display:flex;gap:6px;flex-wrap:wrap"><button type="button" class="btn btn-sm btn-outline" onclick="editExperience(' + x.id + ')">Edit</button><button type="button" class="btn btn-sm btn-danger" onclick="deleteExperience(' + x.id + ')">Delete</button>';
+if (canReview) {
+h += '<button type="button" class="btn btn-sm btn-outline" onclick="aiRefineExpById(' + x.id + ')">✍️ AI Refine</button>';
+h += '<button type="button" class="btn btn-sm btn-outline" onclick="aiValidateExpById(' + x.id + ')">🤖 AI Validation</button>';
+if (pending) h += '<button type="button" class="btn btn-sm btn-success" onclick="approveExperience(' + x.id + ')">Approve</button>';
+else h += '<button type="button" class="btn btn-sm btn-success" disabled>Approved</button>';
+}
+h += '</div>';
+if (canReview) h += '<div id="expai-' + x.id + '" aria-live="polite"></div>';
+h += '</div>';
 });
 h += '</div>';
 return h;
