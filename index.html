@@ -425,6 +425,21 @@ body.role-manager .sb-item.active{background:linear-gradient(100deg,#087d8a33,#f
 @media(max-width:650px){.md-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.md-hero{padding:20px;flex-wrap:wrap}.md-card{padding:16px}.md-alert{gap:12px}.md-alert .btn{margin-left:0}.md-metric{padding:16px 8px}.md-metric strong{font-size:28px}}
 
 </style>
+<style>
+/* HR admin only: approved navy/indigo layout, gold action frame, colored card links. */
+body.role-hr .header{background:linear-gradient(110deg,#111b35,#222154);border-bottom:1px solid #c9ad72}
+.hd{font:14px/1.6 system-ui,-apple-system,'Segoe UI',sans-serif;color:#111b35}.hd h2{font-size:22px;line-height:1.3;margin:0 0 8px}.hd h3{font-size:15px;margin:0 0 4px}.hd p{font-size:13px;color:#64748b;margin:5px 0 12px}
+.hd-hero{display:flex;justify-content:space-between;gap:20px;align-items:center;background:radial-gradient(ellipse at 100% 80%,#4844b655,transparent 70%),linear-gradient(110deg,#111b35,#29265e);padding:27px 30px;border-radius:14px;border-bottom:2px solid #c9ad72;margin-bottom:22px;color:#fff}.hd-hero h2{font-size:27px;color:#fff}.hd-hero p{color:#dbe1f0;margin:0}.hd-kicker{font-size:11px;letter-spacing:1.5px;color:#e5c67f;font-weight:750;display:block;margin-bottom:7px}
+.hd-filters{display:flex;gap:10px;flex-wrap:wrap}.hd-filters select{max-width:210px;background:#ffffff0c;color:white;border-color:#ffffff40;font-size:13px}.hd-filters option{color:#111b35;background:white}
+.hd-metrics{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:16px}.hd-metric{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;padding:21px 12px 0;border:1px solid #d6d2ff;background:linear-gradient(140deg,#fff,#f2f0ff);border-radius:12px;box-shadow:0 2px 9px #111b3509;color:#4433b4;font-family:inherit;cursor:pointer;min-height:155px}.hd-metric strong{font-size:30px;line-height:1.25}.hd-metric span{font-size:14px;font-weight:650;color:#263656}.hd-metric small{display:block;margin-top:12px;padding:12px 0;width:100%;border-top:1px solid #d8dff0;font-size:12px;font-weight:650}.hd-metric.green{color:#177549;border-color:#cae6d5;background:linear-gradient(140deg,#fff,#eefaf2)}.hd-metric.amber{color:#a95811;border-color:#f1dbbb;background:linear-gradient(140deg,#fff,#fff6e9)}.hd-metric.rose{color:#ba3c45;border-color:#f3d0d4;background:linear-gradient(140deg,#fff,#fff1f2)}.hd-metric.purple{color:#813ec4;border-color:#e4d2fa;background:linear-gradient(140deg,#fff,#f8f0ff)}.hd-metric:hover{border-color:currentColor;box-shadow:0 5px 14px #111b3515}.hd button:focus-visible{outline:3px solid #b8903f;outline-offset:3px}
+.hd .hd-note{font-size:12px;color:#6c7790;margin:12px 4px 18px}.hd-warning{background:#fff6e3;border-left:3px solid #b58122;padding:14px;margin:16px 0;border-radius:7px}
+.hd-card{background:#fff;border:1px solid #dfe4ef;border-radius:13px;box-shadow:0 2px 9px #111b3508;padding:22px;margin-bottom:20px}.hd-action-panel{border-color:#c9ad72}.hd-heading{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:12px}.hd-heading h2{display:flex;gap:12px;align-items:center}.hd-heading svg{width:25px;height:25px;color:#b38b37}
+.hd-action{display:flex;align-items:center;gap:16px;padding:14px 0;border-top:1px solid #e8ebf3}.hd-action>div{flex:1}.hd-action p{margin:0;font-size:12px}.hd-count{width:36px;height:36px;display:flex;align-items:center;justify-content:center;flex:none;border-radius:50%;font-size:16px;font-weight:750;background:linear-gradient(135deg,#5551df,#29265e);color:#fff}.hd .btn{font-size:13px;padding:9px 14px;border-radius:8px}.hd-action .btn{min-width:180px;justify-content:center;background:linear-gradient(140deg,#fff,#f4f3ff)}
+.hd-columns{display:grid;grid-template-columns:1fr 1.2fr;gap:18px}.hd-coverage{display:flex;align-items:center;gap:22px;padding:22px 0}.hd-coverage>strong{width:125px;height:125px;border:9px solid #e6e4fa;border-top-color:#4338ca;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:29px;color:#3730a3}.hd-coverage p{font-size:17px;max-width:180px}.hd-recent{display:flex;align-items:center;justify-content:space-between;gap:12px;border-bottom:1px solid #e7ebf1;padding:12px 0}.hd-recent p{margin:3px 0 0;font-size:12px}.hd-quick{display:flex;gap:12px;flex-wrap:wrap;margin:12px 0 25px}.hd-quick .btn{padding:16px;background:linear-gradient(135deg,#fff,#efefff);box-shadow:0 2px 8px #111b3508}.hd td{vertical-align:top}.hd table{min-width:700px}
+@media(max-width:1150px){.hd-hero{flex-wrap:wrap}.hd-metrics{grid-template-columns:repeat(3,minmax(0,1fr))}.hd-columns{grid-template-columns:1fr}}
+@media(max-width:700px){.hd-metrics{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.hd-hero{padding:20px}.hd-hero h2{font-size:23px}.hd-card{padding:16px}.hd-action{flex-wrap:wrap}.hd-action .btn{margin-left:52px}.hd-heading{flex-wrap:wrap}.hd-filters select{max-width:170px}.hd-quick{display:grid;grid-template-columns:1fr}}
+
+</style>
 </head>
 <body>
 <style>
@@ -10622,6 +10637,183 @@ _supabase.from=function(table){var q=piPreviousFrom(table);if(table==='assessmen
 
 loadManagerTeam=function(){return mdDetailPage('team');};
 loadMgrPromPool=function(){return mdDetailPage('pool');};
+
+</script>
+<script>
+/* HR Admin presentation: navy/indigo banner, gold action frame and five jewel-tinted cards.
+   New dashboard reads contain metadata, not private executive comments. */
+var HD={company:'',department:'',data:null,epoch:0};
+function hdAllowed(){return APP.currentRole==='hr'&&APP.user&&APP.user.modes.isAdmin;}
+function hdNorm(s){return String(s||'').trim().toUpperCase();}
+async function hdRPC(name,action,data){var q=await _supabase.rpc(name,{p_action:action,p_data:data||{}});if(q.error)throw new Error(q.error.message);return q.data;}
+async function hdAll(name,action){var rows=[];for(var page=0;;page++){var batch=await hdRPC(name,action,{page:page});if(!Array.isArray(batch))throw new Error('Unexpected response loading '+action);rows.push(...batch);if(batch.length<500)return rows;}}
+async function hdLoad(){
+ var key='cms_hr_scope:'+APP.user.email;try{var v=JSON.parse(sessionStorage.getItem(key)||'null');if(v){HD.company=v.company||'';HD.department=v.department||'';}}catch(e){}
+ var kinds=['employees','assessments','positions','frameworks','plans','progress','redos','reports','report_approvals'];
+ var data={errors:{}};await Promise.all(kinds.map(async k=>{try{data[k]=await hdAll('cms_hr_dashboard',k);}catch(e){data[k]=null;data.errors[k]=e.message;}}));
+ try{data.mappings=await hdAll('cms_csuite_routing','list');}catch(e){data.mappings=null;data.errors.mappings=e.message;}
+ if(!data.employees)throw new Error('Could not load employees: '+data.errors.employees);
+ return data;
+}
+function hdModel(data,company,department){
+ var people=data.employees.filter(e=>(!company||hdNorm(e.company)===company)&&(!department||hdNorm(e.department)===department)),ids=new Set(people.map(e=>e.employee_id));
+ var a=(data.assessments||[]).filter(r=>ids.has(r.employee_id)),done=new Set(a.filter(r=>r.type==='Manager').map(r=>r.employee_id));
+ var positions=new Map();people.forEach(e=>{var key=hdNorm(e.department)+'|'+hdNorm(e.position);if(!positions.has(key))positions.set(key,{department:e.department||'',position:e.position||'Not recorded',people:[],criticality:''});positions.get(key).people.push(e);});
+ (data.positions||[]).forEach(p=>{var key=hdNorm(p.department)+'|'+hdNorm(p.position_name);if(department&&hdNorm(p.department)!==department)return;if(company&&!positions.has(key))return;if(!positions.has(key))positions.set(key,{department:p.department,position:p.position_name,people:[],criticality:''});var row=positions.get(key);var val=p.criticality||'';if(row.criticality&&hdNorm(row.criticality)!==hdNorm(val))row.conflict=true;else row.criticality=val;});
+ var pos=Array.from(positions.values()).map(p=>Object.assign(p,{assessed:p.people.filter(e=>done.has(e.employee_id)).length}));
+ var critical=pos.filter(p=>!p.conflict&&!!hdNorm(p.criticality)&&!hdNorm(p.criticality).startsWith('NON'));
+ var scope=(rows)=>(rows||[]).filter(r=>ids.has(r.employee_id));
+ var review=a.filter(r=>Number(r.pending_rows)>0),returned=a.filter(r=>Number(r.returned_rows)>0);
+ var frameworks=(data.frameworks||[]).filter(r=>(!department||hdNorm(r.department)===department)&&(!company||pos.some(p=>hdNorm(p.department)===hdNorm(r.department)&&hdNorm(p.position)===hdNorm(r.position))));
+ var reports=scope(data.reports),unassigned=reports.filter(r=>(r.status==='Escalated'||['CSUITE','C_SUITE','C-SUITE'].includes(hdNorm(r.stage)))&&Number(r.assigned_cases)===0);
+ var scopes=new Map();people.forEach(e=>{if(hdNorm(e.company)&&hdNorm(e.department))scopes.set(hdNorm(e.company)+'|'+hdNorm(e.department),{company:hdNorm(e.company),department:hdNorm(e.department)});});
+ var missing=Array.from(scopes.values()).filter(x=>!(data.mappings||[]).some(m=>m.company===x.company&&m.department===x.department&&m.enabled));
+ return {people:people,done:done,assessed:people.filter(e=>done.has(e.employee_id)),notAssessed:people.filter(e=>!done.has(e.employee_id)),positions:pos,critical:critical,coverage:people.length?Math.round(done.size/people.length*100):0,
+ review:review,returned:returned,frameworks:frameworks,plans:scope(data.plans),progress:scope(data.progress),redos:scope(data.redos),reports:reports.filter(r=>r.status==='Returned'),unassigned:unassigned,reportApprovals:scope(data.report_approvals),missing:missing,
+ recent:a.slice().sort((a,b)=>String(b.assessment_date||'').localeCompare(String(a.assessment_date||''))).slice(0,5)};
+}
+function hdButton(text,page,cls){return '<button type="button" class="'+(cls||'btn btn-outline')+'" onclick="navigateTo('+rcArg(page)+')">'+escapeHtml(text)+'</button>';}
+function hdCall(text,fn,args){return '<button type="button" class="btn btn-outline" onclick="'+fn+'('+args.map(rcArg).join(',')+')">'+escapeHtml(text)+'</button>';}
+function hdTitle(title,sub,back){return '<header class="hd-hero"><div><span class="hd-kicker">HR WORKSPACE</span><h2>'+escapeHtml(title)+'</h2><p>'+escapeHtml(sub)+'</p></div>'+(back?hdButton('Back to Dashboard','hr-dashboard'):'<div id="hdFilters" class="hd-filters"></div>')+'</header>';}
+function hdCard(value,label,page,tone,link){return '<button type="button" class="hd-metric '+tone+'" onclick="navigateTo('+rcArg(page)+')"><strong>'+escapeHtml(value)+'</strong><span>'+escapeHtml(label)+'</span><small>'+escapeHtml(link)+' →</small></button>';}
+function hdActions(data,m){return [
+ ['review','Assessment reviews',m.review,'assessments','Review assessments'],['returned','Returned assessment evidence',m.returned,'assessments','Monitor corrections'],
+ ['frameworks','Frameworks awaiting approval',m.frameworks,'frameworks','Open approvals'],['plans','Development plan items requiring review',m.plans,'plans','Review plans'],
+ ['progress','Development reports for HR acknowledgment',m.progress,'progress','Review progress reports'],['reportApprovals','Report approvals',m.reportApprovals,'report_approvals','Open report approvals'],
+ ['redos','Redo requests for HR',m.redos,'redos','Open requests'],['reports','Reports returned by HOHR',m.reports,'reports','Open returned reports'],
+ ['unassigned','Escalated reports without a C-Suite case',m.unassigned,'reports','Assign privately'],['missing','Missing or inactive C-Suite defaults',m.missing,'mappings','Open C-Suite Mapping']
+ ];}
+function hdActionHTML(data,m,activeOnly){var actions=hdActions(data,m);if(activeOnly)actions=actions.filter(x=>data[x[3]]===null||x[2].length>0);if(!actions.length)return '<p>No outstanding actions in this scope. View all actions to open any queue.</p>';return actions.map(([key,title,list,source,action])=>'<div class="hd-action"><span class="hd-count">'+(data[source]===null?'!':list.length)+'</span><div><h3>'+title+'</h3><p>'+(data[source]===null?'Could not load this queue. Open for details.':key==='review'?list.reduce((n,r)=>n+Number(r.pending_rows),0)+' experience rows awaiting HR review':key==='missing'?'Routing defaults do not change existing case assignments.':list.length?'Open the filtered queue to review individual items.':'No current items in this scope.')+'</p></div>'+hdButton(action,'hr-actions-'+key)+'</div>').join('');}
+async function hdDashboard(){
+ if(!hdAllowed())return hdLegacyDashboard();var epoch=CN.epoch;setContent('<div class="card">Loading HR dashboard...</div>');
+ try{var data=await hdLoad();if(epoch!==CN.epoch||!hdAllowed())return;HD.data=data;hdRender();}
+ catch(e){if(epoch===CN.epoch)setContent('<section class="card"><h2>Dashboard unavailable</h2><p>'+escapeHtml(e.message)+'</p>'+hdButton('Retry','hr-dashboard')+'</section>');}
+}
+function hdRender(){var data=HD.data,m=hdModel(data,HD.company,HD.department),ok=!!data.assessments;
+ var h='<div class="hd">'+hdTitle('HR Admin Dashboard','People, assessment coverage and actions requiring your attention.',false)+'<div class="hd-metrics">';
+ h+=hdCard(m.people.length,'Total Staff','hr-people-all','indigo','View all employees');h+=hdCard(ok?m.assessed.length+' ('+m.coverage+'%)':'--','Assessed','hr-people-assessed','green','View assessed employees');h+=hdCard(ok?m.notAssessed.length:'--','Not Assessed','hr-people-pending','amber','View outstanding employees');h+=hdCard(data.positions?m.critical.length:'--','Critical Positions','hr-position-critical','rose','View critical roles');h+=hdCard(data.positions?m.positions.length:'--','Total Positions','hr-position-all','purple','View position registry');
+ h+='</div><p class="hd-note">Assessed means a current-role manager submission exists, not that HR review is complete. Positions are unique department/position pairs; Non-Critical roles are excluded from Critical Positions.</p>';
+ if(Object.keys(data.errors).length)h+='<div class="hd-warning">Some data could not load: '+escapeHtml(Object.keys(data.errors).join(', '))+'. Unavailable queues are not reported as zero.</div>';
+ h+='<section class="hd-card hd-action-panel"><div class="hd-heading"><h2>'+edIcon('bell')+' Notifications &amp; Actions Needed</h2>'+hdButton('View all actions','hr-actions-all')+'</div>'+hdActionHTML(data,m,true)+'</section>';
+ h+='<div class="hd-columns"><section class="hd-card"><h2>Assessment Coverage</h2><div class="hd-coverage"><strong>'+(ok?m.coverage+'%':'--')+'</strong><p>'+(ok?m.assessed.length+' of '+m.people.length+' employees assessed':'Assessment data unavailable')+'</p></div>'+hdButton('View coverage by position','hr-coverage')+'</section><section class="hd-card"><h2>Recent Assessment Activity</h2>';
+ h+=m.recent.length?m.recent.map(r=>'<div class="hd-recent"><div><strong>'+escapeHtml(r.employee_name||r.employee_id)+'</strong><p>'+escapeHtml(r.type)+' | '+escapeHtml(r.assessment_date||'No date')+' | Round '+r.round_number+'</p></div>'+hdCall('View','hdOpenAssessment',[r.employee_id])+'</div>').join(''):'<p>No current assessment records to show.</p>';
+ h+=hdButton('View all assessments','hr-all')+'</section></div><h2>Quick Actions</h2><div class="hd-quick">'+hdButton('Communicate to Employee','hr-communicate')+hdButton('Invite Prospective Assessment','hr-prosp-invites')+hdButton('Review Competencies','hr-comp-approvals')+hdButton('C-Suite Mapping','hr-csuite-mapping');
+ if(window.CMS_ACCESS&&CMS_ACCESS.can_manage)h+=hdButton('Manage User Access','hr-user-access');h+='</div></div>';setContent(h);hdFilters();}
+function hdFilters(){var host=document.getElementById('hdFilters');if(!host)return;var data=HD.data;
+ var c=document.createElement('select');c.setAttribute('aria-label','Company scope');c.add(new Option('All companies',''));Array.from(new Set(data.employees.map(e=>hdNorm(e.company)).filter(Boolean))).sort().forEach(x=>c.add(new Option(x,x)));c.value=HD.company;
+ var dep=document.createElement('select');dep.setAttribute('aria-label','Department scope');dep.add(new Option('All departments',''));Array.from(new Set(data.employees.filter(e=>!HD.company||hdNorm(e.company)===HD.company).map(e=>hdNorm(e.department)).filter(Boolean))).sort().forEach(x=>dep.add(new Option(x,x)));dep.value=HD.department;
+ function persist(){sessionStorage.setItem('cms_hr_scope:'+APP.user.email,JSON.stringify({company:HD.company,department:HD.department}));hdRender();}
+ c.onchange=()=>{HD.company=c.value;HD.department='';persist();};dep.onchange=()=>{HD.department=dep.value;persist();};host.append(c,dep);}
+function hdOpenAssessment(id){APP.hrAllTarget=id;return navigateTo('hr-all');}
+function hdScopeText(){return (HD.company||'All companies')+' / '+(HD.department||'All departments');}
+async function hdDetail(kind){if(!hdAllowed())return;var epoch=CN.epoch;setContent('<div class="card">Loading scoped details...</div>');
+ try{var data=await hdLoad();if(epoch!==CN.epoch)return;HD.data=data;var m=hdModel(data,HD.company,HD.department),titles={all:'All Employees',assessed:'Assessed Employees',pending:'Employees Not Yet Assessed',critical:'Critical Positions',positions:'Position Registry',coverage:'Assessment Coverage by Position'};
+ var h='<div class="hd">'+hdTitle(titles[kind],hdScopeText(),true)+'<section class="hd-card">';
+ if(['all','assessed','pending'].includes(kind)){
+ if(kind!=='all'&&!data.assessments)throw new Error('Assessment data unavailable: '+data.errors.assessments);
+ var people=kind==='all'?m.people:kind==='assessed'?m.assessed:m.notAssessed;
+ h+='<p>Assessed = at least one current-role manager submission. Self-only employees remain Not Assessed under this metric.</p><div class="table-wrap"><table><thead><tr><th>Employee</th><th>Company / Department</th><th>Position</th><th>Manager submission</th><th>Details</th></tr></thead><tbody>';
+ h+=people.map(e=>'<tr><td>'+escapeHtml(e.employee_name)+'</td><td>'+escapeHtml(e.company||'')+' / '+escapeHtml(e.department||'')+'</td><td>'+escapeHtml(e.position)+'</td><td>'+(m.done.has(e.employee_id)?'Submitted':'Not submitted')+'</td><td>'+hdCall('View assessments','hdOpenAssessment',[e.employee_id])+'</td></tr>').join('');h+='</tbody></table></div><p>'+people.length+' employee(s) in this filtered list.</p>';
+ }else{
+ if(!data.positions)throw new Error('Position registry data unavailable: '+data.errors.positions);
+ var list=kind==='critical'?m.critical:m.positions;
+ h+='<p>Unique department/position pairs from the registry and employee records. Company-scoped results cover occupied positions only. Conflicting criticality entries are flagged, not guessed.</p>'+hdButton('Manage Positions & Criticality','hr-positions')+'<div class="table-wrap"><table><thead><tr><th>Department</th><th>Position</th><th>Criticality</th><th>Employees</th><th>Assessed</th><th>Coverage</th></tr></thead><tbody>';
+ h+=list.map(p=>'<tr><td>'+escapeHtml(p.department)+'</td><td>'+escapeHtml(p.position)+'</td><td>'+escapeHtml(p.conflict?'Conflicting registry entries':p.criticality||'Not recorded')+'</td><td>'+p.people.length+'</td><td>'+(data.assessments?p.assessed:'Unavailable')+'</td><td>'+(data.assessments&&p.people.length?Math.round(p.assessed/p.people.length*100)+'%':'--')+'</td></tr>').join('');h+='</tbody></table></div>';
+ }setContent(h+'</section></div>');}catch(e){if(epoch===CN.epoch)setContent('<div class="card"><p>'+escapeHtml(e.message)+'</p>'+hdButton('Back to Dashboard','hr-dashboard')+'</div>');}}
+async function hdActionPage(kind){if(!hdAllowed())return;var epoch=CN.epoch;setContent('<div class="card">Loading action queue...</div>');
+ try{var data=await hdLoad();if(epoch!==CN.epoch)return;HD.data=data;var m=hdModel(data,HD.company,HD.department),actions=hdActions(data,m);
+ if(kind==='all'){setContent('<div class="hd">'+hdTitle('Notifications & Actions Needed',hdScopeText(),true)+'<section class="hd-card">'+hdActionHTML(data,m)+'</section></div>');return;}
+ var def=actions.find(x=>x[0]===kind);if(!def)throw new Error('Unknown action queue');if(data[def[3]]===null)throw new Error(data.errors[def[3]]);
+ var h='<div class="hd">'+hdTitle(def[1],hdScopeText(),true)+'<section class="hd-card"><p>'+def[2].length+' item(s). Counts show current records, not unread notifications.</p>';
+ def[2].forEach(r=>{
+ h+='<div class="hd-action"><div>';
+ if(kind==='missing')h+='<h3>'+escapeHtml(r.company)+' / '+escapeHtml(r.department)+'</h3><p>No enabled trusted default for this scope.</p>';
+ else if(kind==='frameworks')h+='<h3>'+escapeHtml(r.position||'Company-wide Core')+'</h3><p>'+escapeHtml(r.department||'Company-wide')+' | '+r.experience_rows+' experiences</p>';
+ else h+='<h3>'+escapeHtml(r.employee_name||r.employee_id)+'</h3><p>'+escapeHtml(r.type||r.task||r.status||r.comp_name||'')+(kind==='review'?' | '+r.pending_rows+' pending experience rows':kind==='returned'?' | '+r.returned_rows+' returned experience rows':'')+'</p>';
+ h+='</div>';
+ if(kind==='review'||kind==='returned')h+=hdCall('Open Review','goReview',[r.employee_id]);
+ else if(kind==='plans'||kind==='progress')h+=hdCall('Open development review','openDPFor',[r.employee_id]);
+ else if(kind==='frameworks')h+=hdButton('Review framework','hr-comp-approvals');
+ else if(kind==='redos')h+=hdCall('Review request','hdRedo',[String(r.id)]);
+ else if(kind==='reports')h+=hdCall('View report','viewReportDoc',[r.id]);
+ else if(kind==='unassigned')h+=hdCall('Assign privately','exAssign',[r.id]);
+ else if(kind==='missing')h+=hdButton('Set mapping','hr-csuite-mapping');
+ else if(kind==='reportApprovals')h+=hdButton('Open approvals','hr-repappr');h+='</div>';
+ });h+='</section><div id="hdRequest"></div></div>';setContent(h);
+ }catch(e){if(epoch===CN.epoch)setContent('<div class="card"><p>Queue unavailable: '+escapeHtml(e.message)+'</p>'+hdButton('Back to Dashboard','hr-dashboard')+'</div>');}}
+async function hdRedo(id){var host=document.getElementById('hdRequest');if(!host)return;try{var r=(HD.data.redos||[]).find(x=>String(x.id)===id);if(!r)throw new Error('Refresh this request list.');if(r.type==='Prospective Self'){host.innerHTML='<section class="hd-card"><h3>Prospective self-assessment request</h3><p>'+escapeHtml(r.employee_name)+' | '+escapeHtml(r.reason||'')+'</p><p>This requires an HR/HOHR invitation, not an automatic score-based unlock. Review the request and issue an invitation if appropriate.</p>'+hdButton('Open Prospective Invitations','hr-prosp-invites')+'</section>';return;}host.innerHTML='<section class="hd-card"><h3>'+escapeHtml(r.employee_name)+' | '+escapeHtml(r.type)+'</h3><p>'+escapeHtml(r.reason||'')+'</p><label>Decision comment<input id="rc-'+escapeHtml(id)+'"></label><button class="btn btn-primary" onclick="hdRedoDecision('+rcArg(id)+',true)">Approve redo</button><button class="btn btn-outline" onclick="hdRedoDecision('+rcArg(id)+',false)">Reject redo</button></section>';}catch(e){host.textContent=e.message;}}
+async function hdRedoDecision(id,yes){if(!confirm((yes?'Approve':'Reject')+' this one redo request? The existing notification will be sent to the requester.'))return;await decideRedo(id,yes);}
+
+async function hrRoutingPage(){if(!rcHR())return;var epoch=CN.epoch,root=rcShell('C-Suite Mapping');
+ rcNode('p','Set a default executive for each company and department. A default only suggests a recipient when HR creates a NEW private case. It never reassigns existing cases, broadcasts reports or shares another executive’s comments.',root);
+ rcButton('Back to Dashboard',()=>navigateTo(APP.currentRole==='hr'?'hr-dashboard':'hohr-dash'),root);
+ try{
+ var [scopes,members,mappings,legacy]=await Promise.all([hdAll('cms_csuite_routing','scopes'),hdRPC('cms_csuite_routing','members'),hdAll('cms_csuite_routing','list'),hdAll('cms_csuite_routing','legacy')]);
+ if(epoch!==CN.epoch||!root.isConnected)return;
+ var editor=rcCard(root);rcNode('h3','New or updated routing default',editor);
+ var scope=rcText('Company / department',editor,'select');scope.add(new Option('Choose scope',''));scopes.forEach((s,i)=>scope.add(new Option(s.company+' / '+s.department,String(i))));
+ var exec=rcText('Verified C-Suite recipient',editor,'select');exec.add(new Option('Select executive',''));members.forEach(m=>exec.add(new Option(m.email,m.id)));
+ if(!members.length)rcNode('p','No enabled verified executives. Use User Access to enable the appropriate accounts first.',editor);
+ var reason=rcText('Reason for the change',editor,'textarea');reason.maxLength=1000;
+ var preview=rcNode('div',undefined,editor);
+ rcButton('Preview mapping',()=>{
+ if(scope.value===''||!exec.value||reason.value.trim().length<5)throw new Error('Select scope and executive, then add a reason.');
+ var s=scopes[Number(scope.value)],old=mappings.find(m=>m.company===s.company&&m.department===s.department),person=members.find(m=>m.id===exec.value);
+ var payload={company:s.company,department:s.department,executive_id:exec.value,expected_version:old?old.version:0,reason:reason.value.trim()};
+ preview.replaceChildren();rcNode('p','Change 1 routing default: '+s.company+' / '+s.department+' from '+(old?old.email:'No default')+' to '+person.email+'. Existing assignments remain unchanged.',preview);
+ rcButton('Confirm and save mapping',async()=>{await hdRPC('cms_csuite_routing','save',payload);showToast('Routing default saved. Existing cases unchanged.');await hrRoutingPage();},preview);
+ },editor);
+ var list=rcCard(root);rcNode('h3','Trusted routing defaults',list);if(!mappings.length)rcNode('p','No trusted defaults configured yet.',list);
+ mappings.forEach(m=>{var c=rcCard(list);rcNode('strong',m.company+' / '+m.department,c);rcNode('p',m.email+' | '+(m.enabled?'Enabled executive':'Executive disabled; default will not be suggested'),c);
+ rcButton('Edit default',()=>{scope.value=String(scopes.findIndex(s=>s.company===m.company&&s.department===m.department));exec.value=m.enabled?m.executive_id:'';reason.value='';preview.replaceChildren();editor.scrollIntoView({block:'center'});},c);
+ rcButton('Remove default',()=>{var why=prompt('Reason for removing this routing default:');if(!why)return;if(!confirm('Remove 1 default for '+m.company+' / '+m.department+' → '+m.email+'? Existing private cases remain unchanged.'))return;return hdRPC('cms_csuite_routing','remove',{company:m.company,department:m.department,expected_version:m.version,reason:why}).then(()=>hrRoutingPage());},c);
+ });
+ var old=rcCard(root);rcNode('h3','Existing legacy mappings (preserved)',old);rcNode('p','These older entries are shown for reference, not used as automatic access grants. Review them and create an explicit trusted default above; wildcard or ambiguous legacy entries are not migrated automatically.',old);
+ if(!legacy.length)rcNode('p','No legacy mappings found.',old);legacy.forEach(m=>rcNode('p',(m.company||'Any company')+' / '+(m.department||'No department')+' → '+(m.csuite_email||'No executive'),old));
+ var audit=rcCard(root);rcNode('h3','Mapping change history',audit);await hrRoutingHistory(audit,0);
+ rcButton('Open private executive reviews',()=>navigateTo('ex-private'),root);
+ }catch(e){if(root.isConnected)rcNode('p','Could not load C-Suite Mapping: '+e.message,root);}
+}
+// Add a suggested default to the existing one-executive assignment form.
+// No existing assignment or report comment is read or copied by this helper.
+var hdOldAssign=exAssign;
+exAssign=async function(reportId){
+ await hdOldAssign(reportId);
+ var root=document.getElementById('exRoot');if(!root||!rcHR())return;
+ var report=root.querySelector('select[aria-label="Original HR report"]'),member=root.querySelector('select[aria-label="Assigned executive"]');if(!report||!member)return;
+ var note=document.createElement('p');note.className='hd-routing-note';note.style.cssText='font-size:13px;color:#64748b;margin:10px 0';member.after(note);var serial=0;
+ async function suggest(){var token=++serial,id=report.value;member.value='';if(!id){note.textContent='Choose a report to check its company/department default.';return;}
+ note.textContent='Checking routing default...';
+ try{var value=await hdRPC('cms_csuite_routing','suggest',{report_id:id});if(token!==serial||!root.isConnected||report.value!==id)return;
+ if(value&&Array.from(member.options).some(o=>o.value===value.executive_id)){member.value=value.executive_id;note.textContent='Suggested default: '+value.email+' ('+value.company+' / '+value.department+'). Verify the recipient and write a new brief before assigning.';}
+ else note.textContent='No enabled trusted default. Select one verified executive explicitly; nothing will be broadcast.';
+ }catch(e){if(token===serial&&root.isConnected)note.textContent='Routing lookup unavailable. Select one executive explicitly: '+e.message;}
+ }
+ report.addEventListener('change',suggest);member.addEventListener('change',()=>{serial++;note.textContent='Recipient selected manually. Only this executive and HR/HOHR can access the new private case.';});await suggest();
+};
+
+
+async function hrRoutingHistory(host,page){var rows=await hdRPC('cms_csuite_routing','history',{page:page});if(!host.isConnected)return;host.replaceChildren();rcNode('h3','Mapping change history',host);if(!rows.length)rcNode('p','No changes on this page.',host);rows.forEach(r=>rcNode('p',r.company+' / '+r.department+' | '+new Date(r.changed_at).toLocaleString()+' | '+r.actor_email+' | '+r.reason,host));if(page)rcButton('Previous',()=>hrRoutingHistory(host,page-1),host);if(rows.length===50)rcButton('Next',()=>hrRoutingHistory(host,page+1),host);}
+
+var hdLegacyDashboard=loadHRDashboard;loadHRDashboard=hdDashboard;
+var hdPreviousPage=loadPage;
+loadPage=function(id){
+ if(id==='hr-dashboard')return hdDashboard();
+ if(id==='hr-csuite-mapping'||id==='hohr-csuite-mapping')return hrRoutingPage();
+ var map={'hr-people-all':'all','hr-people-assessed':'assessed','hr-people-pending':'pending','hr-position-critical':'critical','hr-position-all':'positions','hr-coverage':'coverage'};
+ if(map[id])return hdDetail(map[id]);
+ if(id.startsWith('hr-actions-'))return hdActionPage(id.slice('hr-actions-'.length));
+ return hdPreviousPage(id);
+};
+var hdPreviousLabel=getPageLabel;
+getPageLabel=function(id){var labels={'hr-csuite-mapping':'C-Suite Mapping','hohr-csuite-mapping':'C-Suite Mapping','hr-people-all':'All Employees','hr-people-assessed':'Assessed Employees','hr-people-pending':'Not Assessed','hr-position-critical':'Critical Positions','hr-position-all':'Position Registry','hr-coverage':'Assessment Coverage'};return labels[id]||(id.startsWith('hr-actions-')?'HR Actions':hdPreviousLabel(id));};
+var hdPreviousNav=setupNav;
+setupNav=function(role){hdPreviousNav(role);if(role!=='hr'&&role!=='hohr')return;var side=document.getElementById('sideNav');if(!side)return;var page=role==='hr'?'hr-csuite-mapping':'hohr-csuite-mapping';
+ var b=rcButton('C-Suite Mapping',()=>navigateTo(page),side);b.dataset.page=page;b.className='sb-item';b.style.cssText='width:100%;background:transparent;border:0;text-align:left';
+ if(role==='hr'){var act=rcButton('Notifications & Actions',()=>navigateTo('hr-actions-all'),side);act.dataset.page='hr-actions-all';act.className='sb-item';act.style.cssText=b.style.cssText;}
+};
+// Replace the old embedded mapping form with the verified mapping route, including HOHR's legacy dashboard.
+loadCSuiteMappingCard=async function(){var host=document.getElementById('mainContent');if(host&&rcHR()){var card=document.createElement('section');card.className='card';rcNode('h3','C-Suite Mapping',card);rcNode('p','Manage verified company/department defaults on the dedicated page. Existing executive cases stay private.',card);rcButton('Open C-Suite Mapping',()=>navigateTo(APP.currentRole==='hr'?'hr-csuite-mapping':'hohr-csuite-mapping'),card);host.appendChild(card);}};
 
 </script>
 </body>
