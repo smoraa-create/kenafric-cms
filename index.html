@@ -690,7 +690,7 @@ var pages = [];
 if (role === 'employee') {
 pages = [{id:'emp-profile',label:'My Profile'},{id:'emp-selfassess',label:'Self Assessment'},{id:'emp-mgrview',label:'Manager Assessment'},{id:'emp-gaps',label:'My Gaps'},{id:'emp-strengths',label:'My Strengths'},{id:'emp-devplans',label:'Development Plans'}];
 } else if (role === 'manager') {
-pages = [{id:'mgr-dashboard',label:'Dashboard'},{id:'mgr-team',label:'My Team'},{id:'mgr-prompool',label:'Promotion-Ready Pool'},{id:'mgr-assess',label:'Assessment'},{id:'mgr-details',label:'Assessment Details'},{id:'mgr-requests',label:'Requests'},{id:'mgr-gaps',label:'Team Gaps'},{id:'mgr-devplans',label:'Development Plans'},{id:'mgr-setcomp',label:'Set Competencies'},{id:'mgr-repappr',label:'Report Approvals'},{id:'mgr-comp',label:'Competency Library (View)'}];
+pages = [{id:'mgr-dashboard',label:'Dashboard'},{id:'mgr-team',label:'My Team'},{id:'mgr-prompool',label:'Progression-Ready Pool'},{id:'mgr-assess',label:'Assessment'},{id:'mgr-details',label:'Assessment Details'},{id:'mgr-requests',label:'Requests'},{id:'mgr-gaps',label:'Team Gaps'},{id:'mgr-devplans',label:'Development Plans'},{id:'mgr-setcomp',label:'Set Competencies'},{id:'mgr-repappr',label:'Report Approvals'},{id:'mgr-comp',label:'Competency Library (View)'}];
 } else if (role === 'hohr') {
 pages = [{id:'hohr-dash',label:'Dashboard'},{id:'hohr-kpi',label:'Critical Roles'},{id:'hohr-positions',label:'Positions & Criticality'},{id:'hohr-assessed',label:'Assessed'},{id:'hohr-pool',label:'Talent Pool'},{id:'hohr-reports',label:'All Reports'},{id:'hohr-assess',label:'All Assessments'},{id:'hohr-devplans',label:'Approved Dev Plans'},{id:'hohr-staff',label:'All Staff'},{id:'hohr-gaps',label:'All Gaps'},{id:'hohr-strengths',label:'All Strengths'},{id:'hohr-comp',label:'Competency Library'}];
 }
@@ -698,7 +698,7 @@ else if (role === 'csuite') {
 pages = [{id:'cs-reports',label:'Executive Recommendations'}];
 } 
 else if (role === 'hr') {
-pages = [{id:'hr-dashboard',label:'Dashboard'},{id:'hr-kpi',label:'KPI Dashboard'},{id:'hr-managers',label:'Line Managers'},{id:'hr-departments',label:'Departments'},{id:'hr-companies',label:'Companies'},{id:'hr-prompool',label:'Promotion-Ready Pool'},{id:'hr-staff',label:'All Employees'},{id:'hr-review',label:'Assessment Review'},{id:'hr-gaps',label:'Employee Gaps'},{id:'hr-devplans',label:'Development Plans'},{id:'hr-all',label:'All Assessments'},{id:'hr-reports',label:'Reports'},{id:'hr-repappr',label:'Report Approvals'},{id:'hr-positions',label:'Positions & Criticality'},{id:'hr-comp',label:'Competency Library'},{id:'hr-redo',label:'Redo Requests'}];
+pages = [{id:'hr-dashboard',label:'Dashboard'},{id:'hr-kpi',label:'KPI Dashboard'},{id:'hr-managers',label:'Line Managers'},{id:'hr-departments',label:'Departments'},{id:'hr-companies',label:'Companies'},{id:'hr-prompool',label:'Progression-Ready Pool'},{id:'hr-staff',label:'All Employees'},{id:'hr-review',label:'Assessment Review'},{id:'hr-gaps',label:'Employee Gaps'},{id:'hr-devplans',label:'Development Plans'},{id:'hr-all',label:'All Assessments'},{id:'hr-reports',label:'Reports'},{id:'hr-repappr',label:'Report Approvals'},{id:'hr-positions',label:'Positions & Criticality'},{id:'hr-comp',label:'Competency Library'},{id:'hr-redo',label:'Redo Requests'}];
 }
 if (role === 'hr') pages.push({id:'hr-comp-approvals',label:'Competency Approvals & Validation'});
 if (role === 'hohr') pages.push({id:'hohr-comp-approvals',label:'Competency Approvals & Validation'});
@@ -783,7 +783,7 @@ document.querySelectorAll('.sb-item').forEach(function(b) { b.classList.toggle('
 function getPageLabel(id) {
 if (id === 'hohr-comp-approvals') return 'Competency Approvals & Validation';
 if (id === 'hr-comp-approvals') return 'Competency Approvals & Validation';
-var map = {'emp-profile':'My Profile','emp-selfassess':'Self Assessment','emp-mgrview':'Manager Assessment','emp-gaps':'My Gaps','emp-strengths':'My Strengths','emp-devplans':'Development Plans','mgr-dashboard':'Dashboard','mgr-team':'My Team','mgr-prompool':'Promotion-Ready Pool','mgr-assess':'Assessment','mgr-details':'Assessment Details','mgr-gaps':'Team Gaps','mgr-devplans':'Development Plans','mgr-requests':'Requests','mgr-repappr':'Report Approvals','mgr-setcomp':'Set Competencies','mgr-comp':'Competency Library (View)','hohr-reports':'Report Approvals','hohr-comp':'Competency Library','cs-reports':'Executive Recommendations','hr-dashboard':'Dashboard','hr-kpi':'KPI Dashboard','hr-departments':'Departments','hr-companies':'Companies','hr-prompool':'Promotion-Ready Pool','hr-staff':'All Employees','hr-managers':'Line Managers','hr-review':'Assessment Review','hr-gaps':'Employee Gaps','hr-devplans':'Development Plans','hr-all':'All Assessments','hr-reports':'Reports','hr-repappr':'Report Approvals','hr-comp':'Competency Library','hr-redo':'Redo Requests','hr-positions':'Positions & Criticality'}
+var map = {'emp-profile':'My Profile','emp-selfassess':'Self Assessment','emp-mgrview':'Manager Assessment','emp-gaps':'My Gaps','emp-strengths':'My Strengths','emp-devplans':'Development Plans','mgr-dashboard':'Dashboard','mgr-team':'My Team','mgr-prompool':'Progression-Ready Pool','mgr-assess':'Assessment','mgr-details':'Assessment Details','mgr-gaps':'Team Gaps','mgr-devplans':'Development Plans','mgr-requests':'Requests','mgr-repappr':'Report Approvals','mgr-setcomp':'Set Competencies','mgr-comp':'Competency Library (View)','hohr-reports':'Report Approvals','hohr-comp':'Competency Library','cs-reports':'Executive Recommendations','hr-dashboard':'Dashboard','hr-kpi':'KPI Dashboard','hr-departments':'Departments','hr-companies':'Companies','hr-prompool':'Progression-Ready Pool','hr-staff':'All Employees','hr-managers':'Line Managers','hr-review':'Assessment Review','hr-gaps':'Employee Gaps','hr-devplans':'Development Plans','hr-all':'All Assessments','hr-reports':'Reports','hr-repappr':'Report Approvals','hr-comp':'Competency Library','hr-redo':'Redo Requests','hr-positions':'Positions & Criticality'}
 return map[id] || '';
 }
 // Current-role decisions require both submissions; zero is a valid score.
@@ -850,11 +850,11 @@ function makeGapBar(name, pct, color) {
 return '<div class="gap-bar"><span class="name">' + name + '</span><div class="bar"><div class="bar-fill" style="width:' + pct + '%;background:' + color + '"></div></div><span class="pct" style="color:' + color + '">' + pct + '%</span></div>';
 }
 function getCurrentRoleReadiness(pct) {
-if (pct >= 81) return { label: 'Strong Performer', detail: 'Eligible for prospective assessment', badge: 'success' };
-if (pct >= 71) return { label: 'Proficient', detail: 'Minor refinement, reassess in 6 months', badge: 'info' };
-if (pct >= 61) return { label: 'Developing', detail: 'Structured coaching, reassess in 12 months', badge: 'warning' };
-if (pct >= 51) return { label: 'Below Expectations', detail: 'Targeted development, reassess in 18 months', badge: 'danger' };
-return { label: 'Critical Gap', detail: 'Performance improvement plan required', badge: 'danger' };
+if (pct >= 80) return { label: 'Strong / Highly Proficient', detail: 'Meets the role at a high standard', badge: 'success' };
+if (pct >= 70) return { label: 'Proficient', detail: 'Development plan for refinement, reassess in 6 months', badge: 'info' };
+if (pct >= 60) return { label: 'Developing', detail: 'Development plan and coaching, reassess in 12 months', badge: 'warning' };
+if (pct >= 50) return { label: 'Below Expectations', detail: 'Targeted development plan, reassess in 18 months', badge: 'danger' };
+return { label: 'Significant Gap', detail: 'Individual development plan required (performance concerns are handled separately)', badge: 'danger' };
 }
 function tierMaximums(tiers) {
 var hasC = tiers.critical.total > 0, hasI = tiers.important.total > 0, hasV = tiers.valueAdd.total > 0;
@@ -907,10 +907,10 @@ return totalWeight > 0 ? Math.round(weightedScore / totalWeight) : 0;
 }
 function ord(n){ n = +n; if (n === 1) return '1st'; if (n === 2) return '2nd'; if (n === 3) return '3rd'; return n + 'th'; }
 function getProspectiveReadiness(pct) {
-if (pct >= 81) return { label: 'Ready Now: Recommend for promotion' };
-if (pct >= 71) return { label: 'Near Ready: Develop for 6 months' };
-if (pct >= 61) return { label: 'Emerging: Development plan for 12 months' };
-if (pct >= 51) return { label: 'Not Ready: Significant gaps, reassess in 18 months' };
+if (pct >= 80) return { label: 'Ready Now: readiness for consideration (not a promotion commitment)' };
+if (pct >= 70) return { label: 'Near Ready: develop for 6 months' };
+if (pct >= 60) return { label: 'Emerging: development plan for 12 months' };
+if (pct >= 50) return { label: 'Develop: reassess in 18 months' };
 return { label: 'Not Ready: Reassess after 24 months development' };
 }
 function positionRank(pos) {
@@ -1025,7 +1025,7 @@ var cs = calculateCompetencyScore(emp.employee_id, comp.code, 'Manager', formatt
 var pct = cs.total > 0 ? Math.round((cs.score / 5) * 100) : 0;
 if (cs.total > 0) assessedComps++;
 if (released && cs.total > 0) {
-if (pct >= 70) strengths.push({ name: comp.competency, pct: pct });
+if (pct >= 75) strengths.push({ name: comp.competency, pct: pct });
 else if (pct > 0) gaps.push({ name: comp.competency, pct: pct });
 }
 var entry = { name: comp.competency, score: cs.total > 0 ? cs.score : 0 };
@@ -1073,14 +1073,14 @@ html += '<div class="card"><div style="display:flex;justify-content:space-betwee
 html += '<div><div class="card-title" style="margin-bottom:2px">Competency Scores</div><div style="font-size:11px;color:var(--gray-500)">Overall weighted assessment results</div></div>';
 if (!released && hasMgr) html += '<span class="badge badge-purple">🔒 Manager results visible after HR review</span>';
 else if (!released && hasMgr) html += '<span class="badge badge-purple">🔒 Manager results visible after HR review</span>';
-else if (readiness) { var rc = profileDecision >= 81 ? 'success' : profileDecision >= 71 ? 'info' : profileDecision >= 61 ? 'warning' : 'danger'; html += '<span class="badge badge-' + rc + '">' + escapeHtml(readiness.label) + '</span>'; }
+else if (readiness) { var rc = profileDecision >= 80 ? 'success' : profileDecision >= 70 ? 'info' : profileDecision >= 60 ? 'warning' : 'danger'; html += '<span class="badge badge-' + rc + '">' + escapeHtml(readiness.label) + '</span>'; }
 else html += '<span class="badge badge-warning">Not Yet Assessed</span>';
 html += '</div>';
 var hasAvg = hasSelf && hasMgr;
 var avgScore = currentRoleDecision(selfScore, mgrScore, hasSelf, hasMgr);
 var mgrRowsRaw = (allResults || []).filter(function(r){ return r.type === 'Manager'; });
 var hrReviewed = mgrRowsRaw.length > 0 && mgrRowsRaw.some(function(r){ return r.hr_status === 'Approved'; }) && !mgrRowsRaw.some(function(r){ return r.ticked && (r.hr_status === '' || r.hr_status === 'Pending'); });
-var passedCurrent = hasAvg && hrReviewed && avgScore >= 81;
+var passedCurrent = hasAvg && hrReviewed && avgScore >= 80;
 var released = assessmentReleased(allResults || []);
 var hasAvg = hasSelf && hasMgr;
 var avgScore = currentRoleDecision(selfScore, mgrScore, hasSelf, hasMgr);
@@ -1098,9 +1098,9 @@ html += '</div>';
 if (hasAvg && released) html += '<div style="text-align:center;margin:6px 0"><span class="badge badge-' + (avgScore >= 80 ? 'success' : 'warning') + '">Final Average: ' + avgScore + '% — ' + (avgScore >= 80 ? 'meets the 80%+ prospective door' : 'below the 80%+ prospective door') + '</span></div>';
 if (hasAvg && !released) html += '<div style="text-align:center;margin:6px 0"><span class="badge badge-purple">🔒 Final Average unlocks once HR Admin approves/disapproves all Self + Manager experiences</span></div>';
 if (hasProsp && prospScore > 0) html += '<div style="text-align:center;margin:6px 0"><span class="badge badge-purple">' + escapeHtml(getProspectiveReadiness(prospScore).label) + '</span></div>';
-if (hasPS && hasProsp && psAvg > 0) html += '<div style="text-align:center;margin:6px 0"><span class="badge badge-purple">Prospective Final Average: ' + psAvg + '% — ' + (psAvg >= 81 ? 'promotion-ready line met ✅' : 'below the 81% promotion line') + '</span></div>';
+if (hasPS && hasProsp && psAvg > 0) html += '<div style="text-align:center;margin:6px 0"><span class="badge badge-purple">Prospective Final Average: ' + psAvg + '% — ' + (psAvg >= 80 ? 'readiness line met ✅' : 'below the 80% readiness line') + '</span></div>';
 if (passedCurrent && !hasProsp) html += '<div style="text-align:center;margin:6px 0"><span class="badge badge-info">🎉 You passed your current role (' + mgrScore + '%) — your prospective assessment is now open</span></div>';
-if (!passedCurrent && hasMgr) html += '<div style="text-align:center;margin:6px 0"><span class="badge badge-warning">Prospective unlocks after you pass your current role (81%+ after HR approval)</span></div>';
+if (!passedCurrent && hasMgr) html += '<div style="text-align:center;margin:6px 0"><span class="badge badge-warning">Prospective unlocks after you pass your current role (80%+ after HR approval)</span></div>';
 if (hasProsp && prospScore > 0) html += '<div style="text-align:center;margin:6px 0"><span class="badge badge-purple">' + escapeHtml(getProspectiveReadiness(prospScore).label) + '</span></div>';
 html += '</div>';
 html += '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px">';
@@ -1143,7 +1143,7 @@ if (cls.indexOf('Important') !== -1 || cls.indexOf('Performance') !== -1) return
 return 'Evidence of the Value-Add Experience...';
 }
 function rateBoxesHTML(itemId, onchange) {
-var levels = [ { v: 1, c: 'rt1', t: '1 – Unsatisfactory' }, { v: 2, c: 'rt2', t: '2 – Below Average' }, { v: 3, c: 'rt3', t: '3 – Average' }, { v: 4, c: 'rt4', t: '4 – Above Average' }, { v: 5, c: 'rt5', t: '5 – Exceptional' } ];
+var levels = [ { v: 1, c: 'rt1', t: '1 – Not demonstrated' }, { v: 2, c: 'rt2', t: '2 – Limited exposure, needs significant support' }, { v: 3, c: 'rt3', t: '3 – Demonstrates independently at expected level' }, { v: 4, c: 'rt4', t: '4 – Demonstrates consistently and handles complexity' }, { v: 5, c: 'rt5', t: '5 – Demonstrates exceptionally and can coach others' } ];
 var h = '<div class="rate-wrap"><div class="rate-instr">👉 Tick the proficiency level for this experience (required when evidence is provided):</div><div class="rate-opts">';
 levels.forEach(function(l){ h += '<span class="' + l.c + '"><input type="radio" id="rate-' + itemId + '-' + l.v + '" name="rate-' + itemId + '" value="' + l.v + '" onchange="' + onchange + '"><label for="rate-' + itemId + '-' + l.v + '">' + l.t + '</label></span>'; });
 return h + '</div></div>';
@@ -1237,7 +1237,7 @@ html += '<div style="background:var(--primary-light);border:1px solid var(--gray
 html += '<strong style="color:var(--primary-dark)">HOW TO COMPLETE THIS ASSESSMENT</strong><ol style="margin:6px 0 0 18px;padding:0">';
 html += '<li><strong>Tick</strong> only the experiences you have actually done. Leave the rest unticked — they are recorded as <strong>Not Yet Demonstrated</strong> (a gap, not a penalty).</li>';
 html += '<li>For every ticked experience, <strong>write evidence</strong>: what you did and the result (numbers, dates, names). <strong>No evidence = 0 points.</strong></li>';
-html += '<li>Then <strong>tick one proficiency level</strong> for it: <span style="color:#dc2626;font-weight:700">1 Unsatisfactory</span> · <span style="color:#ea580c;font-weight:700">2 Below Average</span> · <span style="color:#b45309;font-weight:700">3 Average</span> · <span style="color:#2563eb;font-weight:700">4 Above Average</span> · <span style="color:#059669;font-weight:700">5 Exceptional</span>. <strong>No level = 0 points.</strong></li>';
+html += '<li>Then <strong>tick one proficiency level</strong> for it: <span style="color:#dc2626;font-weight:700">1 Not demonstrated</span> · <span style="color:#ea580c;font-weight:700">2 Limited exposure, needs support</span> · <span style="color:#b45309;font-weight:700">3 Independent at expected level</span> · <span style="color:#2563eb;font-weight:700">4 Consistent, handles complexity</span> · <span style="color:#059669;font-weight:700">5 Exceptional, can coach others</span>. <strong>No level = 0 points.</strong></li>';
 html += '<li>Score per experience = <strong>level ÷ 5 × its weight</strong> (Critical counts most). The Weighted Score updates as you fill in. Your work is <strong>auto‑saved every 20 seconds</strong> (you can also press Save Draft), but you can <strong>submit only once</strong>.</li>';
 html += '</ol></div>';
 html += '<p style="font-size:12px;color:var(--gray-500);margin-bottom:16px">Tick each experience you have demonstrated and provide evidence (no evidence = no point). Leave unticked to record it as <strong>Not Yet Demonstrated</strong>.</p>';
@@ -1433,7 +1433,7 @@ var comp = APP.competencies[i];
 var cs = calculateCompetencyScore(emp.employee_id, comp.code, 'Manager', formattedResults);
 if (cs.total > 0) {
 var pct = Math.round((cs.score / 5) * 100);
-if (pct < 70 && pct > 0) gaps.push({ name: comp.competency, pct: pct });
+if (pct < 75 && pct > 0) gaps.push({ name: comp.competency, pct: pct });
 }
 }
 gaps.sort((a, b) => a.pct - b.pct);
@@ -1463,7 +1463,7 @@ var comp = APP.competencies[i];
 var cs = calculateCompetencyScore(emp.employee_id, comp.code, 'Manager', formattedResults);
 if (cs.total > 0) {
 var pct = Math.round((cs.score / 5) * 100);
-if (pct >= 70) strengths.push({ name: comp.competency, pct: pct });
+if (pct >= 75) strengths.push({ name: comp.competency, pct: pct });
 }
 }
 strengths.sort((a, b) => b.pct - a.pct);
@@ -1592,8 +1592,8 @@ html += '<div class="stat-card" style="background:var(--primary-light)"><div cla
 html += '<div class="stat-card" style="background:var(--green-light)"><div class="num" style="color:var(--green)">' + assessed.length + '</div><div class="lbl">Assessments Complete</div></div>';
 html += '<div class="stat-card" style="background:var(--orange-light)"><div class="num" style="color:var(--orange)">' + pending.length + '</div><div class="lbl">Pending Assessments</div></div>';
 html += '<div class="stat-card" style="background:var(--purple-light)"><div class="num" style="color:var(--purple)">' + teamAvg + '%</div><div class="lbl">Avg Team Score</div></div>';
-var poolCount = team.filter(function(t){ return t.hasP && t.pScore >= 81; }).length;
-html += '<div class="stat-card" style="background:var(--orange-light)"><div class="num" style="color:var(--orange)">' + poolCount + '</div><div class="lbl">In Promotion-Ready Pool</div></div>';
+var poolCount = team.filter(function(t){ return t.hasP && t.pScore >= 80; }).length;
+html += '<div class="stat-card" style="background:var(--orange-light)"><div class="num" style="color:var(--orange)">' + poolCount + '</div><div class="lbl">In Progression-Ready Pool</div></div>';
 html += '</div>';
 html += '<div class="card"><div class="card-title">Direct Reports</div><p style="font-size:11px;color:var(--gray-500);margin-bottom:8px"><strong>Current</strong> = the employee\'s present role (Self = their own rating, Manager = yours). <strong>Prospective</strong> = readiness for the next role (Self = their own rating, Manager = yours). 🔒 = unlocks once HR Admin completes the review.</p><div class="table-wrap"><table class="staff-table" style="white-space:nowrap"><thead><tr><th>Employee</th><th>Self — Cur</th><th>Mgr — Cur</th><th>Final Avg</th><th>Self — Prosp</th><th>Mgr — Prosp</th><th>Prosp Avg</th><th>Ready For</th><th>Readiness</th><th>Management Decision</th><th>Status</th></tr></thead><tbody>';
 team.forEach(function(t) {
@@ -1706,7 +1706,7 @@ var decFinal = dec && (String(dec.status).indexOf('Approved') === 0 || String(de
 var rec = '';
 if (decFinal) rec = '🏛 Organizational decision: ' + decFinal;
 else if (t.finalAvg >= 80) {
-if (t.prospDone) rec = t.prospScore >= 81 ? 'Recommend for Promotion' : 'Develop: ' + getProspectiveReadiness(t.prospScore).label;
+if (t.prospDone) rec = t.prospScore >= 80 ? 'Recommend for Promotion' : 'Develop: ' + getProspectiveReadiness(t.prospScore).label;
 else rec = 'Next: Assess Prospective Role';
 } else {
 rec = 'Develop: ' + getCurrentRoleReadiness(t.finalAvg).detail;
@@ -1747,7 +1747,7 @@ var manager = null;
 var team = (allEmps || []).filter(function(e){ return e.manager_email === APP.user.email && e.email !== APP.user.email; });
 const { data: rap1 } = await _supabase.from('report_approvals').select('*');
 var appr1 = {}; (rap1 || []).forEach(function(r){ appr1[r.employee_id] = r.status; });
-setContent(promPoolHTML(team, allResults || [], 'My Promotion-Ready Pool', 'Members of your team who score 81%+ on a Prospective Role Assessment join this pool. Actual appointment remains subject to vacancy availability and management approval.', appr1));
+setContent(promPoolHTML(team, allResults || [], 'My Progression-Ready Pool', 'Members of your team who score 80%+ on a Prospective Role Assessment join this pool. Actual appointment remains subject to vacancy availability and management approval.', appr1));
 }
 async function loadHRPromPool() {
 setContent('<div class="loading"><div class="spinner"></div>Loading...</div>');
@@ -1755,7 +1755,7 @@ const { data: allEmps } = await _supabase.from('employees').select('*');
 const { data: allResults } = await _supabase.from('assessments').select(ASSESS_COLS);
 const { data: rap2 } = await _supabase.from('report_approvals').select('*');
 var appr2 = {}; (rap2 || []).forEach(function(r){ appr2[r.employee_id] = r.status; });
-setContent(promPoolHTML(allEmps || [], allResults || [], '🏆 Promotion-Ready Pool', 'Staff who score 81%+ on a Prospective Role Assessment join this pool. Actual appointment remains subject to vacancy availability and management approval.', appr2));
+setContent(promPoolHTML(allEmps || [], allResults || [], '🏆 Progression-Ready Pool', 'Staff who score 80%+ on a Prospective Role Assessment join this pool. Actual appointment remains subject to vacancy availability and management approval.', appr2));
 }
 function promPoolHTML(emps, allResults, title, note, appr) {
 var pool = [];
@@ -1765,7 +1765,7 @@ if (!pRows.length) return;
 var latest = latestOnly(pRows);
 var pfr = latest.map(function(r){ return { 'Employee ID': r.employee_id, 'Competency Code': r.comp_code, 'Type': r.type, 'Ticked': r.ticked, 'Evidence': r.evidence, 'HR_Status': r.hr_status, 'Rating': r.proficiency_rating }; });
 var pscore = calculateOverallScore(e.employee_id, 'Prospective', pfr);
-if (pscore < 81) return;
+if (pscore < 80) return;
 var mRows = (allResults || []).filter(function(r){ return r.employee_id === e.employee_id && r.type === 'Manager'; });
 var mscore = mRows.length ? calculateOverallScore(e.employee_id, 'Manager', latestOnly(mRows).map(function(r){ return { 'Employee ID': r.employee_id, 'Competency Code': r.comp_code, 'Type': r.type, 'Ticked': r.ticked, 'Evidence': r.evidence, 'HR_Status': r.hr_status, 'Rating': r.proficiency_rating }; })) : 0;
 pool.push({ id: e.employee_id, name: e.employee_name, position: e.position, company: e.company, prospRole: latest[0].prospective_role || '', pscore: pscore, mscore: mscore, date: latest[0].assessment_date || '' });
@@ -1775,7 +1775,7 @@ var html = '<div class="card"><div class="card-title">' + title + '</div>';
 html += '<p style="font-size:12px;color:var(--gray-500);margin-bottom:12px">' + note + '</p>';
 html += '<div class="stats-grid"><div class="stat-card" style="background:var(--purple-light)"><div class="num" style="color:var(--purple)">' + pool.length + '</div><div class="lbl">In the Pool</div></div></div>';
 if (!pool.length) {
-html += '<p style="color:var(--gray-500)">No one is in the Promotion-Ready Pool yet. Staff appear here automatically once they score 81%+ on a Prospective Role Assessment.</p>';
+html += '<p style="color:var(--gray-500)">No one is in the Progression-Ready Pool yet. Staff appear here automatically once they score 80%+ on a Prospective Role Assessment.</p>';
 } else {
 html += '<div class="table-wrap"><table><thead><tr><th>Employee</th><th>Current Position</th><th>Current Role Score</th><th>Ready For</th><th>Prospective Score</th><th>Assessed On</th><th>Status</th></tr></thead><tbody>';
 pool.forEach(function(p) {
@@ -1930,7 +1930,7 @@ html += '<div style="background:var(--primary-light);border:1px solid var(--gray
 html += '<strong style="color:var(--primary-dark)">HOW TO COMPLETE THIS ASSESSMENT</strong><ol style="margin:6px 0 0 18px;padding:0">';
 html += '<li><strong>Tick</strong> only the experiences the employee has actually done. Leave the rest unticked — they are recorded as <strong>Not Yet Demonstrated</strong> (a gap, not a penalty).</li>';
 html += '<li>For every ticked experience, <strong>write evidence</strong>: what the employee did and the result (numbers, dates, names). <strong>No evidence = 0 points.</strong></li>';
-html += '<li>Then <strong>tick one proficiency level</strong> for it: <span style="color:#dc2626;font-weight:700">1 Unsatisfactory</span> · <span style="color:#ea580c;font-weight:700">2 Below Average</span> · <span style="color:#b45309;font-weight:700">3 Average</span> · <span style="color:#2563eb;font-weight:700">4 Above Average</span> · <span style="color:#059669;font-weight:700">5 Exceptional</span>. <strong>No level = 0 points.</strong></li>';
+html += '<li>Then <strong>tick one proficiency level</strong> for it: <span style="color:#dc2626;font-weight:700">1 Not demonstrated</span> · <span style="color:#ea580c;font-weight:700">2 Limited exposure, needs support</span> · <span style="color:#b45309;font-weight:700">3 Independent at expected level</span> · <span style="color:#2563eb;font-weight:700">4 Consistent, handles complexity</span> · <span style="color:#059669;font-weight:700">5 Exceptional, can coach others</span>. <strong>No level = 0 points.</strong></li>';
 html += '<li>Score per experience = <strong>level ÷ 5 × its weight</strong> (Critical counts most). The Weighted Score updates as you fill in. Your work is <strong>auto‑saved every 20 seconds</strong> (you can also press Save Draft), but you can <strong>submit only once</strong>.</li>';
 html += '</ol></div>';
 out.forEach(function(comp, ci) {
@@ -1985,7 +1985,7 @@ html += '<div style="background:var(--primary-light);border:1px solid var(--gray
 html += '<strong style="color:var(--primary-dark)">HOW TO COMPLETE THIS ASSESSMENT</strong><ol style="margin:6px 0 0 18px;padding:0">';
 html += '<li><strong>Tick</strong> only the experiences the employee has actually done. Leave the rest unticked — they are recorded as <strong>Not Yet Demonstrated</strong> (a gap, not a penalty).</li>';
 html += '<li>For every ticked experience, <strong>write evidence</strong>: what the employee did and the result (numbers, dates, names). <strong>No evidence = 0 points.</strong></li>';
-html += '<li>Then <strong>tick one proficiency level</strong> for it: <span style="color:#dc2626;font-weight:700">1 Unsatisfactory</span> · <span style="color:#ea580c;font-weight:700">2 Below Average</span> · <span style="color:#b45309;font-weight:700">3 Average</span> · <span style="color:#2563eb;font-weight:700">4 Above Average</span> · <span style="color:#059669;font-weight:700">5 Exceptional</span>. <strong>No level = 0 points.</strong></li>';
+html += '<li>Then <strong>tick one proficiency level</strong> for it: <span style="color:#dc2626;font-weight:700">1 Not demonstrated</span> · <span style="color:#ea580c;font-weight:700">2 Limited exposure, needs support</span> · <span style="color:#b45309;font-weight:700">3 Independent at expected level</span> · <span style="color:#2563eb;font-weight:700">4 Consistent, handles complexity</span> · <span style="color:#059669;font-weight:700">5 Exceptional, can coach others</span>. <strong>No level = 0 points.</strong></li>';
 html += '<li>Score per experience = <strong>level ÷ 5 × its weight</strong> (Critical counts most). The Weighted Score updates as you fill in. You may <strong>Save Draft</strong>, but you can <strong>submit only once</strong>.</li>';
 html += '</ol></div>';
 out.forEach(function(comp, ci) {
@@ -2964,10 +2964,10 @@ var pRows = (allResults || []).filter(function(r){ return r.employee_id === e.em
 var pscore = 0, promHtml = '<span style="color:var(--gray-400)">—</span>';
 if (pRows.length) {
 pscore = calculateOverallScore(e.employee_id, 'Prospective', fmtRows(pRows));
-promHtml = pscore >= 81 ? '<span class="badge badge-success">✓ Promotion Ready (' + pscore + '%)</span>' : '<span class="badge badge-info">' + pscore + '% — ' + getProspectiveReadiness(pscore).label + '</span>';
+promHtml = pscore >= 80 ? '<span class="badge badge-success">✓ Promotion Ready (' + pscore + '%)</span>' : '<span class="badge badge-info">' + pscore + '% — ' + getProspectiveReadiness(pscore).label + '</span>';
 }
 var plans = (allPlans || []).filter(function(p){ return p.employee_id === e.employee_id; });
-return { assessed: allDone, ready: pscore >= 81, idp: plans.length > 0, idpCount: plans.length, assessHtml: assessHtml, promHtml: promHtml };
+return { assessed: allDone, ready: pscore >= 80, idp: plans.length > 0, idpCount: plans.length, assessHtml: assessHtml, promHtml: promHtml };
 }
 var tierStats = {};
 TIERS.forEach(function(t){ tierStats[t] = { positions: {}, staff: 0, assessed: 0, ready: 0, idp: 0 }; });
@@ -2983,7 +2983,7 @@ TIERS.forEach(function(t){ assessed += tierStats[t].assessed; promoted += tierSt
 var pctAssessed = total ? Math.round((assessed / total) * 100) : 0;
 var pctPromoted = total ? Math.round((promoted / total) * 100) : 0;
 var pctIdp = total ? Math.round((onIdp / total) * 100) : 0;
-var html = '<div class="card"><div class="card-title">🎯 HR KPI Dashboard — Critical Roles Only</div><p style="font-size:12px;color:var(--gray-500)">Counts ONLY staff in positions YOU mark as critical, split by criticality level. Employees scoring 81%+ on a Prospective Role Assessment join the Promotion-Ready Pool. Actual appointment remains subject to vacancy availability and management approval. Self-assessments and general roles are excluded.</p></div>';
+var html = '<div class="card"><div class="card-title">🎯 HR KPI Dashboard — Critical Roles Only</div><p style="font-size:12px;color:var(--gray-500)">Counts ONLY staff in positions YOU mark as critical, split by criticality level. Employees scoring 80%+ on a Prospective Role Assessment join the Progression-Ready Pool. Actual appointment remains subject to vacancy availability and management approval. Self-assessments and general roles are excluded.</p></div>';
 html += '<div class="stats-grid">';
 html += '<div class="stat-card" style="background:var(--red-light)"><div class="num" style="color:var(--red)">' + critList.length + '</div><div class="lbl">Critical Roles Identified</div></div>';
 html += '<div class="stat-card" style="background:var(--primary-light)"><div class="num" style="color:var(--primary)">' + total + '</div><div class="lbl">Staff in Critical Roles</div></div>';
@@ -3709,7 +3709,7 @@ html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:
 html += '<div class="form-group"><label>1. STRENGTHS — your professional observations (editable)</label><textarea id="hohrStrengths" rows="4" style="width:100%">' + escapeHtml(d.ex && d.ex.strengths_text ? d.ex.strengths_text : d.cur.st.join(NL)) + '</textarea></div>';
 html += '<div class="form-group"><label>2. GAPS & DEVELOPMENT NEEDS (editable)</label><textarea id="hohrGaps" rows="4" style="width:100%">' + escapeHtml(d.ex && d.ex.gaps_text ? d.ex.gaps_text : d.cur.gp.join(NL)) + '</textarea></div>';
 html += '<div class="form-group"><label>3. HR RECOMMENDATION (editable)</label><textarea id="hohrRec" rows="3" style="width:100%">' + escapeHtml(d.ex && d.ex.recommendation_text ? d.ex.recommendation_text : '') + '</textarea></div>';
-html += '<div class="form-group"><label>Suggested path (your recommendation — HOHR makes the final decision)</label><select id="hohrPath" style="width:auto"><option>Promote — appoint now (subject to vacancy & process)</option><option>Promotion Ready — hold in Promotion-Ready Pool; develop to close remaining gaps</option><option>Develop for 3 months, then reassess</option><option>Develop for 6 months, then reassess</option><option>Develop for 12 months, then reassess</option><option>Develop for 18 months, then reassess</option><option>Performance improvement plan required</option><option>Retain & develop — no promotion path currently</option></select></div>';
+html += '<div class="form-group"><label>Suggested path (your recommendation — HOHR makes the final decision)</label><select id="hohrPath" style="width:auto"><option>Promote — appoint now (subject to vacancy & process)</option><option>Promotion Ready — hold in Progression-Ready Pool; develop to close remaining gaps</option><option>Develop for 3 months, then reassess</option><option>Develop for 6 months, then reassess</option><option>Develop for 12 months, then reassess</option><option>Develop for 18 months, then reassess</option><option>Performance improvement plan required</option><option>Retain & develop — no promotion path currently</option></select></div>';
 if (d.ex) html += '<p style="font-size:11px;color:var(--gray-500)">Existing report status: ' + escapeHtml(d.ex.status) + ' (' + escapeHtml(d.ex.stage) + ')</p>';
 html += '<div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap"><button class="btn btn-primary" onclick="saveHOHRReport(\'' + empId + '\',false)">📤 Submit to Head of HR</button> <button class="btn btn-outline" onclick="saveHOHRReport(\'' + empId + '\',true)">💾 Save Draft</button> <button class="btn btn-outline" onclick="printHOHRReport(\'' + empId + '\')">📄 Print / PDF</button> <button class="btn btn-success" onclick="downloadHOHRReportWord(\'' + empId + '\')">📝 Word</button> <button class="btn btn-outline" onclick="loadHRAllDetail(\'' + empId + '\')">Cancel</button></div>';
 html += '</div>';
@@ -3811,7 +3811,7 @@ var strengths = [];
 for (var i = 0; i < APP.competencies.length; i++) {
 var comp = APP.competencies[i];
 var cs = calculateCompetencyScore(emp.employee_id, comp.code, 'Manager', fr);
-if (cs.total > 0) { var pct = Math.round((cs.score / 5) * 100); if (pct >= 70) strengths.push({ name: comp.competency, pct: pct }); }
+if (cs.total > 0) { var pct = Math.round((cs.score / 5) * 100); if (pct >= 75) strengths.push({ name: comp.competency, pct: pct }); }
 }
 if (!strengths.length) return;
 any = true;
@@ -3863,7 +3863,7 @@ rows.forEach(function(r){ var g = groupOf(r); if (counts[g] !== undefined) count
 var avatarColors = ['#8b5cf6','#ef4444','#f59e0b','#10b981','#3b82f6','#ec4899','#14b8a6','#a16207'];
 function avColor(name){ var h = 0; for (var i = 0; i < (name || '').length; i++) h = (h * 31 + name.charCodeAt(i)) % 997; return avatarColors[h % avatarColors.length]; }
 function initials(n){ var p = (n || '').split(' '); return p.length >= 2 ? p[0].charAt(0) + p[1].charAt(0) : (n || '?').charAt(0); }
-function dot(s){ return s >= 81 ? 'var(--green)' : s >= 71 ? 'var(--primary)' : s >= 61 ? 'var(--orange)' : 'var(--red)'; }
+function dot(s){ return s >= 80 ? 'var(--green)' : s >= 70 ? 'var(--primary)' : s >= 60 ? 'var(--orange)' : 'var(--red)'; }
 var f = window._hohrFilter || 'all';
 var html = '<div class="hohr-wrap"><div>';
 html += '<div style="margin-bottom:14px"><div style="font-size:20px;font-weight:800;color:var(--gray-900)">Report Approvals</div><div style="font-size:12px;color:var(--gray-500)">' + (counts.pending + counts.escalated) + ' assessments awaiting your review</div></div>';
@@ -3985,7 +3985,7 @@ else {
 sendCMSemail(r.submitted_by, 'Decision: ' + decision + ' — ' + r.employee_name, 'Head of HR decision for ' + r.employee_name + ': ' + decision + '.' + (comment ? ' Comment: ' + comment : ''));
 if (mgrEmail) {
 if (decision.indexOf('Development Plan') >= 0) sendCMSemail(mgrEmail, 'Development Plan Directed: ' + r.employee_name, 'The Head of HR directed a DEVELOPMENT PLAN for ' + r.employee_name + '. Create the IDP from their gaps in the CMS: ' + APP_LINK);
-else if (decision.indexOf('Hold') >= 0) sendCMSemail(mgrEmail, 'Promotion Approved (Hold — No Vacancy): ' + r.employee_name, r.employee_name + ' is approved for promotion but held in the Promotion-Ready Pool until a vacancy arises. Continue their development in the meantime.');
+else if (decision.indexOf('Hold') >= 0) sendCMSemail(mgrEmail, 'Promotion Approved (Hold — No Vacancy): ' + r.employee_name, r.employee_name + ' is approved for promotion but held in the Progression-Ready Pool until a vacancy arises. Continue their development in the meantime.');
 else sendCMSemail(mgrEmail, 'Promotion Approved: ' + r.employee_name, r.employee_name + ' has been approved for promotion by the Head of HR (subject to company process).');
 }
 showToast('Decision saved — notifications sent');
@@ -4046,7 +4046,7 @@ var selfList = assessedList.filter(function(e){ return empStats[e.employee_id].h
 var empAvg = selfList.length ? Math.round(selfList.reduce(function(a,e){ return a + empStats[e.employee_id].selfScore; }, 0) / selfList.length) : 0;
 var finalAvg = pairedCurrentAverage(assessedList, empStats);
 var dist = { a: 0, b: 0, c: 0, d: 0 };
-assessedList.forEach(function(e){ var s = empStats[e.employee_id].mgrScore; if (s >= 81) dist.a++; else if (s >= 71) dist.b++; else if (s >= 61) dist.c++; else dist.d++; });
+assessedList.forEach(function(e){ var s = empStats[e.employee_id].mgrScore; if (s >= 80) dist.a++; else if (s >= 70) dist.b++; else if (s >= 60) dist.c++; else dist.d++; });
 function pctOf(n){ return totalAssessed ? Math.round((n / totalAssessed) * 100) : 0; }
 var compAgg = {};
 var compAgg = {};
@@ -4062,7 +4062,7 @@ if (cs.total > 0) { counted++; if (Math.round((cs.score / 5) * 100) < 70) below+
 if (counted) gapRows.push({ name: comp.competency, pct: Math.round((below / counted) * 100) });
 }
 gapRows.sort(function(a,b){ return b.pct - a.pct; });
-var succReadyList = (empRows || []).filter(function(e){ return empStats[e.employee_id].prospScore >= 81; });
+var succReadyList = (empRows || []).filter(function(e){ return empStats[e.employee_id].prospScore >= 80; });
 var succReady = pctOf(succReadyList.length);
 var pipe = {};
 succReadyList.forEach(function(e){ var st = empStats[e.employee_id]; if (st.prospRole) { if (!pipe[st.prospRole]) pipe[st.prospRole] = []; pipe[st.prospRole].push({ name: e.employee_name, company: companyOf[e.employee_id], score: st.prospScore }); } });
@@ -4106,7 +4106,7 @@ html += '<div class="cs-section" data-tab="recs" style="display:none">';
 html += '<div class="cs-card"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><h3>Executive Recommendations</h3><span class="cs-badge">Escalated — your departments only</span></div>';
 if (!reqs.length) html += '<p style="font-size:12px;color:var(--gray-500);margin-top:10px">No escalated reports for your departments yet.</p>';
 reqs.forEach(function(r){
-var badge = (r.prosp_score >= 81) ? '<span class="badge badge-success">Ready Now</span>' : '<span class="badge badge-warning">Developing</span>';
+var badge = (r.prosp_score >= 80) ? '<span class="badge badge-success">Ready Now</span>' : '<span class="badge badge-warning">Developing</span>';
 html += '<div style="border:1px solid var(--gray-200);border-radius:10px;padding:14px;margin-top:12px">';
 html += '<div style="display:flex;align-items:flex-start;gap:12px"><div style="width:38px;height:38px;border-radius:10px;background:' + avColor(r.employee_name) + ';color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:12px;flex:none">' + escapeHtml(initials(r.employee_name)) + '</div>';
 html += '<div style="flex:1"><div style="font-weight:800;font-size:13px">' + escapeHtml(r.employee_name) + '</div><div style="font-size:11px;color:var(--gray-500)">' + escapeHtml(r.position) + ' · ' + escapeHtml(deptOf[r.employee_id] || '') + '</div>';
@@ -4131,9 +4131,9 @@ html += '</div></div>';
 });
 html += '</div></div>';
 html += '<div class="cs-section" data-tab="pipe" style="display:none">';
-html += '<div class="cs-card"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><h3>Key Succession Pipeline</h3><span class="cs-badge">Promotion-Ready Pool</span></div>';
+html += '<div class="cs-card"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><h3>Key Succession Pipeline</h3><span class="cs-badge">Progression-Ready Pool</span></div>';
 var roleKeys = Object.keys(pipe);
-if (!roleKeys.length) html += '<p style="font-size:12px;color:var(--gray-500);margin-top:10px">No promotion-ready staff yet (prospective score 81%+).</p>';
+if (!roleKeys.length) html += '<p style="font-size:12px;color:var(--gray-500);margin-top:10px">No promotion-ready staff yet (prospective score 80%+).</p>';
 var panelColors = ['#dbeafe','#d1fae5','#ede9fe','#ffedd5','#fce7f3']; var pi = 0;
 html += '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-top:12px">';
 roleKeys.slice(0, 6).forEach(function(role){
@@ -4243,7 +4243,7 @@ var selfList = assessedList.filter(function(e){ return empStats[e.employee_id].h
 var empAvg = selfList.length ? Math.round(selfList.reduce(function(a,e){ return a + empStats[e.employee_id].selfScore; }, 0) / selfList.length) : 0;
 var finalAvg = pairedCurrentAverage(assessedList, empStats);
 var dist = { a: 0, b: 0, c: 0, d: 0 };
-assessedList.forEach(function(e){ var s = empStats[e.employee_id].mgrScore; if (s >= 81) dist.a++; else if (s >= 71) dist.b++; else if (s >= 61) dist.c++; else dist.d++; });
+assessedList.forEach(function(e){ var s = empStats[e.employee_id].mgrScore; if (s >= 80) dist.a++; else if (s >= 70) dist.b++; else if (s >= 60) dist.c++; else dist.d++; });
 function pctOf(n){ return totalAssessed ? Math.round((n / totalAssessed) * 100) : 0; }
 var compAgg = {};
 var compAgg = {};
@@ -4259,7 +4259,7 @@ if (cs.total > 0) { counted++; if (Math.round((cs.score / 5) * 100) < 70) below+
 if (counted) gapRows.push({ name: comp.competency, pct: Math.round((below / counted) * 100) });
 }
 gapRows.sort(function(a,b){ return b.pct - a.pct; });
-var succReadyList = (empRows || []).filter(function(e){ return empStats[e.employee_id].prospScore >= 81; });
+var succReadyList = (empRows || []).filter(function(e){ return empStats[e.employee_id].prospScore >= 80; });
 var succReady = pctOf(succReadyList.length);
 var pipe = {};
 succReadyList.forEach(function(e){ var st = empStats[e.employee_id]; if (st.prospRole) { if (!pipe[st.prospRole]) pipe[st.prospRole] = []; pipe[st.prospRole].push({ name: e.employee_name, company: companyOf[e.employee_id], score: st.prospScore }); } });
@@ -4303,7 +4303,7 @@ html += '<div class="cs-section" data-tab="recs" style="display:none">';
 html += '<div class="cs-card"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><h3>Executive Recommendations</h3><span class="cs-badge">Escalated — your departments only</span></div>';
 if (!reqs.length) html += '<p style="font-size:12px;color:var(--gray-500);margin-top:10px">No escalated reports for your departments yet.</p>';
 reqs.forEach(function(r){
-var badge = (r.prosp_score >= 81) ? '<span class="badge badge-success">Ready Now</span>' : '<span class="badge badge-warning">Developing</span>';
+var badge = (r.prosp_score >= 80) ? '<span class="badge badge-success">Ready Now</span>' : '<span class="badge badge-warning">Developing</span>';
 html += '<div style="border:1px solid var(--gray-200);border-radius:10px;padding:14px;margin-top:12px">';
 html += '<div style="display:flex;align-items:flex-start;gap:12px"><div style="width:38px;height:38px;border-radius:10px;background:' + avColor(r.employee_name) + ';color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:12px;flex:none">' + escapeHtml(initials(r.employee_name)) + '</div>';
 html += '<div style="flex:1"><div style="font-weight:800;font-size:13px">' + escapeHtml(r.employee_name) + '</div><div style="font-size:11px;color:var(--gray-500)">' + escapeHtml(r.position) + ' · ' + escapeHtml(deptOf[r.employee_id] || '') + '</div>';
@@ -4328,9 +4328,9 @@ html += '</div></div>';
 });
 html += '</div></div>';
 html += '<div class="cs-section" data-tab="pipe" style="display:none">';
-html += '<div class="cs-card"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><h3>Key Succession Pipeline</h3><span class="cs-badge">Promotion-Ready Pool</span></div>';
+html += '<div class="cs-card"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><h3>Key Succession Pipeline</h3><span class="cs-badge">Progression-Ready Pool</span></div>';
 var roleKeys = Object.keys(pipe);
-if (!roleKeys.length) html += '<p style="font-size:12px;color:var(--gray-500);margin-top:10px">No promotion-ready staff yet (prospective score 81%+).</p>';
+if (!roleKeys.length) html += '<p style="font-size:12px;color:var(--gray-500);margin-top:10px">No promotion-ready staff yet (prospective score 80%+).</p>';
 var panelColors = ['#dbeafe','#d1fae5','#ede9fe','#ffedd5','#fce7f3']; var pi = 0;
 html += '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-top:12px">';
 roleKeys.slice(0, 6).forEach(function(role){
@@ -4824,16 +4824,16 @@ if (org === 'Returned') return '<span class="badge badge-danger">↩ Returned to
 return '<span class="badge badge-success">🏛 ' + escapeHtml(String(org).replace('Approved: ', '').replace('Finalized: ', 'FINAL: ')) + '</span>';
 }
 if (sPA !== null) {
-if (sPA >= 81) return '<span class="badge badge-success">🚀 Promote — Ready Now</span>';
-if (sPA >= 71) return '<span class="badge badge-info">🌱 Develop 6 months</span>';
-if (sPA >= 61) return '<span class="badge badge-warning">📚 IDP 12 months</span>';
+if (sPA >= 80) return '<span class="badge badge-success">🚀 Promote — Ready Now</span>';
+if (sPA >= 70) return '<span class="badge badge-info">🌱 Develop 6 months</span>';
+if (sPA >= 60) return '<span class="badge badge-warning">📚 IDP 12 months</span>';
 return '<span class="badge badge-danger">⚠️ Performance plan</span>';
 }
 if (sS !== null && sM !== null) {
 var fa = currentRoleDecision(sS, sM, true, true);
 if (fa >= 80) return '<span class="badge badge-purple">🎯 Assess prospective role</span>';
-if (fa >= 71) return '<span class="badge badge-info">🌱 Refine — reassess in 6m</span>';
-if (fa >= 61) return '<span class="badge badge-warning">📚 Development plan</span>';
+if (fa >= 70) return '<span class="badge badge-info">🌱 Refine — reassess in 6m</span>';
+if (fa >= 60) return '<span class="badge badge-warning">📚 Development plan</span>';
 return '<span class="badge badge-danger">⚠️ Performance plan</span>';
 }
 return '<span style="color:var(--gray-400)">Awaiting assessments</span>';
@@ -5418,7 +5418,7 @@ function kaiLocal(q) {
   var s = (q || '').toLowerCase();
   function has(w) { return s.indexOf(w) >= 0; }
   if (has('hello') || has('hi ') || s === 'hi' || has('hey')) return 'Hello! Ask me anything about Kenafric CMS.';
-  if (has('procedure') || has('process') || has('steps') || (has('how') && has('assessment'))) return 'The assessment process: 1) Employee does Self Assessment (tick experiences, evidence, rate 1-5, attach proof). 2) Line Manager does Current Role assessment. 3) HR Admin reviews each experience (Approve/Return/Disapprove). 4) Scores release when all decisions are done. 5) Final Average of 80%+ unlocks Prospective; 81%+ enters Promotion-Ready Pool.';
+  if (has('procedure') || has('process') || has('steps') || (has('how') && has('assessment'))) return 'The assessment process: 1) Employee does Self Assessment (tick experiences, evidence, rate 1-5, attach proof). 2) Line Manager does Current Role assessment. 3) HR Admin reviews each experience (Approve/Return/Disapprove). 4) Scores release when all decisions are done. 5) Final Average of 80%+ unlocks Prospective; 80%+ enters Progression-Ready Pool.';
   if (has('promotion') || has('prospective') || has('80%') || has('81')) return 'Both current-role assessments are required. After HR review, the current-role decision score (70% Manager + 30% Self) at 80%+ unlocks Prospective. Prospective scoring is unchanged.';
   if (has('redo') || has('re-assess') || has('reassess')) return 'Redo requests: Open Assessment, choose "Current Role Assessment", send a redo request with your reason. HR Admin approves it and the form unlocks for a new round.';
   if (has('approv') && (kaiGetRole() === 'HR Admin' || kaiGetRole() === 'Head of HR')) return 'Assessment Review: Pick the employee, then Approve, Return, or Disapprove each experience. When all decisions are done, scores release automatically.';
@@ -5470,7 +5470,7 @@ async function kaiAnswer(q) {
     + 'SELF ASSESSMENT: employee ticks experiences, writes evidence, rates 1-5, attaches proof; one submission; a redo needs an HR-approved redo request.\n'
     + 'MANAGER ASSESSMENT: manager assesses the current role; if already assessed, select "Current Role Assessment" and send a redo request — the form unlocks when HR Admin approves.\n'
     + 'PROSPECTIVE: unlocks after both current-role assessments and HR review, with current-role decision score (70% Manager + 30% Self) >= 80%; prospective position must be same level or higher, never the current role. Prospective scoring remains unchanged.\n'
-    + 'SCORING: experiences tiered Critical / Important / Value-Add; points = rating ÷ 5 × tier weight; competency weights total 100% (Core 7% each; Functional 12/12/12/12/8/8/8). Readiness: 81%+ Strong Performer / promotion-eligible; 71-80 Proficient; 61-70 Developing; 51-60 Below Expectations; lower = Critical Gap. Strengths ≥ 70%; Gaps < 70%.\n'
+    + 'SCORING: experiences tiered Critical / Important / Value-Add; points = rating ÷ 5 × tier weight; competency weights total 100% (Core 7% each; Functional 12/12/12/12/8/8/8). Readiness: 80%+ Strong Performer / promotion-eligible; 71-80 Proficient; 61-70 Developing; 51-60 Below Expectations; lower = Critical Gap. Strengths ≥ 70%; Gaps < 70%.\n'
     + 'VISIBILITY: employees & managers see scores only after HR Admin approves/disapproves ALL Self + Manager experiences and completed returns (locked before that). HR Admin & Head of HR see everything.\n'
     + 'HR ADMIN: Assessment Review (approve/return/disapprove each experience), Redo Requests, staff add/delete, competency library, positions & criticality registry, PDF/Excel/Email exports.\n'
     + 'HEAD OF HR: decision queue (Promotion / Development Plan / Hold / Escalate to C-Suite / Return), oversight, report approvals.\n'
@@ -5516,9 +5516,9 @@ async function kaiAnswer(q) {
     + 'ROLES: Employee (blue), Line Manager (teal), HR Admin (indigo), Head of HR (gold), C-Suite (navy/gold).\n'
     + 'SELF ASSESSMENT: tick experiences, evidence, rate 1-5, attach proof; one submission; redo needs HR approval.\n'
     + 'MANAGER ASSESSMENT: assess current role; redo via request form when HR approves.\n'
-    + 'PROSPECTIVE: unlocks when Final Average >= 80%; position must be same/higher level; 81%+ joins Promotion-Ready Pool.\n'
+    + 'PROSPECTIVE: unlocks when Final Average >= 80%; position must be same/higher level; 80%+ joins Progression-Ready Pool.\n'
     + 'SCORING: tiers Critical/Important/Value-Add; points = rating/5 x tier weight; weights Core 7% each, Functional 12/12/12/12/8/8/8; '
-    + 'Readiness: 81%+ Strong Performer, 71-80 Proficient, 61-70 Developing, 51-60 Below Expectations, <51 Critical Gap; Strengths >= 70%, Gaps < 70%.\n'
+    + 'Readiness: 80%+ Strong Performer, 71-80 Proficient, 61-70 Developing, 51-60 Below Expectations, <51 Critical Gap; Strengths >= 70%, Gaps < 70%.\n'
     + 'VISIBILITY: scores locked until HR Admin approves/disapproves ALL experiences. HR Admin & HOHR see everything.\n'
     + 'HR ADMIN: Assessment Review, Redo Requests, staff management, competency library, positions registry, exports.\n'
     + 'HOHR: decision queue (Promote/Dev Plan/Hold/Escalate/Return), oversight, report approvals.\n'
@@ -7689,7 +7689,7 @@ var roleRules = {
 'Head of HR': 'CAN: everything HR Admin can + decision queue, oversight, cross-company gaps. CANNOT: C-Suite succession summaries; never reveal queue outcomes to non-HOHR.',
 'C-Suite Executive': 'CAN: executive averages, succession pipeline, company comparison, critical gaps, dev-plan summaries, promotion-ready pool. CANNOT: modify assessments, individual evidence details.' }[role] || '';
 var pageHints = { 'emp-profile': 'Page: My Profile — help with score rings, readiness, gaps/strengths meaning.', 'emp-selfassess': 'Page: Self Assessment — ticking, evidence tips, 1-5 rating, proof, submission rules.', 'mgr-assess': 'Page: Manager Assessment — assessing a report, tiers, redo requests.', 'mgr-devplans': 'Page: Development Plans — creating plans, approvals, progress tracking.', 'hr-review': 'Page: Assessment Review — approve/return/disapprove workflow, release rules.', 'hr-all': 'Page: All Assessments — columns, search, exports.', 'hr-staff': 'Page: All Staff — staff table, add employee, reminders.', 'hohr-reports': 'Page: HOHR Report Approvals — decision queue, promote vs hold, escalation.', 'cs-reports': 'Page: C-Suite Dashboard — executive metrics, succession pipeline, company comparison.', 'hr-comp': 'Page: Competency Library — competencies, tiers, weights.', 'hr-positions': 'Page: Positions & Criticality — registry, criticality levels.' };
-var prompt = 'You are KAI (Kenafric Artificial Intelligence), the friendly in-app assistant for Kenafric CMS — warm, professional, like a knowledgeable HR colleague. Current user role: ' + role + '. Current page: ' + page + '. ' + (pageHints[page] || '') + '\nAnswer concisely (max 160 words), plain text, step-by-step for how-to, English only. If asked outside the CMS: "Great question, but I only know about Kenafric CMS!"\n' + security + '\nROLE RULES (' + role + '): ' + roleRules + '\nSYSTEM KNOWLEDGE:\nROLES & THEMES: Employee (blue), Line Manager (teal), HR Admin (indigo), Head of HR (gold), C-Suite (navy/gold).\nSELF ASSESSMENT: tick experiences, evidence, rate 1-5, attach proof; one submission; redo needs HR approval.\nMANAGER ASSESSMENT: assess current role; redo via request when HR approves.\nPROSPECTIVE: unlocks at Final Average ≥80%; same/higher level only; 81%+ joins Promotion-Ready Pool.\nSCORING: tiers Critical/Important/Value-Add; points = rating÷5 × tier weight; Core 7% each, Functional 12/12/12/12/8/8/8. Readiness: 81%+ Strong Performer; 71-80 Proficient; 61-70 Developing; 51-60 Below Expectations; <51 Critical Gap. Strengths ≥70%; Gaps <70%.\nVISIBILITY: scores locked until HR Admin approves/disapproves ALL Self + Manager experiences.\nHR ADMIN: Review, Redo Requests, staff, library, registry, exports.\nHOHR: decision queue (Promote/Dev Plan/Hold/Escalate/Return), oversight.\nC-SUITE: executive dashboard, succession, company comparison, gaps.\nDEV PLANS: manager builds from gaps, HR approves, monthly reports.\nEXTRAS: chat, profile photo, global search, All Staff/All Assessments tables.\nCONVERSATION SO FAR:\n' + hist + '\nUser: ' + q + '\nKAI:';
+var prompt = 'You are KAI (Kenafric Artificial Intelligence), the friendly in-app assistant for Kenafric CMS — warm, professional, like a knowledgeable HR colleague. Current user role: ' + role + '. Current page: ' + page + '. ' + (pageHints[page] || '') + '\nAnswer concisely (max 160 words), plain text, step-by-step for how-to, English only. If asked outside the CMS: "Great question, but I only know about Kenafric CMS!"\n' + security + '\nROLE RULES (' + role + '): ' + roleRules + '\nSYSTEM KNOWLEDGE:\nROLES & THEMES: Employee (blue), Line Manager (teal), HR Admin (indigo), Head of HR (gold), C-Suite (navy/gold).\nSELF ASSESSMENT: tick experiences, evidence, rate 1-5, attach proof; one submission; redo needs HR approval.\nMANAGER ASSESSMENT: assess current role; redo via request when HR approves.\nPROSPECTIVE: unlocks at Final Average ≥80%; same/higher level only; 80%+ joins Progression-Ready Pool.\nSCORING: tiers Critical/Important/Value-Add; points = rating÷5 × tier weight; Core 7% each, Functional 12/12/12/12/8/8/8. Readiness: 80%+ Strong Performer; 71-80 Proficient; 61-70 Developing; 51-60 Below Expectations; <51 Critical Gap. Strengths ≥70%; Gaps <70%.\nVISIBILITY: scores locked until HR Admin approves/disapproves ALL Self + Manager experiences.\nHR ADMIN: Review, Redo Requests, staff, library, registry, exports.\nHOHR: decision queue (Promote/Dev Plan/Hold/Escalate/Return), oversight.\nC-SUITE: executive dashboard, succession, company comparison, gaps.\nDEV PLANS: manager builds from gaps, HR approves, monthly reports.\nEXTRAS: chat, profile photo, global search, All Staff/All Assessments tables.\nCONVERSATION SO FAR:\n' + hist + '\nUser: ' + q + '\nKAI:';
 try {
 var out = await Promise.race([ callAI(prompt, false), new Promise(function(res){ setTimeout(function(){ res(''); }, 9000); }) ]);
 return (out || '').trim();
@@ -9138,6 +9138,7 @@ document.head.appendChild(xcStyle);
 
 </script>
 <script>
+/* ===== USER ACCESS PAGE (access administrator only) ===== */
 /* Existing user_profiles and trusted permissions synchronized by one RPC. */
 var UA={selected:null,busy:false,page:0,token:0};
 async function uaRPC(action,data){
@@ -9226,6 +9227,629 @@ var uaPreviousPage=loadPage;
 loadPage=function(id){if(id==='hr-user-access')return uaOpen();UA.token++;return uaPreviousPage(id);};
 var uaPreviousLabel=getPageLabel;
 getPageLabel=function(id){return id==='hr-user-access'?'User Access':uaPreviousLabel(id);};
+
+</script>
+<script>
+/* SOP controls v2: critical-experience gates (70% Manager + 30% Self),
+   critical-roles-first succession, calibration review.
+   Gate detail is never rendered for the employee role. */
+var CG = { current: 80, prospective: 70, cache: {} };
+function cgIsCritical(c){ c = (c || '').toString(); return c.indexOf('Critical') !== -1 || c.indexOf('Must-Have') !== -1; }
+function cgRate(r){ var v = parseFloat(r.proficiency_rating); return (v >= 1 && v <= 5) ? v : null; }
+function cgTicked(r){ return r.ticked === true || r.ticked === 'TRUE' || r.ticked === 1; }
+function cgUsable(r){ return cgTicked(r) && (r.evidence || '').toString().trim() !== '' && (r.hr_status || '') !== 'Disapproved' && cgRate(r) !== null; }
+function cgKey(r){ return (r.comp_code || '') + '#' + (r.experience_index == null ? '' : r.experience_index); }
+function cgLatest(rows, type){
+ var f = (rows || []).filter(function(r){ return r.type === type; });
+ if (!f.length) return [];
+ var max = 0; f.forEach(function(r){ var rd = r.assessment_round || 1; if (rd > max) max = rd; });
+ return f.filter(function(r){ return (r.assessment_round || 1) === max; });
+}
+function cgEvaluate(rows, kind){
+ var threshold = kind === 'current' ? CG.current : CG.prospective;
+ var mgrType = kind === 'current' ? 'Manager' : 'Prospective';
+ var selfType = kind === 'current' ? 'Self' : 'Prospective Self';
+ var mgr = cgLatest(rows, mgrType), slf = cgLatest(rows, selfType);
+ var out = { kind: kind, threshold: threshold, items: [], failed: 0, awaiting: 0, state: 'awaiting', note: '' };
+ if (!mgr.length) { out.note = 'Awaiting ' + (kind === 'current' ? 'manager assessment' : 'prospective role assessment') + '.'; return out; }
+ if (!slf.length) { out.note = 'Awaiting ' + (kind === 'current' ? 'self assessment' : 'prospective self assessment') + ' — the gate needs both scores.'; return out; }
+ var mv = mgr[0].framework_version || null, sv = slf[0].framework_version || null;
+ if (mv && sv && mv !== sv) { out.state = 'mismatch'; out.note = 'Self and manager assessments used different published framework versions. Reassess against the current framework before deciding.'; return out; }
+ if (!mv || !sv) out.note = 'Legacy assessment: no stored framework version, so item matching relies on competency and experience order.';
+ var selfBy = {}; slf.forEach(function(r){ selfBy[cgKey(r)] = r; });
+ mgr.forEach(function(r){
+  if (!cgIsCritical(r.classification)) return;
+  var s = selfBy[cgKey(r)];
+  var item = { comp: r.comp_name || r.comp_code, text: r.experience_text || '', mgr: null, self: null, combined: null, ok: false, why: '' };
+  if (!s) { item.why = 'No matching self-assessment item'; out.awaiting++; out.items.push(item); return; }
+  if (!cgUsable(r) || !cgUsable(s)) {
+   item.why = !cgUsable(r) ? 'Manager: not demonstrated, no evidence or no rating' : 'Self: not demonstrated, no evidence or no rating';
+   out.failed++; item.combined = 0; out.items.push(item); return;
+  }
+  item.mgr = Math.round(cgRate(r) / 5 * 100); item.self = Math.round(cgRate(s) / 5 * 100);
+  item.combined = Math.round(item.mgr * 0.7 + item.self * 0.3);
+  item.ok = item.combined >= threshold;
+  if (!item.ok) { out.failed++; item.why = 'Below the ' + threshold + '% minimum'; }
+  out.items.push(item);
+ });
+ if (!out.items.length) { out.state = 'none'; out.note = 'No Must-Have (Critical) experiences are configured for this role.'; return out; }
+ out.state = (out.failed === 0 && out.awaiting === 0) ? 'pass' : (out.awaiting && !out.failed ? 'awaiting' : 'fail');
+ return out;
+}
+function cgHidden(){ return !APP || !APP.currentRole || APP.currentRole === 'employee'; }
+function cgBadge(g){
+ if (g.state === 'pass') return '<span class="badge badge-success">Critical requirement met (every item ' + g.threshold + '%+)</span>';
+ if (g.state === 'fail') return '<span class="badge badge-danger">Critical requirement NOT met — ' + g.failed + ' item(s) below ' + g.threshold + '%</span>';
+ if (g.state === 'mismatch') return '<span class="badge badge-danger">Framework version mismatch</span>';
+ if (g.state === 'none') return '<span class="badge badge-gray">No critical experiences configured</span>';
+ return '<span class="badge badge-warning">Pending — awaiting assessment or evidence</span>';
+}
+function cgPanel(g, title){
+ if (cgHidden()) return '';
+ var h = '<div class="card"><div class="card-title">' + title + '</div><div style="margin-bottom:8px">' + cgBadge(g) + '</div>';
+ h += '<p style="font-size:11px;color:var(--gray-500)">Each Must-Have (Critical) experience must reach ' + g.threshold + '% on its own, scored 70% manager + 30% self. Not shown on the employee\'s own pages.</p>';
+ if (g.note) h += '<p style="font-size:11px;color:var(--orange)">' + escapeHtml(g.note) + '</p>';
+ if (g.items.length) {
+  h += '<div class="table-wrap"><table><thead><tr><th>Competency</th><th>Critical experience</th><th>Manager</th><th>Self</th><th>70/30</th><th>Result</th></tr></thead><tbody>';
+  g.items.forEach(function(i){
+   h += '<tr><td style="font-size:11px">' + escapeHtml(i.comp) + '</td><td style="font-size:11px">' + escapeHtml((i.text || '').slice(0, 120)) + '</td>';
+   h += '<td>' + (i.mgr == null ? '—' : i.mgr + '%') + '</td><td>' + (i.self == null ? '—' : i.self + '%') + '</td>';
+   h += '<td><strong>' + (i.combined == null ? '—' : i.combined + '%') + '</strong></td>';
+   h += '<td>' + (i.ok ? '<span class="badge badge-success">Met</span>' : '<span class="badge badge-danger">' + escapeHtml(i.why || 'Not met') + '</span>') + '</td></tr>';
+  });
+  h += '</tbody></table></div>';
+ }
+ h += '</div>';
+ return h;
+}
+async function cgRows(empId){
+ if (CG.cache[empId]) return CG.cache[empId];
+ var q = await _supabase.from('assessments')
+  .select('employee_id,type,comp_code,comp_name,experience_index,experience_text,classification,ticked,evidence,proficiency_rating,hr_status,assessment_round,framework_version,prospective_role')
+  .eq('employee_id', empId);
+ if (q.error) throw new Error(q.error.message);
+ CG.cache[empId] = q.data || [];
+ return CG.cache[empId];
+}
+async function cgAppend(empId, containerId){
+ if (cgHidden()) return;
+ var box = document.getElementById(containerId); if (!box) return;
+ var host = document.createElement('div'); box.appendChild(host);
+ host.innerHTML = '<div class="card"><p style="font-size:12px;color:var(--gray-500)">Checking critical-experience requirements...</p></div>';
+ try {
+  var rows = await cgRows(empId);
+  var html = cgPanel(cgEvaluate(rows, 'current'), '🔒 Current role — critical experience check (' + CG.current + '%)');
+  var prosp = cgEvaluate(rows, 'prospective');
+  if (prosp.state !== 'awaiting' || prosp.items.length) html += cgPanel(prosp, '🔒 Prospective role — critical experience check (' + CG.prospective + '%)');
+  host.innerHTML = html || '';
+ } catch (e) { host.innerHTML = '<div class="card"><p style="font-size:12px;color:var(--red)">Critical-experience check unavailable: ' + escapeHtml(e.message) + '</p></div>'; }
+}
+/* ---- attach the gate to HR, manager and executive detail views ---- */
+if (typeof loadHRAllDetail === 'function') {
+ var cgOrigHRAll = loadHRAllDetail;
+ loadHRAllDetail = async function(empId){ await cgOrigHRAll(empId); cgAppend(empId, 'hrAllContent'); };
+}
+if (typeof loadDetEmp === 'function') {
+ var cgOrigDet = loadDetEmp;
+ loadDetEmp = async function(){
+  await cgOrigDet();
+  var sel = document.getElementById('detEmp');
+  if (sel && sel.value) cgAppend(sel.value, 'detContent');
+ };
+}
+/* ---- critical-roles-first succession + current-role gate on the assessment page ---- */
+async function cgCriticalRoles(){
+ if (window._cgCrit) return window._cgCrit;
+ var q = await _supabase.from('critical_positions').select('position_name,criticality,department');
+ window._cgCrit = (q.data || []).filter(function(r){ return (r.criticality || '') && (r.criticality || '').toString().toUpperCase().indexOf('NON') !== 0; });
+ return window._cgCrit;
+}
+if (typeof loadAssessEmp === 'function') {
+ var cgOrigAssess = loadAssessEmp;
+ loadAssessEmp = async function(){
+  await cgOrigAssess();
+  var sel = document.getElementById('assessEmp'); if (!sel || !sel.value) return;
+  var empId = sel.value;
+  var form = document.getElementById('assessForm'); if (!form) return;
+  var note = document.createElement('div'); form.appendChild(note);
+  try {
+   var rows = await cgRows(empId);
+   var g = cgEvaluate(rows, 'current');
+   APP._cgCurrent = g.state;
+   var typeSel = document.getElementById('assessTypeSel');
+   if (typeSel && g.state !== 'pass') {
+    for (var i = typeSel.options.length - 1; i >= 0; i--) if (typeSel.options[i].value === 'Prospective') typeSel.remove(i);
+   }
+   var crit = await cgCriticalRoles();
+   var h = cgPanel(g, '🔒 Current role — critical experience check (' + CG.current + '%)');
+   h += '<div class="card"><div class="card-title">Succession route</div>';
+   if (g.state !== 'pass') h += '<p style="font-size:12px;color:var(--orange)">A prospective role assessment needs every critical experience at ' + CG.current + '%+ on the current role first.</p>';
+   else if (!crit.length) h += '<p style="font-size:12px;color:var(--orange)">No critical roles are registered yet. HR must mark target roles in Positions &amp; Criticality before succession assessment.</p>';
+   else h += '<p style="font-size:12px;color:var(--gray-600)">Succession starts from critical roles: only target roles registered as critical can be assessed. Readiness is a recommendation for consideration, not a promotion.</p>';
+   h += '</div>';
+   note.innerHTML = h;
+  } catch (e) { note.innerHTML = '<div class="card"><p style="font-size:12px;color:var(--red)">Critical-experience check unavailable: ' + escapeHtml(e.message) + '</p></div>'; }
+ };
+}
+function cgFilterRoleSelect(id){
+ var sel = document.getElementById(id); if (!sel) return;
+ var crit = window._cgCrit || [];
+ if (!crit.length) return;
+ var allow = {}; crit.forEach(function(r){ allow[(r.position_name || '').toString().toUpperCase().trim()] = true; });
+ for (var i = sel.options.length - 1; i >= 0; i--) {
+  var v = (sel.options[i].value || sel.options[i].text || '').toString().toUpperCase().trim();
+  if (v && !allow[v]) sel.remove(i);
+ }
+ if (sel.options.length <= 1) {
+  var o = document.createElement('option'); o.value = ''; o.text = '-- No critical target role registered --'; sel.add(o);
+ }
+}
+if (typeof buildAssessForm === 'function') {
+ var cgOrigBuild = buildAssessForm;
+ buildAssessForm = async function(empId){
+  await cgOrigBuild(empId);
+  await cgCriticalRoles();
+  cgFilterRoleSelect('prospRoleSel');
+ };
+}
+/* ---- Progression pool: readiness must clear the prospective critical gate ---- */
+if (typeof promPoolHTML === 'function') {
+ var cgOrigPool = promPoolHTML;
+ promPoolHTML = function(emps, allResults, title, note, appr){
+  var kept = (emps || []).filter(function(e){
+   var rows = (allResults || []).filter(function(r){ return r.employee_id === e.employee_id; });
+   var g = cgEvaluate(rows, 'prospective');
+   return g.state === 'pass' || g.state === 'none';
+  });
+  var extra = note + ' Entry indicates readiness for consideration and is not a promotion commitment. Every Must-Have (Critical) experience must also reach ' + CG.prospective + '% (70% manager + 30% self).';
+  return cgOrigPool(kept, allResults, title, extra, appr);
+ };
+}
+/* ---- Calibration review (analysis only; sign-off storage not yet added) ---- */
+async function loadHRCalibration(){
+ setContent('<div class="loading"><div class="spinner"></div>Loading calibration data...</div>');
+ try {
+  var emps = await _supabase.from('employees').select('employee_id,employee_name,department,company,position,manager');
+  if (emps.error) throw new Error(emps.error.message);
+  var rows = [], from = 0;
+  for (;;) {
+   var q = await _supabase.from('assessments').select('employee_id,type,comp_code,classification,ticked,evidence,proficiency_rating,hr_status,assessment_round').range(from, from + 999);
+   if (q.error) throw new Error(q.error.message);
+   rows = rows.concat(q.data || []);
+   if (!q.data || q.data.length < 1000) break;
+   from += 1000;
+  }
+  var byEmp = {};
+  rows.forEach(function(r){ (byEmp[r.employee_id] = byEmp[r.employee_id] || []).push(r); });
+  var people = [];
+  (emps.data || []).forEach(function(e){
+   var er = byEmp[e.employee_id]; if (!er) return;
+   var fr = er.map(function(r){ return { 'Employee ID': r.employee_id, 'Competency Code': r.comp_code, 'Type': r.type, 'Ticked': r.ticked, 'Evidence': r.evidence, 'HR_Status': r.hr_status, 'Rating': r.proficiency_rating, 'Classification': r.classification }; });
+   var hasM = er.some(function(r){ return r.type === 'Manager'; });
+   var hasS = er.some(function(r){ return r.type === 'Self'; });
+   if (!hasM || !hasS) return;
+   var m = calculateOverallScore(e.employee_id, 'Manager', fr);
+   var sc = calculateOverallScore(e.employee_id, 'Self', fr);
+   people.push({ dep: e.department || 'Unassigned', company: e.company || '', name: e.employee_name, position: e.position, manager: e.manager || '', m: m, s: sc, d: sc - m, combined: Math.round(m * 0.7 + sc * 0.3) });
+  });
+  var html = '<div class="card"><div class="card-title">⚖️ Calibration Review</div>';
+  html += '<p style="font-size:12px;color:var(--gray-500)">Compare standards across departments and managers before talent decisions. Only employees with BOTH a self and a manager assessment appear. Scores use the latest submitted rounds.</p>';
+  if (!people.length) { html += '<p style="color:var(--gray-500)">No employee has both assessments yet.</p></div>'; setContent(html); return; }
+  var all = people.reduce(function(a,p){ return a + p.combined; }, 0) / people.length;
+  html += '<div class="stats-grid"><div class="stat-card"><div class="num">' + people.length + '</div><div class="lbl">Calibratable employees</div></div>';
+  html += '<div class="stat-card"><div class="num">' + Math.round(all) + '%</div><div class="lbl">Company average (70/30)</div></div>';
+  html += '<div class="stat-card"><div class="num">' + people.filter(function(p){ return p.d >= 20; }).length + '</div><div class="lbl">Self exceeds manager by 20%+</div></div>';
+  html += '<div class="stat-card"><div class="num">' + people.filter(function(p){ return p.m >= 90; }).length + '</div><div class="lbl">Manager scores 90%+</div></div></div>';
+  var deps = {};
+  people.forEach(function(p){ (deps[p.dep] = deps[p.dep] || []).push(p); });
+  html += '<div class="table-wrap"><table><thead><tr><th>Department</th><th>People</th><th>Avg manager</th><th>Avg self</th><th>Avg 70/30</th><th>vs company</th><th>Strong 80%+</th><th>Below 60%</th><th>Flag</th></tr></thead><tbody>';
+  Object.keys(deps).sort().forEach(function(d){
+   var g = deps[d], n = g.length;
+   var am = Math.round(g.reduce(function(a,p){ return a + p.m; }, 0) / n);
+   var as = Math.round(g.reduce(function(a,p){ return a + p.s; }, 0) / n);
+   var ac = Math.round(g.reduce(function(a,p){ return a + p.combined; }, 0) / n);
+   var diff = ac - Math.round(all);
+   var strong = g.filter(function(p){ return p.combined >= 80; }).length;
+   var low = g.filter(function(p){ return p.combined < 60; }).length;
+   var flags = [];
+   if (Math.abs(diff) >= 10) flags.push(diff > 0 ? 'Possible inflation' : 'Possible severity');
+   if (n >= 3 && strong === n) flags.push('No differentiation');
+   if (n < 3) flags.push('Small sample');
+   html += '<tr><td><strong>' + escapeHtml(d) + '</strong></td><td>' + n + '</td><td>' + am + '%</td><td>' + as + '%</td><td><strong>' + ac + '%</strong></td>';
+   html += '<td style="color:' + (Math.abs(diff) >= 10 ? 'var(--red)' : 'var(--gray-600)') + '">' + (diff > 0 ? '+' : '') + diff + '</td><td>' + strong + '</td><td>' + low + '</td>';
+   html += '<td style="font-size:11px">' + (flags.length ? escapeHtml(flags.join('; ')) : '—') + '</td></tr>';
+  });
+  html += '</tbody></table></div></div>';
+  var wide = people.filter(function(p){ return Math.abs(p.d) >= 20; }).sort(function(a,b){ return Math.abs(b.d) - Math.abs(a.d); });
+  html += '<div class="card"><div class="card-title">Largest self vs manager differences</div>';
+  html += '<p style="font-size:12px;color:var(--gray-500)">Review these in calibration before any talent decision. A difference is a discussion point, not a penalty.</p>';
+  if (!wide.length) html += '<p style="color:var(--gray-500)">No differences of 20% or more.</p>';
+  else {
+   html += '<div class="table-wrap"><table><thead><tr><th>Employee</th><th>Department</th><th>Line manager</th><th>Self</th><th>Manager</th><th>Difference</th></tr></thead><tbody>';
+   wide.slice(0, 25).forEach(function(p){
+    html += '<tr><td style="font-size:11px"><strong>' + escapeHtml(p.name) + '</strong><br><span style="color:var(--gray-400)">' + escapeHtml(p.position || '') + '</span></td><td style="font-size:11px">' + escapeHtml(p.dep) + '</td><td style="font-size:11px">' + escapeHtml(p.manager) + '</td><td>' + p.s + '%</td><td>' + p.m + '%</td><td style="font-weight:700;color:' + (p.d > 0 ? 'var(--orange)' : 'var(--primary)') + '">' + (p.d > 0 ? '+' : '') + p.d + '</td></tr>';
+   });
+   html += '</tbody></table></div>';
+  }
+  html += '</div>';
+  html += '<div class="card"><p style="font-size:12px;color:var(--gray-600)"><strong>Process:</strong> manager assessment → HR review → calibration (this page) → talent decision → succession → promotion only with readiness, sustained performance, a vacancy and approval.</p>';
+  html += '<p style="font-size:11px;color:var(--orange)">This page analyses current data only. Recording a calibration sign-off, attendees and agreed adjustments needs a small database table, which is not installed yet.</p></div>';
+  setContent(html);
+ } catch (e) {
+  setContent('<div class="card"><h3>Calibration unavailable</h3><p>' + escapeHtml(e.message) + '</p></div>');
+ }
+}
+if (typeof loadPage === 'function') {
+ var cgOrigLoadPage = loadPage;
+ loadPage = function(id){ if (id === 'hr-calibration') return loadHRCalibration(); return cgOrigLoadPage(id); };
+}
+if (typeof getPageLabel === 'function') {
+ var cgOrigLabel = getPageLabel;
+ getPageLabel = function(id){ return id === 'hr-calibration' ? 'Calibration Review' : cgOrigLabel(id); };
+}
+if (typeof setupNav === 'function') {
+ var cgOrigNav = setupNav;
+ setupNav = function(role){
+  cgOrigNav(role);
+  if (role !== 'hr' && role !== 'hohr') return;
+  var sb = document.getElementById('sideNav'); if (!sb || document.querySelector('.sb-item[data-page="hr-calibration"]')) return;
+  var anchor = document.querySelector('.sb-item[data-page="hr-review"]') || document.querySelector('.sb-item[data-page="hohr-assess"]');
+  var item = document.createElement('div');
+  item.className = 'sb-item'; item.setAttribute('data-page', 'hr-calibration');
+  item.innerHTML = '<span>⚖️</span>Calibration Review';
+  item.onclick = function(){ navigateTo('hr-calibration'); };
+  if (anchor && anchor.parentNode) anchor.parentNode.insertBefore(item, anchor.nextSibling); else sb.appendChild(item);
+ };
+}
+
+</script>
+<script>
+/* ===== AI EXPERIENCE LIBRARY + PROGRESS DASHBOARD + INLINE SUGGEST ===== */
+
+/* ---------- 1. AI Library: data layer ---------- */
+var AILib = { cache: {}, dep: null, pos: null, code: null };
+
+function aiLibKey(dep, pos, code) { return dep + '|' + pos + '|' + code; }
+
+async function aiLibFetch(dep, pos, code) {
+  var key = aiLibKey(dep, pos, code);
+  if (AILib.cache[key]) return AILib.cache[key];
+  var r = await _supabase.from('ai_experience_library')
+    .select('*')
+    .eq('department', dep)
+    .eq('position_name', pos)
+    .eq('comp_code', code)
+    .order('id');
+  if (r.error) throw new Error(r.error.message);
+  AILib.cache[key] = r.data || [];
+  return AILib.cache[key];
+}
+
+async function aiLibGenerate(dep, pos, code) {
+  var comp = (APP.competencies || []).find(function(c) { return c.code === code; });
+  var compName = comp ? comp.competency : code;
+  var existing = await aiLibFetch(dep, pos, code);
+  var existingText = existing.map(function(e) { return '- ' + e.experience_text; }).join('\n');
+
+  var prompt = 'You are an HR competency framework expert for a manufacturing/FMCG company in East Africa. ' +
+    'Generate exactly 5 observable, assessable experiences for:\n' +
+    'Position: "' + pos + '"\nDepartment: "' + dep + '"\nCompetency: "' + compName + '" (' + code + ')\n\n' +
+    'Rules:\n' +
+    '- Each experience MUST start with "Has " (past tense, observable behaviour)\n' +
+    '- Must be specific enough for a manager to rate 1-5 and for an employee to provide evidence\n' +
+    '- Must be relevant to this specific position and department\n' +
+    '- Classify each as: Must-Have (Critical), Important (Performance Enhancing), or Value-Add (Developmental)\n' +
+    '- At least 2 should be Must-Have (Critical) and at least 1 Value-Add (Developmental)\n' +
+    '- Each experience should be 15-40 words\n' +
+    (existingText ? '\nAlready generated (do NOT repeat or paraphrase these):\n' + existingText + '\n' : '') +
+    '\nReturn ONLY valid JSON, no markdown fences:\n' +
+    '{"experiences":[{"text":"Has ...","classification":"Must-Have (Critical)"}]}';
+
+  var t = await callAI(prompt, true);
+  if (!t) throw new Error('AI returned empty response. Check your OpenRouter key.');
+  var s = t.indexOf('{'), e = t.lastIndexOf('}');
+  if (s >= 0 && e > s) t = t.slice(s, e + 1);
+  var out = JSON.parse(t);
+  var rows = (out.experiences || []).filter(function(exp) {
+    return exp && exp.text && exp.text.trim();
+  }).map(function(exp) {
+    return {
+      department: dep, position_name: pos, comp_code: code,
+      experience_text: exp.text.trim(),
+      classification: exp.classification || 'Important (Performance Enhancing)',
+      generated_by: APP.user ? APP.user.email : 'unknown',
+      used_count: 0
+    };
+  });
+  if (!rows.length) throw new Error('AI generated no valid experiences. Try again.');
+  var ins = await _supabase.from('ai_experience_library').insert(rows).select('*');
+  if (ins.error) throw new Error(ins.error.message);
+  var key = aiLibKey(dep, pos, code);
+  AILib.cache[key] = (AILib.cache[key] || []).concat(ins.data);
+  return ins.data;
+}
+
+/* ---------- 2. AI Library: slide-over panel ---------- */
+async function aiLibPanel(code) {
+  if (!FW.position) return;
+  AILib.dep = FW.position.department;
+  AILib.pos = FW.position.position;
+  AILib.code = code;
+  var comp = (APP.competencies || []).find(function(c) { return c.code === code; });
+  var compName = comp ? comp.competency : code;
+
+  var old = document.getElementById('aiLibPanel');
+  if (old) old.remove();
+
+  var overlay = document.createElement('div');
+  overlay.id = 'aiLibOverlay';
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.3);z-index:9998;';
+  overlay.onclick = function() { aiLibClose(); };
+  document.body.appendChild(overlay);
+
+  var panel = document.createElement('div');
+  panel.id = 'aiLibPanel';
+  panel.style.cssText = 'position:fixed;top:0;right:0;width:min(440px,90vw);height:100vh;background:#fff;' +
+    'box-shadow:-4px 0 24px rgba(0,0,0,.15);z-index:9999;overflow-y:auto;display:flex;flex-direction:column;';
+  panel.innerHTML =
+    '<div style="padding:20px 24px 12px;border-bottom:1px solid #e2e8f0;flex-shrink:0">' +
+      '<div style="display:flex;justify-content:space-between;align-items:center">' +
+        '<h3 style="margin:0;color:#312e81;font-size:18px">\uD83D\uDCDA AI Experience Library</h3>' +
+        '<button onclick="aiLibClose()" style="background:none;border:none;font-size:22px;cursor:pointer;color:#94a3b8;padding:4px 8px">\u00D7</button>' +
+      '</div>' +
+      '<p style="color:#64748b;font-size:13px;margin:8px 0 0"><strong>' + escapeHtml(compName) + '</strong> \u2022 ' + escapeHtml(AILib.pos) + '</p>' +
+    '</div>' +
+    '<div id="aiLibContent" style="flex:1;overflow-y:auto;padding:16px 24px"></div>';
+  document.body.appendChild(panel);
+
+  try {
+    var items = await aiLibFetch(AILib.dep, AILib.pos, code);
+    aiLibRender(items);
+  } catch(e) {
+    var host = document.getElementById('aiLibContent');
+    if (host) host.innerHTML = '<p style="color:#dc2626">' + escapeHtml(e.message) + '</p>';
+  }
+}
+
+function aiLibClose() {
+  var p = document.getElementById('aiLibPanel'); if (p) p.remove();
+  var o = document.getElementById('aiLibOverlay'); if (o) o.remove();
+}
+
+function aiLibRender(items) {
+  var host = document.getElementById('aiLibContent');
+  if (!host) return;
+  var h = '';
+  if (items.length) {
+    h += '<p style="font-size:13px;color:#475569;margin:0 0 14px">' + items.length + ' suggestion' + (items.length !== 1 ? 's' : '') + ' available</p>';
+    items.forEach(function(item) {
+      var usedClass = item.used_count > 0 ? 'border-left:3px solid #a7f3d0;' : '';
+      h += '<div style="border:1px solid #e2e8f0;border-radius:10px;padding:14px;margin-bottom:10px;background:#f8fafc;' + usedClass + '">' +
+        '<p style="margin:0 0 10px;font-size:14px;line-height:1.5;color:#1e293b">' + escapeHtml(item.experience_text) + '</p>' +
+        '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap">' +
+          '<span style="font-size:11px;padding:3px 8px;border-radius:12px;background:#eef2ff;color:#4338ca">' + escapeHtml(item.classification) + '</span>' +
+          '<button class="btn btn-outline" data-ailib-id="' + item.id + '" onclick="aiLibUse(this)" ' +
+            'style="font-size:12px;padding:4px 14px;color:#4338ca;border-color:#818cf8;border-radius:8px">' +
+            (item.used_count > 0 ? '\u2705 Used \u00B7 Add again' : '+ Add to draft') + '</button>' +
+        '</div></div>';
+    });
+  } else {
+    h += '<div style="text-align:center;padding:40px 16px;color:#64748b">' +
+      '<p style="font-size:40px;margin:0 0 12px">\uD83E\uDD16</p>' +
+      '<p style="font-size:15px;margin:0">No AI suggestions yet for this competency.</p>' +
+      '<p style="font-size:13px;margin:6px 0 0">Click below to generate position-specific experiences.</p></div>';
+  }
+  h += '<button class="btn btn-primary" onclick="aiLibGenerateBtn()" ' +
+    'style="width:100%;margin:16px 0 8px;padding:10px;border-radius:10px;font-size:14px">' +
+    '\uD83E\uDD16 ' + (items.length ? 'Generate 5 more suggestions' : 'Generate AI suggestions') + '</button>';
+  host.innerHTML = h;
+}
+
+async function aiLibGenerateBtn() {
+  var host = document.getElementById('aiLibContent');
+  if (!host || !AILib.code) return;
+  host.innerHTML = '<div style="text-align:center;padding:40px 16px">' +
+    '<div class="spinner" style="margin:0 auto 16px"></div>' +
+    '<p style="color:#475569;font-size:14px">\uD83E\uDD16 AI is writing experiences...</p>' +
+    '<p style="color:#94a3b8;font-size:12px">Tailored to ' + escapeHtml(AILib.pos) + '</p></div>';
+  try {
+    await aiLibGenerate(AILib.dep, AILib.pos, AILib.code);
+    var all = AILib.cache[aiLibKey(AILib.dep, AILib.pos, AILib.code)] || [];
+    showToast('Generated new suggestions');
+    aiLibRender(all);
+  } catch(e) {
+    host.innerHTML = '<p style="color:#dc2626;padding:16px">' + escapeHtml(e.message) + '</p>' +
+      '<button class="btn btn-outline" onclick="aiLibGenerateBtn()">Retry</button>';
+  }
+}
+
+async function aiLibUse(btn) {
+  if (!FW.revision || FW.revision.state !== 'Draft' || FW.busy) {
+    showToast('Open a draft first'); return;
+  }
+  var itemId = parseInt(btn.getAttribute('data-ailib-id'), 10);
+  var item = null;
+  Object.values(AILib.cache).forEach(function(list) {
+    var found = list.find(function(i) { return i.id === itemId; });
+    if (found) item = found;
+  });
+  if (!item) { showToast('Suggestion not found'); return; }
+
+  var level = '';
+  if (AILib.code && AILib.code.indexOf('CC') === 0) {
+    level = prompt('Core level: Foundational, Intermediate, Advanced, Master or Executive');
+    if (!level) return;
+  }
+  FW.revision.items.push({
+    id: crypto.randomUUID(), code: AILib.code,
+    text: item.experience_text, classification: item.classification,
+    level: level, ai_note: null
+  });
+  FW.dirty = true;
+
+  _supabase.from('ai_experience_library')
+    .update({ used_count: (item.used_count || 0) + 1 })
+    .eq('id', itemId).then(function() {});
+  item.used_count = (item.used_count || 0) + 1;
+
+  btn.textContent = '\u2705 Added!';
+  btn.disabled = true;
+  showToast('Added: ' + item.experience_text.slice(0, 50) + '\u2026');
+  fwRenderRevision();
+}
+
+/* ---------- 3. Progress Dashboard (replaces the dropdown for Set Competencies) ---------- */
+var fwOriginalOpen = fwOpen;
+fwOpen = async function(mode) {
+  if (mode !== 'draft') return fwOriginalOpen(mode);
+
+  if (FW.busy) { showToast('Please wait for the current framework operation.'); return; }
+  if (FW.dirty && !confirm('Leave without saving this framework draft?')) return;
+  var token = ++FW.token;
+  FW.mode = mode; FW.revision = null; FW.position = null; FW.dirty = false;
+  setContent('<div class="card" style="text-align:center;padding:32px"><div class="spinner" style="margin:0 auto 12px"></div><p>Loading your positions\u2026</p></div>');
+
+  try {
+    await fwCatalogue();
+    if (token !== FW.token) return;
+
+    var positions = (FW.catalogue.positions || []).filter(function(p) { return p.can_edit; });
+
+    /* Fetch draft status in parallel */
+    var draftMap = {};
+    try {
+      var ds = await _supabase.rpc('cms_draft_status');
+      if (ds.data && Array.isArray(ds.data)) {
+        ds.data.forEach(function(d) { draftMap[d.position_id] = d; });
+      }
+    } catch(e) { /* cms_draft_status may not exist yet, degrade gracefully */ }
+
+    var h = '<div id="fwScreen">' +
+      '<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:20px">' +
+        '<div><h2 style="margin:0;color:#1e293b">Set Competencies</h2>' +
+        '<p style="margin:4px 0 0;color:#64748b;font-size:14px">' + positions.length + ' position' + (positions.length !== 1 ? 's' : '') + ' in your department</p></div>' +
+      '</div>' +
+      '<div id="fwDashboard" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px"></div>' +
+    '</div>';
+    setContent(h);
+
+    var dashboard = document.getElementById('fwDashboard');
+
+    positions.forEach(function(p) {
+      var published = !!p.live_version;
+      var liveCount = (p.items || []).length;
+      var draft = draftMap[p.id];
+      var status, statusColor, statusBg, borderColor, detail;
+
+      if (draft && draft.state === 'Submitted') {
+        status = 'Submitted for review';
+        statusColor = '#d97706'; statusBg = '#fffbeb'; borderColor = '#fde68a';
+        detail = draft.filled_count + ' experiences submitted';
+      } else if (draft && draft.state === 'Draft') {
+        status = 'Draft in progress';
+        statusColor = '#2563eb'; statusBg = '#eff6ff'; borderColor = '#bfdbfe';
+        detail = draft.filled_count + '/' + draft.item_count + ' experiences filled';
+      } else if (published) {
+        status = 'Published \u2713';
+        statusColor = '#059669'; statusBg = '#ecfdf5'; borderColor = '#a7f3d0';
+        detail = liveCount + ' live experience' + (liveCount !== 1 ? 's' : '');
+      } else {
+        status = 'Not started';
+        statusColor = '#94a3b8'; statusBg = '#f8fafc'; borderColor = '#e2e8f0';
+        detail = 'No framework yet';
+      }
+
+      var card = document.createElement('div');
+      card.className = 'fw-dash-card';
+      card.style.cssText = 'border:2px solid ' + borderColor + ';border-radius:14px;padding:20px;cursor:pointer;' +
+        'transition:all .2s;background:' + statusBg + ';position:relative';
+      card.onmouseenter = function() { card.style.borderColor = '#6366f1'; card.style.transform = 'translateY(-2px)'; card.style.boxShadow = '0 6px 16px rgba(99,102,241,.12)'; };
+      card.onmouseleave = function() { card.style.borderColor = borderColor; card.style.transform = 'none'; card.style.boxShadow = 'none'; };
+
+      card.innerHTML =
+        '<div style="display:flex;justify-content:space-between;align-items:start;gap:10px;margin-bottom:10px">' +
+          '<strong style="font-size:15px;color:#1e293b;line-height:1.3">' + escapeHtml(p.position) + '</strong>' +
+          '<span style="font-size:11px;font-weight:600;color:' + statusColor + ';background:' + (draft ? (draft.state === 'Submitted' ? '#fef3c7' : '#dbeafe') : (published ? '#d1fae5' : '#f1f5f9')) +
+            ';padding:3px 10px;border-radius:20px;white-space:nowrap;flex-shrink:0">' + status + '</span>' +
+        '</div>' +
+        '<p style="margin:0 0 4px;font-size:13px;color:#64748b">' + escapeHtml(p.department) + '</p>' +
+        '<p style="margin:0;font-size:13px;color:#475569">' + detail + '</p>' +
+        '<p style="margin:12px 0 0;font-size:13px;color:#6366f1;font-weight:500">' +
+          (draft ? 'Resume editing \u2192' : published ? 'Revise framework \u2192' : 'Start building \u2192') + '</p>';
+
+      card.onclick = function() { fwDashOpen(p); };
+      dashboard.appendChild(card);
+    });
+
+    if (!positions.length) {
+      dashboard.innerHTML = '<div style="text-align:center;padding:40px;color:#64748b">' +
+        '<p style="font-size:32px;margin:0 0 8px">\uD83D\uDCCB</p>' +
+        '<p>No positions assigned to you. Contact HR if this doesn\u2019t look right.</p></div>';
+    }
+
+  } catch(e) {
+    setContent('<div class="card"><p>' + escapeHtml(e.message) + '</p></div>');
+  }
+};
+
+async function fwDashOpen(p) {
+  if (FW.dirty && !confirm('Discard unsaved draft edits?')) return;
+  FW.dirty = false; FW.revision = null; FW.position = p;
+
+  var screen = document.getElementById('fwScreen');
+  if (!screen) return;
+  screen.innerHTML =
+    '<div style="display:flex;align-items:center;gap:12px;margin-bottom:20px">' +
+      '<button class="btn btn-outline" onclick="fwOpen(\'draft\')" style="padding:6px 14px;border-radius:8px">\u2190 All Positions</button>' +
+      '<div><h2 style="margin:0;color:#1e293b;font-size:20px">' + escapeHtml(p.position) + '</h2>' +
+      '<p style="margin:2px 0 0;font-size:13px;color:#64748b">' + escapeHtml(p.department) + '</p></div>' +
+    '</div>' +
+    '<div id="fwBody"><div class="card" style="text-align:center;padding:24px"><div class="spinner" style="margin:0 auto 8px"></div><p>Opening framework\u2026</p></div></div>';
+
+  try {
+    FW.revision = await fwRPC('open', { position_id: p.id });
+    if (FW.revision) fwRenderRevision();
+    else fwStartCard();
+  } catch(e) {
+    document.getElementById('fwBody').innerHTML = '<div class="card"><p>' + escapeHtml(e.message) + '</p></div>';
+  }
+}
+
+/* ---------- 4. Inject AI Library buttons into the draft revision view ---------- */
+var fwOrigRenderRevision = fwRenderRevision;
+fwRenderRevision = function() {
+  fwOrigRenderRevision();
+  if (!FW.revision || FW.revision.state !== 'Draft' || !FW.position || !FW.position.department) return;
+
+  /* Find each "Add experience" button and inject an AI Library button beside it */
+  var body = document.getElementById('fwBody');
+  if (!body) return;
+  body.querySelectorAll('button').forEach(function(btn) {
+    var attr = btn.getAttribute('onclick') || '';
+    var m = attr.match(/fwAdd\('([^']+)'\)/);
+    if (!m) return;
+    var code = m[1];
+    var wrap = document.createElement('span');
+    wrap.style.cssText = 'display:inline-block;margin-left:8px';
+    var aiBtn = document.createElement('button');
+    aiBtn.type = 'button';
+    aiBtn.className = 'btn btn-outline';
+    aiBtn.style.cssText = 'background:#eef2ff;border-color:#818cf8;color:#4338ca;border-radius:8px;font-size:13px';
+    aiBtn.textContent = '\uD83D\uDCDA AI Library';
+    aiBtn.onclick = function(e) { e.stopPropagation(); aiLibPanel(code); };
+    wrap.appendChild(aiBtn);
+    btn.parentNode.insertBefore(wrap, btn.nextSibling);
+  });
+};
+
+/* ---------- 5. Spinner CSS (if not already present) ---------- */
+(function() {
+  if (document.getElementById('aiLibSpinnerStyle')) return;
+  var st = document.createElement('style');
+  st.id = 'aiLibSpinnerStyle';
+  st.textContent = '.spinner{width:32px;height:32px;border:3px solid #e2e8f0;border-top-color:#6366f1;border-radius:50%;animation:spin .7s linear infinite}@keyframes spin{to{transform:rotate(360deg)}}';
+  document.head.appendChild(st);
+})();
 
 </script>
 </body>
