@@ -572,6 +572,16 @@ _supabase.from('employees').select('*').eq('email', email).single(),
 _supabase.from('employees').select('employee_id').eq('manager_email', email).limit(1)
 ]);
 var roles = (boot[0].data || []).map(function(r){ return r.role; });
+// Trusted access is authoritative for privileged UI modes, not profile labels.
+var trustedAccessResult = await _supabase.rpc('cms_user_access',{p_action:'me',p_data:{}});
+if (trustedAccessResult.error || !trustedAccessResult.data) {
+setContent('<div class="card"><h3>Access setup unavailable</h3><p>Could not verify account permissions. Contact the administrator to check the User Access upgrade, then sign in again.</p></div>');
+return;
+}
+window.CMS_ACCESS = trustedAccessResult.data;
+roles = roles.filter(function(r){ return !['HR_ADMIN','HEAD_HR','C_SUITE'].includes(r); });
+if (CMS_ACCESS.reviewer !== 'NONE') roles.push(CMS_ACCESS.reviewer);
+if (CMS_ACCESS.executive) roles.push('C_SUITE');
 var emp = boot[1].data;
 var isManager = roles.includes('MANAGER') || ((boot[2].data || []).length > 0);
 APP.user = {
@@ -9119,6 +9129,97 @@ body.ex-modern .hdr-divider{background:rgba(201,173,114,.5)!important}
 @media print{#exRoot .xc-section select,.xc-section .xi-tabs{display:none}}
 `;
 document.head.appendChild(xcStyle);
+
+</script>
+<script>
+/* Existing user_profiles and trusted permissions synchronized by one RPC. */
+var UA={selected:null,busy:false,page:0,token:0};
+async function uaRPC(action,data){
+ var r=await _supabase.rpc('cms_user_access',{p_action:action,p_data:data||{}});
+ if(r.error)throw new Error(r.error.message);return r.data;
+}
+function uaButton(text,fn){
+ var b=document.createElement('button');b.type='button';b.className='btn btn-outline';b.textContent=text;b.onclick=fn;return b;
+}
+async function uaOpen(){
+ var token=++UA.token;
+ setContent('<div id="uaRoot" class="card"><h2>User Access</h2><p>Verifying administrator permission...</p></div>');
+ var root=document.getElementById('uaRoot');
+ try{
+  var me=await uaRPC('me');if(token!==UA.token||document.getElementById('uaRoot')!==root)return;
+  if(!me.can_manage)throw new Error('Only the designated access administrator may manage permissions.');
+  root.innerHTML='<h2 style="color:#312e81">User Access</h2><p>Find an existing login and synchronize its app roles and trusted permissions. This does not create login accounts or change passwords.</p><form id="uaSearch" style="display:flex;gap:12px;margin:18px 0"><input id="uaQuery" type="search" placeholder="Search login email (at least 3 characters)" aria-label="Login email"><button type="submit" class="btn btn-primary">Find account</button></form><div id="uaResults"></div><div id="uaEditor"></div><div id="uaAudit" style="margin-top:24px"></div>';
+  root.querySelector('#uaSearch').onsubmit=async e=>{
+   e.preventDefault();if(UA.busy)return;
+   var result=root.querySelector('#uaResults');result.textContent='Searching...';
+   try{
+    var list=await uaRPC('search',{search:root.querySelector('#uaQuery').value});
+    if(document.getElementById('uaRoot')!==root)return;
+    result.innerHTML='';
+    if(!list.length)result.textContent='No existing login found. Create or invite the account in Supabase Authentication first.';
+    list.forEach(u=>{
+     var card=document.createElement('div');card.className='card';
+     var title=document.createElement('strong');title.textContent=u.email;card.appendChild(title);
+     var info=document.createElement('p');info.textContent=(u.confirmed?'Verified email':'Email not verified')+' | Reviewer: '+u.access.reviewer+' | C-Suite: '+(u.access.executive?'Enabled':'Disabled');card.appendChild(info);
+     var b=uaButton(u.access.access_admin?'Protected administrator':'Manage access',()=>uaEdit(u));b.disabled=u.access.access_admin;card.appendChild(b);result.appendChild(card);
+    });
+   }catch(e){result.textContent=e.message;}
+  };
+  await uaAudit();
+ }catch(e){if(document.getElementById('uaRoot')===root)root.textContent=e.message;}
+}
+function uaEdit(user){
+ UA.selected=user;
+ var host=document.getElementById('uaEditor');host.innerHTML='';
+ var h=document.createElement('h3');h.textContent='Access for '+user.email;host.appendChild(h);
+ function label(text){var n=document.createElement('label');n.textContent=text;host.appendChild(n);}
+ label('Reviewer role');
+ var reviewer=document.createElement('select');reviewer.id='uaReviewer';
+ [['NONE','No HR reviewer access'],['HR_ADMIN','HR Admin'],['HEAD_HR','Head of HR']].forEach(p=>reviewer.add(new Option(p[1],p[0])));
+ reviewer.value=user.access.reviewer;host.appendChild(reviewer);
+ label('C-Suite access');
+ var executive=document.createElement('select');executive.id='uaExecutive';executive.add(new Option('Disabled','false'));executive.add(new Option('Enabled','true'));executive.value=String(user.access.executive);host.appendChild(executive);
+ label('Reason for this change');var reason=document.createElement('textarea');reason.id='uaReason';reason.maxLength=1000;host.appendChild(reason);
+ label('Type the exact login email to confirm');var email=document.createElement('input');email.id='uaConfirm';email.type='email';host.appendChild(email);
+ var caution=document.createElement('p');caution.textContent='HR Admin/HOHR can review private executive cases. C-Suite can see the shared overview and its own assigned cases. Removing privileged access does not disable the login or delete its data.';host.appendChild(caution);
+ var save=uaButton('Review and save access',async()=>{
+  if(UA.busy)return;
+  var payload={id:user.id,reviewer:reviewer.value,executive:executive.value==='true',reason:reason.value.trim(),confirm_email:email.value.trim(),expected:user.access};
+  if(payload.reason.length<5||payload.confirm_email.toLowerCase()!==user.email.toLowerCase()){showToast('Enter a reason and type the account email exactly.');return;}
+  if(!confirm('Change '+user.email+' to reviewer '+payload.reviewer+' and C-Suite '+(payload.executive?'Enabled':'Disabled')+'? Both profile and trusted access will change together.'))return;
+  UA.busy=true;save.disabled=true;
+  try{
+   var r=await uaRPC('save',payload);
+   host.innerHTML='';var done=document.createElement('p');done.textContent='Saved access for '+r.email+'. Ask this person to sign out and sign in again. Their existing data and password are unchanged.';host.appendChild(done);
+   document.getElementById('uaResults').innerHTML='';await uaAudit();
+  }catch(e){showToast(e.message);}finally{UA.busy=false;if(save.isConnected)save.disabled=false;}
+ });save.className='btn btn-primary';save.style.marginTop='16px';host.appendChild(save);
+}
+async function uaAudit(){
+ var host=document.getElementById('uaAudit');if(!host)return;
+ host.textContent='Loading access history...';
+ try{
+  var rows=await uaRPC('audit',{page:UA.page});if(document.getElementById('uaAudit')!==host)return;
+  host.innerHTML='<h3>Access-change history</h3>';
+  rows.forEach(r=>{
+   var p=document.createElement('p');p.textContent=new Date(r.changed_at).toLocaleString()+' | '+r.target_email+' | '+r.changed_by+' | '+r.old_access.reviewer+' → '+r.new_access.reviewer+' | C-Suite '+r.old_access.executive+' → '+r.new_access.executive+' | '+r.reason;host.appendChild(p);
+  });
+  if(!rows.length)host.append('No recorded access changes on this page.');
+  var prev=uaButton('Previous',()=>{UA.page--;uaAudit();});prev.disabled=UA.page===0;host.appendChild(prev);
+  var next=uaButton('Next',()=>{UA.page++;uaAudit();});next.disabled=rows.length<25;host.appendChild(next);
+ }catch(e){host.textContent=e.message;}
+}
+var uaPreviousNav=setupNav;
+setupNav=function(role){
+ uaPreviousNav(role);
+ if(role==='hr'&&window.CMS_ACCESS&&CMS_ACCESS.can_manage){
+  var side=document.getElementById('sideNav');if(side){var b=uaButton('User Access',()=>navigateTo('hr-user-access'));b.style.cssText='margin:12px;color:#fff;background:#4338ca;border:0';side.appendChild(b);}
+ }
+};
+var uaPreviousPage=loadPage;
+loadPage=function(id){if(id==='hr-user-access')return uaOpen();UA.token++;return uaPreviousPage(id);};
+var uaPreviousLabel=getPageLabel;
+getPageLabel=function(id){return id==='hr-user-access'?'User Access':uaPreviousLabel(id);};
 
 </script>
 </body>
