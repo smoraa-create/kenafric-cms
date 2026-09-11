@@ -582,6 +582,12 @@ window.CMS_ACCESS = trustedAccessResult.data;
 roles = roles.filter(function(r){ return !['HR_ADMIN','HEAD_HR','C_SUITE'].includes(r); });
 if (CMS_ACCESS.reviewer !== 'NONE') roles.push(CMS_ACCESS.reviewer);
 if (CMS_ACCESS.executive) roles.push('C_SUITE');
+// The designated access administrator may open oversight views using their
+// existing HR permissions. This does not grant executive decision authority.
+if (CMS_ACCESS.can_manage === true && CMS_ACCESS.reviewer === 'HR_ADMIN') {
+ if (!roles.includes('HEAD_HR')) roles.push('HEAD_HR');
+ if (!roles.includes('C_SUITE')) roles.push('C_SUITE');
+}
 var emp = boot[1].data;
 var isManager = roles.includes('MANAGER') || ((boot[2].data || []).length > 0);
 APP.user = {
