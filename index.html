@@ -482,6 +482,52 @@ body.role-hohr #roleBanner{background:#b45309!important;color:#fff}
 @media(prefers-reduced-motion:no-preference){.hh-metric,.hh-button{transition:box-shadow .16s ease,background .16s ease}}
 
 </style>
+<style id="cms-calculation-table-style">
+/* Full-width calculation ledger. No horizontal clipping or scroll container.
+   The same fields become labeled blocks in narrow panels, retaining all text. */
+.cms-calc-card {box-sizing:border-box; min-width:0; max-width:100%; padding:clamp(12px,2vw,24px)!important; font-family:system-ui,-apple-system,"Segoe UI",sans-serif; color:#182b49;}
+.cms-calc-head h3 {font-size:22px; margin:5px 0 8px; color:#182b49;}
+.cms-calc-eyebrow {font-size:14px; font-weight:750; letter-spacing:.08em; color:#655018;}
+.cms-calc-head p,.cms-calc-card p {font-size:14px!important; line-height:1.55; overflow-wrap:anywhere;}
+.cms-calc-container {container-type:inline-size; width:100%; min-width:0; max-width:100%; overflow:visible;}
+table.cms-calc-table {table-layout:fixed!important; width:100%!important; min-width:0!important; border-collapse:collapse; font-size:14px!important; margin:16px 0;}
+.cms-calc-table th,.cms-calc-table td {box-sizing:border-box; min-width:0!important; max-width:none; padding:12px 9px!important; font-size:14px!important; text-transform:none!important; white-space:normal!important; overflow-wrap:anywhere; word-break:normal; text-align:left; vertical-align:top; line-height:1.5; border-bottom:1px solid #dbe3ed;}
+.cms-calc-table thead th {background:#182b49!important;color:#fff!important; font-weight:650; font-size:14px!important;}
+.cms-calc-table tbody th {font-weight:650; color:#182b49;}
+.cms-calc-table tbody tr:nth-child(even) {background:#f4f7fb;}
+.cms-calc-table .cms-calc-critical {background:#edf1fa;}
+.cms-calc-tier+.cms-calc-tier,.cms-calc-critical-item+.cms-calc-critical-item {margin-top:9px;}
+.cms-calc-formula,.cms-calc-result,.cms-calc-critical-item span,.cms-calc-table small {display:block;}
+.cms-calc-result {color:#243b73; margin-top:4px;}
+.cms-calc-table small {font-size:14px; color:#526177; margin-top:4px;}
+.cms-calc-critical-item strong {color:#243b73;}
+.cms-calc-table tfoot th,.cms-calc-table tfoot td {background:#e4ebf5!important; border-top:2px solid #8294b4; font-size:14px!important;}
+.cms-calc-summary {background:#182b49;color:white;padding:16px;border-radius:10px; margin:16px 0;}
+.cms-calc-summary>strong {font-size:20px;}
+.cms-calc-summary p {color:#e5eaf4; margin:7px 0 0;}
+.cms-calc-note,.cms-calc-muted {color:#526177;}
+.cms-calc-warning {padding:12px;border-left:4px solid #b87912;background:#fff7df;}
+.cms-calc-sr {position:absolute;width:1px;height:1px;padding:0;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;}
+@container (max-width: 760px) {
+  .cms-calc-table,.cms-calc-table tbody,.cms-calc-table tfoot {display:block;width:100%!important;}
+  .cms-calc-table colgroup {display:none;}
+  .cms-calc-table thead {position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);}
+  .cms-calc-table tr {display:block;margin-bottom:16px;border:1px solid #cbd7e6;border-radius:9px;overflow:visible;}
+  .cms-calc-table th[scope="row"] {display:block;width:100%!important;background:#182b49!important;color:white!important;border-radius:8px 8px 0 0;padding:13px!important;}
+  .cms-calc-table td {display:grid;grid-template-columns:minmax(0,34%) minmax(0,1fr);gap:5px 12px;width:100%!important;padding:12px!important;}
+  .cms-calc-table td::before {content:attr(data-label);grid-column:1;grid-row:1;font-weight:650;color:#394b64;}
+  .cms-calc-table td>* {grid-column:2;min-width:0;}
+  .cms-calc-table tfoot th[scope="row"] {background:#324b70!important;}
+}
+@media print {
+ .cms-calc-card {padding:0!important;}
+ .cms-calc-table thead {display:table-header-group;}
+ .cms-calc-table tr {break-inside:avoid;}
+ .cms-calc-summary {background:#edf1fa;color:#182b49;}
+ .cms-calc-summary p {color:#182b49;}
+}
+
+</style>
 </head>
 <body>
 <style>
@@ -4661,48 +4707,94 @@ html += '</div>';
 return html;
 }
 function scoreBreakdownHTML(rows, type) {
-var trs = (rows || []).filter(function(r){ return r.type === type; });
-if (!trs.length) return '';
-var tierNames = { critical: 'Critical', important: 'Important', valueAdd: 'Value-Add' };
-var html = cmsRatingLegendHTML()+cmsPolicyNote(trs)+cmsSavedWeightNote(trs)+'<div class="card"><div class="card-title">🧮 Score Summary — ' + escapeHtml(type) + ' Assessment</div><div style="font-size:12px">';
-var totalW = 0, sumWP = 0, num = 0;
-for (var i = 0; i < APP.competencies.length; i++) {
-var comp = APP.competencies[i];
-var crs = trs.filter(function(r){ return r.comp_code === comp.code; });
-if (!crs.length) continue;
-num++;
-var tiers = { critical: { n: 0, pts: 0 }, important: { n: 0, pts: 0 }, valueAdd: { n: 0, pts: 0 } };
-crs.forEach(function(r) {
-var t = getClassificationTier(r.classification);
-var ticked = (r.ticked === true || r.ticked === 'TRUE' || r.ticked === 1);
-var rating = parseFloat(r.proficiency_rating);
-var hasEv = (r.evidence || '').toString().trim() !== '';
-var ok = ticked && hasEv && rating >= 1 && rating <= 5 && r.hr_status !== 'Disapproved';
-tiers[t].n++; tiers[t].pts += (ok ? rating : cmsFloor(r)) / 5;
-});
-var maxes = tierMaximums({ critical: { total: tiers.critical.n }, important: { total: tiers.important.n }, valueAdd: { total: tiers.valueAdd.n } });
-var compScore = 0; var tierLine = [];
-['critical','important','valueAdd'].forEach(function(t) {
-if (tiers[t].n > 0) {
-var s = (tiers[t].pts / tiers[t].n) * maxes[t];
-compScore += s;
-tierLine.push(tierNames[t] + ' ' + s.toFixed(2) + '/' + maxes[t].toFixed(2));
+  // Presentation only. Retain the original summary's weighting and rounding.
+  var trs = (rows || []).filter(function(r) { return r.type === type; });
+  if (!trs.length) return '';
+  var ids = new Set(trs.map(function(r) { return r.employee_id; }).filter(Boolean));
+  if (ids.size > 1) return '<div class="card">Select one employee to view the calculation.</div>';
+  var showCritical = typeof cgHidden === 'function' && !cgHidden();
+  var names = {critical:'Critical', important:'Important', valueAdd:'Value-Add'};
+  var keys = ['critical','important','valueAdd'];
+  var f = function(n) { return Number(n).toFixed(4).replace(/\.?0+$/, '') || '0'; };
+  var fmt = function(n) { return Number(n).toFixed(2); };
+  var cell = function(label, content, cls) {
+    return '<td data-label="' + escapeHtml(label) + '"' + (cls ? ' class="' + cls + '"' : '') + '><div class="cms-calc-cell">' + content + '</div></td>';
+  };
+  var totalW=0, sumWP=0, exactPoints=0, criticalSum=0, criticalCount=0, missing=0;
+  var html='<section class="card cms-calc-card"><header class="cms-calc-head"><span class="cms-calc-eyebrow">CALCULATION BREAKDOWN</span><h3>' +
+    escapeHtml(type) + ' Assessment</h3><p>Read across: experience tiers → competency score → weight → overall contribution' +
+    (showCritical ? '. Critical percentages are calculated separately.' : '.') + '</p></header>';
+  html+='<div class="cms-calc-container"><table class="cms-calc-table"><caption class="cms-calc-sr">Detailed ' + escapeHtml(type) + ' calculation</caption><colgroup>';
+  (showCritical ? [19,27,9,7,18,20] : [23,32,11,9,25]).forEach(function(w){html+='<col style="width:'+w+'%">';});
+  html+='</colgroup><thead><tr><th scope="col">Competency</th><th scope="col">Competency calculation</th><th scope="col">Score / 5</th><th scope="col">Weight</th><th scope="col">Overall contribution</th>';
+  if(showCritical)html+='<th scope="col">Critical experience calculation</th>';
+  html+='</tr></thead><tbody>';
+  var catalogue=APP.competencies||[];
+  catalogue.forEach(function(comp) {
+    var crs=trs.filter(function(r){return r.comp_code===comp.code;});
+    if(!crs.length){
+      missing++;
+      html+='<tr><th scope="row">'+escapeHtml(comp.competency)+'</th>'+cell('Competency calculation','Not assessed')+cell('Score / 5','Awaiting')+cell('Weight','Not applied')+cell('Overall contribution','Not assessed');
+      if(showCritical)html+=cell('Critical experience calculation','Not assessed');
+      html+='</tr>';return;
+    }
+    var tiers={critical:{n:0,pts:0,ratings:[]},important:{n:0,pts:0,ratings:[]},valueAdd:{n:0,pts:0,ratings:[]}};
+    crs.forEach(function(r){
+      var tier=getClassificationTier(r.classification);
+      var rating=parseFloat(r.proficiency_rating);
+      var valid=(r.ticked===true||r.ticked==='TRUE'||r.ticked===1)&&String(r.evidence||'').trim()!==''&&rating>=1&&rating<=5&&r.hr_status!=='Disapproved';
+      var effective=valid?rating:cmsFloor(r);
+      tiers[tier].n++;tiers[tier].pts+=effective/5;tiers[tier].ratings.push(effective);
+    });
+    var maxes=tierMaximums({critical:{total:tiers.critical.n},important:{total:tiers.important.n},valueAdd:{total:tiers.valueAdd.n}});
+    var compScore=0, lines=[];
+    keys.forEach(function(k){
+      var t=tiers[k];if(!t.n)return;
+      var average=t.pts/t.n*5, earned=t.pts/t.n*maxes[k];compScore+=earned;
+      var intro='<strong>'+names[k]+':</strong> ';
+      if(t.n>1)intro+='<span class="cms-calc-formula">Average ('+t.ratings.map(f).join(' + ')+') ÷ '+t.n+' = '+f(average)+'</span>';
+      lines.push('<div class="cms-calc-tier">'+intro+'<span class="cms-calc-formula">'+f(average)+' ÷ 5 × '+f(maxes[k])+' = <b>'+fmt(earned)+'</b></span></div>');
+    });
+    var w=cmsAssessmentWeight(crs,comp.code,comp.weight), contribution=compScore/5*w;
+    totalW+=w;sumWP+=Math.round(compScore/5*100)*w;exactPoints+=contribution;
+    html+='<tr><th scope="row">'+escapeHtml(comp.competency)+'</th>'+cell('Competency calculation',lines.join(''))+
+      cell('Score / 5','<strong>'+fmt(compScore)+'</strong>')+cell('Weight',f(w)+'%')+
+      cell('Overall contribution',f(compScore)+' ÷ 5 × '+f(w)+' =<strong class="cms-calc-result">'+fmt(contribution)+' points</strong>');
+    if(showCritical){
+      var critical=crs.filter(function(r){return getClassificationTier(r.classification)==='critical';});
+      var modernGate=crs.every(function(r){return r.critical_gate_rule==='average-v1';});
+      var critLines=critical.map(function(r,index){
+        // Gate floor is independent of protected overall-score floors.
+        var effective=modernGate?(cmsRawUsable(r)?Number(r.proficiency_rating):1):cmsEffectiveRating(r);
+        var pct=effective*20;criticalSum+=pct;criticalCount++;
+        return '<div class="cms-calc-critical-item">'+(critical.length>1?'<span>Experience '+(index+1)+'</span>':'')+
+          f(effective)+' ÷ 5 × 100 = <strong>'+f(pct)+'%</strong>'+
+          (!cmsRawUsable(r)?'<small>Effective minimum shown</small>':'')+'</div>';
+      });
+      html+=cell('Critical experience calculation',critLines.length?critLines.join(''):'<span class="cms-calc-muted">N/A: no Critical experiences</span>','cms-calc-critical');
+    }
+    html+='</tr>';
+  });
+  var known=new Set(catalogue.map(function(c){return c.code;}));
+  var unknown=trs.some(function(r){return !known.has(r.comp_code);});
+  var finalPct=totalW?Math.round(sumWP/totalW):0;
+  html+='</tbody><tfoot><tr><th scope="row">TOTAL / AVERAGE</th>'+cell('Competency calculation','Sum of assessed competency contributions')+
+    cell('Score / 5','Not added')+cell('Weight',f(totalW)+'%')+
+    cell('Overall contribution','<strong>'+fmt(exactPoints)+' points</strong><small>Before display rounding</small>');
+  if(showCritical)html+=cell('Critical experience calculation',criticalCount?'<strong>'+fmt(criticalSum/criticalCount)+'%</strong><small>'+f(criticalSum)+' ÷ '+criticalCount+' Critical experiences</small>':'N/A: no Critical experiences','cms-calc-critical');
+  html+='</tr></tfoot></table></div>';
+  html+='<div class="cms-calc-summary"><strong>'+(missing||unknown?'Available-record':'Application')+' '+escapeHtml(type)+' score: '+finalPct+'%</strong>'+
+    '<p>Detailed contributions retain precision. The existing application summary rounds each competency percentage before weighting, divides by the assessed weight ('+f(totalW)+'%), then rounds the total. This layout does not change that calculation.</p></div>';
+  if(missing||unknown)html+='<p class="cms-calc-warning">Incomplete coverage: '+missing+' catalogue competencies have no records'+(unknown?'; records also contain an unrecognized competency code':'')+'. The available-record score is not confirmation of a complete assessment.</p>';
+  if(showCritical){
+    html+='<p class="cms-calc-note">Critical column: '+escapeHtml(type)+' ratings only, not a combined progression decision. Every Critical experience counts equally; Important and Value-Add are excluded. The paired check requires matching Manager and Self assessments and remains in the separate Critical-check panel.</p>';
+    if(trs.some(function(r){return r.critical_gate_rule!=='average-v1';}))html+='<p class="cms-calc-warning">Protected or mixed Critical policy: the average above is descriptive only. The separate gate retains the applicable historical decision rule.</p>';
+  }
+  html+='<p class="cms-calc-note">Tier allocations total 5 points per competency. A tier with several experiences uses their average rating. Values are rounded for display; missing records are not minimum ratings.</p>'+
+    cmsPolicyNote(trs)+cmsSavedWeightNote(trs)+'</section>';
+  return html;
 }
-});
-var pct = Math.round((compScore / 5) * 100);
-var w=cmsAssessmentWeight(crs,comp.code,comp.weight);
-totalW += w; sumWP += pct * w;
-html += '<div style="padding:6px 0;border-bottom:1px dashed #e2e8f0">';
-html += '<div style="display:flex;justify-content:space-between;gap:8px;font-weight:700"><span>' + num + '. ' + escapeHtml(comp.competency) + '</span><span style="color:var(--primary);white-space:nowrap">' + compScore.toFixed(2) + ' / 5 = ' + pct + '%</span></div>';
-html += '<div style="color:var(--gray-500);font-size:11px;margin-top:2px">' + tierLine.join(' · ') + ' <span style="color:var(--gray-400)">(weight ' + w + '%)</span></div>';
-html += '</div>';
-}
-var finalPct = totalW ? Math.round(sumWP / totalW) : 0;
-html += '<div style="margin-top:10px;padding-top:8px;border-top:2px solid var(--gray-300);font-weight:800;font-size:13px">FINAL ' + type.toUpperCase() + ' SCORE = ' + Math.round(sumWP) + ' ÷ ' + Math.round(totalW) + ' = <span style="color:var(--primary)">' + finalPct + '%</span></div>';
-html += '<div style="color:var(--gray-500);font-size:10px;margin-top:6px">How to read: "Critical 3.38/3.75" = of the 3.75 points reserved for Critical experiences, 3.38 were earned. Rules: ticked + evidence + rating = rating ÷ 5 points; missing evidence or rating = 1/5 under the new rule (protected legacy records keep their original floor); Critical counts more than Important, then Value‑Add.</div>';
-html += '</div></div>';
-return html;
-}
+
 async function toggleScoreBreakdown(empId, type, boxId) {
  var box=document.getElementById(boxId);if(!box)return;
  if(box.style.display!=='none'){box.style.display='none';return;}
@@ -11300,3 +11392,4 @@ window.addEventListener('storage',function(event){if(event.key===CMS_LOGIN_WINDO
 <script>suStartApp();</script>
 </body>
 </html>
+v
