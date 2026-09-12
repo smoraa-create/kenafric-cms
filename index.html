@@ -440,6 +440,48 @@ body.role-hr .header{background:linear-gradient(110deg,#111b35,#222154);border-b
 @media(max-width:700px){.hd-metrics{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.hd-hero{padding:20px}.hd-hero h2{font-size:23px}.hd-card{padding:16px}.hd-action{flex-wrap:wrap}.hd-action .btn{margin-left:52px}.hd-heading{flex-wrap:wrap}.hd-filters select{max-width:170px}.hd-quick{display:grid;grid-template-columns:1fr}}
 
 </style>
+<style>
+/* Scoped HOHR theme. Clear layers: dark navigation, blue-grey workspace, white content. */
+body.role-hohr{background:#d8e0ea}
+body.role-hohr .content{background:#d8e0ea;padding:22px 24px 90px}
+body.role-hohr .header{background:#0e1229;border-bottom:1px solid #273448}
+body.role-hohr .sidebar{background:linear-gradient(180deg,#081424,#0d1b30)}
+body.role-hohr .sb-brand .brand-accent{color:#eb7a25}
+body.role-hohr .sb-section{color:#ee8c40}
+body.role-hohr .sb-item.active{background:linear-gradient(110deg,#b45309,#733100);border-left-color:#f5ac59;color:#fff}
+body.role-hohr .role-toggle select{background:#b45309;color:#fff}
+body.role-hohr #roleBanner{background:#b45309!important;color:#fff}
+.hh{font:14px/1.6 system-ui,-apple-system,'Segoe UI',sans-serif;color:#101d35}
+.hh h1,.hh h2,.hh h3,.hh p{margin:0}
+.hh h2{font-size:21px;font-weight:750;line-height:1.4}.hh h3{font-size:15px;font-weight:700;line-height:1.5}.hh p{font-size:14px;line-height:1.65;color:#4b5c73}
+.hh-hero{background:radial-gradient(ellipse at 100% 90%,#213c5933,transparent 75%),linear-gradient(115deg,#071323,#0b1b32);color:#fff;border:1px solid #516075;border-radius:12px;padding:28px 32px;display:flex;justify-content:space-between;align-items:center;gap:24px;margin-bottom:20px;box-shadow:0 3px 8px #18253b15;position:relative;overflow:hidden}
+.hh-hero:after{content:'';position:absolute;width:390px;height:240px;border:1px solid #b4530944;border-radius:50%;transform:rotate(-30deg);right:100px;bottom:-170px;pointer-events:none}
+.hh-hero h1{font-family:system-ui,-apple-system,'Segoe UI',sans-serif;font-size:36px;font-weight:650;line-height:1.2;color:#fff;margin:8px 0 12px}
+.hh .hh-hero p{color:#e0e6ef}.hh .hh-hero .hh-eyebrow{color:#f09b43;font-size:12px;letter-spacing:1.4px;font-weight:700}
+.hh-filters{display:flex;flex-direction:column;gap:12px;min-width:245px;z-index:1}
+.hh-filters select{background:#ffffff07;color:#fff;border:1px solid #617085;border-radius:8px;font-size:14px;padding:10px 12px}.hh-filters option{color:#102039;background:#fff}
+.hh-metrics{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px}
+.hh-metric{background:linear-gradient(150deg,#fff,#fdfefe);border:1px solid #b9c5d5;border-radius:10px;box-shadow:0 3px 7px #25395415;padding:0;color:#b45309;cursor:pointer;font-family:inherit;min-width:0;text-align:left;overflow:hidden}
+.hh-metric>div{display:flex;align-items:center;gap:12px;padding:20px 14px}.hh-metric>div>div{display:flex;flex-direction:column;gap:3px;min-width:0}.hh-metric strong{font-size:29px;line-height:1.2}.hh-metric span{font-size:13px;color:#152843}
+.hh-metric .hh-metric-icon{width:40px;height:40px;display:flex;align-items:center;justify-content:center;flex:none;border-radius:8px;background:#fff4e9;border:1px solid #ecd9c5;color:#b45309}
+.hh-metric svg{width:24px;height:24px}.hh-metric small{display:block;border-top:1px solid #e8ecf1;padding:12px 10px;font-size:12px;font-weight:700;text-align:center}.hh-metric:nth-child(2),.hh-metric:nth-child(5){color:#14223f}.hh-metric:nth-child(2) .hh-metric-icon,.hh-metric:nth-child(5) .hh-metric-icon{background:#f1f4f9;color:#14223f;border-color:#dae1ea}
+.hh-metric:hover{border-color:#b45309;box-shadow:0 5px 12px #263b5928}
+.hh .hh-note{font-size:12px;color:#354862;margin:12px 2px 17px}
+.hh-card{border:1px solid #b9c5d5;background:#fff;border-radius:11px;box-shadow:0 3px 8px #25395416;padding:22px;margin-bottom:18px;min-width:0}
+.hh-heading{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:9px}.hh-heading h2{display:flex;align-items:center;gap:12px}.hh-heading svg{width:26px;height:26px;color:#b45309;flex-shrink:0}
+.hh-action{display:flex;align-items:center;gap:14px;border-top:1px solid #e1e7ef;padding:15px 0}.hh-action>div{flex:1;min-width:0}.hh-action p{font-size:12px;margin-top:3px}.hh-action-icon{display:flex;align-items:center;justify-content:center;flex-shrink:0;background:#fff5eb;border:1px solid #f0dfce;border-radius:7px;color:#b45309;width:35px;height:35px}.hh-action-icon svg{width:20px;height:20px}
+.hh-button{display:inline-flex;align-items:center;justify-content:space-between;gap:14px;padding:9px 13px;background:linear-gradient(135deg,#fff,#fffaf6);border:1px solid #d4a77f;border-radius:7px;font-size:13px;color:#a84405;font-weight:650;cursor:pointer;font-family:inherit;line-height:1.4;text-align:left}.hh-button:hover{background:#fff0e2;border-color:#b45309}.hh-action .hh-button{min-width:215px}.hh .hh-hero .hh-button{background:#fff}.hh button:focus-visible,.hh select:focus-visible{outline:3px solid #d88337;outline-offset:3px}
+.hh-insights{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}.hh-insights .hh-card{display:flex;flex-direction:column;padding:19px;margin-bottom:0}.hh-insights .hh-button{margin-top:auto;border:0;border-top:1px solid #e5e9ef;border-radius:0;padding-top:12px;width:100%;background:#fff;color:#162845}.hh-insights>section:nth-child(2) .hh-button{color:#b45309}
+.hh-coverage,.hh-feature{display:flex;align-items:center;gap:18px;min-height:130px;padding:18px 0}.hh-coverage p,.hh-feature p{font-size:14px}.hh-feature>svg{width:58px;height:58px;flex-shrink:0;color:#b45309}.hh-insights>section:nth-child(3) .hh-feature>svg{color:#14223f}
+.hh-ring{height:94px;width:94px;flex:none;border-radius:50%;background:conic-gradient(#172744 var(--hh-pct),#e4e7ec 0);display:grid;place-items:center}.hh-ring strong{display:grid;place-items:center;width:76px;height:76px;border-radius:50%;background:#fff;font-size:23px}
+.hh .hh-leadership{margin:20px 0 10px;font-size:18px}.hh-shortcuts{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}.hh-shortcuts .hh-button{padding:15px;color:#152843;border-color:#d29566;background:#fff;box-shadow:0 2px 5px #26395412}
+.hh-warning{background:#fff3dc;border:1px solid #ddbc8e;border-radius:8px;color:#713f12;padding:12px 16px;margin:12px 0}
+.hh table{min-width:700px}.hh td{vertical-align:top}.hh-card>p{margin:8px 0 14px}.hh .table-wrap{margin-top:12px}
+@media(max-width:1150px){.hh-metrics{grid-template-columns:repeat(3,minmax(0,1fr))}.hh-hero{flex-wrap:wrap}.hh-insights{grid-template-columns:1fr}.hh-shortcuts{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:700px){body.role-hohr .content{padding:16px 12px 85px}.hh-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.hh-hero{padding:23px 20px}.hh-hero h1{font-size:28px}.hh-filters{min-width:0;width:100%}.hh-metric>div{padding:16px 10px;gap:8px}.hh-metric strong{font-size:25px}.hh-metric .hh-metric-icon{width:30px;height:30px}.hh-card{padding:17px}.hh-heading,.hh-action{flex-wrap:wrap}.hh-action .hh-button{margin-left:49px}.hh-shortcuts{grid-template-columns:1fr}}
+@media(prefers-reduced-motion:no-preference){.hh-metric,.hh-button{transition:box-shadow .16s ease,background .16s ease}}
+
+</style>
 </head>
 <body>
 <style>
@@ -535,7 +577,22 @@ applyKaiAvatar();
 </script><script>
 const SUPABASE_URL = 'https://nnmsfksnjaiageigscdf.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5ubXNma3NuamFpYWdlaWdzY2RmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY0NTI1NTQsImV4cCI6MjEwMjAyODU1NH0.K1rSsO-PHp6xzeUVVMal6-VsN-BYrzp3z_li6J2Krmc';
-const _supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+/* Session lives in this tab. Draft storage is independent and is never cleared here.
+   Browser "restore closed tab" can restore sessionStorage; this is not a device logout guarantee. */
+const CMS_CLIENT_BUILD='CMS-20260912-TAB-UPDATE-01';
+const CMS_AUTH_STORAGE_KEY='cms-tab-auth-v1';
+var CMS_TAB_STORAGE_OK=true;
+try{sessionStorage.setItem('cms-storage-probe','1');sessionStorage.removeItem('cms-storage-probe');}catch(e){CMS_TAB_STORAGE_OK=false;}
+const CMS_TAB_AUTH_STORAGE={
+ getItem:function(k){try{return sessionStorage.getItem(k);}catch(e){return null;}},
+ setItem:function(k,v){if(!CMS_TAB_STORAGE_OK)throw new Error('This browser must allow session storage to sign in.');sessionStorage.setItem(k,v);},
+ removeItem:function(k){try{sessionStorage.removeItem(k);}catch(e){}}
+};
+// Do not import the former browser-wide login into the new tab-scoped session.
+// Remove only this project's old auth token key, never draft keys.
+try{var oldAuth='sb-'+new URL(SUPABASE_URL).hostname.split('.')[0]+'-auth-token';localStorage.removeItem(oldAuth);localStorage.removeItem(oldAuth+'-code-verifier');}catch(e){}
+
+const _supabase = window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY,{auth:{storage:CMS_TAB_AUTH_STORAGE,storageKey:CMS_AUTH_STORAGE_KEY,persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
 const EMAILJS_SERVICE_ID = 'service_n25h19m';
 const EMAILJS_TEMPLATE_ID = 'template_498ij59';
 const EMAILJS_PUBLIC_KEY = 'JVdzezQg3OrI58-fT';
@@ -729,14 +786,21 @@ return;
 await enterApp(email);
 }
 async function enterApp(email) {
+if(!await suBeforeEnter())return;
+APP._photoOf={}; APP._avaByName=null;
 var boot = await Promise.all([
-_supabase.from('user_profiles').select('role').eq('email', email),
+_supabase.from('user_profiles').select('role,photo').eq('email', email),
 _supabase.from('employees').select('*').eq('email', email).single(),
-_supabase.from('employees').select('employee_id').eq('manager_email', email).limit(1)
+_supabase.from('employees').select('employee_id').eq('manager_email', email).limit(1),
+_supabase.rpc('cms_user_access',{p_action:'me',p_data:{}}),
+_supabase.from('competencies').select('*'),
+_supabase.rpc('cms_scoring_policy_version')
 ]);
+if(boot[0].error||boot[2].error||boot[4].error)throw new Error('Could not load sign-in permissions or competency catalogue. Please retry.');
+var profilePhoto=(boot[0].data||[]).find(p=>p.photo);if(profilePhoto)APP._photoOf[email]=profilePhoto.photo;
 var roles = (boot[0].data || []).map(function(r){ return r.role; });
 // Trusted access is authoritative for privileged UI modes, not profile labels.
-var trustedAccessResult = await _supabase.rpc('cms_user_access',{p_action:'me',p_data:{}});
+var trustedAccessResult = boot[3];
 if (trustedAccessResult.error || !trustedAccessResult.data) {
 setContent('<div class="card"><h3>Access setup unavailable</h3><p>Could not verify account permissions. Contact the administrator to check the User Access upgrade, then sign in again.</p></div>');
 return;
@@ -759,14 +823,12 @@ email: email,
 employee_id: emp ? emp.employee_id : null,
 modes: { isEmployee: true, isManager: isManager, isAdmin: roles.includes('HR_ADMIN'), isHOHR: roles.includes('HEAD_HR'), isCSuite: roles.includes('C_SUITE') }
 };
-var boot2 = await Promise.all([ _supabase.from('competencies').select('*'), _supabase.from('experiences').select('*') ]);
-APP.competencies = boot2[0].data || [];
-APP.experiences = boot2[1].data || [];
+APP.competencies = boot[4].data || [];
+APP.experiences = []; // Published frameworks load on demand; legacy pages use pfLibrary().
 document.querySelector('.header').style.display = 'block';
 document.querySelector('.nav-bar').style.display = 'block';
 var pcf = document.getElementById('pchatFab'); if (pcf) pcf.style.display = 'flex';
 var kf = document.getElementById('kaiFab'); if (kf) kf.style.display = 'flex';
-startPresence();
 document.getElementById('userInfo').textContent = APP.user.name;
 var av = document.getElementById('userAvatar');
 if(av && APP.user.name) {
@@ -775,9 +837,10 @@ av.textContent = parts.length >= 2 ? parts[0].charAt(0) + parts[1].charAt(0) : p
 }
 document.getElementById('mainNav').style.display = 'flex';
 setupRoleSwitch(APP.user.modes);
-var scoringSetup=await _supabase.rpc('cms_scoring_policy_version');
+var scoringSetup=boot[5];
 if(scoringSetup.error||scoringSetup.data!=='floor-one-v1'){setContent('<section class="card"><h2>Scoring setup required</h2><p>Install the Rating Floor SQL supplied with this code, then sign out and sign back in. Assessments have not been changed.</p></section>');return;}
 await cnEnter();
+if(APP.user&&APP.user.email===email){startPresence();suSchedule();}
 }
 
 async function doLogout() {
@@ -802,7 +865,7 @@ var kf2 = document.getElementById('kaiFab'); if (kf2) kf2.style.display = 'none'
 var rb=document.getElementById('roleBanner');if(rb)rb.style.display='none';
 var sb = document.getElementById('sideNav');
 if (sb) { sb.style.display = 'none'; sb.innerHTML = ''; }
-document.getElementById('mainContent').innerHTML='<div style="min-height:80vh;display:flex;align-items:center;justify-content:center"><div style="width:100%;max-width:380px"><div style="text-align:center;margin-bottom:32px"><div style="width:56px;height:56px;background:linear-gradient(135deg,var(--primary-dark),var(--primary));border-radius:14px;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;box-shadow:0 4px 12px rgba(67,56,202,0.3)"><span style="color:white;font-size:22px;font-weight:800">K</span></div><h1 style="font-size:20px;font-weight:700;color:var(--gray-900)">Kenafric <span class="brand-accent">CMS</span></h1><p style="font-size:13px;color:var(--gray-500)">Competency Management System</p></div><div class="card" style="padding:28px"><div class="form-group"><label>Email Address</label><input type="email" id="loginEmail" placeholder="you@kenafricind.com"></div><div class="form-group"><label>Password</label><div style="position:relative"><input type="password" id="loginPass" placeholder="Enter your password" style="padding-right:40px"><button type="button" onclick="togglePassword()" id="eyeBtn" title="Show / hide password" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:16px;line-height:1">👁️</button></div></div><button class="btn btn-primary" onclick="doLogin()" style="width:100%;padding:12px;margin-top:8px">Sign In</button><p id="loginError" style="color:var(--red);font-size:12px;margin-top:10px;text-align:center;display:none"></p></div></div></div>';
+document.getElementById('mainContent').innerHTML='<div style="min-height:80vh;display:flex;align-items:center;justify-content:center"><div style="width:100%;max-width:380px"><div style="text-align:center;margin-bottom:32px"><div style="width:56px;height:56px;background:linear-gradient(135deg,var(--primary-dark),var(--primary));border-radius:14px;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;box-shadow:0 4px 12px rgba(67,56,202,0.3)"><span style="color:white;font-size:22px;font-weight:800">K</span></div><h1 style="font-size:20px;font-weight:700;color:var(--gray-900)">Kenafric <span class="brand-accent">CMS</span></h1><p style="font-size:13px;color:var(--gray-500)">Competency Management System</p></div><div class="card" style="padding:28px"><div class="form-group"><label>Email Address</label><input type="email" id="loginEmail" name="username" autocomplete="username" placeholder="you@kenafricind.com"></div><div class="form-group"><label>Password</label><div style="position:relative"><input type="password" id="loginPass" name="password" autocomplete="current-password" placeholder="Enter your password" style="padding-right:40px"><button type="button" onclick="togglePassword()" id="eyeBtn" title="Show / hide password" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:16px;line-height:1">👁️</button></div></div><button class="btn btn-primary" onclick="doLogin()" style="width:100%;padding:12px;margin-top:8px">Sign In</button><p id="loginError" style="color:var(--red);font-size:12px;margin-top:10px;text-align:center;display:none"></p></div></div></div>';
 }
 async function changePassword() {
 var p1 = prompt('Enter your NEW password (minimum 6 characters):');
@@ -1039,7 +1102,7 @@ function cmsAssessmentInstructionsHTML(mode){
  h+='<div class="cms-guide-rating"><h4>Level of Competencies (1–5)</h4><p class="cms-guide-sub">Choose the level that best matches demonstrated work.</p><div class="cms-guide-levels">';
  [5,4,3,2,1].forEach(function(v){h+='<div class="cms-guide-level cms-guide-level-'+v+'"><span class="cms-guide-number">'+v+'</span><div><strong>'+escapeHtml(cmsRatingLabel(v))+'</strong><p>'+escapeHtml(cmsRatingDescription(v))+'</p></div></div>';});
  h+='</div></div><div class="cms-guide-steps"><h4>How to complete it</h4><ol><li><strong>Review every experience.</strong> Tick only those actually demonstrated; leave the rest unticked as Not Yet Demonstrated.</li><li><strong>Provide evidence.</strong> Describe the action, context and result. Use specific projects, dates, numbers or deliverables, and attach supporting proof where available.</li><li><strong>Select one rating.</strong> Use the scale above for each demonstrated experience. Review the weighted score as you fill in.</li>';
- h+=mode==='invited'?'<li><strong>Save and submit your invitation.</strong> Use Save Draft before leaving this invited form. This form saves manually in your current browser session. Submit once for this invitation; only HR can issue another invitation.</li>':correction?'<li><strong>Correct and resubmit.</strong> Use HR’s feedback to update only returned evidence and its rating. Existing attachments are retained. Resubmit each returned item for HR review; approved experiences remain locked.</li>':'<li><strong>Save, review and submit.</strong> Drafts auto-save every 20 seconds while the form is open; you can also press Save Draft. Submit once per authorized round. Reassessment requires approval through the request process.</li>';
+ h+=mode==='invited'?'<li><strong>Save and submit your invitation.</strong> Use Save Draft before leaving this invited form. This form saves manually in this browser, separately from login. Submit once for this invitation; only HR can issue another invitation.</li>':correction?'<li><strong>Correct and resubmit.</strong> Use HR’s feedback to update only returned evidence and its rating. Existing attachments are retained. Resubmit each returned item for HR review; approved experiences remain locked.</li>':'<li><strong>Save, review and submit.</strong> Drafts auto-save every 20 seconds while the form is open; you can also press Save Draft. Submit once per authorized round. Reassessment requires approval through the request process.</li>';
  h+='</ol></div><div class="cms-guide-scoring"><strong>No evidence = rating 1 out of 5 (Unsatisfactory).</strong><p>The same minimum applies to experiences not demonstrated, missing ratings, and HR-disapproved or unverifiable evidence under the new rule. It is weighted normally, not added as a bonus point.</p><details><summary>How scoring and historical results work</summary><p>Each effective rating is divided by 5 and weighted within its experience tier and competency. Critical experiences carry more weight than Important and Value-Add experiences. A missing whole assessment remains “Awaiting assessment”; it does not receive a score. Existing finalized results retain their original scoring policy.</p></details></div></div></section>';
  return h;
 }
@@ -5322,14 +5385,14 @@ reader.readAsDataURL(f);
 /* ===== Presence (online dots) ===== */
 function startPresence() {
 if (window._presenceTimer) clearInterval(window._presenceTimer);
-var beat = function(){ if (APP.user && APP.user.email) _supabase.from('presence').upsert({ email: APP.user.email.toLowerCase(), last_seen: new Date().toISOString() }); };
+var beat = function(){ if (!document.hidden && APP.user && APP.user.email) _supabase.from('presence').upsert({ email: APP.user.email.toLowerCase(), last_seen: new Date().toISOString() }); };
 beat();
 window._presenceTimer = setInterval(beat, 30000);
 }
 /* ===== Presence (online dots) ===== */
 function startPresence() {
 if (window._presenceTimer) clearInterval(window._presenceTimer);
-var beat = function(){ if (APP.user && APP.user.email) _supabase.from('presence').upsert({ email: APP.user.email.toLowerCase(), last_seen: new Date().toISOString() }); };
+var beat = function(){ if (!document.hidden && APP.user && APP.user.email) _supabase.from('presence').upsert({ email: APP.user.email.toLowerCase(), last_seen: new Date().toISOString() }); };
 beat();
 window._presenceTimer = setInterval(beat, 30000);
 }
@@ -5402,8 +5465,11 @@ inp.value = '';
 await _supabase.from('messages').insert({ sender_email: (APP.user.email || '').toLowerCase(), recipient_email: window._pc.withEmail, body: body });
 await pchatLoadMsgs();
 }
+var pfLastChatPoll=0,pfChatPolling=false;
 setInterval(async function(){
-if (!APP.user || !APP.user.email) return;
+if(document.hidden||pfChatPolling||!APP.user||!APP.user.email)return;
+var interval=window._pc.open?8000:30000;if(Date.now()-pfLastChatPoll<interval)return;pfLastChatPoll=Date.now();pfChatPolling=true;
+try{
 var me = (APP.user.email || '').toLowerCase();
 const { data } = await _supabase.from('messages').select('id, sender_email').eq('recipient_email', me).eq('read', false);
 var rows = data || [];
@@ -5418,6 +5484,7 @@ var b = document.getElementById('pchatUnread');
 if (b) { b.style.display = rows.length ? 'block' : 'none'; b.textContent = rows.length; }
 if (rows.length && !window._pc.open) showToast('💬 New message from ' + (rows[0].sender_email || '').split('@')[0]);
 if (window._pc.open) pchatRenderContacts();
+}finally{pfChatPolling=false;}
 }, 8000);
 /* ===== KAI V2 assistant - role-aware, page-aware, secure ===== */
 var KAI_AVATAR = 'kai-avatar.png';
@@ -7740,15 +7807,7 @@ var pageId = (event.state && event.state.page) ? event.state.page : (window.loca
 if (pageId) navigateTo(pageId, false);
 });
 
-(async function() {
-const { data } = await _supabase.auth.getSession();
-if (data && data.session) {
-document.getElementById('mainContent').innerHTML = '<div class="loading"><div class="spinner"></div>Loading...</div>';
-await enterApp(data.session.user.email);
-} else {
-showLoginScreen();
-}
-})();
+
 </script>
 <script>
 /* ============ OPENROUTER-ONLY AI ENGINE (Groq & Gemini removed) ============ */
@@ -10321,6 +10380,7 @@ function cnRead(key){try{return JSON.parse(sessionStorage.getItem(key)||'null');
 function cnWrite(key,value){try{sessionStorage.setItem(key,JSON.stringify(value));}catch(e){}}
 function cnRoleAllowed(role){var m=APP.user&&APP.user.modes||{};return role==='employee'||role==='hr'&&m.isAdmin||role==='hohr'&&m.isHOHR||role==='manager'&&m.isManager||role==='csuite'&&m.isCSuite;}
 function cnPageRole(page,preferred){
+ if(page==='cms-saved-drafts')return preferred;
  if(page==='hr-calibration'||page==='hr-communicate')return preferred==='hohr'?'hohr':'hr';
  if(page==='ex-overview'||page==='ex-private')return ['hr','hohr','csuite'].includes(preferred)?preferred:'csuite';
  if(page.startsWith('emp-'))return 'employee';if(page.startsWith('mgr-'))return 'manager';if(page.startsWith('hohr-'))return 'hohr';if(page.startsWith('hr-'))return 'hr';if(page.startsWith('cs-'))return 'csuite';return null;
@@ -10581,8 +10641,8 @@ async function piMine(){if(APP.currentRole!=='employee')return;var root=rcShell(
  try{var rows=await piRPC('mine');if(!root.isConnected)return;if(!rows.length)rcNode('p','No prospective invitations have been issued to you.',root);rows.forEach(r=>{var c=rcCard(root);rcNode('h3',r.position,c);rcNode('p',r.department+' | '+r.level+' | '+r.state,c);if(r.note)rcNode('p',r.note,c);if(r.state==='Open')rcButton('Open invited assessment',()=>piOpen(r.id),c);});}catch(e){if(root.isConnected)rcNode('p',e.message,root);}}
 async function piOpen(id){if(APP.currentRole!=='employee')return;var token=++PI.token,root=rcShell('Invited Prospective Self Assessment');
  try{var d=await piRPC('open',{id:id});if(token!==PI.token||!root.isConnected)return;PI.active=d;rcNode('h3',d.department+' / '+d.position+' | '+d.level,root);root.insertAdjacentHTML('beforeend',cmsAssessmentInstructionsHTML('invited'));
- rcNode('p','This invited form uses Save Draft below (manual save). Drafts are private to this browser session. Submit only the role and experiences selected by HR.',root);
- var draftKey='cms_invited_draft:'+APP.user.email+':'+id,draft={};try{draft=JSON.parse(sessionStorage.getItem(draftKey)||'{}');}catch(e){}
+ rcNode('p','This invited form uses Save Draft below (manual save). Drafts are saved locally for your account in this browser. Submit only the role and experiences selected by HR.',root);
+ var draftKey='cms_invited_draft:'+APP.user.email+':'+id,draft={};try{draft=JSON.parse(localStorage.getItem(draftKey)||'{}');}catch(e){}
  var fields=[];d.items.sort((a,b)=>compareCompetencyDisplay(a.code,b.code));var last=null;
  d.items.forEach(item=>{if(item.code!==last){last=item.code;rcNode('h3',(d.competencies.find(c=>c.code===item.code)||{}).competency||item.code,root);}var card=rcCard(root);rcNode('p',item.text,card);rcNode('p',item.classification||'',card);
  var t=rcText('I have demonstrated this experience',card);t.type='checkbox';t.style.width='auto';var e=rcText('Evidence: action, context and result',card,'textarea');e.rows=3;var rating=rcText('Rating',card,'select');rating.add(new Option('Select rating',''));[1,2,3,4,5].forEach(v=>rating.add(new Option(v+' - '+cmsRatingLabel(v)+': '+cmsRatingDescription(v),String(v))));
@@ -10590,9 +10650,9 @@ async function piOpen(id){if(APP.currentRole!=='employee')return;var token=++PI.
  var file=rcText('Supporting proof (optional)',card);file.type='file';file.id='pi-file-'+item.id;file.accept='.pdf,.doc,.docx,.xls,.xlsx,image/*';
  fields.push({item:item,t:t,e:e,rating:rating,file:file});});
  function values(){return fields.map((f,index)=>({comp_code:f.item.code,experience_index:index,id:f.item.id,ticked:f.t.checked,evidence:f.e.value.trim(),rating:f.rating.value?Number(f.rating.value):null,_att:f.file.id}));}
- rcButton('Save Draft',()=>{var map={};values().forEach(v=>map[v.id]=v);sessionStorage.setItem(draftKey,JSON.stringify(map));showToast('Invited assessment draft saved in this browser session.');},root);
+ rcButton('Save Draft',()=>{var map={};values().forEach(v=>map[v.id]=v);localStorage.setItem(draftKey,JSON.stringify(map));showToast('Invited assessment draft saved locally in this browser.');},root);
  rcButton('Submit invited assessment',async()=>{var items=values();if(!confirm('Submit this invited prospective self assessment for HR review? Items without valid evidence/rating receive the minimum of 1/5.'))return;
- for(var item of items){var input=document.getElementById(item._att);if(input&&input.files&&input.files[0]&&item.ticked){var file=input.files[0];var path='ev/PSI-'+id+'/'+item.id+'_'+Date.now()+'_'+file.name;var upload=await _supabase.storage.from('evidence-files').upload(path,file,{upsert:false});if(upload.error)throw new Error('Supporting file upload failed: '+upload.error.message);item.attachment_name=file.name;item.attachment_url=_supabase.storage.from('evidence-files').getPublicUrl(path).data.publicUrl;}delete item._att;}await piRPC('submit',{id:id,items:items});sessionStorage.removeItem(draftKey);root.replaceChildren();rcNode('h2','Prospective self assessment submitted',root);rcNode('p','HR will review your evidence. No recommendation has been automatically communicated.',root);rcButton('Back to Invitations',piMine,root);},root);
+ for(var item of items){var input=document.getElementById(item._att);if(input&&input.files&&input.files[0]&&item.ticked){var file=input.files[0];var path='ev/PSI-'+id+'/'+item.id+'_'+Date.now()+'_'+file.name;var upload=await _supabase.storage.from('evidence-files').upload(path,file,{upsert:false});if(upload.error)throw new Error('Supporting file upload failed: '+upload.error.message);item.attachment_name=file.name;item.attachment_url=_supabase.storage.from('evidence-files').getPublicUrl(path).data.publicUrl;}delete item._att;}await piRPC('submit',{id:id,items:items});localStorage.removeItem(draftKey);root.replaceChildren();rcNode('h2','Prospective self assessment submitted',root);rcNode('p','HR will review your evidence. No recommendation has been automatically communicated.',root);rcButton('Back to Invitations',piMine,root);},root);
  rcButton('Back to Invitations',async()=>{if(!confirm('Return to invitations? Save Draft first to retain unsaved edits.'))return;await piMine();},root);
  }catch(e){if(root.isConnected)rcNode('p',e.message,root);}}
 // Eliminate the old score-triggered unlock path, including direct legacy form calls.
@@ -10816,5 +10876,375 @@ setupNav=function(role){hdPreviousNav(role);if(role!=='hr'&&role!=='hohr')return
 loadCSuiteMappingCard=async function(){var host=document.getElementById('mainContent');if(host&&rcHR()){var card=document.createElement('section');card.className='card';rcNode('h3','C-Suite Mapping',card);rcNode('p','Manage verified company/department defaults on the dedicated page. Existing executive cases stay private.',card);rcButton('Open C-Suite Mapping',()=>navigateTo(APP.currentRole==='hr'?'hr-csuite-mapping':'hohr-csuite-mapping'),card);host.appendChild(card);}};
 
 </script>
+<script>
+/* HOHR leadership overview. Approved three-layer palette: navy, blue-grey canvas, white cards.
+   Additive module: all legacy workflows and existing permission checks remain in place. */
+var HH={company:'',department:'',data:null,token:0};
+function hhAllowed(){return APP.currentRole==='hohr';}
+async function hhLoad(){
+ var data={errors:{}};
+ await Promise.all(['employees','assessments','positions','frameworks','reports','executive','plans'].map(async k=>{
+ try{data[k]=await hdAll('cms_hohr_dashboard',k);}catch(e){data[k]=null;data.errors[k]=e.message;}
+ }));
+ if(!data.employees)throw new Error('Staff data unavailable: '+data.errors.employees);
+ return data;
+}
+function hhState(){try{var s=JSON.parse(sessionStorage.getItem('cms_hohr_scope:'+APP.user.email)||'null');if(s){HH.company=s.company||'';HH.department=s.department||'';}}catch(e){}}
+function hhSaveScope(){try{sessionStorage.setItem('cms_hohr_scope:'+APP.user.email,JSON.stringify({company:HH.company,department:HH.department}));}catch(e){}}
+function hhModel(data){
+ // Reuse the HR dashboard's metadata-only counting rules, not its privilege checks or state.
+ var common=hdModel(Object.assign({},data,{mappings:[],progress:[],redos:[],report_approvals:[]}),HH.company,HH.department);
+ var ids=new Set(common.people.map(e=>e.employee_id));
+ var reports=(data.reports||[]).filter(r=>ids.has(r.employee_id));
+ common.decisions=reports.filter(r=>r.status==='Pending'&&hdNorm(r.stage)==='HOHR');
+ common.endorsements=reports.filter(r=>hdNorm(r.status).startsWith('ENDORSED'));
+ common.executive=(data.executive||[]).filter(r=>ids.has(r.employee_id));
+ common.plans=(data.plans||[]).filter(r=>ids.has(r.employee_id));
+ common.unassigned=reports.filter(r=>(r.status==='Escalated'||['C_SUITE','CSUITE','C-SUITE'].includes(hdNorm(r.stage)))&&Number(r.assigned_cases)===0);
+ return common;
+}
+function hhButton(text,page,cls){return '<button type="button" class="'+(cls||'hh-button')+'" onclick="navigateTo('+rcArg(page)+')">'+escapeHtml(text)+' <span aria-hidden="true">→</span></button>';}
+function hhCall(text,fn,args){return '<button type="button" class="hh-button" onclick="'+fn+'('+args.map(rcArg).join(',')+')">'+escapeHtml(text)+' →</button>';}
+function hhTitle(title,sub,back){return '<header class="hh-hero"><div><p class="hh-eyebrow">PEOPLE · READINESS · DECISIONS</p><h1>'+escapeHtml(title)+'</h1><p>'+escapeHtml(sub)+'</p></div>'+(back?hhButton('Back to Dashboard','hohr-dash'):'<div id="hhFilters" class="hh-filters"></div>')+'</header>';}
+function hhMetric(value,title,page,link,index){return '<button class="hh-metric" type="button" onclick="navigateTo('+rcArg(page)+')"><div><span class="hh-metric-icon">'+edIcon(index===0?'file':index===1?'chart':index===2?'clock':index===3?'lock':'file')+'</span><div><strong>'+escapeHtml(value)+'</strong><span>'+escapeHtml(title)+'</span></div></div><small>'+escapeHtml(link)+' →</small></button>';}
+function hhActions(data,m){return [
+ ['decisions','Reports awaiting your decision',m.decisions,'reports','Open decision queue'],
+ ['frameworks','Frameworks awaiting approval',m.frameworks,'frameworks','Review frameworks'],
+ ['executive','C-Suite recommendations to review',m.executive,'executive','Review private recommendations'],
+ ['endorsements','Legacy endorsements awaiting finalization',m.endorsements,'reports','Review endorsements'],
+ ['unassigned','Unassigned executive cases',m.unassigned,'reports','Assign privately']
+ ];}
+function hhActionHTML(data,m){return hhActions(data,m).map(([key,title,rows,source,label])=>'<div class="hh-action"><span class="hh-action-icon">'+edIcon(key==='frameworks'?'file':key==='decisions'?'calendar':'mail')+'</span><div><h3>'+title+'</h3><p>'+(data[source]===null?'Unavailable: open queue for error details.':rows.length+' item(s) in the selected scope.')+'</p></div>'+hhButton(label,'hohr-action-'+key)+'</div>').join('');}
+async function hhDashboard(){
+ if(!hhAllowed())return;var epoch=CN.epoch,token=++HH.token;hhState();setContent('<section class="card"><p>Loading your leadership overview...</p></section>');
+ try{var data=await hhLoad();if(epoch!==CN.epoch||token!==HH.token||!hhAllowed())return;HH.data=data;hhRender();}
+ catch(e){if(epoch===CN.epoch)setContent('<section class="card"><h2>Head of HR dashboard unavailable</h2><p>'+escapeHtml(e.message)+'</p>'+hhButton('Retry','hohr-dash')+'</section>');}
+}
+function hhRender(){
+ var d=HH.data,m=hhModel(d),ok=!!d.assessments;var h='<div class="hh">'+hhTitle('Head of HR Dashboard','Your leadership view of talent, coverage and decisions.',false)+'<div class="hh-metrics">';
+ h+=hhMetric(m.people.length,'Total Staff','hohr-overview-staff','View all staff',0);
+ h+=hhMetric(ok?m.assessed.length+' ('+m.coverage+'%)':'--','Assessed','hohr-overview-assessed','View assessed employees',1);
+ h+=hhMetric(ok?m.notAssessed.length:'--','Not Assessed','hohr-overview-outstanding','View outstanding assessments',2);
+ h+=hhMetric(d.positions?m.critical.length:'--','Critical Positions','hohr-overview-critical','Explore critical roles',3);
+ h+=hhMetric(d.positions?m.positions.length:'--','Total Positions','hohr-overview-positions','Open position registry',4);
+ h+='</div><p class="hh-note">Assessed = a current-role Manager submission exists, not final HR approval. Each card opens its filtered detail page.</p>';
+ if(Object.keys(d.errors).length)h+='<div class="hh-warning">Some data is unavailable: '+escapeHtml(Object.keys(d.errors).join(', '))+'. Unavailable data is never shown as zero.</div>';
+ h+='<section class="hh-card hh-notifications"><div class="hh-heading"><h2>'+edIcon('bell')+' Notifications &amp; Decisions Requiring Attention</h2>'+hhButton('Open action centre','hohr-action-all')+'</div>'+hhActionHTML(d,m)+'</section>';
+ h+='<div class="hh-insights"><section class="hh-card"><h3>Assessment Coverage</h3><div class="hh-coverage"><div class="hh-ring" style="--hh-pct:'+(ok?m.coverage:0)+'%"><strong>'+(ok?m.coverage+'%':'--')+'</strong></div><p>'+(ok?'<strong>'+m.assessed.length+' of '+m.people.length+'</strong><br>employees assessed':'Assessment data unavailable')+'</p></div>'+hhButton('View coverage by position','hohr-overview-coverage')+'</section>';
+ h+='<section class="hh-card"><h3>Succession &amp; Critical Roles</h3><div class="hh-feature">'+edIcon('file')+'<p>Review role criticality and successor readiness.</p></div>'+hhButton('Open critical-role coverage','hohr-kpi')+'</section>';
+ h+='<section class="hh-card"><h3>Development Oversight</h3><div class="hh-feature">'+edIcon('chart')+'<p>'+(d.plans?m.plans.length+' approved plan item(s). Track plans and follow-up.':'Approved-plan data unavailable.')+'</p></div>'+hhButton('View approved development plans','hohr-overview-plans')+'</section></div>';
+ h+='<h2 class="hh-leadership">Leadership Actions</h2><div class="hh-shortcuts">'+hhButton('Communicate to Employee','hr-communicate')+hhButton('Invite Prospective Assessment','hohr-prosp-invites')+hhButton('C-Suite Mapping','hohr-csuite-mapping')+hhButton('Private Executive Reviews','ex-private')+'</div></div>';
+ setContent(h);hhFilters();
+}
+function hhFilters(){var host=document.getElementById('hhFilters');if(!host)return;var employees=HH.data.employees;
+ var c=document.createElement('select');c.setAttribute('aria-label','HOHR company scope');c.add(new Option('All companies',''));Array.from(new Set(employees.map(e=>hdNorm(e.company)).filter(Boolean))).sort().forEach(v=>c.add(new Option(v,v)));c.value=HH.company;
+ var d=document.createElement('select');d.setAttribute('aria-label','HOHR department scope');d.add(new Option('All departments',''));Array.from(new Set(employees.filter(e=>!HH.company||hdNorm(e.company)===HH.company).map(e=>hdNorm(e.department)).filter(Boolean))).sort().forEach(v=>d.add(new Option(v,v)));d.value=HH.department;
+ c.onchange=()=>{HH.company=c.value;HH.department='';hhSaveScope();hhRender();};d.onchange=()=>{HH.department=d.value;hhSaveScope();hhRender();};host.append(c,d);
+}
+function hhScope(){return (HH.company||'All companies')+' / '+(HH.department||'All departments');}
+async function hhDetail(kind){
+ if(!hhAllowed())return;var epoch=CN.epoch;hhState();setContent('<section class="card">Loading details...</section>');
+ try{var d=await hhLoad();if(epoch!==CN.epoch)return;HH.data=d;var m=hhModel(d),titles={staff:'All Staff',assessed:'Assessed Employees',outstanding:'Outstanding Assessments',critical:'Critical Positions',positions:'Position Registry',coverage:'Assessment Coverage by Position',plans:'Approved Development Plans'};
+ var h='<div class="hh">'+hhTitle(titles[kind],hhScope(),true)+'<section class="hh-card">';
+ if(['staff','assessed','outstanding'].includes(kind)){
+ if(kind!=='staff'&&!d.assessments)throw new Error(d.errors.assessments);
+ var rows=kind==='staff'?m.people:kind==='assessed'?m.assessed:m.notAssessed;
+ h+='<p>Assessed means the manager has submitted a current-role assessment. Assessment-detail access still follows the submitted-report rule.</p><div class="table-wrap"><table><thead><tr><th>Employee</th><th>Company / Department</th><th>Position</th><th>Manager assessment</th><th>Details</th></tr></thead><tbody>';
+ h+=rows.map(e=>'<tr><td>'+escapeHtml(e.employee_name)+'</td><td>'+escapeHtml(e.company||'')+' / '+escapeHtml(e.department||'')+'</td><td>'+escapeHtml(e.position||'')+'</td><td>'+(d.assessments?(m.done.has(e.employee_id)?'Submitted':'Not submitted'):'Unavailable')+'</td><td>'+(e.report_submitted?hhCall('View assessments','hhOpenAssessment',[e.employee_id]):'HR report not yet submitted')+'</td></tr>').join('');h+='</tbody></table></div><p>'+rows.length+' employees in this scope.</p>';
+ }else if(kind==='plans'){
+ if(!d.plans)throw new Error(d.errors.plans);
+ h+='<p>Explicitly HR-approved plan items in this scope. Open the existing Approved Dev Plans page for full actions, measures and progress notes.</p>'+hhButton('Open full approved plans','hohr-devplans')+'<div class="table-wrap"><table><thead><tr><th>Employee</th><th>Competency / task</th><th>Period</th><th>Status</th></tr></thead><tbody>';
+ h+=m.plans.map(p=>'<tr><td>'+escapeHtml(p.employee_name||p.employee_id)+'</td><td>'+escapeHtml(p.comp_name||'')+'<br>'+escapeHtml(p.task||'')+'</td><td>'+escapeHtml(p.start_date||'')+' to '+escapeHtml(p.end_date||'')+'</td><td>'+escapeHtml(p.status||'Not recorded')+'</td></tr>').join('');h+='</tbody></table></div>';
+ }else{
+ if(!d.positions)throw new Error(d.errors.positions);var rows=kind==='critical'?m.critical:m.positions;
+ h+='<p>One row per department/position pair. Non-Critical roles are excluded from Critical Positions; conflicting registry classifications are flagged. Company filtering includes occupied positions only.</p>'+hhButton('Manage Positions & Criticality','hohr-positions')+'<div class="table-wrap"><table><thead><tr><th>Department</th><th>Position</th><th>Criticality</th><th>Staff</th><th>Assessed</th><th>Coverage</th></tr></thead><tbody>';
+ h+=rows.map(p=>'<tr><td>'+escapeHtml(p.department)+'</td><td>'+escapeHtml(p.position)+'</td><td>'+escapeHtml(p.conflict?'Conflicting registry entries':p.criticality||'Not recorded')+'</td><td>'+p.people.length+'</td><td>'+(d.assessments?p.assessed:'Unavailable')+'</td><td>'+(d.assessments&&p.people.length?Math.round(p.assessed/p.people.length*100)+'%':'--')+'</td></tr>').join('');h+='</tbody></table></div>';
+ }setContent(h+'</section></div>');
+ }catch(e){if(epoch===CN.epoch)setContent('<section class="card"><p>'+escapeHtml(e.message)+'</p>'+hhButton('Back to Dashboard','hohr-dash')+'</section>');}
+}
+async function hhOpenAssessment(id){if(!hhAllowed())return;var e=(HH.data&&HH.data.employees||[]).find(e=>e.employee_id===id);if(!e||!e.report_submitted){showToast('A submitted HR report is required to view these assessment details.');return;}APP.hrAllTarget=id;return navigateTo('hohr-assess');}
+async function hhActionPage(kind){if(!hhAllowed())return;var epoch=CN.epoch;hhState();setContent('<section class="card">Loading action queue...</section>');
+ try{var d=await hhLoad();if(epoch!==CN.epoch)return;HH.data=d;var m=hhModel(d);
+ if(kind==='all'){setContent('<div class="hh">'+hhTitle('Notifications & Decisions',hhScope(),true)+'<section class="hh-card">'+hhActionHTML(d,m)+'</section></div>');return;}
+ var def=hhActions(d,m).find(x=>x[0]===kind);if(!def)throw new Error('Unknown queue');if(d[def[3]]===null)throw new Error(d.errors[def[3]]);
+ var h='<div class="hh">'+hhTitle(def[1],hhScope(),true)+'<section class="hh-card"><p>'+def[2].length+' current item(s). Opening an item does not approve, finalize, notify or assign it.</p>';
+ def[2].forEach(r=>{h+='<div class="hh-action"><div><h3>'+escapeHtml(r.employee_name||r.position||'Company-wide Core')+'</h3><p>'+escapeHtml(r.department||r.position_name||r.position||'')+(kind==='frameworks'?' | '+r.experience_rows+' experiences':kind==='executive'?' | Assigned to '+escapeHtml(r.assigned_email):' | '+escapeHtml(r.status||''))+'</p></div>';
+ if(kind==='frameworks')h+=hhCall('Review framework','hhOpenFramework',[r.id]);
+ else if(kind==='executive')h+=hhCall('Review privately','hhOpenCase',[r.id]);
+ else if(kind==='unassigned')h+=hhCall('Assign privately','hhAssign',[r.id]);
+ else h+=hhCall(kind==='endorsements'?'Open endorsement':'Open decision report','hhOpenReport',[r.id]);h+='</div>';});
+ setContent(h+'</section></div>');
+ }catch(e){if(epoch===CN.epoch)setContent('<section class="card"><p>Queue unavailable: '+escapeHtml(e.message)+'</p>'+hhButton('Back to Dashboard','hohr-dash')+'</section>');}}
+async function hhOpenReport(id){
+ if(!hhAllowed())return;window._hohrFilter='all';await navigateTo('hohr-reports');
+ if(APP.currentPage!=='hohr-reports')return;var anchor=document.getElementById('fa-'+id);var card=anchor&&anchor.closest('.hohr-card');
+ if(card){if(typeof CN!=='undefined')CN.pending=null;card.scrollIntoView({block:'center'});card.style.outline='2px solid #b45309';setTimeout(()=>{if(card.isConnected)card.style.outline='';},3500);}else showToast('The report may have changed. Find it in All Reports.');
+}
+async function hhOpenFramework(id){if(!hhAllowed())return;await navigateTo('hohr-comp-approvals');var select=document.getElementById('fwRevisionChoice');if(select&&Array.from(select.options).some(o=>o.value===id)){select.value=id;if(select.onchange)await select.onchange();}else showToast('The submitted revision may have changed. Refresh the approval queue.');}
+async function hhOpenCase(id){if(!hhAllowed())return;await navigateTo('ex-private');if(APP.currentRole==='hohr'&&APP.currentPage==='ex-private')await exOpenCase(id);}
+async function hhAssign(id){if(!hhAllowed())return;await navigateTo('ex-private');if(APP.currentRole==='hohr'&&APP.currentPage==='ex-private')await exAssign(id);}
+var hhPreviousPage=loadPage;
+loadPage=function(id){if(id==='hohr-dash')return hhDashboard();if(id.startsWith('hohr-overview-'))return hhDetail(id.slice('hohr-overview-'.length));if(id.startsWith('hohr-action-'))return hhActionPage(id.slice('hohr-action-'.length));return hhPreviousPage(id);};
+var hhPreviousLabel=getPageLabel;
+getPageLabel=function(id){var names={'hohr-overview-staff':'All Staff','hohr-overview-assessed':'Assessed Employees','hohr-overview-outstanding':'Outstanding Assessments','hohr-overview-critical':'Critical Positions','hohr-overview-positions':'Position Registry','hohr-overview-coverage':'Assessment Coverage','hohr-overview-plans':'Approved Development Plans'};return names[id]||(id.startsWith('hohr-action-')?'HOHR Action Centre':hhPreviousLabel(id));};
+var hhPreviousNav=setupNav;
+setupNav=function(role){hhPreviousNav(role);if(role!=='hohr')return;var host=document.getElementById('sideNav');if(host&&!host.querySelector('[data-page="hohr-action-all"]')){var b=rcButton('Notifications & Decisions',()=>navigateTo('hohr-action-all'),host);b.dataset.page='hohr-action-all';b.className='sb-item';b.style.cssText='width:100%;background:transparent;border:0;text-align:left';}
+ var actions=document.querySelector('.hdr-actions');if(actions&&!document.getElementById('hhBell')){var bell=rcButton('Notifications',()=>navigateTo('hohr-action-all'),actions);bell.id='hhBell';bell.className='hdr-btn';bell.innerHTML=edIcon('bell');bell.setAttribute('aria-label','Open Head of HR notifications');}
+};
+// Remove the HOHR-only bell whenever a different role is selected.
+var hhPreviousRole=switchRole;switchRole=function(role){var bell=document.getElementById('hhBell');if(bell)bell.remove();return hhPreviousRole(role);};
+
+</script>
+<script>
+/* Performance only: compact dashboard payloads, single-flight reads, no saved-draft changes. */
+var PF={generation:0,reads:new Map(),library:null,libraryOwner:null,loginBusy:false};
+function pfClear(){PF.generation++;PF.reads.clear();}
+async function pfSummary(name,args,force){
+ var key=JSON.stringify([APP.user&&APP.user.email,APP.currentRole,name,args||{}]);
+ if(force)PF.reads.delete(key);var previous=PF.reads.get(key);
+ if(previous&&Date.now()-previous.time<15000)return previous.promise;
+ var entry={time:Date.now()};entry.promise=(async()=>{var q=await _supabase.rpc(name,args);if(q.error)throw new Error(q.error.message);return q.data;})();
+ PF.reads.set(key,entry);try{return await entry.promise;}catch(e){if(PF.reads.get(key)===entry)PF.reads.delete(key);throw e;}
+}
+// Invalidate summaries for app writes, but do not cache or replay a write.
+var pfFrom=_supabase.from.bind(_supabase);
+_supabase.from=function(table){var q=pfFrom(table);['insert','update','upsert','delete'].forEach(method=>{if(typeof q[method]==='function'){var old=q[method].bind(q);q[method]=function(...args){pfClear();return old(...args);};}});return q;};
+var pfRPC=_supabase.rpc.bind(_supabase);
+_supabase.rpc=function(name,args,...rest){var readNames=new Set(['cms_dashboard_summary','cms_manager_summary','cms_dashboard_alerts','cms_scoring_policy_version','cms_my_manager_positions']);var readActions=new Set(['me','list','inbox','search','history','audit','members','get','catalogue','queue','open','mine','targets','manager_target','team','assessments','alerts','scopes','legacy','suggest','employees','positions','frameworks','plans','progress','redos','reports','report_approvals','executive']);
+ if(!readNames.has(name)&&!(args&&readActions.has(args.p_action)))pfClear();return pfRPC(name,args,...rest);};
+async function pfLibrary(){
+ var user=APP.user&&APP.user.email;if(PF.library&&PF.libraryOwner===user)return PF.library;
+ PF.libraryOwner=user;PF.library=(async()=>{var all=[];for(var start=0;;start+=500){var q=await _supabase.from('experiences').select('*').order('id').range(start,start+499);if(q.error)throw new Error(q.error.message);all.push(...(q.data||[]));if((q.data||[]).length<500)break;}
+ if(APP.user&&APP.user.email===user)APP.experiences=all;return all;})();
+ try{return await PF.library;}catch(e){PF.library=null;throw e;}
+}
+var pfLightPages=new Set(['ex-overview','ex-private','cs-reports','mgr-setcomp','mgr-comp','hr-comp','hohr-comp','hr-comp-approvals','hohr-comp-approvals','emp-profile','mgr-dashboard','hohr-dash','hr-dashboard','mgr-team','mgr-completed','mgr-pending','mgr-score-details','mgr-prompool','mgr-gap-details','mgr-returned-details','mgr-setup-alerts','mgr-framework-alerts','mgr-notifications','cms-saved-drafts','hr-system-update','emp-prosp-invites','hr-prosp-invites','hohr-prosp-invites','hr-communicate','emp-hr-messages','emp-corrections','hr-csuite-mapping','hohr-csuite-mapping','hr-user-access']);
+function pfNoLibrary(id){return pfLightPages.has(id)||id.startsWith('hr-actions-')||id.startsWith('hr-people-')||id.startsWith('hr-position-')||id==='hr-coverage'||id.startsWith('hohr-action-')||id.startsWith('hohr-overview-');}
+function pfRefreshButton(){return '<button type="button" class="btn btn-outline" onclick="pfClear();navigateTo(APP.currentPage,false)">Refresh summary</button>';}
+function pfScopeControls(hostId,scopes,state,render,save){var host=document.getElementById(hostId);if(!host)return;host.replaceChildren();
+ var co=document.createElement('select');co.setAttribute('aria-label','Company scope');co.add(new Option('All companies',''));Array.from(new Set(scopes.map(x=>x.company).filter(Boolean))).sort().forEach(x=>co.add(new Option(x,x)));co.value=state.company;
+ var de=document.createElement('select');de.setAttribute('aria-label','Department scope');de.add(new Option('All departments',''));Array.from(new Set(scopes.filter(x=>!state.company||x.company===state.company).map(x=>x.department).filter(Boolean))).sort().forEach(x=>de.add(new Option(x,x)));de.value=state.department;
+ co.onchange=()=>{state.company=co.value;state.department='';save();render();};de.onchange=()=>{state.department=de.value;save();render();};host.append(co,de);
+}
+async function pfHR(){if(!hdAllowed())return;var epoch=CN.epoch;try{var saved=cnRead('cms_hr_scope:'+APP.user.email);if(saved){HD.company=saved.company||'';HD.department=saved.department||'';}
+ setContent('<section class="hd"><div class="hd-card"><h2>HR Admin Dashboard</h2><p>Loading summary only...</p></div></section>');
+ var d=await pfSummary('cms_dashboard_summary',{p_role:'hr',p_company:HD.company,p_department:HD.department});if(epoch!==CN.epoch||!hdAllowed())return;
+ var c=d.counts;var h='<div class="hd">'+hdTitle('HR Admin Dashboard','People, assessment coverage and actions requiring your attention.',false)+'<div class="hd-metrics">';
+ h+=hdCard(d.staff,'Total Staff','hr-people-all','indigo','View all employees');h+=hdCard(d.assessed+' ('+d.coverage+'%)','Assessed','hr-people-assessed','green','View assessed employees');h+=hdCard(d.not_assessed,'Not Assessed','hr-people-pending','amber','View outstanding employees');h+=hdCard(d.critical,'Critical Positions','hr-position-critical','rose','View critical roles');h+=hdCard(d.positions,'Total Positions','hr-position-all','purple','View position registry');h+='</div><p class="hd-note">Assessed = current-role Manager submission. Summary updated '+escapeHtml(new Date(d.as_of).toLocaleTimeString())+'. Details load when opened.</p>';
+ var descriptors=[['review','Assessment reviews','Review assessments'],['returned','Returned evidence','Monitor corrections'],['frameworks','Framework approvals','Open approvals'],['plans','Development plan items','Review plans'],['progress','Development reports','Review progress'],['reportApprovals','Report approvals','Open approvals'],['redos','Redo requests','Open requests'],['reports','Reports returned by HOHR','Open reports'],['unassigned','Unassigned executive cases','Assign privately'],['missing','Missing/inactive C-Suite defaults','Open mappings']];
+ h+='<section class="hd-card hd-action-panel"><div class="hd-heading"><h2>Notifications &amp; Actions Needed</h2>'+hdButton('View all actions','hr-actions-all')+'</div>';
+ var active=descriptors.filter(x=>Number(c[x[0]])>0);h+=active.length?active.map(x=>'<div class="hd-action"><span class="hd-count">'+c[x[0]]+'</span><div><h3>'+x[1]+'</h3><p>'+(x[0]==='review'?c.review_experiences+' experience rows awaiting review':'Open the queue for individual items.')+'</p></div>'+hdButton(x[2],'hr-actions-'+x[0])+'</div>').join(''):'<p>No outstanding actions in this scope.</p>';h+='</section>';
+ h+='<div class="hd-columns"><section class="hd-card"><h2>Assessment Coverage</h2><div class="hd-coverage"><strong>'+d.coverage+'%</strong><p>'+d.assessed+' of '+d.staff+' assessed</p></div>'+hdButton('View coverage by position','hr-coverage')+'</section><section class="hd-card"><h2>Recent Assessment Activity</h2>';
+ h+=(d.recent||[]).map(r=>'<div class="hd-recent"><div><strong>'+escapeHtml(r.employee_name||r.employee_id)+'</strong><p>'+escapeHtml(r.type)+' | '+escapeHtml(r.assessment_date||'')+'</p></div>'+hdCall('View','hdOpenAssessment',[r.employee_id])+'</div>').join('')||'<p>No assessments yet.</p>';
+ h+=hdButton('View all assessments','hr-all')+'</section></div><h2>Quick Actions</h2><div class="hd-quick">'+hdButton('Communicate to Employee','hr-communicate')+hdButton('Invite Prospective Assessment','hr-prosp-invites')+hdButton('Review Competencies','hr-comp-approvals')+hdButton('C-Suite Mapping','hr-csuite-mapping');if(CMS_ACCESS.can_manage)h+=hdButton('Manage User Access','hr-user-access');h+='</div>'+pfRefreshButton()+'</div>';setContent(h);
+ pfScopeControls('hdFilters',d.scopes,HD,pfHR,()=>sessionStorage.setItem('cms_hr_scope:'+APP.user.email,JSON.stringify({company:HD.company,department:HD.department})));
+ }catch(e){if(epoch===CN.epoch)setContent('<section class="card"><h2>Summary unavailable</h2><p>'+escapeHtml(e.message)+'</p>'+pfRefreshButton()+'</section>');}}
+async function pfHOHR(){if(!hhAllowed())return;hhState();var epoch=CN.epoch;setContent('<section class="card"><h2>Head of HR Dashboard</h2><p>Loading summary only...</p></section>');
+ try{var d=await pfSummary('cms_dashboard_summary',{p_role:'hohr',p_company:HH.company,p_department:HH.department});if(epoch!==CN.epoch||!hhAllowed())return;var c=d.counts;
+ var h='<div class="hh">'+hhTitle('Head of HR Dashboard','Your leadership view of talent, coverage and decisions.',false)+'<div class="hh-metrics">';
+ h+=hhMetric(d.staff,'Total Staff','hohr-overview-staff','View all staff',0)+hhMetric(d.assessed+' ('+d.coverage+'%)','Assessed','hohr-overview-assessed','View assessed employees',1)+hhMetric(d.not_assessed,'Not Assessed','hohr-overview-outstanding','View outstanding assessments',2)+hhMetric(d.critical,'Critical Positions','hohr-overview-critical','Explore critical roles',3)+hhMetric(d.positions,'Total Positions','hohr-overview-positions','Open position registry',4);
+ h+='</div><p class="hh-note">Assessed = Manager submission. Updated '+escapeHtml(new Date(d.as_of).toLocaleTimeString())+'. Details load when opened.</p><section class="hh-card"><div class="hh-heading"><h2>Notifications &amp; Decisions Requiring Attention</h2>'+hhButton('Open action centre','hohr-action-all')+'</div>';
+ [['decisions','Reports awaiting your decision','Open decision queue'],['frameworks','Frameworks awaiting approval','Review frameworks'],['executive','C-Suite recommendations to review','Review privately'],['endorsements','Legacy endorsements awaiting finalization','Review endorsements'],['unassigned','Unassigned executive cases','Assign privately']].forEach(x=>{h+='<div class="hh-action"><div><h3>'+x[1]+'</h3><p>'+c[x[0]]+' item(s) in scope.</p></div>'+hhButton(x[2],'hohr-action-'+x[0])+'</div>';});
+ h+='</section><div class="hh-insights"><section class="hh-card"><h3>Assessment Coverage</h3><div class="hh-coverage"><div class="hh-ring" style="--hh-pct:'+d.coverage+'%"><strong>'+d.coverage+'%</strong></div><p>'+d.assessed+' of '+d.staff+' assessed</p></div>'+hhButton('View coverage by position','hohr-overview-coverage')+'</section><section class="hh-card"><h3>Succession &amp; Critical Roles</h3><div class="hh-feature">'+edIcon('file')+'<p>Review role criticality and successor readiness.</p></div>'+hhButton('Open critical-role coverage','hohr-kpi')+'</section><section class="hh-card"><h3>Development Oversight</h3><div class="hh-feature">'+edIcon('chart')+'<p>'+c.approved_plans+' approved plan item(s).</p></div>'+hhButton('View approved development plans','hohr-overview-plans')+'</section></div><h2 class="hh-leadership">Leadership Actions</h2><div class="hh-shortcuts">'+hhButton('Communicate to Employee','hr-communicate')+hhButton('Invite Prospective Assessment','hohr-prosp-invites')+hhButton('C-Suite Mapping','hohr-csuite-mapping')+hhButton('Private Executive Reviews','ex-private')+'</div>'+pfRefreshButton()+'</div>';setContent(h);pfScopeControls('hhFilters',d.scopes,HH,pfHOHR,hhSaveScope);
+ }catch(e){if(epoch===CN.epoch)setContent('<section class="card"><h2>Summary unavailable</h2><p>'+escapeHtml(e.message)+'</p>'+pfRefreshButton()+'</section>');}}
+async function pfManager(){if(!mdAllowed())return;var epoch=CN.epoch;setContent('<section class="card"><h2>Manager Dashboard</h2><p>Loading summary only...</p></section>');
+ try{var d=await pfSummary('cms_manager_summary');if(epoch!==CN.epoch||!mdAllowed())return;
+ var h='<div class="md">'+mdHero('Manager Dashboard','Team performance overview and pending actions.',false)+'<div class="md-metrics">'+mdMetric(d.staff,'Direct Reports','mgr-team','teal','View team & details')+mdMetric(d.complete,'Assessments Complete','mgr-completed','green','View submitted assessments')+mdMetric(d.pending,'Pending Assessments','mgr-pending','amber','View outstanding assessments')+mdMetric(d.average===null?'--':d.average+'%','Avg Team Score','mgr-score-details','purple','See calculation')+mdMetric(d.pool,'In Progression-Ready Pool','mgr-prompool','rose','View readiness details')+'</div><section class="md-card md-alert-card"><div class="md-heading"><h2>Notifications &amp; Actions Needed</h2>'+mdButton('View all notifications','mgr-notifications')+'</div><div id="mdAlerts">Checking updates...</div></section><div class="md-bottom"><section class="md-card"><h3>Quick Actions</h3>'+mdButton('New Assessment','mgr-assess','btn btn-primary')+mdButton('My Team','mgr-team')+'</section><section class="md-card"><h3>Pending Assessments</h3><strong class="md-number">'+d.pending+'</strong><p>Manager current-role assessments not yet submitted.</p>'+mdButton('View pending assessments','mgr-pending')+'</section><section class="md-card"><h3>Top Gaps (Team)</h3>';
+ h+=(d.gaps||[]).slice(0,3).map(g=>'<p>'+escapeHtml(g.name)+' · '+g.score+'% among '+g.count+' affected report(s)</p><div class="md-bar"><span style="width:'+g.score+'%"></span></div>').join('')||'<p>No gaps identified.</p>';
+ h+=mdButton('View team gaps','mgr-gap-details')+'</section></div><p class="md-note">Manager-score average; missing submissions excluded. Summary updated '+escapeHtml(new Date(d.as_of).toLocaleTimeString())+'.</p>'+pfRefreshButton()+'</div>';setContent(h);mdAlerts(false);
+ }catch(e){if(epoch===CN.epoch)setContent('<section class="card"><h2>Summary unavailable</h2><p>'+escapeHtml(e.message)+'</p>'+pfRefreshButton()+'</section>');}}
+var pfPage=loadPage;
+loadPage=async function(id){var epoch=CN.epoch;
+ if(id==='hr-dashboard')return pfHR();if(id==='hohr-dash')return pfHOHR();if(id==='mgr-dashboard')return pfManager();
+ if(!pfNoLibrary(id)){try{await pfLibrary();}catch(e){if(epoch===CN.epoch)setContent('<section class="card"><p>Reference library unavailable: '+escapeHtml(e.message)+'</p>'+pfRefreshButton()+'</section>');return;}if(epoch!==CN.epoch)return;}
+ return pfPage(id);
+};
+// Load only the current avatar at navigation startup. Bulk photo decoration is deferred to explicit refresh.
+var pfOldPhotoMap=loadPhotoMap;loadPhotoMap=function(force){if(force)return pfOldPhotoMap(true);return Promise.resolve(true);};
+var pfOldLogout=doLogout;doLogout=async function(){pfClear();PF.library=null;PF.libraryOwner=null;if(window._presenceTimer){clearInterval(window._presenceTimer);window._presenceTimer=null;}return pfOldLogout();};
+var pfOldLogin=doLogin;doLogin=async function(){if(PF.loginBusy)return;PF.loginBusy=true;pfClear();PF.library=null;PF.libraryOwner=null;try{return await pfOldLogin();}catch(e){showLoginScreen();var error=document.getElementById('loginError');if(error){error.textContent='Sign-in could not finish: '+e.message;error.style.display='block';}}finally{PF.loginBusy=false;}};
+
+</script>
+<script>
+/* Additive controls: publish only on explicit admin confirmation; never store passwords.
+   Navy notice, amber action accent. Content drafts and session tokens have separate lifetimes. */
+var SU={generation:null,freshLogin:false,blocked:false,polling:false,lastCheck:0,timer:null,warning:null,cache:new Map(),draftTimer:null};
+function suAuthClear(){try{[CMS_AUTH_STORAGE_KEY,CMS_AUTH_STORAGE_KEY+'-code-verifier','cms-release-session'].forEach(k=>sessionStorage.removeItem(k));}catch(e){}}
+async function suCurrent(){var r=await suOriginalRPC('cms_app_release',{p_action:'current',p_data:{}});if(r.error)throw new Error(r.error.message);if(!r.data||!r.data.build||r.data.generation==null)throw new Error('System update registry unavailable');return r.data;}
+async function suBeforeEnter(){
+ if(!CMS_TAB_STORAGE_OK)throw new Error('Allow browser session storage before signing in.');
+ var release=await suCurrent(),mark=sessionStorage.getItem('cms-release-session');
+ if(release.build!==CMS_CLIENT_BUILD){suAuthClear();try{await _supabase.auth.signOut({scope:'local'});}catch(e){}suUpdatePrompt(release,true);return false;}
+ if(!SU.freshLogin&&String(mark)!==String(release.generation)){
+  suAuthClear();try{await _supabase.auth.signOut({scope:'local'});}catch(e){}APP.user=null;showLoginScreen();suLoginNotice('A system update requires you to sign in again. Saved drafts have not been deleted.');return false;
+ }
+ sessionStorage.setItem('cms-release-session',String(release.generation));SU.generation=String(release.generation);SU.blocked=false;var main=document.getElementById('app')||document.getElementById('mainContent');if(main)main.inert=false;
+ if(SU.warning){SU.warning.remove();SU.warning=null;}
+ return true;
+}
+function suLoginNotice(text){var e=document.getElementById('loginError');if(e){e.textContent=text;e.style.display='block';}}
+function suDraftUser(){return APP.user?String(APP.user.email||'').toLowerCase():'';}
+function suContext(){
+ var selectors=['assessEmp','assessTypeSel','prospRoleSel','psRoleSel','hrRevDep','detEmp','dpEmp','hrDPEmp','repEmpSel'];var ctx={page:APP.currentPage,role:APP.currentRole};
+ selectors.forEach(id=>{var e=document.getElementById(id);if(e)ctx[id]=e.value;});
+ if(APP.currentPage==='hr-review')ctx.employee=window._hrRevLast||null;
+ if(typeof FW!=='undefined'&&FW.revision&&APP.currentPage==='mgr-setcomp')ctx.revision=[FW.revision.id,FW.revision.edit_number,FW.revision.base_version];
+ if(typeof PI!=='undefined'&&PI.active&&APP.currentPage==='emp-prosp-invites')ctx.invitation=PI.active.id;
+ return ctx;
+}
+function suDraftFields(){
+ var root=document.getElementById('mainContent');if(!root)return [];
+ var allowedPages=new Set(['emp-selfassess','mgr-assess','hr-review','emp-prosp-invites','emp-corrections','hr-communicate','emp-devplans','mgr-devplans','hr-reports','hohr-reports','ex-private','mgr-setcomp','hr-prosp-invites','hohr-prosp-invites']);
+ if(!allowedPages.has(APP.currentPage))return [];
+ return Array.from(root.querySelectorAll('textarea,input,select')).filter(e=>!['password','file','hidden','submit','button'].includes(e.type)&&e.id!=='globalSearch').map((e,i)=>({id:e.id||'',name:e.name||'',tag:e.tagName,type:e.type||'',index:i,value:e.value,checked:!!e.checked,disabled:!!e.disabled}));
+}
+function suSaveSafety(){
+ if(!APP.user)return {ok:true,empty:true};var fields=suDraftFields();var framework=null;
+ if(typeof FW!=='undefined'&&FW.dirty&&FW.revision&&APP.currentPage==='mgr-setcomp')framework={id:FW.revision.id,edit_number:FW.revision.edit_number,items:FW.revision.items};
+ if(!fields.length&&!framework)return {ok:true,empty:true};
+ var context=suContext(),key='cms_safety_v1:'+suDraftUser()+':'+encodeURIComponent(JSON.stringify(context));
+ var data={context:context,saved_at:new Date().toISOString(),fields:fields,framework:framework};
+ try{localStorage.setItem(key,JSON.stringify(data));return {ok:true,key:key};}catch(e){return {ok:false,data:data,error:e.message};}
+}
+function suSaveStandard(){
+ if(!APP.user)return;
+ if(window._autoSaveArgs&&typeof saveDraft==='function'){
+  var a=window._autoSaveArgs;
+  // Avoid writing a stale previous user's form or an empty page into another draft.
+  if(document.querySelector('[id^="'+String(a[1]).replace(/"/g,'')+'"]'))saveDraft(a[0],a[1],a[2],a[3],true);
+ }
+}
+function suSaveAll(){var result;try{suSaveStandard();result=suSaveSafety();}catch(e){result={ok:false,error:e.message};}return result;}
+function suExportSafety(){
+ var fields=suDraftFields();var data={user:suDraftUser(),context:suContext(),saved_at:new Date().toISOString(),fields:fields};
+ if(typeof FW!=='undefined'&&FW.dirty&&FW.revision)data.framework=FW.revision;
+ var blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='CMS-unsaved-work-'+Date.now()+'.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),5000);
+}
+function suUpdatePrompt(release,staleBuild){
+ SU.blocked=true;SU.cache.clear();var saved=suSaveAll();if(SU.warning)return;
+ var overlay=document.createElement('div');overlay.id='suUpdateRequired';overlay.style.cssText='position:fixed;inset:0;z-index:100000;background:rgba(9,18,37,.75);display:grid;place-items:center;padding:20px';
+ var panel=document.createElement('section');panel.setAttribute('role','alertdialog');panel.setAttribute('aria-modal','true');panel.setAttribute('aria-labelledby','suUpdateTitle');panel.style.cssText='background:white;border-radius:16px;border-top:5px solid #b45309;max-width:650px;padding:28px;color:#111b35;box-shadow:0 15px 50px #0005';overlay.appendChild(panel);
+ var title=rcNode('h2','System update: sign in again',panel);title.id='suUpdateTitle';
+ rcNode('p',staleBuild?'This page is running an older build. Reload the deployed app, then sign in.':'HR has published a system update. Save your work, then reload and sign in again.',panel);
+ rcNode('p','Build: '+release.build+' | Release '+release.generation,panel);
+ var notice=rcNode('p',saved.ok?'A local safety copy of editable text is saved where available. Previously saved drafts are retained.':'Could not save a safety copy: '+saved.error+'. Export your work before reloading.',panel);
+ rcNode('p','Unsaved supporting files cannot be restored automatically. Keep the originals and reattach them after signing in. No assessment or recommendation is submitted by this prompt.',panel);
+ rcButton('Save draft safety copy',()=>{var r=suSaveAll();notice.textContent=r.ok?'Local safety copy saved. No assessment was submitted.':'Save failed: '+r.error;},panel);
+ rcButton('Download unsaved work',suExportSafety,panel);
+ rcButton('Reload and sign in',async()=>{var r=suSaveAll();if(!r.ok){notice.textContent='Local save failed. Download unsaved work before continuing.';return;}await suReloadForUpdate();},panel);
+ rcNode('p','If this message remains after reload, HR must check that the deployed file’s build identifier matches the published build. Repeated login attempts will not fix an old deployment.',panel);
+ document.body.appendChild(overlay);SU.warning=overlay;
+ var main=document.getElementById('app')||document.getElementById('mainContent');if(main)main.inert=true;
+}
+async function suReloadForUpdate(){
+ if(typeof cnCapture==='function')cnCapture();
+ if(typeof PF!=='undefined')pfClear();
+ suAuthClear();
+ try{await _supabase.auth.signOut({scope:'local'});}catch(e){/* Local auth storage was cleared regardless. */}
+ APP.user=null;
+ // Reload the same deployed URL. No sandbox URL or arbitrary target is used.
+ window.location.reload();
+}
+async function suCheck(){
+ if(SU.polling||!APP.user||document.hidden||SU.blocked)return;
+ SU.polling=true;
+ try{var r=await suCurrent();SU.lastCheck=Date.now();if(String(r.generation)!==SU.generation||r.build!==CMS_CLIENT_BUILD)suUpdatePrompt(r,r.build!==CMS_CLIENT_BUILD);}
+ catch(e){/* Transient network failures do not erase drafts or fabricate an update. */console.warn('Could not check published update.');}
+ finally{SU.polling=false;}
+}
+function suSchedule(){clearTimeout(SU.timer);if(!APP.user)return;SU.timer=setTimeout(async()=>{await suCheck();suSchedule();},60000+Math.floor(Math.random()*15000));}
+async function suPublishPage(){
+ if(APP.currentRole!=='hr')return showToast('HR Admin view required.');var root=rcShell('Publish System Update');
+ rcNode('p','Use this only after deploying and testing new application code. Ordinary employee, assessment and mapping edits do not require a system update.',root);
+ try{var current=await suCurrent();if(!root.isConnected)return;
+ rcNode('p','This file: '+CMS_CLIENT_BUILD+' | Published: '+current.build+' | Release '+current.generation,root);
+ var build=rcText('Build identifier from the newly deployed Index.html',root);build.value=CMS_CLIENT_BUILD;build.maxLength=100;
+ var reason=rcText('Internal reason for publishing',root,'textarea');reason.maxLength=1000;
+ var checked=rcText('I deployed and tested this build before publishing',root);checked.type='checkbox';checked.style.width='auto';
+ var preview=rcNode('div',undefined,root);
+ rcButton('Preview system update',()=>{
+  if(!checked.checked||!build.value.trim()||reason.value.trim().length<5)throw new Error('Confirm deployment and enter a build identifier and reason.');
+  var payload={build:build.value.trim(),reason:reason.value.trim(),expected_generation:current.generation};preview.replaceChildren();
+  rcNode('strong','Impact: all active users running this update-aware app, including you, will be prompted to save, reload and sign in again at the next update check.',preview);
+  rcNode('p','New build: '+payload.build+'. Background/closed tabs detect the update when resumed or reopened. No existing assessment, draft, password or permission is changed. Earlier app versions without this update checker cannot be notified retroactively.',preview);
+  rcButton('Publish update and require sign-in',async()=>{if(SU.publishing)return;SU.publishing=true;try{var r=await suOriginalRPC('cms_app_release',{p_action:'publish',p_data:payload});if(r.error)throw new Error(r.error.message);suUpdatePrompt(r.data,r.data.build!==CMS_CLIENT_BUILD);}finally{SU.publishing=false;}},preview);
+ },root);
+ var h=await suOriginalRPC('cms_app_release',{p_action:'history',p_data:{}});if(h.error)throw new Error(h.error.message);if(!root.isConnected)return;rcNode('h3','Recent published updates',root);(h.data||[]).forEach(r=>rcNode('p','Release '+r.generation+' | '+r.build+' | '+new Date(r.published_at).toLocaleString()+' | '+(r.published_by||'Unknown')+' | '+r.reason,root));
+ }catch(e){if(root.isConnected)rcNode('p',e.message,root);}
+}
+function suSavedDrafts(){
+ if(!APP.user)return;var root=rcShell('Saved Draft Safety Copies');rcNode('p','Local recovery copies are private to this browser profile and login. They do not replace submitted assessments or cloud backups. To restore, reopen the original page and use Restore local edits. File uploads are not included.',root);
+ var prefix='cms_safety_v1:'+suDraftUser()+':',list=[];for(var i=0;i<localStorage.length;i++){var k=localStorage.key(i);if(k&&k.startsWith(prefix)){try{list.push({key:k,data:JSON.parse(localStorage.getItem(k))});}catch(e){}}}
+ list.sort((a,b)=>b.data.saved_at.localeCompare(a.data.saved_at));if(!list.length)rcNode('p','No safety copies yet.',root);
+ list.forEach(r=>{var c=rcCard(root);rcNode('strong',r.data.context.page+' | '+r.data.context.role,c);rcNode('p',new Date(r.data.saved_at).toLocaleString(),c);
+ rcButton('Open original page',()=>{return navigateTo(r.data.context.page);},c);
+ var details=rcNode('details',undefined,c);rcNode('summary','View saved text for manual recovery',details);(r.data.fields||[]).filter(f=>f.tag==='TEXTAREA'||f.type==='text').forEach(f=>{var p=rcNode('p',(f.id||f.name||'Field '+f.index)+': '+f.value,details);p.style.whiteSpace='pre-wrap';});
+ rcButton('Download this copy',()=>{var url=URL.createObjectURL(new Blob([JSON.stringify(r.data,null,2)],{type:'application/json'})),a=document.createElement('a');a.href=url;a.download='CMS-draft-'+Date.parse(r.data.saved_at)+'.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),5000);},c);
+ });
+}
+function suRestoreLocal(){
+ var key='cms_safety_v1:'+suDraftUser()+':'+encodeURIComponent(JSON.stringify(suContext())),data;try{data=JSON.parse(localStorage.getItem(key)||'null');}catch(e){}
+ if(!data)return showToast('No safety copy matches this page and selected record. Open Saved Drafts to inspect other copies.');
+ if(!confirm('Restore locally saved text for this same record? Nothing will be submitted. Review all restored values before saving.'))return;
+ var current=suDraftFields();
+ if(data.framework){if(typeof FW==='undefined'||!FW.revision||FW.revision.id!==data.framework.id||FW.revision.edit_number!==data.framework.edit_number)return showToast('The framework changed. Use Saved Drafts for manual recovery.');FW.revision.items=data.framework.items;FW.dirty=true;fwRenderRevision();return;}
+ var root=document.getElementById('mainContent');var elements=Array.from(root.querySelectorAll('textarea,input,select')).filter(e=>!['password','file','hidden','submit','button'].includes(e.type)&&e.id!=='globalSearch');
+ if(current.length!==data.fields.length||current.some((f,i)=>f.id!==data.fields[i].id||f.name!==data.fields[i].name||f.tag!==data.fields[i].tag||f.type!==data.fields[i].type))return showToast('This page structure changed. Use Saved Drafts for manual recovery.');
+ // Do not restore selection/navigation, permissions or decision controls. Recover editable text only.
+ data.fields.forEach((f,i)=>{var e=elements[i];if(e.disabled)return;if(e.tagName==='TEXTAREA'||['text','search'].includes(e.type))e.value=f.value;});
+ showToast('Saved text restored. Recheck ratings and selections before saving or submitting.');
+}
+// Private draft controls are shown only on editor pages that have inputs to protect.
+function suDraftToolbar(){var root=document.getElementById('mainContent');if(!root||SU.blocked||!APP.user||!suDraftFields().length||root.querySelector('#suDraftToolbar'))return;
+ var bar=document.createElement('div');bar.id='suDraftToolbar';bar.style.cssText='display:flex;gap:8px;flex-wrap:wrap;padding:10px;margin:10px 0;border:1px solid #cbd5e1;border-radius:8px;background:#f8fafc';
+ rcButton('Save local safety copy',()=>{var r=suSaveAll();showToast(r.ok?'Local safety copy saved.':'Draft save failed: '+r.error);},bar);
+ rcButton('Restore local edits',suRestoreLocal,bar);rcButton('Saved Drafts',()=>navigateTo('cms-saved-drafts'),bar);root.appendChild(bar);
+}
+const suOriginalRPC=_supabase.rpc.bind(_supabase);
+_supabase.rpc=function(name,args,...rest){
+ var reads=new Set(['me','list','inbox','search','history','audit','members','get','catalogue','queue','open','mine','targets','manager_target','team','assessments','alerts','scopes','legacy','suggest','employees','positions','frameworks','plans','progress','redos','reports','report_approvals','executive','current']);
+ if(SU.blocked&&!reads.has(args&&args.p_action)&&!['cms_dashboard_summary','cms_manager_summary','cms_dashboard_alerts','cms_scoring_policy_version','cms_my_manager_positions'].includes(name))throw new Error('System update required. Save drafts and sign in again.');
+ if(!reads.has(args&&args.p_action)&&!['cms_dashboard_summary','cms_manager_summary','cms_dashboard_alerts','cms_scoring_policy_version','cms_my_manager_positions'].includes(name))SU.cache.clear();
+ return suOriginalRPC(name,args,...rest);
+};
+var suFrom=_supabase.from.bind(_supabase);_supabase.from=function(table){var q=suFrom(table);['insert','update','upsert','delete'].forEach(k=>{if(q[k]){var old=q[k].bind(q);q[k]=function(...args){if(SU.blocked)throw new Error('System update required. Save drafts and sign in again.');SU.cache.clear();return old(...args);};}});return q;};
+var suOldLogin=doLogin;doLogin=async function(){if(SU.loginRunning)return;SU.loginRunning=true;SU.freshLogin=true;try{return await suOldLogin();}finally{SU.freshLogin=false;SU.loginRunning=false;}};
+var suOldLogout=doLogout;doLogout=async function(){suSaveAll();clearTimeout(SU.timer);SU.cache.clear();SU.generation=null;suAuthClear();return suOldLogout();};
+var suOldNav=setupNav;setupNav=function(role){suOldNav(role);var root=document.getElementById(role==='employee'?'mainNav':'sideNav');if(root){var b=rcButton('Saved Drafts',()=>navigateTo('cms-saved-drafts'),root);b.dataset.page='cms-saved-drafts';b.className=role==='employee'?'nav-btn':'sb-item';if(role!=='employee')b.style.cssText='width:100%;background:transparent;border:0;text-align:left';}
+ if(role==='hr'&&root){var b=rcButton('Publish System Update',()=>navigateTo('hr-system-update'),root);b.dataset.page='hr-system-update';b.className='sb-item';b.style.cssText='width:100%;background:transparent;border:0;text-align:left';}};
+var suOldLabel=getPageLabel;getPageLabel=function(id){return id==='hr-system-update'?'Publish System Update':id==='cms-saved-drafts'?'Saved Drafts':suOldLabel(id);};
+var suOldPage=loadPage;loadPage=async function(id){if(SU.blocked)return;if(id==='hr-system-update')return suPublishPage();if(id==='cms-saved-drafts')return suSavedDrafts();return suOldPage(id);};
+var suOldNavigate=navigateTo;navigateTo=function(id,history){if(SU.blocked)return;suSaveAll();return suOldNavigate(id,history);};
+// Save text safety copies on input instead of relying solely on unreliable unload events.
+['input','change'].forEach(type=>document.addEventListener(type,function(e){if(!APP.user||!e.target.closest||!e.target.closest('#mainContent')||e.target.type==='password')return;clearTimeout(SU.draftTimer);SU.draftTimer=setTimeout(suSaveAll,400);}));
+window.addEventListener('pagehide',()=>{suSaveAll();});
+document.addEventListener('visibilitychange',()=>{if(document.hidden)suSaveAll();else suCheck();});
+window.addEventListener('focus',()=>{if(Date.now()-SU.lastCheck>15000)suCheck();});
+var suToolbarTimer;new MutationObserver(()=>{clearTimeout(suToolbarTimer);suToolbarTimer=setTimeout(suDraftToolbar,200);}).observe(document.getElementById('mainContent'),{childList:true,subtree:true});
+// Returning read-only dashboard: show an inert snapshot immediately while fresh authorized data loads.
+var suPreviewPages=new Set(['hr-dashboard','hohr-dash','mgr-dashboard','emp-profile']);
+var suPreviewPage=loadPage;loadPage=async function(id){
+ var older=document.getElementById('suCachedPreview');if(older)older.remove();
+ var root=document.getElementById('mainContent');root.hidden=false;var cacheEpoch=CN.epoch,key=JSON.stringify([APP.user&&APP.user.email,APP.currentRole,id]),cached=SU.cache.get(key),preview=null;
+ if(suPreviewPages.has(id)&&cached&&Date.now()-cached.time<120000&&!SU.blocked){
+  preview=document.createElement('section');preview.id='suCachedPreview';preview.inert=true;preview.innerHTML='<div style="padding:10px;background:#fff4dd;color:#713f12;border-radius:8px">Refreshing live data. Previous dashboard shown temporarily; controls are disabled.</div>'+cached.html;
+  preview.querySelectorAll('*').forEach(n=>{n.removeAttribute('id');n.removeAttribute('name');for(var a of Array.from(n.attributes)){if(a.name.startsWith('on'))n.removeAttribute(a.name);}if(['BUTTON','INPUT','SELECT','TEXTAREA'].includes(n.tagName))n.disabled=true;});
+  preview.style.cssText='pointer-events:none;opacity:.9;max-width:1440px;margin:auto;padding:20px';root.before(preview);root.hidden=true;
+ }
+ try{await suPreviewPage(id);if(suPreviewPages.has(id)&&APP.currentPage===id&&!SU.blocked&&root.querySelector('.hd-metrics,.hh-metrics,.md-metrics,#epProfile'))SU.cache.set(key,{time:Date.now(),html:root.innerHTML});}
+ finally{if(preview)preview.remove();if(cacheEpoch===CN.epoch)root.hidden=false;}
+};
+
+async function suStartApp(){
+ try{
+  if(!CMS_TAB_STORAGE_OK){showLoginScreen();suLoginNotice('Allow session storage in this browser to sign in safely.');return;}
+  var response=await _supabase.auth.getSession();if(response.error)throw response.error;
+  if(response.data&&response.data.session){setContent('<section class="card"><p>Restoring your session...</p></section>');await enterApp(response.data.session.user.email);}
+  else showLoginScreen();
+ }catch(e){showLoginScreen();suLoginNotice('Could not restore login: '+(e.message||'Please try signing in again.'));}
+}
+
+</script>
+<script>suStartApp();</script>
 </body>
 </html>
