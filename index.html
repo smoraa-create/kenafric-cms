@@ -577,20 +577,20 @@ applyKaiAvatar();
 </script><script>
 const SUPABASE_URL = 'https://nnmsfksnjaiageigscdf.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5ubXNma3NuamFpYWdlaWdzY2RmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY0NTI1NTQsImV4cCI6MjEwMjAyODU1NH0.K1rSsO-PHp6xzeUVVMal6-VsN-BYrzp3z_li6J2Krmc';
-/* Session lives in this tab. Draft storage is independent and is never cleared here.
-   Browser "restore closed tab" can restore sessionStorage; this is not a device logout guarantee. */
-const CMS_CLIENT_BUILD='CMS-20260912-TAB-UPDATE-01';
-const CMS_AUTH_STORAGE_KEY='cms-tab-auth-v1';
+/* Persistent auth for the same browser profile. Raw passwords are never stored by this code.
+   24-hour app session window is anchored to password login, not token refresh. */
+const CMS_CLIENT_BUILD='CMS-20260912-LOGIN24-03';
+const CMS_AUTH_STORAGE_KEY='cms-auth-24h-v1';
+const CMS_LOGIN_WINDOW_KEY='cms-login-window-24h-v1';
+const CMS_LOGIN_WINDOW_MS=24*60*60*1000;
 var CMS_TAB_STORAGE_OK=true;
-try{sessionStorage.setItem('cms-storage-probe','1');sessionStorage.removeItem('cms-storage-probe');}catch(e){CMS_TAB_STORAGE_OK=false;}
+try{localStorage.setItem('cms-storage-probe','1');localStorage.removeItem('cms-storage-probe');}catch(e){CMS_TAB_STORAGE_OK=false;}
 const CMS_TAB_AUTH_STORAGE={
- getItem:function(k){try{return sessionStorage.getItem(k);}catch(e){return null;}},
- setItem:function(k,v){if(!CMS_TAB_STORAGE_OK)throw new Error('This browser must allow session storage to sign in.');sessionStorage.setItem(k,v);},
- removeItem:function(k){try{sessionStorage.removeItem(k);}catch(e){}}
+ getItem:function(k){try{return localStorage.getItem(k);}catch(e){return null;}},
+ setItem:function(k,v){if(!CMS_TAB_STORAGE_OK)throw new Error('Allow browser storage to stay signed in.');localStorage.setItem(k,v);},
+ removeItem:function(k){try{localStorage.removeItem(k);}catch(e){}}
 };
-// Do not import the former browser-wide login into the new tab-scoped session.
-// Remove only this project's old auth token key, never draft keys.
-try{var oldAuth='sb-'+new URL(SUPABASE_URL).hostname.split('.')[0]+'-auth-token';localStorage.removeItem(oldAuth);localStorage.removeItem(oldAuth+'-code-verifier');}catch(e){}
+// Prior tab credentials are not migrated into a new 24-hour window. Existing drafts remain untouched.
 
 const _supabase = window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY,{auth:{storage:CMS_TAB_AUTH_STORAGE,storageKey:CMS_AUTH_STORAGE_KEY,persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
 const EMAILJS_SERVICE_ID = 'service_n25h19m';
@@ -786,7 +786,7 @@ return;
 await enterApp(email);
 }
 async function enterApp(email) {
-if(!await suBeforeEnter())return;
+if(!await suBeforeEnter(email))return;
 APP._photoOf={}; APP._avaByName=null;
 var boot = await Promise.all([
 _supabase.from('user_profiles').select('role,photo').eq('email', email),
@@ -9500,7 +9500,7 @@ function cgPanel(g, title){
 async function cgRows(empId){
  if (CG.cache[empId]) return CG.cache[empId];
  var q = await _supabase.from('assessments')
-  .select('employee_id,type,comp_code,comp_name,experience_index,experience_text,classification,ticked,evidence,proficiency_rating,hr_status,scoring_rule,assessment_round,framework_version,prospective_role')
+  .select('employee_id,type,comp_code,comp_name,experience_index,experience_text,classification,ticked,evidence,proficiency_rating,hr_status,scoring_rule,critical_gate_rule,assessment_round,framework_version,core_framework_version,prospective_role')
   .eq('employee_id', empId);
  if (q.error) throw new Error(q.error.message);
  CG.cache[empId] = q.data || [];
@@ -10541,9 +10541,12 @@ function mdProspective(rows,employeeId,managerLevel){
  if(p.length!==s.length||p.some(r=>!by.get(key(r)))){out.state='Experience/level mismatch';return out;}
  var critical=p.filter(r=>cgIsCritical(r.classification));
  if(!critical.length){out.state='No Critical experiences configured';return out;}
- var pass=critical.every(r=>{var self=by.get(key(r));return cmsRawUsable(r)&&cmsRawUsable(self)&&Math.round(cmsEffectiveRating(r)/5*100*.7+cmsEffectiveRating(self)/5*100*.3)>=70;});
+ var averageRule=caUsesAverage(p.concat(s));
+ var criticalAverage=averageRule?caAverage(critical.map(r=>({manager:r,self:by.get(key(r))}))):null;
+ var pass=averageRule?criticalAverage>=70:critical.every(r=>{var self=by.get(key(r));return cmsRawUsable(r)&&cmsRawUsable(self)&&Math.round(cmsEffectiveRating(r)/5*100*.7+cmsEffectiveRating(self)/5*100*.3)>=70;});
+ out.criticalAverage=criticalAverage;out.gatePolicy=averageRule?'average-v1':'individual-v1';
  var m=calculateOverallScore(employeeId,'Prospective',mdFormat(p)),ss=calculateOverallScore(employeeId,'Prospective Self',mdFormat(s));
- out.combined=Math.round(m*.7+ss*.3);out.manager=m;out.self=ss;out.ready=pass;out.state=pass?'Critical requirements met':'Critical requirements not met';return out;
+ out.combined=Math.round(m*.7+ss*.3);out.manager=m;out.self=ss;out.ready=pass;out.state=averageRule?(pass?'Critical average meets 70%':'Critical average below 70%'):(pass?'Historical Critical requirements met':'Historical Critical requirements not met');return out;
 }
 function mdModel(team,all){
  var people=team.map(e=>{var rows=all.filter(r=>r.employee_id===e.employee_id),latest=latestOnly(rows),mgr=latest.filter(r=>r.type==='Manager'),self=latest.filter(r=>r.type==='Self');
@@ -10586,7 +10589,7 @@ async function mdDetailPage(kind){
  if(!mdAllowed())return;var epoch=CN.epoch;var titles={team:'My Team',complete:'Assessments Complete',pending:'Pending Assessments',score:'Average Team Score',pool:'Progression-Ready Pool',gaps:'Team Gaps',returned:'Evidence Returned by HR'};
  setContent('<div class="card">Loading details...</div>');
  try{var d=await mdGet();if(epoch!==CN.epoch)return;MD.data=d;
- var explain={team:'Only your direct reports are listed.',complete:'Complete means a current-role Manager assessment was submitted. It does not mean HR approval is complete.',pending:'Direct reports with no current-role Manager submission. Self submission is not required for the manager to begin.',score:'Average Team Score is the arithmetic mean of submitted current-role Manager scores, not the 70/30 decision score. Missing submissions are excluded; genuine zero scores are included.',pool:'Prospective readiness requires both assessments, matching role/framework/experiences, final HR review and every Critical experience reaching 70% using 70% Manager + 30% Self. This is not a promotion commitment.',gaps:'Manager-rated competencies below 75%. The displayed mean covers only affected reports, not the whole team.',returned:'Your latest returned Manager or Prospective evidence for current direct reports. Use Assessment Details to review the HR comment and the existing redo process where required.'};
+ var explain={team:'Only your direct reports are listed.',complete:'Complete means a current-role Manager assessment was submitted. It does not mean HR approval is complete.',pending:'Direct reports with no current-role Manager submission. Self submission is not required for the manager to begin.',score:'Average Team Score is the arithmetic mean of submitted current-role Manager scores, not the 70/30 decision score. Missing submissions are excluded; genuine zero scores are included.',pool:'Prospective readiness requires both assessments, matching role/framework/experiences, final HR review and a Critical-experience average of at least 70%, with 70% Manager + 30% Self per experience. Protected historical assessments retain their prior gate. This is not a promotion commitment.',gaps:'Manager-rated competencies below 75%. The displayed mean covers only affected reports, not the whole team.',returned:'Your latest returned Manager or Prospective evidence for current direct reports. Use Assessment Details to review the HR comment and the existing redo process where required.'};
  var h='<div class="md">'+mdHero(titles[kind],explain[kind],true);
  if(kind==='gaps'){h+='<section class="md-card">'+d.gaps.map(g=>'<p>'+escapeHtml(g.name)+': '+g.score+'% among '+g.count+' affected reports</p>').join('')+(d.gaps.length?'':'<p>No gaps found in available manager assessments.</p>')+'</section>';}
  else{
@@ -11069,18 +11072,18 @@ var pfOldLogin=doLogin;doLogin=async function(){if(PF.loginBusy)return;PF.loginB
 /* Additive controls: publish only on explicit admin confirmation; never store passwords.
    Navy notice, amber action accent. Content drafts and session tokens have separate lifetimes. */
 var SU={generation:null,freshLogin:false,blocked:false,polling:false,lastCheck:0,timer:null,warning:null,cache:new Map(),draftTimer:null};
-function suAuthClear(){try{[CMS_AUTH_STORAGE_KEY,CMS_AUTH_STORAGE_KEY+'-code-verifier','cms-release-session'].forEach(k=>sessionStorage.removeItem(k));}catch(e){}}
-async function suCurrent(){var r=await suOriginalRPC('cms_app_release',{p_action:'current',p_data:{}});if(r.error)throw new Error(r.error.message);if(!r.data||!r.data.build||r.data.generation==null)throw new Error('System update registry unavailable');return r.data;}
-async function suBeforeEnter(){
- if(!CMS_TAB_STORAGE_OK)throw new Error('Allow browser session storage before signing in.');
- var release=await suCurrent(),mark=sessionStorage.getItem('cms-release-session');
- if(release.build!==CMS_CLIENT_BUILD){suAuthClear();try{await _supabase.auth.signOut({scope:'local'});}catch(e){}suUpdatePrompt(release,true);return false;}
- if(!SU.freshLogin&&String(mark)!==String(release.generation)){
-  suAuthClear();try{await _supabase.auth.signOut({scope:'local'});}catch(e){}APP.user=null;showLoginScreen();suLoginNotice('A system update requires you to sign in again. Saved drafts have not been deleted.');return false;
+function suAuthClear(){
+ try{localStorage.removeItem(CMS_AUTH_STORAGE_KEY);localStorage.removeItem(CMS_AUTH_STORAGE_KEY+'-code-verifier');localStorage.removeItem(CMS_LOGIN_WINDOW_KEY);sessionStorage.removeItem('cms-tab-auth-v1');sessionStorage.removeItem('cms-release-session');}catch(e){}
+}
+
+async function suBeforeEnter(email){
+ if(!CMS_TAB_STORAGE_OK)throw new Error('Allow browser storage before signing in.');
+ if(SU.freshLogin){var now=Date.now();localStorage.setItem(CMS_LOGIN_WINDOW_KEY,JSON.stringify({email:String(email).toLowerCase(),started:now,expires:now+CMS_LOGIN_WINDOW_MS}));}
+ if(!suWindowValid(suWindow(),email)){
+  try{await _supabase.auth.signOut({scope:'local'});}catch(e){}suAuthClear();APP.user=null;showLoginScreen();suLoginNotice('Please sign in. Your saved drafts are retained.');return false;
  }
- sessionStorage.setItem('cms-release-session',String(release.generation));SU.generation=String(release.generation);SU.blocked=false;var main=document.getElementById('app')||document.getElementById('mainContent');if(main)main.inert=false;
- if(SU.warning){SU.warning.remove();SU.warning=null;}
- return true;
+ SU.blocked=false;var main=document.getElementById('mainContent');if(main)main.inert=false;
+ if(SU.warning){SU.warning.remove();SU.warning=null;}return true;
 }
 function suLoginNotice(text){var e=document.getElementById('loginError');if(e){e.textContent=text;e.style.display='block';}}
 function suDraftUser(){return APP.user?String(APP.user.email||'').toLowerCase():'';}
@@ -11120,58 +11123,27 @@ function suExportSafety(){
  if(typeof FW!=='undefined'&&FW.dirty&&FW.revision)data.framework=FW.revision;
  var blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='CMS-unsaved-work-'+Date.now()+'.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),5000);
 }
-function suUpdatePrompt(release,staleBuild){
- SU.blocked=true;SU.cache.clear();var saved=suSaveAll();if(SU.warning)return;
- var overlay=document.createElement('div');overlay.id='suUpdateRequired';overlay.style.cssText='position:fixed;inset:0;z-index:100000;background:rgba(9,18,37,.75);display:grid;place-items:center;padding:20px';
- var panel=document.createElement('section');panel.setAttribute('role','alertdialog');panel.setAttribute('aria-modal','true');panel.setAttribute('aria-labelledby','suUpdateTitle');panel.style.cssText='background:white;border-radius:16px;border-top:5px solid #b45309;max-width:650px;padding:28px;color:#111b35;box-shadow:0 15px 50px #0005';overlay.appendChild(panel);
- var title=rcNode('h2','System update: sign in again',panel);title.id='suUpdateTitle';
- rcNode('p',staleBuild?'This page is running an older build. Reload the deployed app, then sign in.':'HR has published a system update. Save your work, then reload and sign in again.',panel);
- rcNode('p','Build: '+release.build+' | Release '+release.generation,panel);
- var notice=rcNode('p',saved.ok?'A local safety copy of editable text is saved where available. Previously saved drafts are retained.':'Could not save a safety copy: '+saved.error+'. Export your work before reloading.',panel);
- rcNode('p','Unsaved supporting files cannot be restored automatically. Keep the originals and reattach them after signing in. No assessment or recommendation is submitted by this prompt.',panel);
- rcButton('Save draft safety copy',()=>{var r=suSaveAll();notice.textContent=r.ok?'Local safety copy saved. No assessment was submitted.':'Save failed: '+r.error;},panel);
- rcButton('Download unsaved work',suExportSafety,panel);
- rcButton('Reload and sign in',async()=>{var r=suSaveAll();if(!r.ok){notice.textContent='Local save failed. Download unsaved work before continuing.';return;}await suReloadForUpdate();},panel);
- rcNode('p','If this message remains after reload, HR must check that the deployed file’s build identifier matches the published build. Repeated login attempts will not fix an old deployment.',panel);
- document.body.appendChild(overlay);SU.warning=overlay;
- var main=document.getElementById('app')||document.getElementById('mainContent');if(main)main.inert=true;
-}
-async function suReloadForUpdate(){
- if(typeof cnCapture==='function')cnCapture();
- if(typeof PF!=='undefined')pfClear();
- suAuthClear();
- try{await _supabase.auth.signOut({scope:'local'});}catch(e){/* Local auth storage was cleared regardless. */}
- APP.user=null;
- // Reload the same deployed URL. No sandbox URL or arbitrary target is used.
- window.location.reload();
-}
+
+
 async function suCheck(){
- if(SU.polling||!APP.user||document.hidden||SU.blocked)return;
- SU.polling=true;
- try{var r=await suCurrent();SU.lastCheck=Date.now();if(String(r.generation)!==SU.generation||r.build!==CMS_CLIENT_BUILD)suUpdatePrompt(r,r.build!==CMS_CLIENT_BUILD);}
- catch(e){/* Transient network failures do not erase drafts or fabricate an update. */console.warn('Could not check published update.');}
- finally{SU.polling=false;}
+ if(!APP.user||SU.expiring)return;
+ if(suWindowValid(suWindow(),APP.user.email))return;
+ SU.expiring=true;
+ try{
+  var saved=suSaveAll();
+  if(!saved.ok){showToast('Session ended. Local draft saving failed; copy your work before signing in.');return;}
+  clearTimeout(SU.timer);clearInterval(window._autoSaveTimer);window._autoSaveArgs=null;
+  if(typeof cnCapture==='function')cnCapture();
+  if(typeof CN!=='undefined'){++CN.epoch;CN.pending=null;CN.key=null;}
+  if(typeof pfClear==='function')pfClear();SU.cache.clear();
+  try{await _supabase.auth.signOut({scope:'local'});}catch(e){}suAuthClear();
+  APP.user=null;SU.blocked=false;
+  if(typeof FW!=='undefined'){FW.dirty=false;FW.revision=null;FW.position=null;}
+  clearInterval(window._presenceTimer);showLoginScreen();suLoginNotice('Your 24-hour session has ended. Sign in again; saved drafts are retained.');
+ }finally{SU.expiring=false;}
 }
-function suSchedule(){clearTimeout(SU.timer);if(!APP.user)return;SU.timer=setTimeout(async()=>{await suCheck();suSchedule();},60000+Math.floor(Math.random()*15000));}
-async function suPublishPage(){
- if(APP.currentRole!=='hr')return showToast('HR Admin view required.');var root=rcShell('Publish System Update');
- rcNode('p','Use this only after deploying and testing new application code. Ordinary employee, assessment and mapping edits do not require a system update.',root);
- try{var current=await suCurrent();if(!root.isConnected)return;
- rcNode('p','This file: '+CMS_CLIENT_BUILD+' | Published: '+current.build+' | Release '+current.generation,root);
- var build=rcText('Build identifier from the newly deployed Index.html',root);build.value=CMS_CLIENT_BUILD;build.maxLength=100;
- var reason=rcText('Internal reason for publishing',root,'textarea');reason.maxLength=1000;
- var checked=rcText('I deployed and tested this build before publishing',root);checked.type='checkbox';checked.style.width='auto';
- var preview=rcNode('div',undefined,root);
- rcButton('Preview system update',()=>{
-  if(!checked.checked||!build.value.trim()||reason.value.trim().length<5)throw new Error('Confirm deployment and enter a build identifier and reason.');
-  var payload={build:build.value.trim(),reason:reason.value.trim(),expected_generation:current.generation};preview.replaceChildren();
-  rcNode('strong','Impact: all active users running this update-aware app, including you, will be prompted to save, reload and sign in again at the next update check.',preview);
-  rcNode('p','New build: '+payload.build+'. Background/closed tabs detect the update when resumed or reopened. No existing assessment, draft, password or permission is changed. Earlier app versions without this update checker cannot be notified retroactively.',preview);
-  rcButton('Publish update and require sign-in',async()=>{if(SU.publishing)return;SU.publishing=true;try{var r=await suOriginalRPC('cms_app_release',{p_action:'publish',p_data:payload});if(r.error)throw new Error(r.error.message);suUpdatePrompt(r.data,r.data.build!==CMS_CLIENT_BUILD);}finally{SU.publishing=false;}},preview);
- },root);
- var h=await suOriginalRPC('cms_app_release',{p_action:'history',p_data:{}});if(h.error)throw new Error(h.error.message);if(!root.isConnected)return;rcNode('h3','Recent published updates',root);(h.data||[]).forEach(r=>rcNode('p','Release '+r.generation+' | '+r.build+' | '+new Date(r.published_at).toLocaleString()+' | '+(r.published_by||'Unknown')+' | '+r.reason,root));
- }catch(e){if(root.isConnected)rcNode('p',e.message,root);}
-}
+function suSchedule(){clearTimeout(SU.timer);if(!APP.user)return;var w=suWindow();var wait=Math.max(250,Math.min(60000,w? w.expires-Date.now():250));SU.timer=setTimeout(async()=>{await suCheck();if(APP.user)suSchedule();},wait);}
+
 function suSavedDrafts(){
  if(!APP.user)return;var root=rcShell('Saved Draft Safety Copies');rcNode('p','Local recovery copies are private to this browser profile and login. They do not replace submitted assessments or cloud backups. To restore, reopen the original page and use Restore local edits. File uploads are not included.',root);
  var prefix='cms_safety_v1:'+suDraftUser()+':',list=[];for(var i=0;i<localStorage.length;i++){var k=localStorage.key(i);if(k&&k.startsWith(prefix)){try{list.push({key:k,data:JSON.parse(localStorage.getItem(k))});}catch(e){}}}
@@ -11203,17 +11175,17 @@ function suDraftToolbar(){var root=document.getElementById('mainContent');if(!ro
 const suOriginalRPC=_supabase.rpc.bind(_supabase);
 _supabase.rpc=function(name,args,...rest){
  var reads=new Set(['me','list','inbox','search','history','audit','members','get','catalogue','queue','open','mine','targets','manager_target','team','assessments','alerts','scopes','legacy','suggest','employees','positions','frameworks','plans','progress','redos','reports','report_approvals','executive','current']);
- if(SU.blocked&&!reads.has(args&&args.p_action)&&!['cms_dashboard_summary','cms_manager_summary','cms_dashboard_alerts','cms_scoring_policy_version','cms_my_manager_positions'].includes(name))throw new Error('System update required. Save drafts and sign in again.');
+ if((SU.blocked || (APP.user&&!suWindowValid(suWindow(),APP.user.email)))&&!reads.has(args&&args.p_action)&&!['cms_dashboard_summary','cms_manager_summary','cms_dashboard_alerts','cms_scoring_policy_version','cms_my_manager_positions'].includes(name))throw new Error('Your session has ended. Sign in again to save changes.');
  if(!reads.has(args&&args.p_action)&&!['cms_dashboard_summary','cms_manager_summary','cms_dashboard_alerts','cms_scoring_policy_version','cms_my_manager_positions'].includes(name))SU.cache.clear();
  return suOriginalRPC(name,args,...rest);
 };
-var suFrom=_supabase.from.bind(_supabase);_supabase.from=function(table){var q=suFrom(table);['insert','update','upsert','delete'].forEach(k=>{if(q[k]){var old=q[k].bind(q);q[k]=function(...args){if(SU.blocked)throw new Error('System update required. Save drafts and sign in again.');SU.cache.clear();return old(...args);};}});return q;};
+var suFrom=_supabase.from.bind(_supabase);_supabase.from=function(table){var q=suFrom(table);['insert','update','upsert','delete'].forEach(k=>{if(q[k]){var old=q[k].bind(q);q[k]=function(...args){if(SU.blocked||(APP.user&&!suWindowValid(suWindow(),APP.user.email)))throw new Error('Your session has ended. Sign in again to save changes.');SU.cache.clear();return old(...args);};}});return q;};
 var suOldLogin=doLogin;doLogin=async function(){if(SU.loginRunning)return;SU.loginRunning=true;SU.freshLogin=true;try{return await suOldLogin();}finally{SU.freshLogin=false;SU.loginRunning=false;}};
 var suOldLogout=doLogout;doLogout=async function(){suSaveAll();clearTimeout(SU.timer);SU.cache.clear();SU.generation=null;suAuthClear();return suOldLogout();};
 var suOldNav=setupNav;setupNav=function(role){suOldNav(role);var root=document.getElementById(role==='employee'?'mainNav':'sideNav');if(root){var b=rcButton('Saved Drafts',()=>navigateTo('cms-saved-drafts'),root);b.dataset.page='cms-saved-drafts';b.className=role==='employee'?'nav-btn':'sb-item';if(role!=='employee')b.style.cssText='width:100%;background:transparent;border:0;text-align:left';}
- if(role==='hr'&&root){var b=rcButton('Publish System Update',()=>navigateTo('hr-system-update'),root);b.dataset.page='hr-system-update';b.className='sb-item';b.style.cssText='width:100%;background:transparent;border:0;text-align:left';}};
+};
 var suOldLabel=getPageLabel;getPageLabel=function(id){return id==='hr-system-update'?'Publish System Update':id==='cms-saved-drafts'?'Saved Drafts':suOldLabel(id);};
-var suOldPage=loadPage;loadPage=async function(id){if(SU.blocked)return;if(id==='hr-system-update')return suPublishPage();if(id==='cms-saved-drafts')return suSavedDrafts();return suOldPage(id);};
+var suOldPage=loadPage;loadPage=async function(id){if(SU.blocked)return;if(id==='hr-system-update')return navigateTo('hr-dashboard',false);if(id==='cms-saved-drafts')return suSavedDrafts();return suOldPage(id);};
 var suOldNavigate=navigateTo;navigateTo=function(id,history){if(SU.blocked)return;suSaveAll();return suOldNavigate(id,history);};
 // Save text safety copies on input instead of relying solely on unreliable unload events.
 ['input','change'].forEach(type=>document.addEventListener(type,function(e){if(!APP.user||!e.target.closest||!e.target.closest('#mainContent')||e.target.type==='password')return;clearTimeout(SU.draftTimer);SU.draftTimer=setTimeout(suSaveAll,400);}));
@@ -11237,13 +11209,74 @@ var suPreviewPage=loadPage;loadPage=async function(id){
 
 async function suStartApp(){
  try{
-  if(!CMS_TAB_STORAGE_OK){showLoginScreen();suLoginNotice('Allow session storage in this browser to sign in safely.');return;}
+  if(!CMS_TAB_STORAGE_OK){showLoginScreen();suLoginNotice('Allow browser storage to sign in.');return;}
+  var w=suWindow();
+  // Expired credentials are removed before restoring a protected page.
+  if(!w||!suWindowValid(w,w.email))suAuthClear();
   var response=await _supabase.auth.getSession();if(response.error)throw response.error;
-  if(response.data&&response.data.session){setContent('<section class="card"><p>Restoring your session...</p></section>');await enterApp(response.data.session.user.email);}
-  else showLoginScreen();
- }catch(e){showLoginScreen();suLoginNotice('Could not restore login: '+(e.message||'Please try signing in again.'));}
+  if(response.data&&response.data.session&&suWindowValid(suWindow(),response.data.session.user.email)){
+   setContent('<section class="card"><p>Opening your workspace...</p></section>');await enterApp(response.data.session.user.email);
+  }else showLoginScreen();
+ }catch(e){showLoginScreen();suLoginNotice('Could not restore login: '+(e.message||'Please sign in again.'));}
 }
 
+</script>
+<script>
+/* Critical average: equal weight per matching Critical experience, 70/30 within each pair.
+   Do not round the average before the threshold comparison. Historical decisions retain individual-v1. */
+function caUsesAverage(rows){return rows.length>0&&rows.every(r=>r.critical_gate_rule==='average-v1');}
+function caRate(r){return cmsRawUsable(r)?Number(r.proficiency_rating):1;}
+function caAverage(pairs){return pairs.length?pairs.reduce((sum,p)=>sum+caRate(p.manager)*20*.7+caRate(p.self)*20*.3,0)/pairs.length:null;}
+var caIndividualEvaluate=cgEvaluate;
+cgEvaluate=function(rows,kind){
+ var manager=cgLatest(rows,kind==='current'?'Manager':'Prospective'),self=cgLatest(rows,kind==='current'?'Self':'Prospective Self');
+ if(!caUsesAverage(manager.concat(self))){var old=caIndividualEvaluate(rows,kind);old.policy='individual-v1';return old;}
+ var result={kind:kind,threshold:kind==='current'?CG.current:CG.prospective,items:[],failed:0,awaiting:0,state:'awaiting',note:'',average:null,policy:'average-v1'};
+ if(!manager.length||!self.length){result.note='Awaiting '+(!manager.length?'manager':'self')+' assessment. Both are required.';return result;}
+ for(var version of ['framework_version','core_framework_version']){
+  var m=new Set(manager.map(r=>r[version]||null)),s=new Set(self.map(r=>r[version]||null));
+  if(m.size!==1||s.size!==1||Array.from(m)[0]!==Array.from(s)[0]){result.state='mismatch';result.note='Assessment framework versions do not match.';return result;}
+ }
+ if(kind!=='current'){
+  var targets=new Set(manager.concat(self).map(r=>String(r.prospective_role||'').trim().toUpperCase()));
+  if(targets.size!==1||targets.has('')){result.state='mismatch';result.note='The target roles do not match.';return result;}
+ }
+ function key(r){return JSON.stringify([r.comp_code,r.experience_text,r.classification]);}
+ var selfMap=new Map();self.forEach(r=>{var k=key(r);selfMap.set(k,selfMap.has(k)?null:r);});
+ var critical=manager.filter(r=>cgIsCritical(r.classification));
+ if(!critical.length){result.state='none';result.note='No Critical experiences are configured.';return result;}
+ var mKeys=new Set(critical.map(key));
+ if(mKeys.size!==critical.length||self.filter(r=>cgIsCritical(r.classification)).some(r=>!mKeys.has(key(r)))){result.state='mismatch';result.note='Critical experience sets differ or contain ambiguous duplicates.';return result;}
+ var pairs=[];
+ critical.forEach(r=>{
+  var s=selfMap.get(key(r));if(!s){result.awaiting++;result.items.push({comp:r.comp_name||r.comp_code,text:r.experience_text,mgr:null,self:null,combined:null,why:'Matching self experience missing',ok:false});return;}
+  pairs.push({manager:r,self:s});var m=caRate(r)*20,ss=caRate(s)*20,c=m*.7+ss*.3;
+  result.items.push({comp:r.comp_name||r.comp_code,text:r.experience_text,mgr:m,self:ss,combined:c,ok:true,why:!cmsRawUsable(r)||!cmsRawUsable(s)?'Minimum 1/5 applied to missing or invalid evidence/rating.':''});
+ });
+ if(result.awaiting){result.note='A complete matching Critical set is required; missing items are not excluded from the average.';return result;}
+ result.average=caAverage(pairs);result.state=result.average>=result.threshold?'pass':'fail';result.failed=result.state==='fail'?1:0;
+ result.note=critical.length+' Critical experiences averaged equally. One low item is not an automatic failure.';
+ return result;
+};
+var caOldBadge=cgBadge;
+cgBadge=function(g){if(g.policy!=='average-v1')return caOldBadge(g);if(g.state==='pass'||g.state==='fail')return '<span class="badge '+(g.state==='pass'?'badge-success':'badge-warning')+'">Critical average '+g.average.toFixed(2)+'%: '+(g.state==='pass'?'minimum met':'below '+g.threshold+'%')+'</span>';return caOldBadge(g);};
+var caOldPanel=cgPanel;
+cgPanel=function(g,title){
+ if(cgHidden())return '';
+ if(g.policy!=='average-v1')return '<p style="font-size:12px;color:#64748b">Protected historical assessment: original individual-experience gate retained.</p>'+caOldPanel(g,title);
+ var h='<section class="card"><h3>'+escapeHtml(title)+'</h3>'+cgBadge(g)+'<p style="margin:12px 0">The average across all Must-Have (Critical) experiences must reach <strong>'+g.threshold+'%</strong>. Each experience uses 70% Manager + 30% Self; all Critical experiences have equal weight in this gate.</p><p>Missing or invalid evidence contributes rating 1/5. The gate uses the unrounded average, not the displayed rounded value. Not shown on employee pages.</p>';
+ if(g.average!==null)h+='<p style="margin:12px 0"><strong>Critical average: '+g.average.toFixed(2)+'%</strong> across '+g.items.length+' experiences.</p>';
+ if(g.note)h+='<p>'+escapeHtml(g.note)+'</p>';
+ if(g.items.length){h+='<details><summary>View contributions to the average</summary><div class="table-wrap"><table><thead><tr><th>Competency</th><th>Critical experience</th><th>Manager</th><th>Self</th><th>70/30</th><th>Note</th></tr></thead><tbody>';
+ g.items.forEach(i=>{h+='<tr><td>'+escapeHtml(i.comp)+'</td><td>'+escapeHtml(i.text||'')+'</td><td>'+(i.mgr===null?'Awaiting':i.mgr+'%')+'</td><td>'+(i.self===null?'Awaiting':i.self+'%')+'</td><td>'+(i.combined===null?'Awaiting':i.combined.toFixed(2)+'%')+'</td><td>'+escapeHtml(i.why||'Included in average')+'</td></tr>';});h+='</tbody></table></div></details>';}
+ return h+'</section>';
+};
+
+</script>
+<script>
+function suWindow(){try{return JSON.parse(localStorage.getItem(CMS_LOGIN_WINDOW_KEY)||'null');}catch(e){return null;}}
+function suWindowValid(w,email){return !!(w&&typeof w.started==='number'&&typeof w.expires==='number'&&w.expires-w.started===CMS_LOGIN_WINDOW_MS&&Date.now()>=w.started&&Date.now()<w.expires&&String(w.email).toLowerCase()===String(email||'').toLowerCase());}
+window.addEventListener('storage',function(event){if(event.key===CMS_LOGIN_WINDOW_KEY&&APP.user)suCheck();});
 </script>
 <script>suStartApp();</script>
 </body>
