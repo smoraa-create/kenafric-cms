@@ -725,7 +725,7 @@ var APP = { user: null, currentRole: 'employee', currentPage: '', competencies: 
 var ALLOWED_COMPS = ['Customer Centricity','Collaboration','Trustworthy','Bold','Analytical Thinking & Problem Solving','Judgement & Decision Making','Planning','Execution','Continuous Learning & Improvement','People Skills','Leadership'];
 function normCompName(s){ return (s||'').toString().toLowerCase().replace(/[^a-z]/g,''); }
 function isAllowedComp(name){ var n = normCompName(name); if (!n) return false; for (var i=0;i<ALLOWED_COMPS.length;i++){ if (normCompName(ALLOWED_COMPS[i]) === n) return true; } return false; }
-var ASSESS_COLS = 'id, employee_id, employee_name, comp_code, type, ticked, proficiency_rating, hr_status, hr_comment, hr_reviewer, hr_review_date, assessment_round, assessment_date, evidence_stub';
+var ASSESS_COLS = 'id, employee_id, employee_name, comp_code, type, ticked, proficiency_rating, hr_status, hr_comment, hr_reviewer, hr_review_date, assessment_round, assessment_date, evidence_stub, classification, scoring_rule, weight_profile, weight_policy';
 async function cached(key, ttlMs, loader) {
 try { var raw = localStorage.getItem('kcache_' + key); if (raw) { var o = JSON.parse(raw); if (Date.now() - o.t < ttlMs) return o.d; } } catch (e) {}
 var d = await loader();
@@ -824,6 +824,7 @@ employee_id: emp ? emp.employee_id : null,
 modes: { isEmployee: true, isManager: isManager, isAdmin: roles.includes('HR_ADMIN'), isHOHR: roles.includes('HEAD_HR'), isCSuite: roles.includes('C_SUITE') }
 };
 APP.competencies = boot[4].data || [];
+if(!cmsCheckWeightCatalogue(APP.competencies)){showLoginScreen();suLoginNotice('Install the 5/14/8 competency-weight SQL, then sign in again. Existing records have not been deleted.');return;}
 APP.experiences = []; // Published frameworks load on demand; legacy pages use pfLibrary().
 document.querySelector('.header').style.display = 'block';
 document.querySelector('.nav-bar').style.display = 'block';
@@ -1018,7 +1019,7 @@ var rows = latestOnly((results || []).filter(function(r){return r.employee_id ==
 var hasS = rows.some(function(r){return r.type === 'Self';});
 var hasM = rows.some(function(r){return r.type === 'Manager';});
 if (!hasS || !hasM) return currentRoleWaiting(hasS,hasM);
-var fr = rows.map(function(r){return {'Employee ID':r.employee_id,'Competency Code':r.comp_code,'Type':r.type,'Ticked':r.ticked,'Evidence':r.evidence,'HR_Status':r.hr_status,'Rating':r.proficiency_rating, 'Scoring Rule': r.scoring_rule || 'legacy-zero', 'Classification': r.scoring_rule === 'floor-one-v1' ? r.classification : undefined};});
+var fr = rows.map(function(r){return {'Employee ID':r.employee_id,'Competency Code':r.comp_code,'Type':r.type,'Ticked':r.ticked,'Evidence':r.evidence,'HR_Status':r.hr_status,'Rating':r.proficiency_rating, 'Scoring Rule': r.scoring_rule || 'legacy-zero', 'Classification': r.scoring_rule === 'floor-one-v1' ? r.classification : undefined, 'Weight Profile': r.weight_profile, 'Weight Policy': r.weight_policy};});
 var score = currentRoleDecision(calculateOverallScore(empId,'Self',fr),calculateOverallScore(empId,'Manager',fr),hasS,hasM);
 return 'Current Role Decision: ' + currentRoleScoreText(score) + ' (70% Manager + 30% Self)';
 }
@@ -1104,7 +1105,7 @@ function cmsAssessmentInstructionsHTML(mode){
  h+='</div></div><div class="cms-guide-steps"><h4>How to complete it</h4><ol><li><strong>Review every experience.</strong> Tick only those actually demonstrated; leave the rest unticked as Not Yet Demonstrated.</li><li><strong>Provide evidence.</strong> Describe the action, context and result. Use specific projects, dates, numbers or deliverables, and attach supporting proof where available.</li><li><strong>Select one rating.</strong> Use the scale above for each demonstrated experience. Review the weighted score as you fill in.</li>';
  h+=mode==='invited'?'<li><strong>Save and submit your invitation.</strong> Use Save Draft before leaving this invited form. This form saves manually in this browser, separately from login. Submit once for this invitation; only HR can issue another invitation.</li>':correction?'<li><strong>Correct and resubmit.</strong> Use HR’s feedback to update only returned evidence and its rating. Existing attachments are retained. Resubmit each returned item for HR review; approved experiences remain locked.</li>':'<li><strong>Save, review and submit.</strong> Drafts auto-save every 20 seconds while the form is open; you can also press Save Draft. Submit once per authorized round. Reassessment requires approval through the request process.</li>';
  h+='</ol></div><div class="cms-guide-scoring"><strong>No evidence = rating 1 out of 5 (Unsatisfactory).</strong><p>The same minimum applies to experiences not demonstrated, missing ratings, and HR-disapproved or unverifiable evidence under the new rule. It is weighted normally, not added as a bonus point.</p><details><summary>How scoring and historical results work</summary><p>Each effective rating is divided by 5 and weighted within its experience tier and competency. Critical experiences carry more weight than Important and Value-Add experiences. A missing whole assessment remains “Awaiting assessment”; it does not receive a score. Existing finalized results retain their original scoring policy.</p></details></div></div></section>';
- return h;
+ return h+cmsWeightGuideHTML();
 }
 
 function cmsFloor(r){return (r&&(r.scoring_rule||r['Scoring Rule']))==='floor-one-v1'?1:0;}
@@ -1145,11 +1146,28 @@ score += (tiers[tierKey].points / tiers[tierKey].total) * tierMax[tierKey];
 }score = Math.round(score * 100) / 100;
 return { score: score, total: rows.length, valid: tiers.critical.valid + tiers.important.valid + tiers.valueAdd.valid };
 }
+/* All roles: 20% Core + 56% operational + 24% behavioral.
+   Assessment snapshots determine historical weights; library uses the current approved profile. */
+var CMS_WEIGHT_PROFILE={FC001:14,FC002:14,FC003:14,FC004:14,FC005:8,PC001:8,LC001:8,CC001:5,CC002:5,CC003:5,CC004:5};
+function cmsCheckWeightCatalogue(rows){
+ var codes=Object.keys(CMS_WEIGHT_PROFILE);return Array.isArray(rows)&&rows.length===codes.length&&codes.every(code=>rows.filter(r=>r.code===code).length===1&&Number(rows.find(r=>r.code===code).weight)===CMS_WEIGHT_PROFILE[code]);
+}
+function cmsAssessmentWeight(rows,code,fallback){
+ if(!rows.length)return Number(fallback)||0;
+ var values=rows.map(r=>{var profile=r.weight_profile||r['Weight Profile'];return profile&&Number(profile[code]);});
+ if(values.some(v=>!Number.isFinite(v)||v<=0))throw new Error('Assessment weighting metadata is missing. Install the competency weight SQL and reload.');
+ if(values.some(v=>v!==values[0]))throw new Error('Mixed weighting within this assessment. HR must review the selected rounds.');
+ return values[0];
+}
+function cmsWeightGuideHTML(){return '<details class="cms-weight-guide" style="margin:12px 0;padding:12px 16px;border:1px solid #cbd5e1;border-radius:9px;background:#f8fafc"><summary style="cursor:pointer;font-size:14px;font-weight:700;color:#312e81">Competency weights: 100% total</summary><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:14px;margin-top:12px"><div><strong>Core: 20%</strong><p>Customer Centric, Bold, Trustworthy and Collaboration: <strong>5% each</strong>.</p></div><div><strong>Operational: 56%</strong><p>Analytical Thinking &amp; Problem Solving, Judgement &amp; Decision Making, Planning and Execution: <strong>14% each</strong>.</p></div><div><strong>Behavioral: 24%</strong><p>Continuous Learning &amp; Improvement, People Skills and Leadership: <strong>8% each</strong>.</p></div></div><p style="font-size:12px;color:#64748b;margin-top:10px">This profile applies to all roles, including leadership. Protected historical assessments retain their original weights. The 70% Manager / 30% Self split and the separate Critical-average gate are unchanged.</p></details>';}
+function cmsSavedWeightNote(rows){var protectedRows=(rows||[]).some(r=>r.weight_policy==='protected-pre-5-14-8'||r['Weight Policy']==='protected-pre-5-14-8');return '<p style="font-size:12px;color:#64748b">'+(protectedRows?'Historical weighting: this calculation uses the preserved assessment weight profile, not the current library weights.':'Current weighting: 5% each Core, 14% each operational, 8% each remaining behavioral competency.')+'</p>';}
+
 function calculateOverallScore(empId, type, allResults) {
 var totalWeight = 0; var weightedScore = 0;
 for (var i = 0; i < APP.competencies.length; i++) {
 var comp = APP.competencies[i];
-var w = parseFloat(comp.weight) || 0;
+var relevant=allResults.filter(r=>r['Employee ID']===empId&&r['Type']===type&&r['Competency Code']===comp.code);
+var w=cmsAssessmentWeight(relevant,comp.code,comp.weight);
 var cs = calculateCompetencyScore(empId, comp.code, type, allResults);
 if (cs.total > 0) { totalWeight += w; weightedScore += Math.round((cs.score / 5) * 100) * w; }
 }
@@ -1189,7 +1207,7 @@ if (!keys.length) return '';
 var empId = allResults[0].employee_id;
 var html = '<div class="card"><div class="card-title">' + type + ' Assessment History</div><div class="table-wrap"><table><thead><tr><th>Round</th><th>Date</th><th>Score</th></tr></thead><tbody>';
 keys.forEach(function(k){
-var fr = rounds[k].map(function(r){ return { 'Employee ID': r.employee_id, 'Competency Code': r.comp_code, 'Type': r.type, 'Ticked': r.ticked, 'Evidence': r.evidence, 'HR_Status': r.hr_status, 'Rating': r.proficiency_rating , 'Scoring Rule': r.scoring_rule || 'legacy-zero', 'Classification': r.scoring_rule === 'floor-one-v1' ? r.classification : undefined}; });
+var fr = rounds[k].map(function(r){ return { 'Employee ID': r.employee_id, 'Competency Code': r.comp_code, 'Type': r.type, 'Ticked': r.ticked, 'Evidence': r.evidence, 'HR_Status': r.hr_status, 'Rating': r.proficiency_rating , 'Scoring Rule': r.scoring_rule || 'legacy-zero', 'Classification': r.scoring_rule === 'floor-one-v1' ? r.classification : undefined, 'Weight Profile': r.weight_profile, 'Weight Policy': r.weight_policy}; });
 var score = calculateOverallScore(empId, type, fr);
 html += '<tr><td>' + ord(k) + ' assessment</td><td>' + escapeHtml(rounds[k][0].assessment_date || '') + '</td><td style="font-weight:700;color:var(--primary)">' + score + '%</td></tr>';
 });
@@ -1267,7 +1285,7 @@ function epRing(value,color,title,subtitle){
  var inner=show?String(value)+'%':'Not available';
  return '<div class="ep-score"><svg viewBox="0 0 120 120" role="img" aria-label="'+escapeHtml(title+': '+inner)+'"><circle cx="60" cy="60" r="48" fill="none" stroke="#e2e8f0" stroke-width="8"/>'+(show?'<circle cx="60" cy="60" r="48" fill="none" stroke="'+color+'" stroke-width="8" stroke-dasharray="'+(pct/100*301.593)+' 301.593" transform="rotate(-90 60 60)" stroke-linecap="round"/>':'')+'<text x="60" y="66" text-anchor="middle" font-size="22" font-weight="750" fill="#1e293b">'+(show?String(value)+'%':'--')+'</text></svg><h3>'+escapeHtml(title)+'</h3><p>'+escapeHtml(subtitle)+'</p></div>';
 }
-function epFormatted(rows){return rows.map(r=>({'Employee ID':r.employee_id,'Competency Code':r.comp_code,'Type':r.type,'Ticked':r.ticked,'Evidence':r.evidence,'HR_Status':r.hr_status,'Rating':r.proficiency_rating,'Classification':r.classification, 'Scoring Rule': r.scoring_rule || 'legacy-zero'}));}
+function epFormatted(rows){return rows.map(r=>({'Employee ID':r.employee_id,'Competency Code':r.comp_code,'Type':r.type,'Ticked':r.ticked,'Evidence':r.evidence,'HR_Status':r.hr_status,'Rating':r.proficiency_rating,'Classification':r.classification, 'Scoring Rule': r.scoring_rule || 'legacy-zero', 'Weight Profile': r.weight_profile, 'Weight Policy': r.weight_policy}));}
 function epViewModel(employee,rows){
  var latest=epLatestCurrent(rows),data=epFormatted(latest),hasSelf=latest.some(r=>r.type==='Self'),hasManager=latest.some(r=>r.type==='Manager'),released=epReleased(rows);
  var self=hasSelf?calculateOverallScore(employee.employee_id,'Self',data):null;
@@ -1502,7 +1520,7 @@ assessment_id: assessmentId, assessment_date: today, assessment_round: round,
 employee_id: data.employee.employee_id, employee_name: data.employee.employee_name,
 position: data.employee.position, prospective_role: '', type: 'Self',
 comp_code: comp.code, comp_name: comp.name, weight: comp.weight / comp.experiences.length,
-experience_index: ei, experience_text: exp.text, ticked: ticked, scoring_rule: 'floor-one-v1',
+experience_index: ei, experience_text: exp.text, ticked: ticked, scoring_rule: 'floor-one-v1', weight_profile:CMS_WEIGHT_PROFILE, weight_policy:'weights-5-14-8-v1',
 evidence: ticked ? ta.value.trim() : '', assessor_email: APP.user.email,
 hr_status: '', hr_comment: '', hr_reviewer: '', classification: exp.classification || '', 
 proficiency_rating: ratingVal, _att: 'att-exp-' + ci + '-' + ei
@@ -1574,7 +1592,7 @@ return;
 var formattedResults = mgrResults.map(r => ({
 'Employee ID': r.employee_id, 'Competency Code': r.comp_code, 'Type': r.type,
 'Ticked': r.ticked, 'Evidence': r.evidence, 'HR_Status': r.hr_status, 'Rating': r.proficiency_rating
-, 'Scoring Rule': r.scoring_rule || 'legacy-zero', 'Classification': r.scoring_rule === 'floor-one-v1' ? r.classification : undefined}));
+, 'Scoring Rule': r.scoring_rule || 'legacy-zero', 'Classification': r.scoring_rule === 'floor-one-v1' ? r.classification : undefined, 'Weight Profile': r.weight_profile, 'Weight Policy': r.weight_policy}));
 var gaps = [];
 for (var i = 0; i < APP.competencies.length; i++) {
 var comp = APP.competencies[i];
@@ -1606,7 +1624,7 @@ return;
 var formattedResults = mgrResults.map(r => ({
 'Employee ID': r.employee_id, 'Competency Code': r.comp_code, 'Type': r.type,
 'Ticked': r.ticked, 'Evidence': r.evidence, 'HR_Status': r.hr_status, 'Rating': r.proficiency_rating
-, 'Scoring Rule': r.scoring_rule || 'legacy-zero', 'Classification': r.scoring_rule === 'floor-one-v1' ? r.classification : undefined}));
+, 'Scoring Rule': r.scoring_rule || 'legacy-zero', 'Classification': r.scoring_rule === 'floor-one-v1' ? r.classification : undefined, 'Weight Profile': r.weight_profile, 'Weight Policy': r.weight_policy}));
 var strengths = [];
 for (var i = 0; i < APP.competencies.length; i++) {
 var comp = APP.competencies[i];
@@ -1716,13 +1734,13 @@ if (emp.manager_email === APP.user.email && emp.email !== APP.user.email) {
 var empId = emp.employee_id;
 var rows = (allResults || []).filter(function(r){ return r.employee_id === empId; });
 var latest = latestOnly(rows);
-var fr = latest.map(function(r){ return { 'Employee ID': r.employee_id, 'Competency Code': r.comp_code, 'Type': r.type, 'Ticked': r.ticked, 'Evidence': r.evidence, 'HR_Status': r.hr_status, 'Rating': r.proficiency_rating , 'Scoring Rule': r.scoring_rule || 'legacy-zero', 'Classification': r.scoring_rule === 'floor-one-v1' ? r.classification : undefined}; });
+var fr = latest.map(function(r){ return { 'Employee ID': r.employee_id, 'Competency Code': r.comp_code, 'Type': r.type, 'Ticked': r.ticked, 'Evidence': r.evidence, 'HR_Status': r.hr_status, 'Rating': r.proficiency_rating , 'Scoring Rule': r.scoring_rule || 'legacy-zero', 'Classification': r.scoring_rule === 'floor-one-v1' ? r.classification : undefined, 'Weight Profile': r.weight_profile, 'Weight Policy': r.weight_policy}; });
 var hasSelf = latest.some(function(r){ return r.type === 'Self'; });
 var hasMgr = latest.some(function(r){ return r.type === 'Manager'; });
 var pRows = latest.filter(function(r){ return r.type === 'Prospective'; });
 var psRows = latest.filter(function(r){ return r.type === 'Prospective Self'; });
-var pfr = pRows.map(function(r){ return { 'Employee ID': r.employee_id, 'Competency Code': r.comp_code, 'Type': r.type, 'Ticked': r.ticked, 'Evidence': r.evidence, 'HR_Status': r.hr_status, 'Rating': r.proficiency_rating , 'Scoring Rule': r.scoring_rule || 'legacy-zero', 'Classification': r.scoring_rule === 'floor-one-v1' ? r.classification : undefined}; });
-var psfr = psRows.map(function(r){ return { 'Employee ID': r.employee_id, 'Competency Code': r.comp_code, 'Type': r.type, 'Ticked': r.ticked, 'Evidence': r.evidence, 'HR_Status': r.hr_status, 'Rating': r.proficiency_rating , 'Scoring Rule': r.scoring_rule || 'legacy-zero', 'Classification': r.scoring_rule === 'floor-one-v1' ? r.classification : undefined}; });
+var pfr = pRows.map(function(r){ return { 'Employee ID': r.employee_id, 'Competency Code': r.comp_code, 'Type': r.type, 'Ticked': r.ticked, 'Evidence': r.evidence, 'HR_Status': r.hr_status, 'Rating': r.proficiency_rating , 'Scoring Rule': r.scoring_rule || 'legacy-zero', 'Classification': r.scoring_rule === 'floor-one-v1' ? r.classification : undefined, 'Weight Profile': r.weight_profile, 'Weight Policy': r.weight_policy}; });
+var psfr = psRows.map(function(r){ return { 'Employee ID': r.employee_id, 'Competency Code': r.comp_code, 'Type': r.type, 'Ticked': r.ticked, 'Evidence': r.evidence, 'HR_Status': r.hr_status, 'Rating': r.proficiency_rating , 'Scoring Rule': r.scoring_rule || 'legacy-zero', 'Classification': r.scoring_rule === 'floor-one-v1' ? r.classification : undefined, 'Weight Profile': r.weight_profile, 'Weight Policy': r.weight_policy}; });
 var hasP = pRows.length > 0, hasPS = psRows.length > 0;
 var pScore = hasP ? calculateOverallScore(empId, 'Prospective', pfr) : 0;
 var psScore = hasPS ? calculateOverallScore(empId, 'Prospective Self', psfr) : 0;
@@ -1755,8 +1773,8 @@ var status = t.hasMgr ? '<span class="badge badge-success">Complete</span>' : (t
 var lat = latestOnly(t.rows);
 var psRows = lat.filter(function(r){ return r.type === 'Prospective Self'; });
 var pmRows = lat.filter(function(r){ return r.type === 'Prospective'; });
-var fmtPs = psRows.map(function(r){ return { 'Employee ID': r.employee_id, 'Competency Code': r.comp_code, 'Type': r.type, 'Ticked': r.ticked, 'Evidence': r.evidence, 'HR_Status': r.hr_status, 'Rating': r.proficiency_rating , 'Scoring Rule': r.scoring_rule || 'legacy-zero', 'Classification': r.scoring_rule === 'floor-one-v1' ? r.classification : undefined}; });
-var fmtPm = pmRows.map(function(r){ return { 'Employee ID': r.employee_id, 'Competency Code': r.comp_code, 'Type': r.type, 'Ticked': r.ticked, 'Evidence': r.evidence, 'HR_Status': r.hr_status, 'Rating': r.proficiency_rating , 'Scoring Rule': r.scoring_rule || 'legacy-zero', 'Classification': r.scoring_rule === 'floor-one-v1' ? r.classification : undefined}; });
+var fmtPs = psRows.map(function(r){ return { 'Employee ID': r.employee_id, 'Competency Code': r.comp_code, 'Type': r.type, 'Ticked': r.ticked, 'Evidence': r.evidence, 'HR_Status': r.hr_status, 'Rating': r.proficiency_rating , 'Scoring Rule': r.scoring_rule || 'legacy-zero', 'Classification': r.scoring_rule === 'floor-one-v1' ? r.classification : undefined, 'Weight Profile': r.weight_profile, 'Weight Policy': r.weight_policy}; });
+var fmtPm = pmRows.map(function(r){ return { 'Employee ID': r.employee_id, 'Competency Code': r.comp_code, 'Type': r.type, 'Ticked': r.ticked, 'Evidence': r.evidence, 'HR_Status': r.hr_status, 'Rating': r.proficiency_rating , 'Scoring Rule': r.scoring_rule || 'legacy-zero', 'Classification': r.scoring_rule === 'floor-one-v1' ? r.classification : undefined, 'Weight Profile': r.weight_profile, 'Weight Policy': r.weight_policy}; });
 var psScore = psRows.length ? calculateOverallScore(t.id, 'Prospective Self', fmtPs) : null;
 var pmScore = pmRows.length ? calculateOverallScore(t.id, 'Prospective', fmtPm) : null;
 var pAvg = (psScore !== null && pmScore !== null) ? cmsProspectiveDecision(psScore,pmScore,lat) : null;
@@ -1786,7 +1804,7 @@ html += '</div>';
 html += '<div class="card" style="margin-bottom:0"><div class="card-title">Top Gaps (Team)</div>';
 var gapAgg = {};
 assessed.forEach(function(t) {
-var fr2 = latestOnly(t.rows).filter(function(r){ return r.type === 'Manager'; }).map(function(r){ return { 'Employee ID': r.employee_id, 'Competency Code': r.comp_code, 'Type': r.type, 'Ticked': r.ticked, 'Evidence': r.evidence, 'HR_Status': r.hr_status, 'Rating': r.proficiency_rating , 'Scoring Rule': r.scoring_rule || 'legacy-zero', 'Classification': r.scoring_rule === 'floor-one-v1' ? r.classification : undefined}; });
+var fr2 = latestOnly(t.rows).filter(function(r){ return r.type === 'Manager'; }).map(function(r){ return { 'Employee ID': r.employee_id, 'Competency Code': r.comp_code, 'Type': r.type, 'Ticked': r.ticked, 'Evidence': r.evidence, 'HR_Status': r.hr_status, 'Rating': r.proficiency_rating , 'Scoring Rule': r.scoring_rule || 'legacy-zero', 'Classification': r.scoring_rule === 'floor-one-v1' ? r.classification : undefined, 'Weight Profile': r.weight_profile, 'Weight Policy': r.weight_policy}; });
 for (var c = 0; c < APP.competencies.length; c++) {
 var comp = APP.competencies[c];
 var cs = calculateCompetencyScore(t.id, comp.code, 'Manager', fr2);
@@ -1826,13 +1844,13 @@ var pRows = (allResults || []).filter(function(r){ return r.employee_id === empI
 var selfDone = (allResults || []).some(function(r){ return r.employee_id === empId && r.type === 'Self'; });
 var mgrDone = mRows.length > 0;
 var hrReviewed = mgrDone && mRows.some(function(r){ return r.hr_status === 'Approved'; }) && !mRows.some(function(r){ return r.ticked && (r.hr_status === '' || r.hr_status === 'Pending' || r.hr_status === 'Returned'); });
-var fmtM = latestOnly(mRows).map(function(r){ return { 'Employee ID': r.employee_id, 'Competency Code': r.comp_code, 'Type': r.type, 'Ticked': r.ticked, 'Evidence': r.evidence, 'HR_Status': r.hr_status, 'Rating': r.proficiency_rating , 'Scoring Rule': r.scoring_rule || 'legacy-zero', 'Classification': r.scoring_rule === 'floor-one-v1' ? r.classification : undefined}; });
+var fmtM = latestOnly(mRows).map(function(r){ return { 'Employee ID': r.employee_id, 'Competency Code': r.comp_code, 'Type': r.type, 'Ticked': r.ticked, 'Evidence': r.evidence, 'HR_Status': r.hr_status, 'Rating': r.proficiency_rating , 'Scoring Rule': r.scoring_rule || 'legacy-zero', 'Classification': r.scoring_rule === 'floor-one-v1' ? r.classification : undefined, 'Weight Profile': r.weight_profile, 'Weight Policy': r.weight_policy}; });
 var mgrScore = mgrDone ? calculateOverallScore(empId, 'Manager', fmtM) : 0;
-var fmtS = latestOnly((allResults || []).filter(function(r){ return r.employee_id === empId && r.type === 'Self'; })).map(function(r){ return { 'Employee ID': r.employee_id, 'Competency Code': r.comp_code, 'Type': r.type, 'Ticked': r.ticked, 'Evidence': r.evidence, 'HR_Status': r.hr_status, 'Rating': r.proficiency_rating , 'Scoring Rule': r.scoring_rule || 'legacy-zero', 'Classification': r.scoring_rule === 'floor-one-v1' ? r.classification : undefined}; });
+var fmtS = latestOnly((allResults || []).filter(function(r){ return r.employee_id === empId && r.type === 'Self'; })).map(function(r){ return { 'Employee ID': r.employee_id, 'Competency Code': r.comp_code, 'Type': r.type, 'Ticked': r.ticked, 'Evidence': r.evidence, 'HR_Status': r.hr_status, 'Rating': r.proficiency_rating , 'Scoring Rule': r.scoring_rule || 'legacy-zero', 'Classification': r.scoring_rule === 'floor-one-v1' ? r.classification : undefined, 'Weight Profile': r.weight_profile, 'Weight Policy': r.weight_policy}; });
 var selfScoreT = selfDone ? calculateOverallScore(empId, 'Self', fmtS) : 0;
 var finalAvgT = currentRoleDecision(selfScoreT, mgrScore, selfDone, mgrDone);
 var prospDone = pRows.length > 0;
-var fmtP = latestOnly(pRows).map(function(r){ return { 'Employee ID': r.employee_id, 'Competency Code': r.comp_code, 'Type': r.type, 'Ticked': r.ticked, 'Evidence': r.evidence, 'HR_Status': r.hr_status, 'Rating': r.proficiency_rating , 'Scoring Rule': r.scoring_rule || 'legacy-zero', 'Classification': r.scoring_rule === 'floor-one-v1' ? r.classification : undefined}; });
+var fmtP = latestOnly(pRows).map(function(r){ return { 'Employee ID': r.employee_id, 'Competency Code': r.comp_code, 'Type': r.type, 'Ticked': r.ticked, 'Evidence': r.evidence, 'HR_Status': r.hr_status, 'Rating': r.proficiency_rating , 'Scoring Rule': r.scoring_rule || 'legacy-zero', 'Classification': r.scoring_rule === 'floor-one-v1' ? r.classification : undefined, 'Weight Profile': r.weight_profile, 'Weight Policy': r.weight_policy}; });
 var prospScore = prospDone ? calculateOverallScore(empId, 'Prospective', fmtP) : 0;
 team.push({
 id: empId, name: emp.employee_name, email: emp.email, position: emp.position,
@@ -1923,11 +1941,11 @@ emps.forEach(function(e) {
 var pRows = (allResults || []).filter(function(r){ return r.employee_id === e.employee_id && r.type === 'Prospective'; });
 if (!pRows.length) return;
 var latest = latestOnly(pRows);
-var pfr = latest.map(function(r){ return { 'Employee ID': r.employee_id, 'Competency Code': r.comp_code, 'Type': r.type, 'Ticked': r.ticked, 'Evidence': r.evidence, 'HR_Status': r.hr_status, 'Rating': r.proficiency_rating , 'Scoring Rule': r.scoring_rule || 'legacy-zero', 'Classification': r.scoring_rule === 'floor-one-v1' ? r.classification : undefined}; });
+var pfr = latest.map(function(r){ return { 'Employee ID': r.employee_id, 'Competency Code': r.comp_code, 'Type': r.type, 'Ticked': r.ticked, 'Evidence': r.evidence, 'HR_Status': r.hr_status, 'Rating': r.proficiency_rating , 'Scoring Rule': r.scoring_rule || 'legacy-zero', 'Classification': r.scoring_rule === 'floor-one-v1' ? r.classification : undefined, 'Weight Profile': r.weight_profile, 'Weight Policy': r.weight_policy}; });
 var pscore = calculateOverallScore(e.employee_id, 'Prospective', pfr);
 if (pscore < 80) return;
 var mRows = (allResults || []).filter(function(r){ return r.employee_id === e.employee_id && r.type === 'Manager'; });
-var mscore = mRows.length ? calculateOverallScore(e.employee_id, 'Manager', latestOnly(mRows).map(function(r){ return { 'Employee ID': r.employee_id, 'Competency Code': r.comp_code, 'Type': r.type, 'Ticked': r.ticked, 'Evidence': r.evidence, 'HR_Status': r.hr_status, 'Rating': r.proficiency_rating , 'Scoring Rule': r.scoring_rule || 'legacy-zero', 'Classification': r.scoring_rule === 'floor-one-v1' ? r.classification : undefined}; })) : 0;
+var mscore = mRows.length ? calculateOverallScore(e.employee_id, 'Manager', latestOnly(mRows).map(function(r){ return { 'Employee ID': r.employee_id, 'Competency Code': r.comp_code, 'Type': r.type, 'Ticked': r.ticked, 'Evidence': r.evidence, 'HR_Status': r.hr_status, 'Rating': r.proficiency_rating , 'Scoring Rule': r.scoring_rule || 'legacy-zero', 'Classification': r.scoring_rule === 'floor-one-v1' ? r.classification : undefined, 'Weight Profile': r.weight_profile, 'Weight Policy': r.weight_policy}; })) : 0;
 pool.push({ id: e.employee_id, name: e.employee_name, position: e.position, company: e.company, prospRole: latest[0].prospective_role || '', pscore: pscore, mscore: mscore, date: latest[0].assessment_date || '' });
 });
 pool.sort(function(a,b){ return b.pscore - a.pscore; });
@@ -2001,10 +2019,10 @@ if (prospRows.length) {
 const { data: preqs } = await _supabase.from('redo_requests').select('*').eq('employee_id', empId).eq('type', 'Prospective').order('id', { ascending: false }).limit(1);
 prospReq = preqs && preqs.length ? preqs[0] : null;
 }
-var frM = latestOnly(mgrRows).map(function(r){ return { 'Employee ID': r.employee_id, 'Competency Code': r.comp_code, 'Type': r.type, 'Ticked': r.ticked, 'Evidence': r.evidence, 'HR_Status': r.hr_status, 'Rating': r.proficiency_rating , 'Scoring Rule': r.scoring_rule || 'legacy-zero', 'Classification': r.scoring_rule === 'floor-one-v1' ? r.classification : undefined}; });
+var frM = latestOnly(mgrRows).map(function(r){ return { 'Employee ID': r.employee_id, 'Competency Code': r.comp_code, 'Type': r.type, 'Ticked': r.ticked, 'Evidence': r.evidence, 'HR_Status': r.hr_status, 'Rating': r.proficiency_rating , 'Scoring Rule': r.scoring_rule || 'legacy-zero', 'Classification': r.scoring_rule === 'floor-one-v1' ? r.classification : undefined, 'Weight Profile': r.weight_profile, 'Weight Policy': r.weight_policy}; });
 var mgrScore = mgrRows.length ? calculateOverallScore(empId, 'Manager', frM) : 0;
 var selfRowsL = latestOnly((allResults || []).filter(function(r){ return r.type === 'Self'; }));
-var frS = selfRowsL.map(function(r){ return { 'Employee ID': r.employee_id, 'Competency Code': r.comp_code, 'Type': r.type, 'Ticked': r.ticked, 'Evidence': r.evidence, 'HR_Status': r.hr_status, 'Rating': r.proficiency_rating , 'Scoring Rule': r.scoring_rule || 'legacy-zero', 'Classification': r.scoring_rule === 'floor-one-v1' ? r.classification : undefined}; });
+var frS = selfRowsL.map(function(r){ return { 'Employee ID': r.employee_id, 'Competency Code': r.comp_code, 'Type': r.type, 'Ticked': r.ticked, 'Evidence': r.evidence, 'HR_Status': r.hr_status, 'Rating': r.proficiency_rating , 'Scoring Rule': r.scoring_rule || 'legacy-zero', 'Classification': r.scoring_rule === 'floor-one-v1' ? r.classification : undefined, 'Weight Profile': r.weight_profile, 'Weight Policy': r.weight_policy}; });
 var selfScoreL = selfRowsL.length ? calculateOverallScore(empId, 'Self', frS) : 0;
 var hasBothCurrent = selfRowsL.length > 0 && mgrRows.length > 0;
 
@@ -2216,7 +2234,7 @@ assessment_id: assessmentId, assessment_date: today, assessment_round: round,
 employee_id: emp.employee_id, employee_name: emp.employee_name,
 position: emp.position, prospective_role: (type === 'Prospective' || type === 'Prospective Self') ? prospRole : '', type: type,
 comp_code: comp.code, comp_name: comp.name, weight: comp.weight / comp.experiences.length,
-experience_index: ei, experience_text: exp.text, ticked: ticked, scoring_rule: 'floor-one-v1',
+experience_index: ei, experience_text: exp.text, ticked: ticked, scoring_rule: 'floor-one-v1', weight_profile:CMS_WEIGHT_PROFILE, weight_policy:'weights-5-14-8-v1',
 evidence: ticked ? ta.value.trim() : '', assessor_email: APP.user.email,
 hr_status: (type === 'Prospective Self' ? '' : 'Pending'), hr_comment: '', hr_reviewer: '', classification: exp.classification || '',hr_status: 'Pending', hr_comment: '', hr_reviewer: '', classification: exp.classification || '', 
 proficiency_rating: ratingVal, _att: 'att-' + pre + '-' + ci + '-' + ei
@@ -2326,7 +2344,7 @@ return;
 var formattedResults = mgrResults.map(r => ({
 'Employee ID': r.employee_id, 'Competency Code': r.comp_code, 'Type': r.type,
 'Ticked': r.ticked, 'Evidence': r.evidence, 'HR_Status': r.hr_status, 'Rating': r.proficiency_rating
-, 'Scoring Rule': r.scoring_rule || 'legacy-zero', 'Classification': r.scoring_rule === 'floor-one-v1' ? r.classification : undefined}));
+, 'Scoring Rule': r.scoring_rule || 'legacy-zero', 'Classification': r.scoring_rule === 'floor-one-v1' ? r.classification : undefined, 'Weight Profile': r.weight_profile, 'Weight Policy': r.weight_policy}));
 var gaps = [];
 for (var i = 0; i < APP.competencies.length; i++) {
 var comp = APP.competencies[i];
@@ -2399,7 +2417,7 @@ return;
 var formattedResults = mgrResults.map(r => ({
 'Employee ID': r.employee_id, 'Competency Code': r.comp_code, 'Type': r.type,
 'Ticked': r.ticked, 'Evidence': r.evidence, 'HR_Status': r.hr_status, 'Rating': r.proficiency_rating
-, 'Scoring Rule': r.scoring_rule || 'legacy-zero', 'Classification': r.scoring_rule === 'floor-one-v1' ? r.classification : undefined}));
+, 'Scoring Rule': r.scoring_rule || 'legacy-zero', 'Classification': r.scoring_rule === 'floor-one-v1' ? r.classification : undefined, 'Weight Profile': r.weight_profile, 'Weight Policy': r.weight_policy}));
 var gaps = [];
 for (var i = 0; i < APP.competencies.length; i++) {
 var comp = APP.competencies[i];
@@ -3123,7 +3141,7 @@ var critLevelOf = {};
 critList.forEach(function(c){ critLevelOf[(c.position_name || '').toUpperCase().trim()] = c.criticality || 'Critical Role'; });
 function tierOf(e){ var lv = critLevelOf[(e.position || '').toUpperCase().trim()] || ''; return TIERS.indexOf(lv) >= 0 ? lv : ''; }
 var critEmps = (allEmps || []).filter(function(e){ return tierOf(e); });
-function fmtRows(rows){ return latestOnly(rows).map(function(r){ return { 'Employee ID': r.employee_id, 'Competency Code': r.comp_code, 'Type': r.type, 'Ticked': r.ticked, 'Evidence': r.evidence, 'HR_Status': r.hr_status, 'Rating': r.proficiency_rating , 'Scoring Rule': r.scoring_rule || 'legacy-zero', 'Classification': r.scoring_rule === 'floor-one-v1' ? r.classification : undefined}; }); }
+function fmtRows(rows){ return latestOnly(rows).map(function(r){ return { 'Employee ID': r.employee_id, 'Competency Code': r.comp_code, 'Type': r.type, 'Ticked': r.ticked, 'Evidence': r.evidence, 'HR_Status': r.hr_status, 'Rating': r.proficiency_rating , 'Scoring Rule': r.scoring_rule || 'legacy-zero', 'Classification': r.scoring_rule === 'floor-one-v1' ? r.classification : undefined, 'Weight Profile': r.weight_profile, 'Weight Policy': r.weight_policy}; }); }
 function empStats(e) {
 var mRows = (allResults || []).filter(function(r){ return r.employee_id === e.employee_id && r.type === 'Manager'; });
 var anyPending = mRows.some(function(r){ return r.ticked && (r.hr_status === '' || r.hr_status === 'Pending' || r.hr_status === 'Returned'); });
@@ -3308,6 +3326,15 @@ html += '<td><button class="btn btn-sm btn-primary" onclick="loadHRRevEmp(\'' + 
 html += '</tbody></table></div></div>';
 box.innerHTML = html;
 }
+/* Review attachment display only. Reuses saved URLs; never changes storage permissions. */
+function cmsReviewAttachmentHTML(row){
+ var name=String(row.attachment_name||'').trim();
+ var raw=String(row.attachment_url||'').trim();
+ if(!raw)return '<div class="cms-review-file" style="margin:10px 0;font-size:12px;color:#64748b">'+(name?'Supporting file recorded: '+escapeHtml(name)+'. No file link was saved for this experience.':'No supporting file link saved for this experience.')+'</div>';
+ var url;try{url=new URL(raw);if(url.protocol!=='https:'||url.username||url.password)throw new Error('Invalid URL');}catch(e){return '<div class="cms-review-file" style="margin:10px 0;font-size:12px;color:#b45309">Supporting-file link is invalid. '+escapeHtml(name)+'</div>';}
+ return '<div class="cms-review-file" style="margin:10px 0;display:flex;gap:10px;align-items:center;flex-wrap:wrap"><a class="btn btn-outline" href="'+escapeHtml(url.href)+'" target="_blank" rel="noopener noreferrer" referrerpolicy="no-referrer" style="text-decoration:none;font-size:13px">View Supporting Evidence</a><span style="font-size:12px;color:#475569;overflow-wrap:anywhere">'+escapeHtml(name||'Supporting file')+'</span></div>';
+}
+
 async function loadHRRevEmp(id) {
 id = id || window._hrRevLast || ((document.getElementById('hrRevEmp') || {}).value || '');
 window._hrRevLast = id;
@@ -3336,12 +3363,14 @@ if (locked) {
 var ok = exp.hr_status === 'Approved';
 html += '<div class="exp-item ' + (ok ? 'ticked' : 'disapproved') + '"><div class="exp-text">' + escapeHtml(exp.experience_text || ('Experience ' + (exp.experience_index+1))) + ' ' + getClassificationBadge(exp.classification) + (notDemo ? ' <span class="badge badge-warning">Not Yet Demonstrated</span>' : '') + '</div>';
 if (exp.ticked && hasEvidence) html += '<div class="exp-evidence mgr-evidence"><strong>Evidence:</strong> ' + escapeHtml(exp.evidence) + '</div>';
+html += cmsReviewAttachmentHTML(exp);
 html += '<div style="margin-top:6px"><span class="badge ' + (ok ? 'badge-success' : 'badge-danger') + '">' + escapeHtml(exp.hr_status) + '</span> ' + aiNoteBadge(exp.ai_note) + '</div>';
 if (exp.hr_comment) html += '<div style="font-size:11px;color:var(--gray-500);margin-top:6px">Comment: ' + escapeHtml(exp.hr_comment) + '</div>';
 html += '</div>';
 } else {
 html += '<div class="exp-item ' + (returned ? 'returned' : (exp.ticked && hasEvidence ? 'ticked' : '')) + '"><div class="exp-text">' + escapeHtml(exp.experience_text || ('Experience ' + (exp.experience_index+1))) + ' ' + getClassificationBadge(exp.classification) + (notDemo ? ' <span class="badge badge-warning">Not Yet Demonstrated</span>' : '') + '</div>';
 if (exp.ticked && hasEvidence) html += '<div class="exp-evidence mgr-evidence"><strong>Evidence:</strong> ' + escapeHtml(exp.evidence) + '</div>';
+html += cmsReviewAttachmentHTML(exp);
 if (exp.ticked && !hasEvidence) html += '<div style="font-size:11px;color:var(--red);margin-top:4px">Ticked but no evidence: the new scoring rule applies rating 1 out of 5. Protected historical results remain unchanged.</div>';
 if (exp.ticked && hasEvidence) {
 html += '<div style="margin-top:6px;display:flex;gap:6px;align-items:center;flex-wrap:wrap">' + aiNoteBadge(exp.ai_note) + '<button type="button" class="btn btn-sm btn-outline" onclick="aiValidateOne(' + rcArg(exp.id) + ')">🤖 Validate</button><button type="button" class="btn btn-sm btn-outline" onclick="aiRefineOne(' + rcArg(exp.id) + ')">✍️ Refine</button></div><div id="airef-' + exp.id + '"></div>';
@@ -3423,7 +3452,7 @@ return;
 var formattedResults = mgrResults.map(r => ({
 'Employee ID': r.employee_id, 'Competency Code': r.comp_code, 'Type': r.type,
 'Ticked': r.ticked, 'Evidence': r.evidence, 'HR_Status': r.hr_status, 'Rating': r.proficiency_rating
-, 'Scoring Rule': r.scoring_rule || 'legacy-zero', 'Classification': r.scoring_rule === 'floor-one-v1' ? r.classification : undefined}));
+, 'Scoring Rule': r.scoring_rule || 'legacy-zero', 'Classification': r.scoring_rule === 'floor-one-v1' ? r.classification : undefined, 'Weight Profile': r.weight_profile, 'Weight Policy': r.weight_policy}));
 var gaps = [];
 for (var i = 0; i < APP.competencies.length; i++) {
 var comp = APP.competencies[i];
@@ -3635,7 +3664,7 @@ if (!who) return;
 who = who.trim().toLowerCase();
 const { data: allResults } = await _supabase.from('assessments').select('*').eq('employee_id', empId);
 var latest = latestOnly(allResults || []);
-var fr = latest.map(function(r){ return { 'Employee ID': r.employee_id, 'Competency Code': r.comp_code, 'Type': r.type, 'Ticked': r.ticked, 'Evidence': r.evidence, 'HR_Status': r.hr_status, 'Rating': r.proficiency_rating , 'Scoring Rule': r.scoring_rule || 'legacy-zero', 'Classification': r.scoring_rule === 'floor-one-v1' ? r.classification : undefined}; });
+var fr = latest.map(function(r){ return { 'Employee ID': r.employee_id, 'Competency Code': r.comp_code, 'Type': r.type, 'Ticked': r.ticked, 'Evidence': r.evidence, 'HR_Status': r.hr_status, 'Rating': r.proficiency_rating , 'Scoring Rule': r.scoring_rule || 'legacy-zero', 'Classification': r.scoring_rule === 'floor-one-v1' ? r.classification : undefined, 'Weight Profile': r.weight_profile, 'Weight Policy': r.weight_policy}; });
 var mgrScore = calculateOverallScore(empId, 'Manager', fr);
 var pRows = latest.filter(function(r){ return r.type === 'Prospective'; });
 var prospScore = pRows.length ? calculateOverallScore(empId, 'Prospective', fr) : 0;
@@ -3706,7 +3735,7 @@ if (!who) return;
 who = who.trim().toLowerCase();
 const { data: allResults } = await _supabase.from('assessments').select('*').eq('employee_id', empId);
 var latest = latestOnly(allResults || []);
-var fr = latest.map(function(r){ return { 'Employee ID': r.employee_id, 'Competency Code': r.comp_code, 'Type': r.type, 'Ticked': r.ticked, 'Evidence': r.evidence, 'HR_Status': r.hr_status, 'Rating': r.proficiency_rating , 'Scoring Rule': r.scoring_rule || 'legacy-zero', 'Classification': r.scoring_rule === 'floor-one-v1' ? r.classification : undefined}; });
+var fr = latest.map(function(r){ return { 'Employee ID': r.employee_id, 'Competency Code': r.comp_code, 'Type': r.type, 'Ticked': r.ticked, 'Evidence': r.evidence, 'HR_Status': r.hr_status, 'Rating': r.proficiency_rating , 'Scoring Rule': r.scoring_rule || 'legacy-zero', 'Classification': r.scoring_rule === 'floor-one-v1' ? r.classification : undefined, 'Weight Profile': r.weight_profile, 'Weight Policy': r.weight_policy}; });
 var mgrScore = calculateOverallScore(empId, 'Manager', fr);
 var pRows = latest.filter(function(r){ return r.type === 'Prospective'; });
 var prospScore = pRows.length ? calculateOverallScore(empId, 'Prospective', fr) : 0;
@@ -3778,7 +3807,7 @@ async function hohrData(empId) {
 const { data: emp } = await _supabase.from('employees').select('*').eq('employee_id', empId).single();
 const { data: allResults } = await _supabase.from('assessments').select('*').eq('employee_id', empId);
 var latest = latestOnly(allResults || []);
-var fr = latest.map(function(r){ return { 'Employee ID': r.employee_id, 'Competency Code': r.comp_code, 'Type': r.type, 'Ticked': r.ticked, 'Evidence': r.evidence, 'HR_Status': r.hr_status, 'Rating': r.proficiency_rating , 'Scoring Rule': r.scoring_rule || 'legacy-zero', 'Classification': r.scoring_rule === 'floor-one-v1' ? r.classification : undefined}; });
+var fr = latest.map(function(r){ return { 'Employee ID': r.employee_id, 'Competency Code': r.comp_code, 'Type': r.type, 'Ticked': r.ticked, 'Evidence': r.evidence, 'HR_Status': r.hr_status, 'Rating': r.proficiency_rating , 'Scoring Rule': r.scoring_rule || 'legacy-zero', 'Classification': r.scoring_rule === 'floor-one-v1' ? r.classification : undefined, 'Weight Profile': r.weight_profile, 'Weight Policy': r.weight_policy}; });
 var hasS = fr.some(function(r){ return r['Type'] === 'Self'; });
 var hasM = fr.some(function(r){ return r['Type'] === 'Manager'; });
 var hasP = fr.some(function(r){ return r['Type'] === 'Prospective'; });
@@ -3902,7 +3931,7 @@ var path = document.getElementById('hohrPath').value;
 const { data: emp } = await _supabase.from('employees').select('*').eq('employee_id', empId).single();
 const { data: allResults } = await _supabase.from('assessments').select('*').eq('employee_id', empId);
 var latest = latestOnly(allResults || []);
-var fr = latest.map(function(r){ return { 'Employee ID': r.employee_id, 'Competency Code': r.comp_code, 'Type': r.type, 'Ticked': r.ticked, 'Evidence': r.evidence, 'HR_Status': r.hr_status, 'Rating': r.proficiency_rating , 'Scoring Rule': r.scoring_rule || 'legacy-zero', 'Classification': r.scoring_rule === 'floor-one-v1' ? r.classification : undefined}; });
+var fr = latest.map(function(r){ return { 'Employee ID': r.employee_id, 'Competency Code': r.comp_code, 'Type': r.type, 'Ticked': r.ticked, 'Evidence': r.evidence, 'HR_Status': r.hr_status, 'Rating': r.proficiency_rating , 'Scoring Rule': r.scoring_rule || 'legacy-zero', 'Classification': r.scoring_rule === 'floor-one-v1' ? r.classification : undefined, 'Weight Profile': r.weight_profile, 'Weight Policy': r.weight_policy}; });
 var mgrScore = calculateOverallScore(empId, 'Manager', fr);
 var pRows = latest.filter(function(r){ return r.type === 'Prospective'; });
 var prospScore = pRows.length ? calculateOverallScore(empId, 'Prospective', fr) : 0;
@@ -3930,7 +3959,7 @@ const { data: dup } = await _supabase.from('report_chain').select('id').eq('empl
 if (dup && dup.length) { showToast('A report for ' + emp.employee_name + ' is already in the decision chain'); return; }
 const { data: allResults } = await _supabase.from('assessments').select('*').eq('employee_id', empId);
 var latest = latestOnly(allResults || []);
-var fr = latest.map(function(r){ return { 'Employee ID': r.employee_id, 'Competency Code': r.comp_code, 'Type': r.type, 'Ticked': r.ticked, 'Evidence': r.evidence, 'HR_Status': r.hr_status, 'Rating': r.proficiency_rating , 'Scoring Rule': r.scoring_rule || 'legacy-zero', 'Classification': r.scoring_rule === 'floor-one-v1' ? r.classification : undefined}; });
+var fr = latest.map(function(r){ return { 'Employee ID': r.employee_id, 'Competency Code': r.comp_code, 'Type': r.type, 'Ticked': r.ticked, 'Evidence': r.evidence, 'HR_Status': r.hr_status, 'Rating': r.proficiency_rating , 'Scoring Rule': r.scoring_rule || 'legacy-zero', 'Classification': r.scoring_rule === 'floor-one-v1' ? r.classification : undefined, 'Weight Profile': r.weight_profile, 'Weight Policy': r.weight_policy}; });
 var mgrScore = calculateOverallScore(empId, 'Manager', fr);
 var pRows = latest.filter(function(r){ return r.type === 'Prospective'; });
 var prospScore = pRows.length ? calculateOverallScore(empId, 'Prospective', fr) : 0;
@@ -3964,7 +3993,7 @@ var submittedIds = {};
 var html = '<div class="card"><div class="card-title">Assessed Staff</div><div class="table-wrap"><table><thead><tr><th>Employee</th><th>Position</th><th>Company</th><th>Self</th><th>Manager</th><th>Prospective</th><th>Readiness</th></tr></thead><tbody>';
 (allEmps || []).forEach(function(emp) {
 var latest = latestOnly((allResults || []).filter(function(r){ return r.employee_id === emp.employee_id; }));
-var fr = latest.map(function(r){ return { 'Employee ID': r.employee_id, 'Competency Code': r.comp_code, 'Type': r.type, 'Ticked': r.ticked, 'Evidence': r.evidence, 'HR_Status': r.hr_status, 'Rating': r.proficiency_rating , 'Scoring Rule': r.scoring_rule || 'legacy-zero', 'Classification': r.scoring_rule === 'floor-one-v1' ? r.classification : undefined}; });
+var fr = latest.map(function(r){ return { 'Employee ID': r.employee_id, 'Competency Code': r.comp_code, 'Type': r.type, 'Ticked': r.ticked, 'Evidence': r.evidence, 'HR_Status': r.hr_status, 'Rating': r.proficiency_rating , 'Scoring Rule': r.scoring_rule || 'legacy-zero', 'Classification': r.scoring_rule === 'floor-one-v1' ? r.classification : undefined, 'Weight Profile': r.weight_profile, 'Weight Policy': r.weight_policy}; });
 var hasM = fr.some(function(r){ return r['Type'] === 'Manager'; });
 if (!hasM) return;
 if (!submittedIds[emp.employee_id]) return;
@@ -3987,7 +4016,7 @@ var any = false;
 (allEmps || []).forEach(function(emp) {
 var mgrResults = latestOnly((allResults || []).filter(function(r){ return r.employee_id === emp.employee_id; })).filter(function(r){ return r.type === 'Manager'; });
 if (!mgrResults.length) return;
-var fr = mgrResults.map(function(r){ return { 'Employee ID': r.employee_id, 'Competency Code': r.comp_code, 'Type': r.type, 'Ticked': r.ticked, 'Evidence': r.evidence, 'HR_Status': r.hr_status, 'Rating': r.proficiency_rating , 'Scoring Rule': r.scoring_rule || 'legacy-zero', 'Classification': r.scoring_rule === 'floor-one-v1' ? r.classification : undefined}; });
+var fr = mgrResults.map(function(r){ return { 'Employee ID': r.employee_id, 'Competency Code': r.comp_code, 'Type': r.type, 'Ticked': r.ticked, 'Evidence': r.evidence, 'HR_Status': r.hr_status, 'Rating': r.proficiency_rating , 'Scoring Rule': r.scoring_rule || 'legacy-zero', 'Classification': r.scoring_rule === 'floor-one-v1' ? r.classification : undefined, 'Weight Profile': r.weight_profile, 'Weight Policy': r.weight_policy}; });
 var strengths = [];
 for (var i = 0; i < APP.competencies.length; i++) {
 var comp = APP.competencies[i];
@@ -4212,7 +4241,7 @@ const { data: allResults } = await _supabase.from('assessments').select('*');
 var mgrFR = {};
 (empRows || []).forEach(function(e){
 var rows = (allResults || []).filter(function(r){ return r.employee_id === e.employee_id && r.type === 'Manager'; });
-mgrFR[e.employee_id] = latestOnly(rows).map(function(r){ return { 'Employee ID': r.employee_id, 'Competency Code': r.comp_code, 'Type': r.type, 'Ticked': r.ticked, 'Evidence': r.evidence, 'HR_Status': r.hr_status, 'Rating': r.proficiency_rating , 'Scoring Rule': r.scoring_rule || 'legacy-zero', 'Classification': r.scoring_rule === 'floor-one-v1' ? r.classification : undefined}; });
+mgrFR[e.employee_id] = latestOnly(rows).map(function(r){ return { 'Employee ID': r.employee_id, 'Competency Code': r.comp_code, 'Type': r.type, 'Ticked': r.ticked, 'Evidence': r.evidence, 'HR_Status': r.hr_status, 'Rating': r.proficiency_rating , 'Scoring Rule': r.scoring_rule || 'legacy-zero', 'Classification': r.scoring_rule === 'floor-one-v1' ? r.classification : undefined, 'Weight Profile': r.weight_profile, 'Weight Policy': r.weight_policy}; });
 });
 var empStats = {};
 (empRows || []).forEach(function(e){
@@ -4220,9 +4249,9 @@ var fr = mgrFR[e.employee_id];
 var hasM = fr.length > 0;
 var latest = latestOnly((allResults || []).filter(function(r){ return r.employee_id === e.employee_id; }));
 var pRows = latest.filter(function(r){ return r.type === 'Prospective'; });
-var pfr = latestOnly(pRows).map(function(r){ return { 'Employee ID': r.employee_id, 'Competency Code': r.comp_code, 'Type': r.type, 'Ticked': r.ticked, 'Evidence': r.evidence, 'HR_Status': r.hr_status, 'Rating': r.proficiency_rating , 'Scoring Rule': r.scoring_rule || 'legacy-zero', 'Classification': r.scoring_rule === 'floor-one-v1' ? r.classification : undefined}; });
+var pfr = latestOnly(pRows).map(function(r){ return { 'Employee ID': r.employee_id, 'Competency Code': r.comp_code, 'Type': r.type, 'Ticked': r.ticked, 'Evidence': r.evidence, 'HR_Status': r.hr_status, 'Rating': r.proficiency_rating , 'Scoring Rule': r.scoring_rule || 'legacy-zero', 'Classification': r.scoring_rule === 'floor-one-v1' ? r.classification : undefined, 'Weight Profile': r.weight_profile, 'Weight Policy': r.weight_policy}; });
 var sRows2 = latest.filter(function(r){ return r.type === 'Self'; });
-var sfr2 = sRows2.map(function(r){ return { 'Employee ID': r.employee_id, 'Competency Code': r.comp_code, 'Type': r.type, 'Ticked': r.ticked, 'Evidence': r.evidence, 'HR_Status': r.hr_status, 'Rating': r.proficiency_rating , 'Scoring Rule': r.scoring_rule || 'legacy-zero', 'Classification': r.scoring_rule === 'floor-one-v1' ? r.classification : undefined}; });
+var sfr2 = sRows2.map(function(r){ return { 'Employee ID': r.employee_id, 'Competency Code': r.comp_code, 'Type': r.type, 'Ticked': r.ticked, 'Evidence': r.evidence, 'HR_Status': r.hr_status, 'Rating': r.proficiency_rating , 'Scoring Rule': r.scoring_rule || 'legacy-zero', 'Classification': r.scoring_rule === 'floor-one-v1' ? r.classification : undefined, 'Weight Profile': r.weight_profile, 'Weight Policy': r.weight_policy}; });
 var hasS2 = sRows2.length > 0;
 empStats[e.employee_id] = { hasM: hasM, mgrScore: hasM ? calculateOverallScore(e.employee_id, 'Manager', fr) : 0, hasS: hasS2, selfScore: hasS2 ? calculateOverallScore(e.employee_id, 'Self', sfr2) : 0, prospScore: pRows.length ? calculateOverallScore(e.employee_id, 'Prospective', pfr) : 0, prospRole: pRows.length ? (pRows[0].prospective_role || '') : '' };
 });
@@ -4411,7 +4440,7 @@ const { data: allResults } = await _supabase.from('assessments').select('*');
 var mgrFR = {};
 (empRows || []).forEach(function(e){
 var rows = (allResults || []).filter(function(r){ return r.employee_id === e.employee_id && r.type === 'Manager'; });
-mgrFR[e.employee_id] = latestOnly(rows).map(function(r){ return { 'Employee ID': r.employee_id, 'Competency Code': r.comp_code, 'Type': r.type, 'Ticked': r.ticked, 'Evidence': r.evidence, 'HR_Status': r.hr_status, 'Rating': r.proficiency_rating , 'Scoring Rule': r.scoring_rule || 'legacy-zero', 'Classification': r.scoring_rule === 'floor-one-v1' ? r.classification : undefined}; });
+mgrFR[e.employee_id] = latestOnly(rows).map(function(r){ return { 'Employee ID': r.employee_id, 'Competency Code': r.comp_code, 'Type': r.type, 'Ticked': r.ticked, 'Evidence': r.evidence, 'HR_Status': r.hr_status, 'Rating': r.proficiency_rating , 'Scoring Rule': r.scoring_rule || 'legacy-zero', 'Classification': r.scoring_rule === 'floor-one-v1' ? r.classification : undefined, 'Weight Profile': r.weight_profile, 'Weight Policy': r.weight_policy}; });
 });
 var empStats = {};
 (empRows || []).forEach(function(e){
@@ -4419,9 +4448,9 @@ var fr = mgrFR[e.employee_id];
 var hasM = fr.length > 0;
 var latest = latestOnly((allResults || []).filter(function(r){ return r.employee_id === e.employee_id; }));
 var pRows = latest.filter(function(r){ return r.type === 'Prospective'; });
-var pfr = latestOnly(pRows).map(function(r){ return { 'Employee ID': r.employee_id, 'Competency Code': r.comp_code, 'Type': r.type, 'Ticked': r.ticked, 'Evidence': r.evidence, 'HR_Status': r.hr_status, 'Rating': r.proficiency_rating , 'Scoring Rule': r.scoring_rule || 'legacy-zero', 'Classification': r.scoring_rule === 'floor-one-v1' ? r.classification : undefined}; });
+var pfr = latestOnly(pRows).map(function(r){ return { 'Employee ID': r.employee_id, 'Competency Code': r.comp_code, 'Type': r.type, 'Ticked': r.ticked, 'Evidence': r.evidence, 'HR_Status': r.hr_status, 'Rating': r.proficiency_rating , 'Scoring Rule': r.scoring_rule || 'legacy-zero', 'Classification': r.scoring_rule === 'floor-one-v1' ? r.classification : undefined, 'Weight Profile': r.weight_profile, 'Weight Policy': r.weight_policy}; });
 var sRows2 = latestOnly((allResults || []).filter(function(r){ return r.employee_id === e.employee_id && r.type === 'Self'; }));
-var sfr2 = sRows2.map(function(r){ return { 'Employee ID': r.employee_id, 'Competency Code': r.comp_code, 'Type': r.type, 'Ticked': r.ticked, 'Evidence': r.evidence, 'HR_Status': r.hr_status, 'Rating': r.proficiency_rating , 'Scoring Rule': r.scoring_rule || 'legacy-zero', 'Classification': r.scoring_rule === 'floor-one-v1' ? r.classification : undefined}; });
+var sfr2 = sRows2.map(function(r){ return { 'Employee ID': r.employee_id, 'Competency Code': r.comp_code, 'Type': r.type, 'Ticked': r.ticked, 'Evidence': r.evidence, 'HR_Status': r.hr_status, 'Rating': r.proficiency_rating , 'Scoring Rule': r.scoring_rule || 'legacy-zero', 'Classification': r.scoring_rule === 'floor-one-v1' ? r.classification : undefined, 'Weight Profile': r.weight_profile, 'Weight Policy': r.weight_policy}; });
 var hasS2 = sfr2.length > 0;
 empStats[e.employee_id] = { hasM: hasM, mgrScore: hasM ? calculateOverallScore(e.employee_id, 'Manager', fr) : 0, hasS: hasS2, selfScore: hasS2 ? calculateOverallScore(e.employee_id, 'Self', sfr2) : 0, prospScore: pRows.length ? calculateOverallScore(e.employee_id, 'Prospective', pfr) : 0, prospRole: pRows.length ? (pRows[0].prospective_role || '') : '' };
 });
@@ -4596,7 +4625,7 @@ const { data: allResults, error } = await _supabase.from('assessments').select('
 if (error) throw new Error(error.message);
 if (!allResults || !allResults.length) return '<p>No saved assessments were found for this employee. The report itself may still exist.</p>';
 var latest = latestOnly(allResults || []);
-var fr = latest.map(function(r){ return { 'Employee ID': r.employee_id, 'Competency Code': r.comp_code, 'Type': r.type, 'Ticked': r.ticked, 'Evidence': r.evidence, 'HR_Status': r.hr_status, 'Rating': r.proficiency_rating, 'Classification': r.classification , 'Scoring Rule': r.scoring_rule || 'legacy-zero'}; });
+var fr = latest.map(function(r){ return { 'Employee ID': r.employee_id, 'Competency Code': r.comp_code, 'Type': r.type, 'Ticked': r.ticked, 'Evidence': r.evidence, 'HR_Status': r.hr_status, 'Rating': r.proficiency_rating, 'Classification': r.classification , 'Scoring Rule': r.scoring_rule || 'legacy-zero', 'Weight Profile': r.weight_profile, 'Weight Policy': r.weight_policy}; });
 var html = cmsRatingLegendHTML()+cmsPolicyNote(allResults || [])+'<div class="score-rings">';
 if (fr.some(function(r){ return r['Type'] === 'Self'; })) html += makeRing(calculateOverallScore(empId, 'Self', fr), '#3b82f6', 'Self');
 if (fr.some(function(r){ return r['Type'] === 'Manager'; })) html += makeRing(calculateOverallScore(empId, 'Manager', fr), '#059669', 'Manager (Current)');
@@ -4635,7 +4664,7 @@ function scoreBreakdownHTML(rows, type) {
 var trs = (rows || []).filter(function(r){ return r.type === type; });
 if (!trs.length) return '';
 var tierNames = { critical: 'Critical', important: 'Important', valueAdd: 'Value-Add' };
-var html = cmsRatingLegendHTML()+cmsPolicyNote(trs)+'<div class="card"><div class="card-title">🧮 Score Summary — ' + escapeHtml(type) + ' Assessment</div><div style="font-size:12px">';
+var html = cmsRatingLegendHTML()+cmsPolicyNote(trs)+cmsSavedWeightNote(trs)+'<div class="card"><div class="card-title">🧮 Score Summary — ' + escapeHtml(type) + ' Assessment</div><div style="font-size:12px">';
 var totalW = 0, sumWP = 0, num = 0;
 for (var i = 0; i < APP.competencies.length; i++) {
 var comp = APP.competencies[i];
@@ -4661,7 +4690,7 @@ tierLine.push(tierNames[t] + ' ' + s.toFixed(2) + '/' + maxes[t].toFixed(2));
 }
 });
 var pct = Math.round((compScore / 5) * 100);
-var w = parseFloat(comp.weight) || 0;
+var w=cmsAssessmentWeight(crs,comp.code,comp.weight);
 totalW += w; sumWP += pct * w;
 html += '<div style="padding:6px 0;border-bottom:1px dashed #e2e8f0">';
 html += '<div style="display:flex;justify-content:space-between;gap:8px;font-weight:700"><span>' + num + '. ' + escapeHtml(comp.competency) + '</span><span style="color:var(--primary);white-space:nowrap">' + compScore.toFixed(2) + ' / 5 = ' + pct + '%</span></div>';
@@ -4694,7 +4723,7 @@ async function toggleScoreBreakdown(empId, type, boxId) {
   var types=['Self','Manager','Prospective Self','Prospective'].filter(t=>latest.some(r=>r.type===t));
   box.replaceChildren();
   if(!types.length){box.textContent='No saved assessments were found for this employee. The HR report may still exist.';return;}
-  var note=document.createElement('p');note.textContent='Calculation uses the latest saved round for each assessment type and the current competency weights. It may differ from a historical report snapshot.';box.appendChild(note);
+  var note=document.createElement('p');note.textContent='Calculation uses the latest saved round for each assessment type and the the saved weighting profile for those rounds. It may differ from a historical report snapshot.';box.appendChild(note);
   var label=document.createElement('label');label.textContent='Assessment type';box.appendChild(label);
   var select=document.createElement('select');select.setAttribute('aria-label','Assessment type for score calculation');label.appendChild(select);
   types.forEach(t=>select.add(new Option(t,t)));
@@ -5021,7 +5050,7 @@ html += '<div class="table-wrap"><table class="staff-table"><thead><tr><th>Emplo
 (allEmps || []).forEach(function(emp) {
 if (restrictHOHR && !submittedIds[emp.employee_id]) return;
 var latest = latestOnly((allResults || []).filter(function(r){ return r.employee_id === emp.employee_id; }));
-var fr = latest.map(function(r){ return { 'Employee ID': r.employee_id, 'Competency Code': r.comp_code, 'Type': r.type, 'Ticked': r.ticked, 'Evidence': r.evidence, 'HR_Status': r.hr_status, 'Rating': r.proficiency_rating , 'Scoring Rule': r.scoring_rule || 'legacy-zero', 'Classification': r.scoring_rule === 'floor-one-v1' ? r.classification : undefined}; });
+var fr = latest.map(function(r){ return { 'Employee ID': r.employee_id, 'Competency Code': r.comp_code, 'Type': r.type, 'Ticked': r.ticked, 'Evidence': r.evidence, 'HR_Status': r.hr_status, 'Rating': r.proficiency_rating , 'Scoring Rule': r.scoring_rule || 'legacy-zero', 'Classification': r.scoring_rule === 'floor-one-v1' ? r.classification : undefined, 'Weight Profile': r.weight_profile, 'Weight Policy': r.weight_policy}; });
 var hasS = fr.some(function(r){ return r['Type'] === 'Self'; });
 var hasM = fr.some(function(r){ return r['Type'] === 'Manager'; });
 var hasP = fr.some(function(r){ return r['Type'] === 'Prospective'; });
@@ -5078,7 +5107,7 @@ const { data: emp } = await _supabase.from('employees').select('*').eq('employee
 const { data: allResults } = await _supabase.from('assessments').select('*').eq('employee_id', empId);
 if (!emp) { box.innerHTML = '<div class="card"><p>Employee not found</p></div>'; return; }
 var latest = latestOnly(allResults || []);
-var fr = latest.map(function(r){ return { 'Employee ID': r.employee_id, 'Competency Code': r.comp_code, 'Type': r.type, 'Ticked': r.ticked, 'Evidence': r.evidence, 'HR_Status': r.hr_status, 'Rating': r.proficiency_rating , 'Scoring Rule': r.scoring_rule || 'legacy-zero', 'Classification': r.scoring_rule === 'floor-one-v1' ? r.classification : undefined}; });
+var fr = latest.map(function(r){ return { 'Employee ID': r.employee_id, 'Competency Code': r.comp_code, 'Type': r.type, 'Ticked': r.ticked, 'Evidence': r.evidence, 'HR_Status': r.hr_status, 'Rating': r.proficiency_rating , 'Scoring Rule': r.scoring_rule || 'legacy-zero', 'Classification': r.scoring_rule === 'floor-one-v1' ? r.classification : undefined, 'Weight Profile': r.weight_profile, 'Weight Policy': r.weight_policy}; });
 var hasS = fr.some(function(r){ return r['Type'] === 'Self'; });
 var hasM = fr.some(function(r){ return r['Type'] === 'Manager'; });
 var hasP = fr.some(function(r){ return r['Type'] === 'Prospective'; });
@@ -5668,7 +5697,7 @@ async function kaiAnswer(q) {
     + 'SELF ASSESSMENT: employee ticks experiences, writes evidence, rates 1-5, attaches proof; one submission; a redo needs an HR-approved redo request.\n'
     + 'MANAGER ASSESSMENT: manager assesses the current role; if already assessed, select "Current Role Assessment" and send a redo request — the form unlocks when HR Admin approves.\n'
     + 'PROSPECTIVE: unlocks after both current-role assessments and HR review, with current-role decision score (70% Manager + 30% Self) >= 80%; prospective position must be same level or higher, never the current role. Prospective scoring remains unchanged.\n'
-    + 'SCORING: experiences tiered Critical / Important / Value-Add; points = rating ÷ 5 × tier weight; competency weights total 100% (Core 7% each; Functional 12/12/12/12/8/8/8). Readiness: 80%+ Strong Performer / promotion-eligible; 71-80 Proficient; 61-70 Developing; 51-60 Below Expectations; lower = Critical Gap. Strengths ≥ 70%; Gaps < 70%.\n'
+    + 'SCORING: experiences tiered Critical / Important / Value-Add; points = rating ÷ 5 × tier weight; competency weights total 100% (Core 5% each; Functional 14/14/14/14/8/8/8). Readiness: 80%+ Strong Performer / promotion-eligible; 71-80 Proficient; 61-70 Developing; 51-60 Below Expectations; lower = Critical Gap. Strengths ≥ 70%; Gaps < 70%.\n'
     + 'VISIBILITY: employees & managers see scores only after HR Admin approves/disapproves ALL Self + Manager experiences and completed returns (locked before that). HR Admin & Head of HR see everything.\n'
     + 'HR ADMIN: Assessment Review (approve/return/disapprove each experience), Redo Requests, staff add/delete, competency library, positions & criticality registry, PDF/Excel/Email exports.\n'
     + 'HEAD OF HR: decision queue (Promotion / Development Plan / Hold / Escalate to C-Suite / Return), oversight, report approvals.\n'
@@ -5715,7 +5744,7 @@ async function kaiAnswer(q) {
     + 'SELF ASSESSMENT: tick experiences, evidence, rate 1-5, attach proof; one submission; redo needs HR approval.\n'
     + 'MANAGER ASSESSMENT: assess current role; redo via request form when HR approves.\n'
     + 'PROSPECTIVE: unlocks when Final Average >= 80%; position must be same/higher level; 80%+ joins Progression-Ready Pool.\n'
-    + 'SCORING: tiers Critical/Important/Value-Add; points = rating/5 x tier weight; weights Core 7% each, Functional 12/12/12/12/8/8/8; '
+    + 'SCORING: tiers Critical/Important/Value-Add; points = rating/5 x tier weight; weights Core 5% each, Functional 14/14/14/14/8/8/8; '
     + 'Readiness: 80%+ Strong Performer, 71-80 Proficient, 61-70 Developing, 51-60 Below Expectations, <51 Critical Gap; Strengths >= 70%, Gaps < 70%.\n'
     + 'VISIBILITY: scores locked until HR Admin approves/disapproves ALL experiences. HR Admin & HOHR see everything.\n'
     + 'HR ADMIN: Assessment Review, Redo Requests, staff management, competency library, positions registry, exports.\n'
@@ -5932,25 +5961,14 @@ function isOpComp(name){ var n=(name||'').toString().toUpperCase(); return n.ind
 function isBehComp(name){ var n=(name||'').toString().toUpperCase(); return n.indexOf('LEARN')>=0 || n.indexOf('PEOPLE')>=0 || n.indexOf('LEADER')>=0; }
 function compMinExps(name){ return isOpComp(name) ? 3 : (isBehComp(name) ? 2 : 0); }
 function enforceFrameworkRules(comps){
-var notes = [];
-comps.forEach(function(c){
-var min = compMinExps(c.name); var cnt = (c.experiences || []).length;
-if (min && cnt < min) notes.push(c.name + ': needs at least ' + min + ' experiences (has ' + cnt + ') — add more below.');
+var notes=[];
+comps.forEach(function(c){var min=compMinExps(c.name);if(min&&(c.experiences||[]).length<min)notes.push(c.name+': needs at least '+min+' experiences.');
+ if(String(c.code||'').startsWith('CC'))c.weight=5;
+ else if(isOpComp(c.name))c.weight=14;
+ else if(isBehComp(c.name))c.weight=8;
+ else notes.push('Unrecognized competency: '+c.name+'. Use the approved eleven-competency catalogue.');
 });
-var op = comps.filter(function(c){ return isOpComp(c.name); });
-var beh = comps.filter(function(c){ return isBehComp(c.name); });
-var total = comps.reduce(function(a,c){ return a + (parseFloat(c.weight)||0); }, 0);
-var minOp = op.length ? Math.min.apply(null, op.map(function(c){ return parseFloat(c.weight)||0; })) : 0;
-var maxBeh = beh.length ? Math.max.apply(null, beh.map(function(c){ return parseFloat(c.weight)||0; })) : 0;
-if (op.length === 4 && beh.length === 3 && (minOp <= maxBeh || Math.round(total) !== 100)) {
-op.forEach(function(c){ c.weight = 16; });
-beh.forEach(function(c){ c.weight = 12; });
-notes.push('Weights auto-set: first four 16% each, last three 12% each (total 100%).');
-} else if (comps.length && Math.round(total) !== 100) {
-var diff = Math.round((100 - total) * 100) / 100;
-comps[comps.length - 1].weight = Math.round(((parseFloat(comps[comps.length - 1].weight)||0) + diff) * 100) / 100;
-notes.push('Weights adjusted so the total is exactly 100%.');
-}
+notes.push('Current weights: 4 Core at 5% (20%), first four functional at 14% (56%), last three at 8% (24%). Seven non-Core competencies total 80%, with 20% Core added separately.');
 return notes;
 }
 async function aiGenerateComps() {
@@ -5960,7 +5978,7 @@ if (depEl && posEl) { dep = (depEl.value || '').trim(); pos = (posEl.value || ''
 else { dep = (APP.mgrDep || '').trim(); var mp = document.getElementById('mgrCompPos'); if (mp) pos = (mp.value || '').trim(); }
 if (!dep || !pos) { showToast('Select department and position first'); return; }
 showToast('✍️AI is drafting the framework for ' + pos + '...');
-var prompt = 'You are an HR competency framework expert. Create the FUNCTIONAL competencies for the position "' + pos + '" in the "' + dep + '" department. The 4 constant Core competencies (Customer Centric, Bold, Trustworthy, Collaboration) already exist at 7% each — do NOT include them. Return ONLY valid JSON (no markdown) in exactly this shape: {"competencies":[{"code":"2-4 letter code not starting with CC","name":"Competency Name","category":"Functional","weight":12,"experiences":[{"text":"Has ...","classification":"Must-Have (Critical)"}]}]} Rules: use these 7 functional competencies where they fit the role: Analytical Thinking & Problem Solving (12%), Judgement & Decision Making (12%), Planning (12%), Execution (12%), Continuous Learning & Improvement (8%), People Skills (8%), Leadership (8%) — functional weights must total 72 because the 4 Core add 28; MINIMUM 3 experiences for the first four and MINIMUM 2 for the last three; categories: first four Functional, People Skills = People, Leadership = Leadership; classification only one of "Must-Have (Critical)", "Important (Performance Enhancing)", "Value-Add (Developmental)"; every experience starts with "Has ".';
+var prompt = 'You are an HR competency framework expert. Create the FUNCTIONAL competencies for the position "' + pos + '" in the "' + dep + '" department. The 4 constant Core competencies (Customer Centric, Bold, Trustworthy, Collaboration) already exist at 5% each — do NOT include them. Return ONLY valid JSON (no markdown) in exactly this shape: {"competencies":[{"code":"2-4 letter code not starting with CC","name":"Competency Name","category":"Functional","weight":14,"experiences":[{"text":"Has ...","classification":"Must-Have (Critical)"}]}]} Rules: use these 7 functional competencies where they fit the role: Analytical Thinking & Problem Solving (14%), Judgement & Decision Making (14%), Planning (14%), Execution (14%), Continuous Learning & Improvement (8%), People Skills (8%), Leadership (8%) — functional weights must total 80 because the 4 Core add 20; MINIMUM 3 experiences for the first four and MINIMUM 2 for the last three; categories: first four Functional, People Skills = People, Leadership = Leadership; classification only one of "Must-Have (Critical)", "Important (Performance Enhancing)", "Value-Add (Developmental)"; every experience starts with "Has ".';
 try {
 var txt = await callAI(prompt, true);
 if (!txt) return;
@@ -7167,7 +7185,7 @@ const { data: myTasks } = await _supabase.from('comp_tasks').select('*').eq('sta
 var pendTasks = (myTasks || []).filter(function(t){ return (t.manager_email || '').toLowerCase() === (APP.user.email || '').toLowerCase(); });
 var html = '<div class="card"><div class="card-title">🛠 Set Competencies — experiences for your positions</div>';
 html += '<p style="font-size:12px;color:var(--gray-500);margin-bottom:8px">This is your WORK page: pick a department and position, then draft or edit the experiences with AI help. The competency list itself (codes & weights) is managed by HR — use the Competency Library page to view it.</p>';
-html += '<p style="font-size:11px;color:var(--primary-dark);background:var(--primary-light);border:1px solid var(--gray-200);border-radius:8px;padding:8px 10px;margin-bottom:12px">📏 AI setup rules: Analytical Thinking, Judgement & Decision Making, Planning and Execution need <strong>at least 3 experiences</strong> each; Continuous Learning, People Skills and Leadership need <strong>at least 2</strong> each (more can be added). The first four always carry a <strong>higher weight</strong> than the last three (16% vs 12%), and total weight = <strong>100%</strong>.</p>';
+html += '<p style="font-size:11px;color:var(--primary-dark);background:var(--primary-light);border:1px solid var(--gray-200);border-radius:8px;padding:8px 10px;margin-bottom:12px">📏 AI setup rules: Analytical Thinking, Judgement & Decision Making, Planning and Execution need <strong>at least 3 experiences</strong> each; Continuous Learning, People Skills and Leadership need <strong>at least 2</strong> each (more can be added). The first four always carry a <strong>higher weight</strong> than the last three (14% vs 8%, plus four Core at 5% each), and total weight = <strong>100%</strong>.</p>';
 if (pendTasks.length) html += '<p style="font-size:11px;color:var(--orange);background:var(--orange-light);border-radius:8px;padding:8px 10px;margin-bottom:10px">📤 HR requested you to set competencies for: ' + pendTasks.map(function(t){ return '<strong>' + escapeHtml(t.position_name) + '</strong> (' + escapeHtml(t.department) + ')'; }).join(', ') + (pendTasks[0].due_date ? ' — due ' + escapeHtml(pendTasks[0].due_date) : '') + '.</p>';
 html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px"><div class="form-group"><label>Department</label><select id="mgrSetDep" onchange="mgrSetDepChanged()">' + info.list.map(function(d){ return '<option' + (d === APP.mgrDep ? ' selected' : '') + '>' + escapeHtml(d) + '</option>'; }).join('') + '</select></div>';
 html += '<div class="form-group"><label>Position</label><select id="mgrCompPos" onchange="loadMgrSetCompDetail()"><option value="">-- Select --</option></select></div></div>';
@@ -7264,7 +7282,7 @@ var depList = Object.keys(deps).sort();
 if (!APP.mgrDep || deps[APP.mgrDep] === undefined) APP.mgrDep = depList[0] || (me ? (me.department || '') : '');
 var html = '<div class="card"><div class="card-title">Competency Library — set experiences for your positions</div>';
 html += '<p style="font-size:12px;color:var(--gray-500);margin-bottom:8px">Competency names, codes and weights are <strong>constant</strong> (owned by HR). Pick your department and position, then add the experiences under each competency and classify each as Critical / Important / Value-Add.</p>';
-html += '<p style="font-size:11px;color:var(--primary-dark);background:var(--primary-light);border:1px solid var(--gray-200);border-radius:8px;padding:8px 10px;margin-bottom:12px">📏 AI setup rules: Analytical Thinking, Judgement & Decision Making, Planning and Execution need <strong>at least 3 experiences</strong> each; Continuous Learning, People Skills and Leadership need <strong>at least 2</strong> each (more can be added). The first four always carry a <strong>higher weight</strong> than the last three (16% vs 12%), and total weight = <strong>100%</strong>.</p>';
+html += '<p style="font-size:11px;color:var(--primary-dark);background:var(--primary-light);border:1px solid var(--gray-200);border-radius:8px;padding:8px 10px;margin-bottom:12px">📏 AI setup rules: Analytical Thinking, Judgement & Decision Making, Planning and Execution need <strong>at least 3 experiences</strong> each; Continuous Learning, People Skills and Leadership need <strong>at least 2</strong> each (more can be added). The first four always carry a <strong>higher weight</strong> than the last three (14% vs 8%, plus four Core at 5% each), and total weight = <strong>100%</strong>.</p>';
 html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px"><div class="form-group"><label>Department</label><select id="mgrCompDep" onchange="mgrCompDepChanged()">' + (depList.length ? depList.map(function(d){ return '<option' + (d === APP.mgrDep ? ' selected' : '') + '>' + escapeHtml(d) + '</option>'; }).join('') : '<option value="">No department on record</option>') + '</select></div>';
 html += '<div class="form-group"><label>Position</label><select id="mgrCompPos" onchange="loadMgrCompDetail()"><option value="">-- Select --</option></select></div></div>';
 html += '<button class="btn btn-outline" onclick="showJdBox()">✨ AI Competency Builder</button> <button class="btn btn-success" onclick="compBulkPick()">⬆ Bulk Upload</button> <button class="btn btn-outline" onclick="compBulkTemplate()">⬇ Template</button><input type="file" id="compBulkFile" accept=".xlsx,.xls,.csv" style="display:none" onchange="compBulkUpload(this)"></div><div id="mgrCompContent"></div>';
@@ -7600,7 +7618,7 @@ var trs = rows.filter(function(r){ return r.type === type; });
 var rounds = {};
 trs.forEach(function(r){ var rd = r.assessment_round || 1; if (!rounds[rd]) rounds[rd] = []; rounds[rd].push(r); });
 Object.keys(rounds).sort(function(a,b){ return a-b; }).forEach(function(rd) {
-var fr = rounds[rd].map(function(r){ return { 'Employee ID': r.employee_id, 'Competency Code': r.comp_code, 'Type': r.type, 'Ticked': r.ticked, 'Evidence': r.evidence, 'HR_Status': r.hr_status, 'Rating': r.proficiency_rating , 'Scoring Rule': r.scoring_rule || 'legacy-zero', 'Classification': r.scoring_rule === 'floor-one-v1' ? r.classification : undefined}; });
+var fr = rounds[rd].map(function(r){ return { 'Employee ID': r.employee_id, 'Competency Code': r.comp_code, 'Type': r.type, 'Ticked': r.ticked, 'Evidence': r.evidence, 'HR_Status': r.hr_status, 'Rating': r.proficiency_rating , 'Scoring Rule': r.scoring_rule || 'legacy-zero', 'Classification': r.scoring_rule === 'floor-one-v1' ? r.classification : undefined, 'Weight Profile': r.weight_profile, 'Weight Policy': r.weight_policy}; });
 var score = calculateOverallScore(empId, type, fr);
 var label = type === 'Prospective' ? getProspectiveReadiness(score).label : getCurrentRoleReadiness(score).label;
 t += '<tr><td>' + type + '</td><td>' + ord(rd) + '</td><td>' + escapeHtml(rounds[rd][0].assessment_date || '') + '</td><td>' + score + '%</td><td>' + escapeHtml(label) + '</td></tr>';
@@ -7627,7 +7645,7 @@ const { data: allResults } = await _supabase.from('assessments').select('*');
 var t = '<table><tr><th>Employee</th><th>Position</th><th>Company</th><th>Self</th><th>Manager</th><th>Final Average</th><th>Prospective (Self)</th><th>Prospective (Manager)</th><th>Prospective Average</th><th>Current Role Readiness</th><th>Prospective Readiness</th></tr>';
 (allEmps || []).forEach(function(emp) {
 var latest = latestOnly((allResults || []).filter(function(r){ return r.employee_id === emp.employee_id; }));
-var fr = latest.map(function(r){ return { 'Employee ID': r.employee_id, 'Competency Code': r.comp_code, 'Type': r.type, 'Ticked': r.ticked, 'Evidence': r.evidence, 'HR_Status': r.hr_status, 'Rating': r.proficiency_rating , 'Scoring Rule': r.scoring_rule || 'legacy-zero', 'Classification': r.scoring_rule === 'floor-one-v1' ? r.classification : undefined}; });
+var fr = latest.map(function(r){ return { 'Employee ID': r.employee_id, 'Competency Code': r.comp_code, 'Type': r.type, 'Ticked': r.ticked, 'Evidence': r.evidence, 'HR_Status': r.hr_status, 'Rating': r.proficiency_rating , 'Scoring Rule': r.scoring_rule || 'legacy-zero', 'Classification': r.scoring_rule === 'floor-one-v1' ? r.classification : undefined, 'Weight Profile': r.weight_profile, 'Weight Policy': r.weight_policy}; });
 var hasS = fr.some(function(r){ return r['Type'] === 'Self'; });
 var hasM = fr.some(function(r){ return r['Type'] === 'Manager'; });
 var hasP = fr.some(function(r){ return r['Type'] === 'Prospective'; });
@@ -7674,7 +7692,7 @@ var trs = rows.filter(function(r){ return r.type === type; });
 var rounds = {};
 trs.forEach(function(r){ var rd = r.assessment_round || 1; if (!rounds[rd]) rounds[rd] = []; rounds[rd].push(r); });
 Object.keys(rounds).sort(function(a,b){ return a-b; }).forEach(function(rd) {
-var fr = rounds[rd].map(function(r){ return { 'Employee ID': r.employee_id, 'Competency Code': r.comp_code, 'Type': r.type, 'Ticked': r.ticked, 'Evidence': r.evidence, 'HR_Status': r.hr_status, 'Rating': r.proficiency_rating , 'Scoring Rule': r.scoring_rule || 'legacy-zero', 'Classification': r.scoring_rule === 'floor-one-v1' ? r.classification : undefined}; });
+var fr = rounds[rd].map(function(r){ return { 'Employee ID': r.employee_id, 'Competency Code': r.comp_code, 'Type': r.type, 'Ticked': r.ticked, 'Evidence': r.evidence, 'HR_Status': r.hr_status, 'Rating': r.proficiency_rating , 'Scoring Rule': r.scoring_rule || 'legacy-zero', 'Classification': r.scoring_rule === 'floor-one-v1' ? r.classification : undefined, 'Weight Profile': r.weight_profile, 'Weight Policy': r.weight_policy}; });
 var score = calculateOverallScore(empId, type, fr);
 var label = type === 'Prospective' ? getProspectiveReadiness(score).label : getCurrentRoleReadiness(score).label;
 html += '<tr><td>' + type + '</td><td>' + ord(rd) + '</td><td>' + escapeHtml(rounds[rd][0].assessment_date || '') + '</td><td class="score">' + score + '%</td><td>' + escapeHtml(label) + '</td></tr>';
@@ -7730,7 +7748,7 @@ var trs = rows.filter(function(r){ return r.type === type; });
 var rounds = {};
 trs.forEach(function(r){ var rd = r.assessment_round || 1; if (!rounds[rd]) rounds[rd] = []; rounds[rd].push(r); });
 Object.keys(rounds).sort(function(a,b){ return a-b; }).forEach(function(rd) {
-var fr = rounds[rd].map(function(r){ return { 'Employee ID': r.employee_id, 'Competency Code': r.comp_code, 'Type': r.type, 'Ticked': r.ticked, 'Evidence': r.evidence, 'HR_Status': r.hr_status, 'Rating': r.proficiency_rating , 'Scoring Rule': r.scoring_rule || 'legacy-zero', 'Classification': r.scoring_rule === 'floor-one-v1' ? r.classification : undefined}; });
+var fr = rounds[rd].map(function(r){ return { 'Employee ID': r.employee_id, 'Competency Code': r.comp_code, 'Type': r.type, 'Ticked': r.ticked, 'Evidence': r.evidence, 'HR_Status': r.hr_status, 'Rating': r.proficiency_rating , 'Scoring Rule': r.scoring_rule || 'legacy-zero', 'Classification': r.scoring_rule === 'floor-one-v1' ? r.classification : undefined, 'Weight Profile': r.weight_profile, 'Weight Policy': r.weight_policy}; });
 var score = calculateOverallScore(empId, type, fr);
 var label = type === 'Prospective' ? getProspectiveReadiness(score).label : getCurrentRoleReadiness(score).label;
 L.push(type + ' | ' + ord(rd) + ' round | ' + (rounds[rd][0].assessment_date||'') + ' | ' + score + '% | ' + label);
@@ -7883,7 +7901,7 @@ var roleRules = {
 'Head of HR': 'CAN: everything HR Admin can + decision queue, oversight, cross-company gaps. CANNOT: C-Suite succession summaries; never reveal queue outcomes to non-HOHR.',
 'C-Suite Executive': 'CAN: executive averages, succession pipeline, company comparison, critical gaps, dev-plan summaries, promotion-ready pool. CANNOT: modify assessments, individual evidence details.' }[role] || '';
 var pageHints = { 'emp-profile': 'Page: My Profile — help with score rings, readiness, gaps/strengths meaning.', 'emp-selfassess': 'Page: Self Assessment — ticking, evidence tips, 1-5 rating, proof, submission rules.', 'mgr-assess': 'Page: Manager Assessment — assessing a report, tiers, redo requests.', 'mgr-devplans': 'Page: Development Plans — creating plans, approvals, progress tracking.', 'hr-review': 'Page: Assessment Review — approve/return/disapprove workflow, release rules.', 'hr-all': 'Page: All Assessments — columns, search, exports.', 'hr-staff': 'Page: All Staff — staff table, add employee, reminders.', 'hohr-reports': 'Page: HOHR Report Approvals — decision queue, promote vs hold, escalation.', 'cs-reports': 'Page: C-Suite Dashboard — executive metrics, succession pipeline, company comparison.', 'hr-comp': 'Page: Competency Library — competencies, tiers, weights.', 'hr-positions': 'Page: Positions & Criticality — registry, criticality levels.' };
-var prompt = 'You are KAI (Kenafric Artificial Intelligence), the friendly in-app assistant for Kenafric CMS — warm, professional, like a knowledgeable HR colleague. Current user role: ' + role + '. Current page: ' + page + '. ' + (pageHints[page] || '') + '\nAnswer concisely (max 160 words), plain text, step-by-step for how-to, English only. If asked outside the CMS: "Great question, but I only know about Kenafric CMS!"\n' + security + '\nROLE RULES (' + role + '): ' + roleRules + '\nSYSTEM KNOWLEDGE:\nROLES & THEMES: Employee (blue), Line Manager (teal), HR Admin (indigo), Head of HR (gold), C-Suite (navy/gold).\nSELF ASSESSMENT: tick experiences, evidence, rate 1-5, attach proof; one submission; redo needs HR approval.\nMANAGER ASSESSMENT: assess current role; redo via request when HR approves.\nPROSPECTIVE: unlocks at Final Average ≥80%; same/higher level only; 80%+ joins Progression-Ready Pool.\nSCORING: tiers Critical/Important/Value-Add; points = rating÷5 × tier weight; Core 7% each, Functional 12/12/12/12/8/8/8. Readiness: 80%+ Strong Performer; 71-80 Proficient; 61-70 Developing; 51-60 Below Expectations; <51 Critical Gap. Strengths ≥70%; Gaps <70%.\nVISIBILITY: scores locked until HR Admin approves/disapproves ALL Self + Manager experiences.\nHR ADMIN: Review, Redo Requests, staff, library, registry, exports.\nHOHR: decision queue (Promote/Dev Plan/Hold/Escalate/Return), oversight.\nC-SUITE: executive dashboard, succession, company comparison, gaps.\nDEV PLANS: manager builds from gaps, HR approves, monthly reports.\nEXTRAS: chat, profile photo, global search, All Staff/All Assessments tables.\nCONVERSATION SO FAR:\n' + hist + '\nUser: ' + q + '\nKAI:';
+var prompt = 'You are KAI (Kenafric Artificial Intelligence), the friendly in-app assistant for Kenafric CMS — warm, professional, like a knowledgeable HR colleague. Current user role: ' + role + '. Current page: ' + page + '. ' + (pageHints[page] || '') + '\nAnswer concisely (max 160 words), plain text, step-by-step for how-to, English only. If asked outside the CMS: "Great question, but I only know about Kenafric CMS!"\n' + security + '\nROLE RULES (' + role + '): ' + roleRules + '\nSYSTEM KNOWLEDGE:\nROLES & THEMES: Employee (blue), Line Manager (teal), HR Admin (indigo), Head of HR (gold), C-Suite (navy/gold).\nSELF ASSESSMENT: tick experiences, evidence, rate 1-5, attach proof; one submission; redo needs HR approval.\nMANAGER ASSESSMENT: assess current role; redo via request when HR approves.\nPROSPECTIVE: unlocks at Final Average ≥80%; same/higher level only; 80%+ joins Progression-Ready Pool.\nSCORING: tiers Critical/Important/Value-Add; points = rating÷5 × tier weight; Core 5% each, Functional 14/14/14/14/8/8/8. Readiness: 80%+ Strong Performer; 71-80 Proficient; 61-70 Developing; 51-60 Below Expectations; <51 Critical Gap. Strengths ≥70%; Gaps <70%.\nVISIBILITY: scores locked until HR Admin approves/disapproves ALL Self + Manager experiences.\nHR ADMIN: Review, Redo Requests, staff, library, registry, exports.\nHOHR: decision queue (Promote/Dev Plan/Hold/Escalate/Return), oversight.\nC-SUITE: executive dashboard, succession, company comparison, gaps.\nDEV PLANS: manager builds from gaps, HR approves, monthly reports.\nEXTRAS: chat, profile photo, global search, All Staff/All Assessments tables.\nCONVERSATION SO FAR:\n' + hist + '\nUser: ' + q + '\nKAI:';
 try {
 var out = await Promise.race([ callAI(prompt, false), new Promise(function(res){ setTimeout(function(){ res(''); }, 9000); }) ]);
 return (out || '').trim();
@@ -7920,14 +7938,14 @@ function deterministicChecks(dep,pos){
   var core=(APP.competencies||[]).filter(function(c){ return (c.code||'').indexOf('CC')===0; });
   var func=(APP.competencies||[]).filter(function(c){ return (c.code||'').indexOf('CC')!==0; });
   var coreTot=0, funcTot=0;
-  core.forEach(function(c){ var w=parseFloat(c.weight)||0; coreTot+=w; if (w!==7) flags.push({scope:'framework',comp_code:c.code,check_type:'WEIGHT',severity:'medium',message:'Core competency '+c.competency+' weight is '+w+'% (standard is 7%).'}); });
+  core.forEach(function(c){ var w=parseFloat(c.weight)||0; coreTot+=w; if (w!==5) flags.push({scope:'framework',comp_code:c.code,check_type:'WEIGHT',severity:'medium',message:'Core competency '+c.competency+' weight is '+w+'% (standard is 5%).'}); });
   func.forEach(function(c){ funcTot+=parseFloat(c.weight)||0; });
-  if (Math.round(funcTot)!==72) flags.push({scope:'framework',check_type:'WEIGHT',severity:'high',message:'Functional weights total '+funcTot+'% — expected 72% (4 Core × 7% = 28%; grand total must be 100%).'});
+  if (Math.round(funcTot)!==80) flags.push({scope:'framework',check_type:'WEIGHT',severity:'high',message:'Functional weights total '+funcTot+'% — expected 80% (4 Core × 5% = 20%; grand total must be 100%).'});
   if (Math.round(coreTot+funcTot)!==100) flags.push({scope:'framework',check_type:'WEIGHT',severity:'high',message:'Core + Functional weights total '+(coreTot+funcTot)+'% — must equal exactly 100%.'});
   var op=func.filter(function(c){ return isOpComp(c.competency); }).map(function(c){ return parseFloat(c.weight)||0; });
   var beh=func.filter(function(c){ return isBehComp(c.competency); }).map(function(c){ return parseFloat(c.weight)||0; });
   if (op.length && beh.length && Math.min.apply(null,op) <= Math.max.apply(null,beh))
-    flags.push({scope:'framework',check_type:'WEIGHT',severity:'medium',message:'Operational competencies (AT/JD/PL/EX = 12% each) must carry a HIGHER weight than behavioural ones (CL/PS/LD = 8% each).'});
+    flags.push({scope:'framework',check_type:'WEIGHT',severity:'medium',message:'Operational competencies (AT/JD/PL/EX = 14% each) must carry a HIGHER weight than behavioural ones (CL/PS/LD = 8% each).'});
   return flags;
 }
 
@@ -8029,6 +8047,7 @@ if (selectedMode === 'manager') {
     return Object.assign({}, p, {can_edit: managedIds.has(p.id)});
   });
 }
+ if(!cmsCheckWeightCatalogue(c.competencies||[]))throw new Error('Published competency catalogue needs the 5/14/8 weight update.');
  FW.catalogue=c;
  APP.competencies=c.competencies || [];
  APP.experiences=(c.positions || []).flatMap(function(p){
@@ -9500,7 +9519,7 @@ function cgPanel(g, title){
 async function cgRows(empId){
  if (CG.cache[empId]) return CG.cache[empId];
  var q = await _supabase.from('assessments')
-  .select('employee_id,type,comp_code,comp_name,experience_index,experience_text,classification,ticked,evidence,proficiency_rating,hr_status,scoring_rule,critical_gate_rule,assessment_round,framework_version,core_framework_version,prospective_role')
+  .select('employee_id,type,comp_code,comp_name,experience_index,experience_text,classification,ticked,evidence,proficiency_rating,hr_status,weight_profile,weight_policy,scoring_rule,critical_gate_rule,assessment_round,framework_version,core_framework_version,prospective_role')
   .eq('employee_id', empId);
  if (q.error) throw new Error(q.error.message);
  CG.cache[empId] = q.data || [];
@@ -9610,7 +9629,7 @@ var __cmsRouteEpoch = typeof CN === 'undefined' ? null : CN.epoch;
   if (emps.error) throw new Error(emps.error.message);
   var rows = [], from = 0;
   for (;;) {
-   var q = await _supabase.from('assessments').select('employee_id,type,comp_code,classification,ticked,evidence,proficiency_rating,hr_status,scoring_rule,assessment_round').range(from, from + 999);
+   var q = await _supabase.from('assessments').select('employee_id,type,comp_code,classification,ticked,evidence,proficiency_rating,hr_status,weight_profile,weight_policy,scoring_rule,assessment_round').range(from, from + 999);
    if (q.error) throw new Error(q.error.message);
    rows = rows.concat(q.data || []);
    if (!q.data || q.data.length < 1000) break;
@@ -9621,7 +9640,7 @@ var __cmsRouteEpoch = typeof CN === 'undefined' ? null : CN.epoch;
   var people = [];
   (emps.data || []).forEach(function(e){
    var er = byEmp[e.employee_id]; if (!er) return;
-   var fr = er.map(function(r){ return { 'Employee ID': r.employee_id, 'Competency Code': r.comp_code, 'Type': r.type, 'Ticked': r.ticked, 'Evidence': r.evidence, 'HR_Status': r.hr_status, 'Rating': r.proficiency_rating, 'Classification': r.classification , 'Scoring Rule': r.scoring_rule || 'legacy-zero'}; });
+   var fr = er.map(function(r){ return { 'Employee ID': r.employee_id, 'Competency Code': r.comp_code, 'Type': r.type, 'Ticked': r.ticked, 'Evidence': r.evidence, 'HR_Status': r.hr_status, 'Rating': r.proficiency_rating, 'Classification': r.classification , 'Scoring Rule': r.scoring_rule || 'legacy-zero', 'Weight Profile': r.weight_profile, 'Weight Policy': r.weight_policy}; });
    var hasM = er.some(function(r){ return r.type === 'Manager'; });
    var hasS = er.some(function(r){ return r.type === 'Self'; });
    if (!hasM || !hasS) return;
@@ -10526,7 +10545,7 @@ async function mdGet(){
  if(!mdAllowed()||APP.user.email!==who)throw new Error('Role changed. Reopen Manager Dashboard.');
  return mdModel(team,rows);
 }
-function mdFormat(rows){return rows.map(r=>({'Employee ID':r.employee_id,'Competency Code':r.comp_code,'Type':r.type,'Ticked':r.ticked,'Evidence':r.evidence,'HR_Status':r.hr_status,'Rating':r.proficiency_rating,'Scoring Rule':r.scoring_rule||'legacy-zero','Classification':r.scoring_rule==='floor-one-v1'?r.classification:undefined}));}
+function mdFormat(rows){return rows.map(r=>({'Employee ID':r.employee_id,'Competency Code':r.comp_code,'Type':r.type,'Ticked':r.ticked,'Evidence':r.evidence,'HR_Status':r.hr_status,'Rating':r.proficiency_rating,'Scoring Rule':r.scoring_rule||'legacy-zero','Classification':r.scoring_rule==='floor-one-v1'?r.classification:undefined, 'Weight Profile': r.weight_profile, 'Weight Policy': r.weight_policy}));}
 function mdProspective(rows,employeeId,managerLevel){
  var p=latestOnly(rows.filter(r=>r.type==='Prospective')),s=latestOnly(rows.filter(r=>r.type==='Prospective Self'));
  var out={state:'Awaiting both prospective assessments',combined:null,target:p[0]?.prospective_role||s[0]?.prospective_role||'',ready:false};
