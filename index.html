@@ -661,6 +661,323 @@ table.cms-calc-table {table-layout:fixed!important; width:100%!important; min-wi
 }
 
 </style>
+<style id="cms-assessment-case-register-style">
+#purpose-register{color:#182b49;font:14px/1.6 system-ui,-apple-system,"Segoe UI",sans-serif;min-width:0;max-width:100%}
+#purpose-register *{box-sizing:border-box}
+#purpose-register h1{font:750 28px/1.25 system-ui;margin:7px 0}
+#purpose-register h2{font:700 21px/1.3 system-ui;margin:0 0 10px}
+#purpose-register h3{font-size:16px;margin:18px 0 6px}
+#purpose-register p{font-size:14px;margin:8px 0 14px;overflow-wrap:anywhere}
+#purpose-register .pr-header,#purpose-register .pr-title{display:flex;justify-content:space-between;align-items:center;gap:18px;flex-wrap:wrap;margin:18px 0}
+#purpose-register .pr-eyebrow{color:#586482;font-size:13px;font-weight:750;letter-spacing:.08em}
+#purpose-register .pr-purpose-grid,#purpose-register .pr-case-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:22px;margin:22px 0}
+#purpose-register .pr-purpose{display:flex!important;align-items:center;gap:24px;width:100%;min-width:0;text-align:left;font:inherit;color:#182b49;border:1px solid #bfc8ec;border-radius:14px;padding:28px;background:#f2f3ff;cursor:pointer}
+#purpose-register .pr-purpose.teal{background:#eff9f8;border-color:#a6d5d2}
+#purpose-register .pr-purpose.purple{background:#f7f2ff;border-color:#cbbbe7}
+#purpose-register .pr-purpose.gold{background:#fff8ed;border-color:#e8d1a3}
+#purpose-register .pr-icon{display:flex;align-items:center;justify-content:center;flex:0 0 70px;width:70px;height:70px;border:1px solid #aab9de;border-radius:50%;background:#ffffff80;font-size:36px;color:#4338ca}
+#purpose-register .pr-purpose strong,#purpose-register .pr-count{display:block;margin-top:14px;color:#3d4094}
+#purpose-register .pr-count{font-size:14px;color:#586682}
+#purpose-register .pr-purpose:hover{box-shadow:0 5px 18px #182b4912;border-color:#4338ca}
+#purpose-register .pr-purpose:focus-visible{outline:3px solid #4338ca;outline-offset:3px}
+#purpose-register .pr-filters,#purpose-register .pr-form-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px;align-items:end}
+#purpose-register input:not([type=checkbox]),#purpose-register select,#purpose-register textarea{display:block;width:100%;min-width:0;font-size:14px;padding:10px;border:1px solid #bccbdd;border-radius:7px;margin:7px 0 14px}
+#purpose-register textarea{resize:vertical;font-family:inherit}
+#purpose-register label{font-size:14px;min-width:0}
+#purpose-register .btn{white-space:normal;max-width:100%;font-size:14px;padding:10px 15px;margin:5px 6px 5px 0}
+#purpose-register .pr-note{color:#586c83}
+#purpose-register .pr-warning{background:#fff5dc;padding:14px;border-left:4px solid #b3832b}
+#purpose-register .pr-tag{display:inline-block;border-radius:6px;background:#edf1fa;padding:4px 10px;font-size:13px;color:#3f5676}
+#purpose-register .pr-steps{display:flex;gap:18px;flex-wrap:wrap}
+#purpose-register .pr-steps span{background:#edf1fb;border-radius:7px;padding:12px;font-weight:600}
+#purpose-register .pr-case{margin:0;display:flex;flex-direction:column}
+#purpose-register .pr-case .btn{margin-top:auto;align-self:flex-start}
+#purpose-register .pr-details{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}
+#purpose-register .pr-details span{display:block;overflow-wrap:anywhere}
+#purpose-register .pr-linked{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+#purpose-register .pr-linked>div{padding:14px;background:#f0f4fa;border-radius:9px}
+#purpose-register .pr-linked span{display:block;overflow-wrap:anywhere}
+#purpose-register .pr-check{display:flex;align-items:flex-start;gap:10px;padding:9px 0}
+#purpose-register .pr-check input{width:17px!important;min-width:17px!important;height:17px;flex:0 0 17px;margin:4px 0}
+#purpose-register .pr-reference-options{max-height:260px;overflow-y:auto}
+#purpose-register fieldset{min-width:0;border:1px solid #cdd8e9;border-radius:9px;padding:15px;margin:18px 0}
+#purpose-register legend{font-weight:700;padding:0 6px}
+#purpose-register .pr-preview{padding:20px;background:#f0f2ff;border:1px solid #afb9df;border-radius:12px;margin:20px 0}
+#purpose-register .pr-history{padding:16px 0;border-top:1px solid #d8e2ec}
+#purpose-register summary{font-size:17px;font-weight:650;cursor:pointer}
+#purpose-register .pr-pagination{display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap}
+#purpose-register .pr-search{max-width:450px}
+#purpose-register .pr-assessment-links{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+#purpose-register .pr-snapshot-wrap{container-type:inline-size;overflow:visible;max-width:100%}
+#purpose-register .pr-snapshot-table{width:100%!important;min-width:0!important;table-layout:fixed}
+#purpose-register .pr-snapshot-table td,#purpose-register .pr-snapshot-table th{font-size:14px!important;white-space:normal!important;overflow-wrap:anywhere}
+@container(max-width:750px){
+ #purpose-register .pr-snapshot-table,#purpose-register .pr-snapshot-table tbody{display:block}
+ #purpose-register .pr-snapshot-table thead{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)}
+ #purpose-register .pr-snapshot-table tr{display:block;border:1px solid #d1dceb;margin:12px 0}
+ #purpose-register .pr-snapshot-table td{display:block;width:100%}
+ #purpose-register .pr-snapshot-table td:before{content:attr(data-label);display:block;font-weight:700}
+}
+@media(max-width:900px){#purpose-register .pr-filters,#purpose-register .pr-form-grid,#purpose-register .pr-details{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:640px){
+ #purpose-register .pr-assessment-links{grid-template-columns:1fr}
+ #purpose-register .pr-purpose-grid,#purpose-register .pr-case-grid,#purpose-register .pr-linked,#purpose-register .pr-filters,#purpose-register .pr-form-grid,#purpose-register .pr-details{grid-template-columns:1fr}
+ #purpose-register .pr-purpose{padding:20px;gap:16px}
+ #purpose-register .pr-icon{flex-basis:48px;width:48px;height:48px;font-size:28px}
+}
+
+</style>
+<style id="executive-simple-style">
+/* Text branding, existing profile controls. No new K logo or substituted profile. */
+body.es-executive{margin:0!important;padding:0!important}
+body.es-executive .header{top:0!important;left:0!important;width:100%!important;border-radius:0!important;max-width:none!important}
+body.es-executive .header{margin-left:0!important;background:linear-gradient(110deg,#0b1736,#312e81)!important;border-bottom:2px solid #c9a54c;padding:18px 26px!important;z-index:180!important}
+body.es-executive .header-inner{max-width:none!important;display:flex!important;gap:20px;flex-wrap:wrap}
+body.es-executive .header-brand{display:block!important;color:white!important;font:800 22px/1.25 system-ui!important;white-space:normal}
+body.es-executive .brand-accent{color:#fff!important}
+body.es-executive .header-brand small{display:block;font-size:12px;font-weight:450;color:#ccd5e9;margin-top:5px;letter-spacing:.02em}
+body.es-executive #globalSearchBox{display:none!important}
+body.es-executive .header-user{display:flex;gap:12px;background:transparent!important}
+body.es-executive #userAvatar{width:50px!important;height:50px!important;min-width:50px!important;border-radius:50%!important;border:2px solid #c9a54c!important;overflow:hidden;background:#4338ca;color:#fff}
+body.es-executive #userAvatar img{width:100%;height:100%;object-fit:cover;border-radius:50%}
+body.es-executive .header-name{color:white!important;font-size:13px!important}
+body.es-executive #roleSwitch{font-size:12px!important;text-transform:none!important;letter-spacing:0!important;background:#ffffff0d!important;border:1px solid #939fcd!important;color:white!important;border-radius:6px;padding:5px 8px}
+body.es-executive #sideNav{top:var(--es-header-height,95px)!important;background:#0b1736!important;padding-top:25px;width:230px!important}
+body.es-executive #sideNav .es-nav{display:block!important;width:calc(100% - 20px);margin:8px 10px;padding:15px 14px;text-align:left;border:0;border-radius:8px;color:#e6ebf6;background:transparent;font:650 14px system-ui;cursor:pointer}
+body.es-executive #sideNav .es-nav.active,body.es-executive #sideNav .es-nav:hover{background:#4338ca;color:#fff}
+body.es-executive #roleBanner{display:none!important}
+body.es-executive .content{margin-left:230px!important;padding:26px!important;max-width:none!important}
+#esRoot{font:14px/1.6 system-ui;color:#182b49;min-width:0;max-width:1400px;margin:auto}
+#esRoot *{box-sizing:border-box}
+#esRoot h1{font:750 28px/1.3 system-ui;margin:8px 0}
+#esRoot h2{font:700 21px/1.35 system-ui;margin:0 0 12px}
+#esRoot p{font-size:14px;line-height:1.6;margin:8px 0 14px;overflow-wrap:anywhere}
+#esRoot .es-heading{margin-bottom:24px}
+#esRoot .es-heading p{color:#536982}
+#esRoot .es-filters{display:flex;gap:20px;align-items:end;flex-wrap:wrap}
+#esRoot .es-filters label{flex:1;min-width:min(220px,100%);font-size:14px}
+#esRoot select{margin-top:6px;padding:10px;font:14px system-ui;min-width:0}
+#esRoot .btn{font-size:14px;padding:10px 14px;white-space:normal;max-width:100%;margin:4px}
+#esRoot .es-focus{display:flex;align-items:center;gap:20px;justify-content:space-between;flex-wrap:wrap;border-radius:12px;background:#0b1736;color:#fff;padding:18px 22px;margin:20px 0}
+#esRoot .es-focus .btn{background:transparent;color:white;border:1px solid #67708e}
+#esRoot .es-cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px;margin:20px 0}
+#esRoot .es-destination{display:flex!important;gap:22px;align-items:center;padding:25px;text-align:left;background:#f3f3ff;border:1px solid #c4c9ed;border-radius:14px;min-width:0;color:#182b49;font:inherit;cursor:pointer;width:100%}
+#esRoot .es-destination.blue{background:#f0f6ff;border-color:#b9d1f2}
+#esRoot .es-destination.purple{background:#f6f0ff;border-color:#d0beef}
+#esRoot .es-destination.gold{background:#fff7e9;border-color:#e6cc91}
+#esRoot .es-destination.teal{background:#edf8fa;border-color:#a9d8dd}
+#esRoot .es-destination.white{background:white;border-top:5px solid #182b49}
+#esRoot .es-destination:hover{box-shadow:0 5px 16px #182b4915}
+#esRoot .es-card-icon{flex:0 0 64px;width:64px;height:64px;border:1px solid #bac8e1;display:flex;align-items:center;justify-content:center;border-radius:50%;font-size:30px;color:#243977;background:#ffffff70}
+#esRoot .es-destination strong{display:block;color:#4338ca;margin-top:15px}
+#esRoot .es-private{color:#8a5b19;background:#fff5de;padding:3px 8px;border-radius:5px;font-size:12px}
+#esRoot .es-company{display:block!important;min-width:0;padding:24px;border:1px solid #c1d1e6;background:white;border-radius:12px;color:#182b49;text-align:left;cursor:pointer}
+#esRoot .es-company strong{color:#4338ca}
+#esRoot .es-footnote,#esRoot .es-muted{color:#536982;font-size:14px}
+#esRoot .es-metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(170px,100%),1fr));gap:15px;margin:18px 0}
+#esRoot .es-metric{padding:17px;background:#eef2fa;border-radius:9px}
+#esRoot .es-metric strong{display:block;font-size:25px}
+#esRoot .es-metric span{display:block;font-size:14px}
+#esRoot .es-highlow{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:18px 0}
+#esRoot .es-highlow>div{padding:16px;background:#f0f4fb;border-radius:9px}
+#esRoot .es-table-wrap{container-type:inline-size;width:100%;min-width:0}
+#esRoot table{width:100%;table-layout:fixed;min-width:0}
+#esRoot td,#esRoot th{white-space:normal!important;overflow-wrap:anywhere;font-size:14px!important;padding:11px!important;text-transform:none!important}
+#esRoot details{margin:14px 0}
+#esRoot summary{font-size:16px;font-weight:650;cursor:pointer}
+.es-progress{display:flex;justify-content:center;gap:6px;padding:25px;min-height:55px}
+.es-progress span{width:7px;height:7px;border-radius:50%;background:#7c83bb;animation:es-pulse 1.3s infinite ease-in-out}
+.es-progress span:nth-child(2){animation-delay:.15s}.es-progress span:nth-child(3){animation-delay:.3s}
+@keyframes es-pulse{0%,100%{opacity:.3}50%{opacity:1}}
+@media(prefers-reduced-motion:reduce){.es-progress span{animation:none}}
+@container(max-width:700px){
+ #esRoot table,#esRoot tbody{display:block}
+ #esRoot thead{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)}
+ #esRoot tr{display:block;border:1px solid #d4deea;border-radius:7px;margin:12px 0}
+ #esRoot td{display:block;width:100%}
+ #esRoot td:before{content:attr(data-label);display:block;font-weight:700;color:#51647d}
+}
+@media(max-width:1000px){#esRoot .es-destination{padding:20px;gap:14px}#esRoot .es-card-icon{flex-basis:45px;width:45px;height:45px;font-size:24px}}
+@media(max-width:760px){
+ body.es-executive .header{padding:14px!important}
+ body.es-executive .header-right{margin-left:0;flex-wrap:wrap;justify-content:flex-start;width:100%}
+ body.es-executive .header-brand{font-size:20px!important}
+ body.es-executive #sideNav{position:static!important;width:100%!important;display:flex!important;gap:4px;padding:7px!important;flex-wrap:wrap;overflow:visible}
+ body.es-executive #sideNav .es-nav{width:auto!important;flex:1;min-width:95px;margin:0;font-size:12px;padding:12px}
+ body.es-executive .content{margin-left:0!important;padding:16px!important}
+ #esRoot .es-cards,#esRoot .es-highlow{grid-template-columns:1fr}
+ #esRoot .es-focus{gap:8px;padding:15px}
+ #esRoot .es-heading h1{font-size:25px}
+}
+
+</style>
+<style id="executive-approved-color-style">
+/* Approved colorful UI: white reading surfaces, semantic accents, decorative
+   curves confined to the right edge. Icons and arrows are not separate buttons. */
+body.es-executive{background:#edf2fb!important}
+body.es-executive .header{background:linear-gradient(110deg,#061432 5%,#121653 65%,#252189 100%)!important}
+body.es-executive #sideNav{background:linear-gradient(180deg,#081533,#071b42)!important}
+body.es-executive #sideNav .es-nav.active{background:linear-gradient(110deg,#3730c1,#5045e9)!important;box-shadow:0 4px 15px #060d2738}
+#esRoot.ec-approved .es-heading{position:relative;isolation:isolate;overflow:hidden;border-radius:16px;background:linear-gradient(110deg,#11134d 0%,#25219b 65%,#3a36c9 100%);border:1px solid #4c49c4;padding:28px 34px;margin:14px 0 22px;color:#fff;box-shadow:0 5px 18px #25327512}
+#esRoot.ec-approved .es-heading h1{position:relative;z-index:2;color:white;font-size:30px;margin:0 0 8px;max-width:78%}
+#esRoot.ec-approved .es-heading p{position:relative;z-index:2;color:#e1e6ff;font-size:16px;max-width:80%;margin:0}
+#esRoot .ec-hero-art{position:absolute;z-index:0;right:-40px;top:-110px;width:480px;height:390px;pointer-events:none;transform:rotate(-12deg);border:1px solid #d9e3ff30;border-radius:50%;background:radial-gradient(circle at 55% 22%,#8988ff30 0 36%,transparent 36.2%),linear-gradient(145deg,transparent 50%,#c5c4ff25 50.2%,transparent 50.5%)}
+#esRoot .ec-hero-art:before{content:"";position:absolute;inset:100px 65px -35px -60px;border:1px solid #ced6ff35;border-radius:50%}
+#esRoot .ec-hero-art:after{content:"";position:absolute;left:0;right:0;top:210px;height:1px;background:#b9bdff55;transform:rotate(19deg);box-shadow:0 55px 0 #b9bdff22}
+#esRoot.ec-approved .es-filters{background:#fff;border:1px solid #d5def0;box-shadow:0 3px 12px #23335307;padding:16px 22px;gap:20px}
+#esRoot.ec-approved .es-filters label{flex:1 1 230px}
+#esRoot.ec-approved select{background:#fff;border:1px solid #c6d3e9;border-radius:7px;color:#253964;font-size:14px}
+#esRoot .ec-reporting-view{display:flex;flex-direction:column;gap:6px;flex:1 1 210px;font-size:14px;order:1}
+#esRoot .ec-reporting-view strong{background:#f5f7ff;border:1px solid #d0d9ed;border-radius:7px;padding:9px 12px;font-weight:500;color:#263864}
+#esRoot.ec-approved .es-filters>.btn{order:2}
+#esRoot.ec-approved .es-focus{background:linear-gradient(105deg,#061332,#101750);border:1px solid #28356a;margin:17px 0;padding:13px 20px;gap:10px;border-radius:12px}
+#esRoot.ec-approved .es-focus>strong{display:flex;gap:10px;align-items:center;font-size:16px}
+#esRoot .ec-focus-icon{width:24px;height:24px;display:inline-flex;color:#cbd0ff}
+#esRoot .ec-focus-icon svg{width:100%;height:100%}
+#esRoot.ec-approved .es-focus .btn{border-color:#ffffff20;padding:8px 11px;font-size:13px}
+#esRoot.ec-approved .es-cards{gap:18px;margin:18px 0}
+#esRoot.ec-approved .es-destination{--ec-color:#692bea;--ec-mid:#8750f4;--ec-deep:#3d188f;--ec-tint:#f7f2ff;--ec-line:#d9c9ff;position:relative;isolation:isolate;overflow:hidden;background:#fff!important;border:1px solid #d7e0f0!important;border-radius:14px;min-height:180px;padding:22px 74px 22px 20px;gap:18px;box-shadow:0 2px 7px #182b4908;transition:box-shadow .18s,border-color .18s,transform .18s}
+#esRoot.ec-approved .es-destination.blue{--ec-color:#0955c9;--ec-mid:#498eef;--ec-deep:#033a91;--ec-tint:#f0f6ff;--ec-line:#b7d0f4}
+#esRoot.ec-approved .es-destination.purple{--ec-color:#6a23d4;--ec-mid:#a164f4;--ec-deep:#421b8e;--ec-tint:#f8f3ff;--ec-line:#d7baf4}
+#esRoot.ec-approved .es-destination.gold{--ec-color:#976007;--ec-mid:#f1bd4e;--ec-deep:#0b2457;--ec-tint:#fff8eb;--ec-line:#eed098}
+#esRoot.ec-approved .es-destination.teal{--ec-color:#00768b;--ec-mid:#21c1c3;--ec-deep:#045265;--ec-tint:#effcfc;--ec-line:#a0dce6}
+#esRoot.ec-approved .es-destination.white{--ec-color:#153a80;--ec-mid:#496fca;--ec-deep:#071b43;--ec-tint:#f0f4ff;--ec-line:#b6c8eb}
+#esRoot.ec-approved .es-destination:hover{transform:translateY(-2px);border-color:var(--ec-line)!important;box-shadow:0 7px 20px #182b4916}
+#esRoot.ec-approved .es-destination:focus-visible{outline:3px solid #4338ca;outline-offset:4px}
+#esRoot.ec-approved .es-card-icon{position:relative;z-index:2;background:var(--ec-tint);border:1px solid var(--ec-line);color:var(--ec-color);border-radius:14px;flex:0 0 68px;width:68px;height:76px;padding:12px}
+#esRoot.ec-approved .es-card-icon svg{width:100%;height:100%;display:block}
+#esRoot .ec-card-copy{position:relative;z-index:2;min-width:0;flex:1}
+#esRoot.ec-approved .es-destination h2{font-size:20px;line-height:1.3;color:#0c2146;margin:0 0 8px;overflow-wrap:anywhere}
+#esRoot.ec-approved .es-destination p{font-size:14px;line-height:1.55;color:#314568;margin:8px 0}
+#esRoot.ec-approved .es-destination strong{color:var(--ec-color);font-size:14px;line-height:1.45;margin-top:12px}
+#esRoot.ec-approved .es-private{display:inline-block;background:#f0eaff;color:#5e21c7;font-size:12px;padding:2px 7px;border-radius:5px}
+#esRoot .ec-card-art{position:absolute;inset:0 0 0 auto;width:65px;z-index:0;overflow:hidden;pointer-events:none;background:linear-gradient(145deg,var(--ec-mid),var(--ec-color) 50%,var(--ec-deep));border-radius:75% 0 0 12px/95% 0 0 5%}
+#esRoot .ec-card-art:before{content:"";position:absolute;right:-40px;bottom:-100px;width:140px;height:230px;background:var(--ec-deep);opacity:.62;border:1px solid #ffffff55;border-radius:50%;transform:rotate(30deg)}
+#esRoot .ec-card-art:after{content:"";position:absolute;right:3px;bottom:10px;width:42px;height:58px;opacity:.35;background-image:radial-gradient(circle,#fff 1px,transparent 1.5px);background-size:8px 8px}
+#esRoot .ec-card-arrow{position:absolute;z-index:3;right:17px;bottom:16px;width:36px;height:36px;border-radius:50%;padding:8px;border:1px solid #ffffffb3;background:var(--ec-color);color:white;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px #071d431a;pointer-events:none}
+#esRoot .ec-card-arrow svg{width:100%;height:100%}
+#esRoot.ec-approved .es-footnote{background:#f9fbff;border:1px solid #d7e1f2;border-radius:11px;padding:13px 18px;color:#465a7f;margin-top:20px}
+#esRoot.ec-approved .es-company{border-top:4px solid #2b6ad4;border-radius:12px;background:linear-gradient(130deg,#fff,#f0f6ff)}
+#esRoot.ec-approved .es-metric{background:linear-gradient(125deg,#f4f7ff,#edf0ff);border:1px solid #d9e1f5;border-top:3px solid #5962d2}
+#esRoot.ec-approved .es-metric:nth-child(2){border-top-color:#238398;background:linear-gradient(125deg,#f4fbff,#eafaFA)}
+#esRoot.ec-approved .es-metric:nth-child(3){border-top-color:#8460be;background:linear-gradient(125deg,#fff,#f4eeff)}
+#esRoot.ec-approved .es-metric:nth-child(4){border-top-color:#9b781f;background:linear-gradient(125deg,#fff,#fff8e7)}
+#esRoot.ec-approved .es-highlow>div:first-child{background:#eef9f7;border-left:4px solid #228476}
+#esRoot.ec-approved .es-highlow>div:last-child{background:#fff8eb;border-left:4px solid #af8735}
+#esRoot.ec-approved .es-table-wrap th{background:#eef2fd;color:#33456b}
+#esRoot.ec-approved .es-table-wrap tbody tr:nth-child(even){background:#f8faff}
+@media(max-width:1200px) and (min-width:761px){
+ #esRoot.ec-approved .es-destination{padding:20px 55px 20px 16px;gap:12px;min-height:205px}
+ #esRoot.ec-approved .es-card-icon{flex-basis:48px;width:48px;height:56px;padding:8px}
+ #esRoot .ec-card-art{width:46px}
+ #esRoot .ec-card-arrow{width:30px;height:30px;right:8px;bottom:12px;padding:6px}
+}
+@media(max-width:760px){
+ #esRoot.ec-approved .es-heading{padding:22px 20px;border-radius:12px}
+ #esRoot.ec-approved .es-heading h1{font-size:25px;max-width:95%}
+ #esRoot.ec-approved .es-heading p{font-size:14px;max-width:95%}
+ #esRoot .ec-hero-art{opacity:.45;right:-190px}
+ #esRoot.ec-approved .es-destination{padding:20px 57px 20px 14px;gap:12px;min-height:165px}
+ #esRoot.ec-approved .es-card-icon{flex-basis:48px;width:48px;height:56px;padding:8px}
+ #esRoot .ec-card-art{width:48px}
+ #esRoot .ec-card-arrow{right:10px;bottom:14px;width:30px;height:30px;padding:6px}
+ #esRoot.ec-approved .es-destination h2{font-size:18px}
+ #esRoot.ec-approved .es-filters{padding:15px}
+}
+@media(prefers-reduced-motion:reduce){#esRoot.ec-approved .es-destination{transition:none}#esRoot.ec-approved .es-destination:hover{transform:none}}
+
+</style>
+<style id="executive-mockup-graphics-style">
+/* Wider layered art recreates the approved mockup instead of a narrow strip.
+   Readable copy is protected; cards expand vertically on smaller screens. */
+#esRoot.eg-mockup .es-heading{padding:28px 34px;min-height:138px;display:flex;flex-direction:column;justify-content:center;background:linear-gradient(112deg,#080e49,#211b95 62%,#3631c6)}
+#esRoot.eg-mockup .ec-hero-art{inset:0 0 0 auto;width:53%;height:100%;border:0;border-radius:0;transform:none;background:none}
+#esRoot.eg-mockup .ec-hero-art:before,#esRoot.eg-mockup .ec-hero-art:after{content:none}
+#esRoot.eg-mockup .ec-hero-art svg{display:block;width:100%;height:100%}
+#esRoot.eg-mockup .es-heading h1{font-size:34px;letter-spacing:-.6px;margin-bottom:9px}
+#esRoot.eg-mockup .es-heading p{font-size:17px}
+#esRoot.eg-mockup .es-filters{gap:18px;padding:12px 22px;align-items:center}
+#esRoot.eg-mockup .es-filters label{display:flex;align-items:center;gap:16px;flex:1 1 260px;margin:0;font-weight:500}
+#esRoot.eg-mockup .es-filters select{margin:0;min-width:0;flex:1;background:white}
+#esRoot.eg-mockup .ec-reporting-view{flex:1 1 300px;flex-direction:row;align-items:center;gap:18px}
+#esRoot.eg-mockup .ec-reporting-view strong{flex:1;background:white;white-space:normal}
+#esRoot.eg-mockup .es-filters>.btn{font-size:13px;padding:8px 12px;margin:0}
+#esRoot.eg-mockup .es-focus{padding:10px 22px;margin:12px 0;gap:12px;min-height:60px}
+#esRoot.eg-mockup .es-focus .btn{display:inline-flex;align-items:center;gap:10px;border:0;border-radius:0;border-left:1px solid #a5afd655;padding:4px 15px 4px 22px;font-size:14px;margin:0;background:transparent}
+#esRoot.eg-mockup .es-focus .btn:first-of-type{border-left:0}
+#esRoot.eg-mockup .es-focus .btn:hover{background:#ffffff12}
+#esRoot.eg-mockup .eg-focus-glyph{width:23px;height:23px;color:#bab2ff;display:inline-flex;flex-shrink:0}
+#esRoot.eg-mockup .eg-focus-glyph svg{width:100%;height:100%}
+#esRoot.eg-mockup .es-focus .btn:last-child .eg-focus-glyph{color:#f1c24f}
+#esRoot.eg-mockup .es-cards{gap:14px 18px;margin:14px 0}
+#esRoot.eg-mockup .es-destination{min-height:165px;gap:24px;padding:20px 107px 20px 22px;border-radius:13px;box-shadow:0 2px 5px #102b5c0c;background:#fff!important}
+#esRoot.eg-mockup .es-card-icon{flex:0 0 84px;width:84px;height:90px;max-width:none;border-radius:17px;padding:16px;align-self:center}
+#esRoot.eg-mockup .ec-card-copy{align-self:center}
+#esRoot.eg-mockup .es-destination h2{font-size:21px;letter-spacing:-.35px;line-height:1.24;margin:0 0 9px;font-weight:750}
+#esRoot.eg-mockup .es-destination p{font-size:14px;line-height:1.5;margin:6px 0 12px}
+#esRoot.eg-mockup .es-destination strong{font-size:15px;margin-top:9px;font-weight:650}
+#esRoot.eg-mockup .es-private{font-size:12px;padding:2px 7px;margin-bottom:3px}
+#esRoot.eg-mockup .ec-card-art{width:175px;max-width:33%;height:100%;border:0;border-radius:0;background:none;overflow:hidden}
+#esRoot.eg-mockup .ec-card-art:before,#esRoot.eg-mockup .ec-card-art:after{content:none}
+#esRoot.eg-mockup .ec-card-art svg{display:block;width:100%;height:100%}
+#esRoot.eg-mockup .ec-card-arrow{right:90px;bottom:14px;width:40px;height:40px;padding:9px;box-shadow:none;border:1px solid #ffffffb0;isolation:isolate}
+#esRoot.eg-mockup .ec-card-arrow svg{display:block;width:100%;height:100%;min-width:0;min-height:0;opacity:1!important;stroke:white!important}
+#esRoot.eg-mockup .es-footnote{padding:12px 18px;margin:14px 0;font-size:14px}
+#esRoot.eg-mockup .es-footnote:before{content:"ⓘ";margin-right:10px;color:#24346b;font-size:19px}
+#esRoot.eg-mockup>.es-heading+div>.es-muted{font-size:12px;margin:8px 2px;color:#61718c}
+body.es-executive .header-brand{font-size:25px!important;letter-spacing:-.4px!important}
+body.es-executive .header-brand small{font-size:13px!important;letter-spacing:0!important}
+@media(min-width:1450px){
+ #esRoot.eg-mockup .es-destination{min-height:164px;padding-right:123px}
+ #esRoot.eg-mockup .ec-card-art{width:190px}
+ #esRoot.eg-mockup .ec-card-arrow{right:112px}
+}
+@media(max-width:1250px) and (min-width:761px){
+ #esRoot.eg-mockup .es-destination{padding:18px 74px 18px 16px;gap:15px;min-height:192px}
+ #esRoot.eg-mockup .es-card-icon{flex-basis:62px;width:62px;height:72px;padding:12px}
+ #esRoot.eg-mockup .ec-card-art{width:135px;max-width:33%}
+ #esRoot.eg-mockup .ec-card-arrow{right:44px;bottom:14px;width:34px;height:34px;padding:8px}
+ #esRoot.eg-mockup .es-destination h2{font-size:19px}
+ #esRoot.eg-mockup .es-focus .btn{font-size:13px;padding-left:10px}
+}
+@media(max-width:1000px) and (min-width:761px){
+ #esRoot.eg-mockup .es-cards{grid-template-columns:1fr}
+ #esRoot.eg-mockup .es-destination{min-height:165px;padding-right:115px}
+ #esRoot.eg-mockup .es-card-icon{flex-basis:80px;width:80px;height:88px;padding:15px}
+ #esRoot.eg-mockup .ec-card-art{width:180px}
+ #esRoot.eg-mockup .ec-card-arrow{right:94px}
+}
+@media(max-width:760px){
+ #esRoot.eg-mockup .es-heading{padding:24px 21px;min-height:125px}
+ #esRoot.eg-mockup .es-heading h1{font-size:27px}
+ #esRoot.eg-mockup .es-heading p{font-size:15px}
+ #esRoot.eg-mockup .ec-hero-art{width:75%;opacity:.55}
+ #esRoot.eg-mockup .es-filters{padding:16px;gap:12px}
+ #esRoot.eg-mockup .es-filters label,#esRoot.eg-mockup .ec-reporting-view{flex-basis:100%;gap:10px;font-size:13px}
+ #esRoot.eg-mockup .es-focus{gap:12px;padding:15px;justify-content:flex-start}
+ #esRoot.eg-mockup .es-focus>strong{flex-basis:100%}
+ #esRoot.eg-mockup .es-focus .btn{border:0;padding:4px 0;font-size:13px}
+ #esRoot.eg-mockup .es-destination{padding:20px 64px 20px 15px;gap:14px;min-height:180px}
+ #esRoot.eg-mockup .es-card-icon{flex-basis:58px;width:58px;height:68px;padding:10px;border-radius:12px}
+ #esRoot.eg-mockup .es-destination h2{font-size:18px}
+ #esRoot.eg-mockup .ec-card-art{width:115px;max-width:31%}
+ #esRoot.eg-mockup .ec-card-arrow{right:28px;bottom:13px;width:32px;height:32px;padding:7px}
+ body.es-executive .header-brand{font-size:22px!important}
+}
+@media(max-width:360px){
+ #esRoot.eg-mockup .es-destination{padding:18px 54px 18px 12px;gap:10px}
+ #esRoot.eg-mockup .es-card-icon{flex-basis:44px;width:44px;height:54px;padding:8px}
+ #esRoot.eg-mockup .ec-card-arrow{right:15px}
+}
+@media(max-width:500px){
+ #esRoot.eg-mockup .es-destination{flex-direction:column;align-items:flex-start;padding:18px 100px 18px 18px;gap:13px;min-height:220px}
+ #esRoot.eg-mockup .es-card-icon{align-self:flex-start;flex-basis:54px;width:48px;height:54px}
+ #esRoot.eg-mockup .ec-card-copy{align-self:stretch}
+ #esRoot.eg-mockup .ec-card-art{width:90px;max-width:31%}
+ #esRoot.eg-mockup .ec-card-arrow{right:23px;bottom:18px}
+}
+
+</style>
 </head>
 <body>
 <style>
@@ -684,7 +1001,7 @@ table.cms-calc-table {table-layout:fixed!important; width:100%!important; min-wi
 <div class="avatar" id="userAvatar" title="Click to set profile picture" onclick="document.getElementById('profilePicInput').click()">--</div>
 <input type="file" id="profilePicInput" accept="image/*" style="display:none" onchange="uploadProfilePic(this)">
 <div>
-<div class="header-name" id="userInfo">Loading...</div>
+<div class="header-name" id="userInfo"></div>
 <div class="role-toggle" style="margin-top:4px;display:flex;align-items:center;gap:6px">
 <select id="roleSwitch" onchange="switchRole(this.value)"></select>
 <span style="color:#8b93a7;font-size:10px;line-height:1">▾</span>
@@ -702,7 +1019,7 @@ table.cms-calc-table {table-layout:fixed!important; width:100%!important; min-wi
 <div class="sidebar" id="sideNav"></div>
 <div class="nav-bar" style="display:none"><div class="nav-inner" id="mainNav"></div></div>
 <div id="roleBanner"></div>
-<div class="content" id="mainContent"><div class="loading"><div class="spinner"></div>Loading...</div></div>
+<div class="content" id="mainContent"><div class="es-progress" role="status" aria-label="Please wait"><span></span><span></span><span></span></div></div>
 <div class="toast" id="toast"></div>
 <button class="pchat-fab" id="pchatFab" onclick="togglePChat()" style="display:none">💬<span class="ub" id="pchatUnread" style="display:none">0</span></button>
 <button class="kai-fab" id="kaiFab" onclick="toggleKai()" style="display:none" title="Ask KAI"><img src="kai.png" alt="KAI" onerror="this.style.display='none';this.parentNode.textContent='🤖';"></button>
@@ -953,7 +1270,7 @@ document.getElementById('loginError').style.display = 'block';
 return;
 }
 document.getElementById('loginError').style.display = 'none';
-document.getElementById('mainContent').innerHTML = '<div class="loading"><div class="spinner"></div>Signing in...</div>';
+document.getElementById('mainContent').innerHTML = '<div class="es-progress" role="status" aria-label="Please wait"><span></span><span></span><span></span></div>';
 const { data, error } = await _supabase.auth.signInWithPassword({ email: email, password: pass });
 if (error) {
 showLoginScreen();
@@ -10519,7 +10836,7 @@ async function edReloadAlerts(){
 async function loadEmployeeProfile(){
 var __cmsRouteEpoch = typeof CN === 'undefined' ? null : CN.epoch;
 
- var token=++EP.token;((typeof CN === 'undefined' || __cmsRouteEpoch === CN.epoch) ? setContent('<section class="card"><p>Loading your dashboard...</p></section>') : undefined);
+ var token=++EP.token;((typeof CN === 'undefined' || __cmsRouteEpoch === CN.epoch) ? setContent('<div class="es-progress" role="status" aria-label="Please wait"><span></span><span></span><span></span></div>') : undefined);
  try{
   var eq=await _supabase.from('employees').select('*').eq('email',APP.user.email).single();if(eq.error||!eq.data)throw new Error(eq.error?eq.error.message:'Employee profile not found.');
   var emp=eq.data;var rq=await _supabase.from('assessments').select('*').eq('employee_id',emp.employee_id).in('type',['Self','Manager']);if(rq.error)throw new Error(rq.error.message);
@@ -10730,7 +11047,7 @@ function mdModel(team,all){
 function mdHero(title,sub,back){return '<section class="md-hero"><div><h2>'+escapeHtml(title)+'</h2><p>'+escapeHtml(sub)+'</p></div>'+(back?mdButton('Back to Dashboard','mgr-dashboard'):'')+'</section>';}
 function mdMetric(value,title,page,color,explanation){return '<button type="button" class="md-metric '+color+'" onclick="navigateTo('+rcArg(page)+')"><strong>'+escapeHtml(value)+'</strong><span>'+escapeHtml(title)+'</span><small>'+escapeHtml(explanation)+' →</small></button>';}
 async function loadManagerDashboard(){
- if(!mdAllowed())return;var token=++MD.token,epoch=CN.epoch;setContent('<div class="card">Loading your team dashboard...</div>');
+ if(!mdAllowed())return;var token=++MD.token,epoch=CN.epoch;setContent('<div class="es-progress" role="status" aria-label="Please wait"><span></span><span></span><span></span></div>');
  try{var d=await mdGet();if(token!==MD.token||epoch!==CN.epoch)return;MD.data=d;
  var h='<div class="md">'+mdHero('Manager Dashboard','Team performance overview and actions for your direct reports.',false)+'<div class="md-metrics">';
  h+=mdMetric(d.people.length,'Direct Reports','mgr-team','teal','View team & details');
@@ -11089,7 +11406,7 @@ function hhActions(data,m){return [
  ];}
 function hhActionHTML(data,m){return hhActions(data,m).map(([key,title,rows,source,label])=>'<div class="hh-action"><span class="hh-action-icon">'+edIcon(key==='frameworks'?'file':key==='decisions'?'calendar':'mail')+'</span><div><h3>'+title+'</h3><p>'+(data[source]===null?'Unavailable: open queue for error details.':rows.length+' item(s) in the selected scope.')+'</p></div>'+hhButton(label,'hohr-action-'+key)+'</div>').join('');}
 async function hhDashboard(){
- if(!hhAllowed())return;var epoch=CN.epoch,token=++HH.token;hhState();setContent('<section class="card"><p>Loading your leadership overview...</p></section>');
+ if(!hhAllowed())return;var epoch=CN.epoch,token=++HH.token;hhState();setContent('<div class="es-progress" role="status" aria-label="Please wait"><span></span><span></span><span></span></div>');
  try{var data=await hhLoad();if(epoch!==CN.epoch||token!==HH.token||!hhAllowed())return;HH.data=data;hhRender();}
  catch(e){if(epoch===CN.epoch)setContent('<section class="card"><h2>Head of HR dashboard unavailable</h2><p>'+escapeHtml(e.message)+'</p>'+hhButton('Retry','hohr-dash')+'</section>');}
 }
@@ -11385,7 +11702,7 @@ async function suStartApp(){
   if(!w||!suWindowValid(w,w.email))suAuthClear();
   var response=await _supabase.auth.getSession();if(response.error)throw response.error;
   if(response.data&&response.data.session&&suWindowValid(suWindow(),response.data.session.user.email)){
-   setContent('<section class="card"><p>Opening your workspace...</p></section>');await enterApp(response.data.session.user.email);
+   setContent('<div class="es-progress" role="status" aria-label="Please wait"><span></span><span></span><span></span></div>');await enterApp(response.data.session.user.email);
   }else showLoginScreen();
  }catch(e){showLoginScreen();suLoginNotice('Could not restore login: '+(e.message||'Please sign in again.'));}
 }
@@ -11988,6 +12305,661 @@ calAIPreview=function(){
  document.getElementById('cal-ai-input').innerHTML=h;
 };
 if(calActive()&&CAL.data.length)calRender();
+
+</script>
+<script id="cms-assessment-case-register">
+/* One case per purpose. Exact submission links, immutable decision snapshots.
+   Shared common records across HR Admin, HOHR and verified C-Suite, not shared private evidence. */
+var PR={token:0,role:'',access:null,cases:[],employees:[],owners:[],purpose:'',company:'',department:'',search:'',page:0,
+ mode:'home',selected:null,draft:null,options:[],refs:[],history:[],preview:null,busy:false,dirty:false,host:null};
+var PR_PURPOSES={
+ promotion:{name:'Promotion',description:'Check readiness for a specific higher role.',icon:'↗',color:'indigo'},
+ succession:{name:'Succession',description:'Prepare someone to cover a named role.',icon:'⇄',color:'teal'},
+ pipeline:{name:'Talent pipeline',description:'Develop people for future opportunities.',icon:'◇',color:'purple'},
+ development:{name:'Development',description:'Improve skills in the current role.',icon:'◎',color:'gold'}
+};
+var PR_STATUS={draft:'Draft',awaiting:'Awaiting assessments',review:'Under review',decided:'Decision recorded'};
+var PR_OUTCOME={consider:'For further consideration',develop:'Development needed',hold:'Hold',not_recommended:'Not recommended'};
+function prAllowed(){var m=APP.user?.modes||{};return APP.currentRole==='hr'&&m.isAdmin||APP.currentRole==='hohr'&&m.isHOHR||APP.currentRole==='csuite'&&m.isCSuite;}
+function prActive(){return prAllowed()&&PR.role===APP.currentRole&&PR.host&&PR.host.isConnected;}
+function prE(v){return escapeHtml(v==null?'':String(v));}
+function prB(action,text,attrs,cls){return '<button type="button" class="btn '+(cls||'btn-outline')+'" data-pr="'+action+'" '+(attrs||'')+'>'+prE(text)+'</button>';}
+async function prRPC(action,data){
+ if(!prAllowed())throw new Error('Authorized HR or executive access required');
+ var q=await _supabase.rpc('cms_assessment_cases',{p_action:action,p_data:Object.assign({},data,{view_role:APP.currentRole})});
+ if(q.error)throw new Error(q.error.message);return q.data;
+}
+async function prPages(action,data,size){
+ var all=[];for(var pg=0;pg<100000;pg++){var batch=await prRPC(action,Object.assign({},data,{page:pg}));
+ if(!Array.isArray(batch))throw new Error('Unexpected register response');all=all.concat(batch);if(batch.length<size)return all;}
+ throw new Error('Too many records. Incomplete totals will not be displayed.');
+}
+function prDiscard(){return !PR.dirty||confirm('Discard this unsaved case draft?');}
+async function prOpen(host){
+ if(prActive()&&(PR.busy||!prDiscard()))return;
+ if(!prAllowed()){if(!host)setContent('<div class="card">Authorized HR or executive access required.</div>');return;}
+ var token=++PR.token;PR.role=APP.currentRole;PR.dirty=false;PR.busy=false;PR.preview=null;
+ if(!host){setContent('<div id="purpose-register"></div>');host=document.getElementById('purpose-register');}
+ else{host.innerHTML='<div id="purpose-register"></div>';host=host.firstElementChild;}
+ PR.host=host;host.innerHTML='<div class="card">Loading assessment cases…</div>';
+ try{
+ var access=await prRPC('access');if(token!==PR.token||!prActive())return;PR.access=access;
+ var values=await Promise.all([prPages('list',{},100),access.write?prPages('employees',{},250):[],access.write?prPages('owners',{},250):[]]);
+ if(token!==PR.token||!prActive())return;[PR.cases,PR.employees,PR.owners]=values;PR.mode='home';PR.purpose='';PR.selected=null;prRender();
+ }catch(e){if(token===PR.token&&prActive())host.innerHTML='<section class="card"><h2>Case register unavailable</h2><p>'+prE(e.message)+'</p><p>Install the new assessment-case SQL first. Existing pools and assessments have not been deleted.</p>'+prB('reload','Retry')+'</section>';}
+}
+function prOptions(values,chosen,blank){return '<option value="">'+prE(blank||'All')+'</option>'+[...new Set(values.filter(Boolean))].sort().map(v=>'<option value="'+prE(v)+'" '+(v===chosen?'selected':'')+'>'+prE(v)+'</option>').join('');}
+function prScoped(){return PR.cases.filter(c=>(!PR.company||c.company===PR.company)&&(!PR.department||c.department===PR.department));}
+function prHeader(title,sub){return '<header class="pr-header"><div><span class="pr-eyebrow">KENAFRIC CMS / '+prE(PR.role==='hr'?'HR ADMIN':PR.role==='hohr'?'HEAD OF HR':'C-SUITE')+'</span><h1>'+prE(title)+'</h1><p>'+prE(sub)+'</p></div>'+
+ (PR.access.write?(PR.mode==='edit'?'':prB('new','+ New assessment case','','btn-primary')):'<span class="pr-tag">Shared cases · read only</span>')+'</header>';}
+function prFilters(){return '<div class="card pr-filters"><label>Company<select data-pr-filter="company">'+prOptions(PR.cases.map(c=>c.company),PR.company,'All companies')+'</select></label><label>Department<select data-pr-filter="department">'+prOptions(PR.cases.filter(c=>!PR.company||c.company===PR.company).map(c=>c.department),PR.department,'All departments')+'</select></label>'+prB('reload','Refresh')+'</div>';}
+function prRender(){
+ if(!prActive())return;
+ var h='';
+ if(PR.mode==='edit'){prRenderForm();return;}
+ if(PR.mode==='detail'){prRenderDetail();return;}
+ var list=prScoped();
+ h=prHeader(PR.purpose?PR_PURPOSES[PR.purpose].name+' cases':'Talent Pools',PR.purpose?PR_PURPOSES[PR.purpose].description:'Choose why you are assessing someone.');
+ if(PR.purpose)h='<nav>'+prB('home','← Talent Pools')+'</nav>'+h;
+ h+=prFilters();
+ if(!PR.purpose){
+  h+='<section class="pr-purpose-grid">';
+  Object.entries(PR_PURPOSES).forEach(([key,p])=>{var cases=list.filter(c=>c.purpose===key);
+   h+='<button type="button" class="pr-purpose '+p.color+'" data-pr="purpose" data-purpose="'+key+'"><span class="pr-icon" aria-hidden="true">'+p.icon+'</span><div><h2>'+p.name+'</h2><p>'+p.description+'</p><span class="pr-count">'+cases.length+' cases · '+new Set(cases.map(c=>c.employee_id)).size+' people</span><strong>Open '+p.name.toLowerCase()+' cases →</strong></div></button>';
+  });
+  h+='</section><section class="card"><h2>One case, one clear purpose</h2><p>The same assessment can support different cases when HR confirms it is still relevant. A different target role requires its own assessment.</p><div class="pr-steps"><span>Choose purpose</span><span>Select employee and role</span><span>Link assessment rounds</span><span>Review and record outcome</span></div></section>'+
+  '<p class="pr-note">These are assessment cases, not automatic readiness pools. Previous employee talent tracks are unchanged and are not converted into cases. Historical reports still use their original recorded data.</p>';
+ }else{
+  list=list.filter(c=>c.purpose===PR.purpose&&(!PR.search||[c.employee_name,c.employee_id,c.target_role,c.status].join(' ').toLowerCase().includes(PR.search.toLowerCase())));
+  var pages=Math.max(1,Math.ceil(list.length/8));PR.page=Math.min(PR.page,pages-1);
+  h+='<label class="pr-search">Find a case<input data-pr-filter="search" value="'+prE(PR.search)+'" placeholder="Employee, role or status"></label><p>'+list.length+' cases · '+new Set(list.map(c=>c.employee_id)).size+' unique people</p><section class="pr-case-grid">';
+  list.slice(PR.page*8,PR.page*8+8).forEach(c=>h+='<article class="card pr-case"><div class="pr-title"><h2>'+prE(c.employee_name)+'</h2><span class="pr-tag">'+PR_STATUS[c.status]+'</span></div><p>'+prE(c.current_role)+' · '+prE(c.company)+' / '+prE(c.department)+'</p><p><b>Target role:</b> '+prE(c.target_role||'Not applicable')+'</p><p><b>Purpose:</b> '+PR_PURPOSES[c.purpose].name+'</p><p><b>Outcome:</b> '+prE(PR_OUTCOME[c.outcome]||'Not decided')+'</p><p class="pr-note">'+(c.shared?'Shared with C-Suite':'HR-only draft / working case')+'</p>'+prB('detail','Open case','data-id="'+prE(c.id)+'"','btn-primary')+'</article>');
+  h+='</section>';
+  if(!list.length)h+='<section class="card"><h2>No cases here yet</h2><p>'+(PR.access.write?'Create a case and choose its employee, role and purpose.':'Only cases deliberately shared by HR appear here.')+'</p></section>';
+  if(pages>1)h+='<nav class="pr-pagination">'+prB('prev','Previous',PR.page?'':'disabled')+'<span>Page '+(PR.page+1)+' of '+pages+'</span>'+prB('next','Next',PR.page>=pages-1?'disabled':'')+'</nav>';
+ }
+ PR.host.innerHTML=h;
+}
+async function prDetail(id){
+ if(!prDiscard()||PR.busy)return;var token=++PR.token;PR.dirty=false;
+ try{var result=await Promise.all([prRPC('detail',{id}),prRPC('history',{id,page:0})]);
+ if(token!==PR.token||!prActive())return;PR.selected=result[0];PR.history=result[1];PR.historyPage=0;PR.mode='detail';prRender();}
+ catch(e){if(token===PR.token&&prActive())showToast(e.message);}
+}
+function prLinkedTable(links){
+ if(!links.length)return '<p>No assessments linked yet.</p>';
+ return '<div class="pr-linked">'+links.map(l=>'<div><b>'+prE(l.type)+'</b><span>Round '+prE(l.round)+' · '+prE(l.experiences)+' experiences</span><span>'+prE(l.date||'Date not recorded')+'</span><span>'+prE(l.target||'Current role')+'</span></div>').join('')+'</div>';
+}
+function prRenderDetail(){
+ var c=PR.selected,h='<nav>'+prB('purpose','← '+PR_PURPOSES[c.purpose].name+' cases','data-purpose="'+c.purpose+'"')+'</nav>'+prHeader(c.employee_name,PR_PURPOSES[c.purpose].name+' assessment case');
+ h+='<section class="card"><div class="pr-title"><h2>'+PR_STATUS[c.status]+'</h2><span class="pr-tag">'+(c.shared?'Shared case':'HR-only')+'</span></div><div class="pr-details">'+
+ [['Employee ID',c.employee_id],['Company / department',c.company+' / '+c.department],['Current role',c.current_role],['Target role',c.target_role||'Not applicable'],
+ ['Case owner',PR.cases.find(x=>x.id===c.id)?.owner_email||PR.owners.find(x=>x.id===c.owner_id)?.email||'Recorded owner'],['Version',c.version]].map(a=>'<div><b>'+a[0]+'</b><span>'+prE(a[1])+'</span></div>').join('')+'</div>'+
+ '<h3>Why this assessment?</h3><p>'+prE(c.reason)+'</p><h3>Outcome</h3><p>'+prE(PR_OUTCOME[c.outcome]||'Not decided')+'</p><p>'+prE(c.outcome_note)+'</p>'+
+ (PR.access.write&&c.status!=='decided'?prB('edit','Edit case','','btn-primary'):'')+'</section>';
+ h+='<section class="card"><h2>Linked assessment rounds</h2>'+prLinkedTable(c.links)+'<h3>Why these assessments are suitable</h3><p>'+prE(c.reuse_reason||'Not yet confirmed')+'</p>'+
+ '<p class="pr-note">Links identify specific submissions, not whichever assessment becomes latest later. A saved snapshot is retained each time the case is saved.</p>'+
+ (PR.access.write?prB('snapshot','View saved calculations and Critical checks'):'<p class="pr-note">Evidence and detailed calculations remain restricted to HR. Shared case information is the same in HR, HOHR and C-Suite views.</p>')+'<div id="pr-snapshot"></div></section>';
+ h+='<section class="card"><h2>Related records</h2>'+(c.reference_links.length?c.reference_links.map(r=>'<p>'+prE(r.kind==='report'?'HR report':'Development plan')+' · Reference '+prE(r.id)+'</p>').join(''):'<p>No reports or plans linked.</p>')+
+ '<p class="pr-note">These are references, not copies of private report discussions. Open the existing authorized workflow to view or act on them.</p>'+
+ (PR.access.write?prB('route','Reports','data-route="reports"')+prB('route','Development plans','data-route="plans"'):'')+'</section>';
+ h+='<details class="card"><summary>Case history</summary><div id="pr-history">'+prHistory()+'</div>'+prB('history','Load older history')+'</details>'+
+ '<p class="pr-note">A recorded outcome is not an appointment, promotion approval, succession nomination or employee notification. Those remain separate authorized processes. Decided cases are preserved; create a new follow-up case instead of rewriting them.</p>';
+ PR.host.innerHTML=h;
+}
+function prHistory(){return PR.history.map(e=>'<article class="pr-history"><b>'+prE(PR_STATUS[e.value.status])+' · version '+prE(e.value.version)+'</b><p>'+prE(e.actor_email)+' · '+prE(e.actor_role)+' · '+prE(e.at)+'</p><p>'+prE(e.value.reason)+'</p><p>'+prE(PR_OUTCOME[e.value.outcome]||'Not decided')+' '+prE(e.value.outcome_note||'')+'</p></article>').join('')||'<p>No visible history.</p>';}
+async function prForm(existing){
+ if(!PR.access.write||!prDiscard())return;
+ PR.dirty=false;PR.preview=null;PR.mode='edit';PR.options=[];PR.refs=[];
+ PR.draft=existing?JSON.parse(JSON.stringify(existing)):{id:crypto.randomUUID(),version:0,employee_id:'',purpose:PR.purpose||'',
+ target_role:'',owner_id:'',reason:'',status:'draft',outcome:'',outcome_note:'',shared:false,reuse_reason:'',links:[],reference_links:[]};
+ if(existing)await prLoadLinks(existing.employee_id,true);else prRenderForm();
+}
+async function prLoadLinks(id,keep){
+ var token=++PR.token;PR.options=[];PR.refs=[];PR.preview=null;PR.busy=true;
+ if(!keep){PR.draft.links=[];PR.draft.reference_links=[];PR.draft.reuse_reason='';}
+ prRenderForm();
+ try{var r=await Promise.all([prPages('assessment_options',{employee_id:id},100),prPages('reference_options',{employee_id:id},100)]);
+ if(token!==PR.token||!prActive())return;
+ PR.options=r[0];PR.refs=r[1];PR.busy=false;prRenderForm();}
+ catch(e){if(token===PR.token&&prActive()){PR.busy=false;prRenderForm();showToast(e.message);}}
+}
+function prRenderForm(){
+ if(!prActive()||!PR.draft)return;
+ var d=PR.draft,h='<nav>'+prB('cancel','← Back')+'</nav>'+prHeader(d.version?'Edit assessment case':'New assessment case','Keep the purpose separate from the eventual decision.');
+ h+='<form id="pr-form" class="card"><div class="pr-form-grid"><label>Purpose<select data-pr-field="purpose" '+(d.version?'disabled':'')+'><option value="">Select purpose</option>'+
+ Object.entries(PR_PURPOSES).map(([k,p])=>'<option value="'+k+'" '+(d.purpose===k?'selected':'')+'>'+p.name+'</option>').join('')+'</select></label>'+
+ '<label>Employee<select data-pr-field="employee_id" '+(d.version||PR.busy?'disabled':'')+'><option value="">Select employee</option>'+
+ PR.employees.map(e=>'<option value="'+prE(e.employee_id)+'" '+(d.employee_id===e.employee_id?'selected':'')+'>'+prE(e.employee_name)+' ('+prE(e.employee_id)+')</option>').join('')+'</select></label>'+
+ '<label>Case owner<select data-pr-field="owner_id"><option value="">Select HR owner</option>'+PR.owners.map(o=>'<option value="'+prE(o.id)+'" '+(d.owner_id===o.id?'selected':'')+'>'+prE(o.email)+' · '+prE(o.role)+'</option>').join('')+'</select></label>'+
+ '<label>Target role<input data-pr-field="target_role" maxlength="300" value="'+prE(d.target_role)+'" placeholder="Required for Promotion / Succession"></label>'+
+ '<label>Status<select data-pr-field="status">'+Object.entries(PR_STATUS).filter(([k])=>k!=='decided'||PR.access.decide).map(([k,v])=>'<option value="'+k+'" '+(d.status===k?'selected':'')+'>'+v+'</option>').join('')+'</select></label></div>'+
+ '<p class="pr-note">'+prE(PR_PURPOSES[d.purpose]?.description||'Choose why this assessment is needed.')+' A typed target is a planning label, not a published framework or assessment invitation. Linked target assessments must match it exactly.</p>'+
+ '<label>Business reason<textarea data-pr-field="reason" rows="3" maxlength="5000">'+prE(d.reason)+'</textarea></label>'+
+ '<h2>Link specific assessment rounds</h2><p>Select at most one Self and Manager submission for each role. The same submission can be used in another case after HR checks its relevance.</p>'+
+ (PR.busy?'<p>Loading employee records…</p>':'')+
+ '<div class="pr-assessment-links">'+['Self','Manager','Prospective Self','Prospective'].map(type=>'<label>'+type+'<select data-pr-link="'+type+'"><option value="">Not linked</option>'+
+ PR.options.map((o,i)=>({o,i})).filter(x=>x.o.type===type).map(({o,i})=>'<option value="'+i+'" '+(d.links.some(l=>l.type===o.type&&l.round===o.round&&l.submission===o.submission)?'selected':'')+'>Round '+prE(o.round)+' · '+prE(o.date||'No date')+' · '+prE(o.target||'Current role')+' · '+o.experiences+' experiences</option>').join('')+'</select></label>').join('')+'</div>'+
+ '<p class="pr-note">Choosing a link uses its present record and validates it again on save. Confirm relevance even when no other case has used it. Deciding a target-role case requires reviewed current and target pairs.</p>'+
+ '<label>HR relevance check / reason for reuse<textarea data-pr-field="reuse_reason" rows="3" maxlength="5000" placeholder="Why are these rounds still relevant and valid for this purpose?">'+prE(d.reuse_reason)+'</textarea></label>'+
+ '<h2>Link existing reports or development plans</h2><div class="pr-reference-options">'+PR.refs.map((r,i)=>'<label class="pr-check"><input type="checkbox" data-pr-reference="'+i+'" '+(d.reference_links.some(x=>x.kind===r.kind&&x.id===r.id)?'checked':'')+'><span>'+prE(r.kind==='report'?'HR report':'Development plan')+' · '+prE(r.label)+' · '+prE(r.id)+'</span></label>').join('')+'</div>';
+ if(!PR.refs.length)h+='<p>No related reports or plans available.</p>';
+ if(PR.access.decide)h+='<fieldset><legend>HOHR case outcome</legend><p>Used only when status is Decision recorded. This records a conclusion, not appointment approval.</p><label>Outcome<select data-pr-field="outcome"><option value="">Select outcome</option>'+Object.entries(PR_OUTCOME).map(([k,v])=>'<option value="'+k+'" '+(d.outcome===k?'selected':'')+'>'+v+'</option>').join('')+'</select></label><label>Outcome explanation<textarea data-pr-field="outcome_note" maxlength="5000" rows="3">'+prE(d.outcome_note)+'</textarea></label></fieldset>';
+ h+='<label class="pr-check"><input type="checkbox" data-pr-field="shared" '+(d.shared?'checked':'')+' '+(PR.selected?.id===d.id&&PR.selected.shared?'disabled':'')+'><span>Share this case with verified C-Suite users</span></label>'+
+ '<p class="pr-warning">All case fields, relevance reasons, related-record references and the outcome become shared. Do not paste private executive comments or sensitive evidence. Drafts cannot be shared; submitted HR report required. Previously shared history remains visible.</p>'+
+ prB('preview','Preview case',PR.busy?'disabled':'','btn-primary')+prB('cancel','Cancel')+'<div id="pr-preview"></div></form>';
+ PR.host.innerHTML=h;
+}
+function prPreview(){
+ var d=PR.draft;
+ if(PR.busy)return;
+ if(!d.purpose||!d.employee_id||!d.owner_id||d.reason.trim().length<10){showToast('Choose purpose, employee, owner and a reason of at least 10 characters.');return;}
+ if(['promotion','succession'].includes(d.purpose)&&!d.target_role.trim()){showToast('Enter the named target role.');return;}
+ if(d.links.length&&d.reuse_reason.trim().length<10){showToast('Explain why the linked assessments remain suitable.');return;}
+ if(d.shared&&d.status==='draft'){showToast('Draft cases stay HR-only.');return;}
+ if(d.status==='decided'&&(!d.outcome||d.outcome_note.trim().length<10)){showToast('HOHR must select and explain the case outcome.');return;}
+ PR.preview=Object.assign({},JSON.parse(JSON.stringify(d)),{event_id:crypto.randomUUID()});
+ var e=PR.employees.find(x=>x.employee_id===d.employee_id);
+ document.getElementById('pr-preview').innerHTML='<section class="pr-preview"><h2>Confirm this case</h2><p><b>'+prE(e?.employee_name)+' · '+PR_PURPOSES[d.purpose].name+'</b></p><p>'+prE(d.target_role||'Current role only')+' · '+PR_STATUS[d.status]+'</p><p>'+prE(d.reason)+'</p>'+prLinkedTable(d.links)+'<p><b>Relevance:</b> '+prE(d.reuse_reason||'No linked assessments')+'</p><p><b>Outcome:</b> '+prE(PR_OUTCOME[d.outcome]||'Not decided')+' '+prE(d.outcome_note)+'</p><p>'+d.reference_links.length+' related records linked</p><p><b>Visibility: '+(d.shared?'Shared with verified C-Suite':'HR-only')+'</b></p>'+prB('save','Confirm and save','','btn-primary')+'</section>';
+}
+async function prSave(){
+ if(!PR.preview||PR.busy)return;var token=PR.token,packet=PR.preview;PR.busy=true;
+ var b=PR.host.querySelector('[data-pr="save"]');if(b){b.disabled=true;b.textContent='Saving…';}
+ try{await prRPC('save',packet);if(token!==PR.token||!prActive())return;
+ PR.dirty=false;PR.preview=null;PR.busy=false;PR.cases=await prPages('list',{},100);
+ if(token!==PR.token||!prActive())return;showToast('Case saved. No scores, messages or appointments changed.');await prDetail(packet.id);
+ }catch(e){if(token===PR.token&&prActive()){PR.busy=false;showToast(e.message);if(b){b.disabled=false;b.textContent='Retry confirmed save';}}}
+}
+async function prSnapshot(){
+ var token=PR.token,id=PR.selected.id,host=document.getElementById('pr-snapshot');host.innerHTML='<p>Loading saved snapshot…</p>';
+ try{var data=await prRPC('snapshot',{id});if(token!==PR.token||!prActive()||!host.isConnected)return;
+ var rows=data?.snapshot||[];var h='<p>Saved on '+prE(data?.at||'Not recorded')+'. These are case-linked snapshots, not the latest live assessments.</p>';
+ ['Self','Manager','Prospective Self','Prospective'].forEach(type=>{h+=scoreBreakdownHTML(rows,type)||'';});
+ ['current','prospective'].forEach(kind=>{if(rows.some(r=>r.type===(kind==='current'?'Self':'Prospective Self')))h+=cgPanel(cgEvaluate(rows,kind),'Saved '+kind+' Critical check');});
+ host.innerHTML=h||'<p>No snapshots linked.</p>';
+ host.querySelectorAll('.table-wrap').forEach(w=>{
+  w.classList.add('pr-snapshot-wrap');
+  w.querySelectorAll('table').forEach(t=>{t.classList.add('pr-snapshot-table');var labels=Array.from(t.querySelectorAll('thead th')).map(x=>x.textContent);
+   t.querySelectorAll('tbody tr').forEach(tr=>Array.from(tr.cells).forEach((td,i)=>td.dataset.label=labels[i]||'Detail'));});
+ });
+ }catch(e){if(host.isConnected)host.innerHTML='<p>'+prE(e.message)+'</p>';}
+}
+document.addEventListener('submit',e=>{if(e.target.id==='pr-form')e.preventDefault();});
+document.addEventListener('input',function(e){
+ var t=e.target;if(!prActive()||!t.closest('#purpose-register')||!t.dataset.prField||PR.busy)return;
+ PR.draft[t.dataset.prField]=t.type==='checkbox'?t.checked:t.value;PR.dirty=true;PR.preview=null;var p=document.getElementById('pr-preview');if(p)p.innerHTML='';
+});
+document.addEventListener('change',async function(e){
+ var t=e.target;if(!prActive()||!t.closest('#purpose-register')||PR.busy)return;
+ if(t.dataset.prFilter){PR[t.dataset.prFilter]=t.value;if(t.dataset.prFilter==='company')PR.department='';PR.page=0;prRender();return;}
+ if(!PR.draft)return;
+ if(t.dataset.prField){var key=t.dataset.prField;PR.draft[key]=t.type==='checkbox'?t.checked:t.value;PR.dirty=true;PR.preview=null;
+ if(key==='employee_id'){await prLoadLinks(t.value,false);return;}
+ if(key==='purpose'||key==='status')prRenderForm();
+ }
+ if(t.dataset.prLink){var type=t.dataset.prLink;PR.draft.links=PR.draft.links.filter(l=>l.type!==type);
+ if(t.value!=='')PR.draft.links.push({...PR.options[Number(t.value)]});PR.dirty=true;PR.preview=null;}
+ if(t.dataset.prReference){var r=PR.refs[Number(t.dataset.prReference)];PR.draft.reference_links=PR.draft.reference_links.filter(x=>!(x.kind===r.kind&&x.id===r.id));if(t.checked)PR.draft.reference_links.push({kind:r.kind,id:r.id});PR.dirty=true;PR.preview=null;}
+ var p=document.getElementById('pr-preview');if(p)p.innerHTML='';
+});
+document.addEventListener('click',async function(e){
+ var b=e.target.closest('[data-pr]');if(!b||!prActive()||!b.closest('#purpose-register')||PR.busy)return;
+ var a=b.dataset.pr;
+ if(['home','purpose','reload','cancel'].includes(a)&&!prDiscard())return;
+ if(a==='home'||a==='purpose'||a==='cancel'){PR.token++;PR.preview=null;PR.dirty=false;PR.mode='home';if(a==='home')PR.purpose='';if(a==='purpose')PR.purpose=b.dataset.purpose;PR.page=0;PR.search='';prRender();}
+ if(a==='reload')prOpen(PR.host.parentElement.id==='mainContent'?null:PR.host.parentElement);
+ if(a==='new')prForm(null);
+ if(a==='edit')prForm(PR.selected);
+ if(a==='detail')prDetail(b.dataset.id);
+ if(a==='prev'){PR.page=Math.max(0,PR.page-1);prRender();}
+ if(a==='next'){PR.page++;prRender();}
+ if(a==='preview')prPreview();
+ if(a==='save')prSave();
+ if(a==='snapshot')prSnapshot();
+ if(a==='history'){try{var token=PR.token;var batch=await prRPC('history',{id:PR.selected.id,page:(PR.historyPage||0)+1});if(token===PR.token&&prActive()){PR.historyPage++;PR.history=PR.history.concat(batch);document.getElementById('pr-history').innerHTML=prHistory();if(!batch.length)b.disabled=true;}}catch(err){showToast(err.message);}}
+ if(a==='route'){var target=APP.currentRole==='hohr'?(b.dataset.route==='reports'?'hohr-reports':'hohr-devplans'):(b.dataset.route==='reports'?'hr-reports':'hr-devplans');navigateTo(target);}
+});
+// Preserve the old readiness view separately; don't relabel readiness as assessment purpose.
+var prLegacyPool=loadHRPromPool;
+loadHRPromPool=function(){return prOpen();};
+var prOldPeople=xiPeople;
+xiPeople=async function(host,active,talent){if(talent)return prOpen(host);return prOldPeople.apply(this,arguments);};
+var prOldXiOpen=xiOpen;
+xiOpen=function(){if(prActive()&&(PR.busy||!prDiscard()))return;PR.token++;PR.dirty=false;PR.host=null;return prOldXiOpen.apply(this,arguments);};
+var prOldPageRole=cnPageRole;
+cnPageRole=function(page,preferred){return page==='assessment-cases'?(['hr','hohr','csuite'].includes(preferred)?preferred:null):prOldPageRole.apply(this,arguments);};
+var prOldPage=loadPage;
+loadPage=function(id){if(id==='assessment-cases')return prOpen();if(id==='legacy-readiness-pool')return prLegacyPool();return prOldPage.apply(this,arguments);};
+var prOldLabel=getPageLabel;
+getPageLabel=function(id){return id==='assessment-cases'||id==='hr-prompool'||id==='hohr-pool'?'Talent Pools':prOldLabel.apply(this,arguments);};
+var prOldNav=setupNav;
+setupNav=function(role){
+ prOldNav.apply(this,arguments);
+ if(!['hr','hohr','csuite'].includes(role))return;
+ var nav=document.getElementById('sideNav');if(!nav)return;
+ var existing=nav.querySelector('[data-page="'+(role==='hr'?'hr-prompool':'hohr-pool')+'"]');
+ if(existing&&role!=='csuite'){existing.innerHTML='<span aria-hidden="true">◇</span>Talent Pools';return;}
+ if(!nav.querySelector('[data-page="assessment-cases"]')){
+ var item=document.createElement('div');item.className='sb-item';item.dataset.page='assessment-cases';item.tabIndex=0;item.setAttribute('role','button');
+ item.innerHTML='<span aria-hidden="true">◇</span>Talent Pools';item.onclick=()=>navigateTo('assessment-cases');item.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();item.click();}};nav.appendChild(item);}
+};
+var prOldNavigate=navigateTo;
+navigateTo=function(id){
+ if(prActive()&&(PR.busy||!prDiscard()))return;
+ PR.token++;PR.dirty=false;PR.preview=null;PR.host=null;return prOldNavigate.apply(this,arguments);
+};
+var prOldSwitch=switchRole;
+switchRole=function(role){if(prActive()&&(PR.busy||!prDiscard()))return;PR.token++;PR.host=null;PR.dirty=false;return prOldSwitch.apply(this,arguments);};
+window.addEventListener('beforeunload',e=>{if(prActive()&&(PR.dirty||PR.busy)){e.preventDefault();e.returnValue='';}});
+// Existing historical/category reports remain intact; explain their different source.
+if(typeof xcRender==='function'){
+ var prOldCategories=xcRender;
+ xcRender=function(host,data){
+  var note=document.createElement('section');note.className='card';
+  var title=document.createElement('h3');title.textContent='Assessment cases and employee tracks are different';note.appendChild(title);
+  var text=document.createElement('p');text.textContent='The category tables below use the original employee talent tracks or saved report snapshots. New case-based purposes and outcomes are in Talent Pools; these historical tables are not backfilled from current cases.';note.appendChild(text);
+  var button=document.createElement('button');button.type='button';button.className='btn btn-outline';button.textContent='Open assessment case register';button.onclick=()=>navigateTo('assessment-cases');note.appendChild(button);host.appendChild(note);
+  return prOldCategories.apply(this,arguments);
+ };
+}
+
+</script>
+<script id="executive-simple-module">
+/* Executive presentation only: existing authorized data services and private
+   case workflows remain authoritative. No synthetic metrics or period reconstruction. */
+var ES={token:0,view:'home',company:'',department:'',reportMonth:'',reportScope:'',reports:[],data:null};
+var ES_DEST=[
+ ['private','My decisions','Review cases assigned to you.','Open my decisions','♙','indigo'],
+ ['companies','Company overview','See assessment progress, strengths and gaps.','Choose a company','▥','blue'],
+ ['talent','Talent Pools','Promotion, Succession, Talent pipeline and Development.','Explore the four pools','◇','purple'],
+ ['succession','Critical roles & successors','See roles needing cover and proposed successors.','View role coverage','☆','gold'],
+ ['development','Development progress','Track plans, progress and overdue actions.','Review development','↗','teal'],
+ ['reports','Reports','Open clear monthly reports by company.','Open report centre','▤','white']
+];
+function esAllowed(){return APP.currentRole==='csuite'&&APP.user?.modes?.isCSuite;}
+function esN(tag,text,cls){var n=document.createElement(tag);if(text!=null)n.textContent=text;if(cls)n.className=cls;return n;}
+function esB(text,fn,cls){var b=esN('button',text,'btn '+(cls||'btn-outline'));b.type='button';b.onclick=fn;return b;}
+function esGo(view){return navigateTo(view==='private'?'ex-private':view==='home'?'ex-overview':'cs-simple-'+view);}
+function esBusy(){return '<div class="es-progress" role="status" aria-label="Please wait"><span></span><span></span><span></span></div>';}
+function esShell(title,subtitle){
+ setContent('<div id="esRoot"></div>');var root=document.getElementById('esRoot');
+ if(ES.view!=='home'){var back=esN('nav');back.appendChild(esB('← Executive Overview',()=>esGo('home')));root.appendChild(back);}
+ var header=esN('header',null,'es-heading');header.append(esN('h1',title),esN('p',subtitle));root.appendChild(header);
+ document.querySelectorAll('#sideNav [data-es-nav]').forEach(b=>b.classList.toggle('active',b.dataset.esNav===(ES.view==='reports'?'reports':'home')));
+ return root;
+}
+function esPanel(title,text){var p=esN('section',null,'card');p.appendChild(esN('h2',title));if(text)p.appendChild(esN('p',text));return p;}
+function esMetric(host,label,value){var item=esN('div',null,'es-metric');item.append(esN('strong',value==null?'Not available':String(value)),esN('span',label));host.appendChild(item);}
+function esPct(n){return n==null?'Not assessed':Number(n).toFixed(1)+'%';}
+function esScope(){return {company:ES.company,department:ES.department,position:'',page:0,search:'',track:''};}
+function esSelect(label,values,value,fn){
+ var l=esN('label',label),s=esN('select');s.add(new Option('All '+label.toLowerCase(),''));values.forEach(x=>s.add(new Option(x,x)));s.value=value;s.onchange=()=>fn(s.value);l.appendChild(s);return l;
+}
+function esFilters(root,d){
+ var controls=esN('section',null,'card es-filters');
+ controls.appendChild(esSelect('Companies',d.filters?.companies||[],ES.company,v=>{ES.company=v;ES.department='';esOpen(ES.view);}));
+ if(ES.view!=='home')controls.appendChild(esSelect('Departments',d.filters?.departments||[],ES.department,v=>{ES.department=v;esOpen(ES.view);}));
+ controls.appendChild(esB('Refresh',()=>esOpen(ES.view)));root.appendChild(controls);
+ root.appendChild(esN('p','Latest submitted assessments · Updated '+new Date(d.as_of).toLocaleString()+'. Historical dates are available only through saved reports.','es-muted'));
+}
+async function esOpen(view){
+ if(!esAllowed())return;
+ if(typeof prActive==='function'&&prActive()&&(PR.busy||!prDiscard()))return;
+ if(typeof PR!=='undefined'){PR.token++;PR.dirty=false;PR.host=null;}
+ ES.view=view||'home';var token=++ES.token;
+ var def=ES_DEST.find(x=>x[0]===view),root=esShell(def?def[1]:'Executive Overview',def?def[2]:'See the risks. Review decisions. Track progress.');
+ var host=esN('div');root.appendChild(host);host.innerHTML=esBusy();
+ var active=()=>token===ES.token&&esAllowed()&&root.isConnected;
+ try{
+  if(view==='talent'){host.innerHTML='';return await prOpen(host);}
+  if(view==='reports'){await esReports(host,active);return;}
+  var d=await xiRPC('overview',esScope());if(!active())return;ES.data=d;XI.data=d;
+  host.innerHTML='';esFilters(host,d);
+  if(!view||view==='home')esHome(host,d);
+  if(view==='companies')esCompanies(host,d,active);
+  if(view==='succession')esSuccession(host,d);
+  if(view==='development')await esDevelopment(host,active);
+  if(active())host.appendChild(esN('p','Shared information stays separate from private executive recommendations.','es-footnote'));
+ }catch(e){if(active()){host.innerHTML='';var card=esPanel('This section is unavailable',e.message);card.appendChild(esB('Retry',()=>esOpen(view)));host.appendChild(card);}}
+}
+function esHome(host,d){
+ var focus=esN('section',null,'es-focus');focus.appendChild(esN('strong','Your focus'));
+ [['Review assigned cases','private'],['Check roles needing cover','succession'],['Follow up development','development']].forEach(x=>focus.appendChild(esB(x[0],()=>esGo(x[1]))));host.appendChild(focus);
+ var grid=esN('section',null,'es-cards');
+ ES_DEST.forEach(a=>{
+  var b=esN('button',null,'es-destination '+a[5]);b.type='button';b.dataset.esCard=a[0];b.onclick=()=>esGo(a[0]);
+  var icon=esN('span',a[4],'es-card-icon');icon.setAttribute('aria-hidden','true');var text=esN('div');
+  text.appendChild(esN('h2',a[1]));
+  if(a[0]==='private')text.appendChild(esN('span','Private to you','es-private'));
+  text.append(esN('p',a[2]),esN('strong',a[3]+' →'));b.append(icon,text);grid.appendChild(b);
+ });host.appendChild(grid);
+}
+function esSummary(host,d){
+ var grid=esN('div',null,'es-metrics');
+ esMetric(grid,'Employees in scope',d.employees);esMetric(grid,'Both assessments submitted',d.complete_pairs);
+ esMetric(grid,'Combined score',d.current_score==null?null:esPct(d.current_score));esMetric(grid,'People in development',d.development?.people);host.appendChild(grid);
+ host.appendChild(esN('p','“Both assessments submitted” is coverage, not completed HR review. Combined scores still require Self and Manager assessments.','es-muted'));
+}
+function esTable(host,heads,rows){
+ var wrap=esN('div',null,'es-table-wrap'),t=esN('table'),head=esN('thead'),tr=esN('tr'),body=esN('tbody');
+ heads.forEach(h=>tr.appendChild(esN('th',h)));head.appendChild(tr);t.appendChild(head);
+ rows.forEach(row=>{var r=esN('tr');row.forEach((v,i)=>{var c=esN('td');c.dataset.label=heads[i];if(v instanceof Node)c.appendChild(v);else c.textContent=v==null?'Not recorded':String(v);r.appendChild(c);});body.appendChild(r);});
+ t.appendChild(body);wrap.appendChild(t);host.appendChild(wrap);if(!rows.length)host.appendChild(esN('p','No records available for this scope.'));return t;
+}
+function esRank(host,d){
+ var ranking=(d.ranking||[]).slice().sort((a,b)=>(b.score??-1)-(a.score??-1));
+ var known=ranking.filter(r=>r.score!=null&&r.assessed>0),high=known.length?known[0].score:null,low=known.length?known.at(-1).score:null;
+ var p=esPanel('Competency strengths and gaps');
+ var extremes=esN('div',null,'es-highlow');
+ [['Highest',high],['Lowest',low]].forEach(([label,n])=>{var box=esN('div');box.append(esN('strong',label),esN('p',n==null?'Not assessed':known.filter(r=>Number(r.score)===Number(n)).map(r=>r.competency).join(' / ')+' · '+esPct(n)));extremes.appendChild(box);});
+ p.appendChild(extremes);esTable(p,['Competency','Combined score','Employees assessed'],ranking.map(r=>[r.competency,esPct(r.score),r.assessed]));
+ var details=esN('details');details.append(esN('summary','How to read this report'),esN('p','Highest to lowest across employees with both assessments. The combined score remains 70% Manager and 30% Self. Different roles may use different experience standards; gaps require evidence review, not automatic decisions.'));
+ p.appendChild(details);host.appendChild(p);
+}
+function esCompanies(host,d,active){
+ if(!ES.company){
+  var grid=esN('section',null,'es-cards');
+  (d.companies||[]).forEach(c=>{var b=esN('button',null,'es-company');b.type='button';b.onclick=()=>{ES.company=c.company;ES.department='';esOpen('companies');};
+   b.append(esN('h2',c.company),esN('p',c.employees+' employees'),esN('p',c.complete_pairs+' with both assessments submitted'),esN('strong','Open company report →'));grid.appendChild(b);});host.appendChild(grid);
+  if(!(d.companies||[]).length)host.appendChild(esN('p','No companies available.'));
+  return;
+ }
+ esSummary(host,d);esRank(host,d);
+ var people=esN('details',null,'card');people.append(esN('summary','View employees behind the results'),esN('p','Open only when you need individual summaries.'));var content=esN('div');people.appendChild(content);host.appendChild(people);
+ people.addEventListener('toggle',async function(){
+  if(!people.open||people.dataset.loaded)return;
+  people.dataset.loaded='1';content.innerHTML=esBusy();
+  try{
+   XI.company=ES.company;XI.department=ES.department;XI.position='';XI.page=0;XI.search='';XI.track='';
+   await esPeople(content,active,0);
+  }catch(e){content.textContent=e.message;delete people.dataset.loaded;}
+ });
+}
+async function esPeople(host,active,page){
+ var r=await xiRPC('people',Object.assign(esScope(),{page}));if(!active())return;host.innerHTML='';
+ esTable(host,['Employee','Current role','Combined score','Open'],r.items.map(p=>[p.employee_name,p.position,esPct(p.decision_score),esB('Profile',()=>xiProfile(p.employee_id))]));
+ var prev=esB('Previous',()=>esPeople(host,active,page-1).catch(e=>showToast(e.message))),next=esB('Next',()=>esPeople(host,active,page+1).catch(e=>showToast(e.message)));
+ prev.disabled=page===0;next.disabled=(page+1)*25>=r.total;host.append(prev,esN('span','Page '+(page+1)+' · '+r.total+' employees'),next);
+}
+function esSuccession(host,d){
+ var roles=esPanel('Roles needing cover','Recorded occupied roles only. Roles without a recorded ready successor need review, not an automatic appointment.');
+ esTable(roles,['Company / department','Role','Importance','Ready successors'],(d.critical_roles||[]).map(r=>[r.company+' / '+r.department,r.position,r.criticality,r.ready_successors]));host.appendChild(roles);
+ var nominations=esPanel('Proposed successors','Readiness is an HR-reviewed record, not a promotion commitment.');
+ esTable(nominations,['Target role','Candidate / current role','Readiness','Target date','Details'],(d.succession||[]).map(n=>[n.target_position+' · '+n.target_company+' / '+n.target_department,n.candidate+' / '+n.current_position,n.readiness,n.target_date||'Not set',esB('Profile',()=>xiProfile(n.employee_id))]));host.appendChild(nominations);
+}
+async function esDevelopment(host,active,page){
+ page=page||0;var r=await xiRPC('development',Object.assign(esScope(),{page}));if(!active())return;
+ var existing=host.querySelector('#es-development');if(existing)existing.remove();var p=esPanel('Development follow-up');p.id='es-development';
+ var metrics=esN('div',null,'es-metrics');esMetric(metrics,'People in development',r.summary.people);esMetric(metrics,'Overdue monthly updates',r.summary.overdue_reports);p.appendChild(metrics);
+ esTable(p,['Employee / company','Development action','Owner','Due','Status'],r.items.map(x=>[x.employee_name+' / '+x.company,x.comp_name+': '+(x.task||'')+(x.action?' / '+x.action:''),x.responsible_party,x.end_date,x.status]));
+ var prev=esB('Previous',()=>esDevelopment(host,active,page-1).catch(e=>showToast(e.message))),next=esB('Next',()=>esDevelopment(host,active,page+1).catch(e=>showToast(e.message)));
+ prev.disabled=page===0;next.disabled=r.items.length<25;p.append(prev,esN('span','Page '+(page+1)),next);host.appendChild(p);
+}
+async function esReports(host,active){
+ var list=await xiRPC('reports',{});if(!active())return;ES.reports=list;host.innerHTML='';
+ var controls=esN('section',null,'card es-filters');
+ controls.appendChild(esSelect('Months',[...new Set(list.map(r=>r.month))].sort().reverse(),ES.reportMonth,v=>{ES.reportMonth=v;draw();}));
+ controls.appendChild(esSelect('Report types',[...new Set(list.map(r=>r.scope))].sort(),ES.reportScope,v=>{ES.reportScope=v;draw();}));
+ host.appendChild(controls);host.appendChild(esN('p','Saved reports show the figures captured at that time, not reconstructed month-end data. Your private reports remain separate from shared company reporting.','es-muted'));
+ var capture=esN('details',null,'card');capture.appendChild(esN('summary','Create my private monthly report'));
+ capture.appendChild(esN('p','Captures your own assigned-case report for the current month. Existing one-per-month and scope limits apply.'));
+ capture.appendChild(esB('Preview capture',()=>xiCapture(false)));host.appendChild(capture);
+ var body=esN('section',null,'es-cards');host.appendChild(body);
+ function draw(){body.innerHTML='';var rows=list.filter(r=>(!ES.reportMonth||r.month===ES.reportMonth)&&(!ES.reportScope||r.scope===ES.reportScope));
+ rows.forEach(r=>{var c=esPanel(r.month+' · '+r.scope);c.append(esN('p','Captured '+new Date(r.captured_at).toLocaleString()),esB('Open report',()=>esReport(r.id),'btn-primary'));body.appendChild(c);});
+ if(!rows.length)body.appendChild(esPanel('No saved reports','Choose another month or report type. Reports must be captured before they can appear here.'));}
+ draw();
+}
+async function esReport(id){
+ if(!esAllowed())return;
+ var token=++ES.token;ES.view='reports';var root=esShell('Monthly report','Saved figures, clearly organized.');var host=esN('div');root.appendChild(host);host.innerHTML=esBusy();
+ try{var report=await xiRPC('report',{id});if(token!==ES.token||!root.isConnected||!esAllowed())return;
+ if(report.scope!=='Shared'){return esPreviousReport(id);}
+ host.innerHTML='';host.appendChild(esB('← Report centre',()=>esGo('reports')));
+ var area=esN('div',null,'es-report');host.appendChild(area);var d=report.payload;
+ area.appendChild(esN('h2',report.month+' · Shared report'));area.appendChild(esN('p','Captured '+new Date(report.captured_at).toLocaleString()+'. Figures are frozen at capture time.'));
+ var scope=d.filters;area.appendChild(esN('p','This report uses its saved scope; current page filters are not applied.','es-muted'));
+ esSummary(area,d);
+ var risks=esPanel('What needs attention');var uncovered=(d.critical_roles||[]).filter(r=>!r.ready_successors);
+ risks.appendChild(esN('p',uncovered.length+' recorded roles have no ready successor. Verify coverage and next steps with HR.'));
+ risks.appendChild(esN('p','Development owners and due dates are listed only where captured in the source report. They are not inferred from scores.'));
+ area.appendChild(risks);esRank(area,d);esSuccession(area,d);
+ var byCompany=esPanel('Company summary');esTable(byCompany,['Company','Employees','Both assessments submitted','Combined score','In development'],(d.companies||[]).map(c=>[c.company,c.employees,c.complete_pairs,esPct(c.score),c.people_in_development]));area.appendChild(byCompany);
+ var actions=esPanel('Follow-up actions','Shared aggregate reports do not automatically create actions. Open My decisions for your own private case actions, or Development progress for recorded owners and dates.');
+ area.appendChild(actions);
+ host.prepend(esB('Print / Save PDF',()=>esPrint(area),'btn-primary'));
+ var data=esN('details',null,'card');data.appendChild(esN('summary','Supporting report data'));
+ data.appendChild(esB('Download original report data',()=>{var url=URL.createObjectURL(new Blob([JSON.stringify(report,null,2)],{type:'application/json'}));var a=document.createElement('a');a.href=url;a.download='CMS-'+report.month+'-Shared.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}));host.appendChild(data);
+ }catch(e){if(root.isConnected)host.textContent='Could not open report: '+e.message;}
+}
+function esPrint(area){
+ var w=window.open('','_blank');if(!w){showToast('Allow pop-ups to print.');return;}
+ w.document.write('<!doctype html><html><head><title>CMS Executive Report</title><style>body{font:14px Arial;padding:24px;color:#182b49}table{width:100%;border-collapse:collapse}td,th{border:1px solid #ccd5e1;padding:9px}button{display:none}.card{margin:24px 0}h2{color:#182b49}.es-metrics,.es-highlow{display:flex;gap:24px;flex-wrap:wrap}.es-metric strong,.es-metric span{display:block}details{display:none}</style></head><body></body></html>');
+ w.document.body.appendChild(area.cloneNode(true));w.document.close();w.focus();w.print();
+}
+// Delegate non-executive users unchanged. Keep authorized private case reads intact.
+var esPreviousOverview=exOverview,esPreviousXiOpen=xiOpen,esPreviousReport=xiReport;
+exOverview=function(){return esAllowed()?esOpen('home'):esPreviousOverview.apply(this,arguments);};
+xiOpen=function(){return esAllowed()?esOpen('home'):esPreviousXiOpen.apply(this,arguments);};
+xiReport=function(id){return esAllowed()?esReport(id):esPreviousReport.apply(this,arguments);};
+var esPreviousPage=loadPage;
+loadPage=function(id){
+ if(esAllowed()&&id.startsWith('cs-simple-'))return esOpen(id.slice(10));
+ if(esAllowed()&&id==='ex-overview')return esOpen('home');
+ return esPreviousPage.apply(this,arguments);
+};
+var esPreviousRole=cnPageRole;
+cnPageRole=function(page,preferred){return page.startsWith('cs-simple-')?'csuite':esPreviousRole.apply(this,arguments);};
+var esPreviousLabel=getPageLabel;
+getPageLabel=function(id){if(id.startsWith('cs-simple-'))return ES_DEST.find(d=>d[0]===id.slice(10))?.[1]||'Executive Overview';return esPreviousLabel.apply(this,arguments);};
+function esHeader(){
+ var executive=APP.currentRole==='csuite';document.body.classList.toggle('es-executive',executive);
+ var brand=document.querySelector('.header-brand');if(brand){
+  if(!brand.dataset.esOriginal)brand.dataset.esOriginal=brand.innerHTML;
+  brand.innerHTML=executive?'Kenafric <span class="brand-accent">CMS</span><small>Competency Management System</small>':brand.dataset.esOriginal;
+ }
+ var header=document.querySelector('.header');
+ if(header)document.documentElement.style.setProperty('--es-header-height',Math.ceil(header.getBoundingClientRect().height)+'px');
+ var av=document.getElementById('userAvatar');if(av){av.setAttribute('aria-label','Change profile picture');av.setAttribute('role','button');av.tabIndex=0;}
+}
+var esPreviousNav=setupNav;
+setupNav=function(role){
+ var result=esPreviousNav.apply(this,arguments);esHeader();
+ if(role!=='csuite')return result;
+ var side=document.getElementById('sideNav');if(side){
+ side.replaceChildren();
+ [['home','Executive Overview','ex-overview'],['private','My decisions','ex-private'],['reports','Reports','cs-simple-reports']].forEach(([key,label,page])=>{
+  var b=esB(label,()=>navigateTo(page));b.className='es-nav';b.dataset.esNav=key;side.appendChild(b);
+ });}
+ return result;
+};
+var esPreviousNavigate=navigateTo;
+navigateTo=function(id){
+ ES.token++;var result=esPreviousNavigate.apply(this,arguments);
+ if(esAllowed())document.querySelectorAll('#sideNav [data-es-nav]').forEach(b=>b.classList.toggle('active',b.dataset.esNav===(id==='ex-private'||id==='cs-reports'?'private':id==='cs-simple-reports'?'reports':'home')));
+ return result;
+};
+// Progress messages are presentation only: authentication, checks, errors, retries remain.
+function esQuietLoaders(root){
+ if(!root)return;
+ root.querySelectorAll('.loading,.xm-loading,.es-login-progress').forEach(n=>{
+  if(n.dataset.esQuiet||n.querySelector('input,button,select,textarea'))return;
+  if(!/^(?:Loading(?: (?:details|aggregate metrics))?[.…]*|Signing in[.…]*|Opening your workspace[.…]*)$/i.test(n.textContent.trim()))return;
+  n.dataset.esQuiet='true';n.innerHTML=esBusy();
+ });
+ root.querySelectorAll('section.card>p,.card>p').forEach(n=>{
+  if(n.dataset.esQuiet||!/^Loading your (dashboard|team dashboard|leadership overview|positions)(?:\\u2026|[.…]*)$/i.test(n.textContent.trim()))return;
+  n.dataset.esQuiet='true';n.innerHTML=esBusy();
+ });
+}
+var esPreviousSetContent=setContent;
+setContent=function(html){
+ var result=esPreviousSetContent.apply(this,arguments);
+ esQuietLoaders(document.getElementById('mainContent'));return result;
+};
+function esObserve(){
+ var content=document.getElementById('mainContent');if(content)new MutationObserver(()=>esQuietLoaders(content)).observe(content,{childList:true,subtree:true});
+ var header=document.querySelector('.header');if(header&&typeof ResizeObserver!=='undefined')new ResizeObserver(()=>{
+  document.documentElement.style.setProperty('--es-header-height',Math.ceil(header.getBoundingClientRect().height)+'px');
+ }).observe(header);
+ document.getElementById('userAvatar')?.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();e.currentTarget.click();}});
+ esHeader();esQuietLoaders(content);
+}
+esObserve();
+
+</script>
+<script id="executive-approved-color-module">
+/* Approved colorful executive presentation. No service calls, score or permission changes. */
+var EC_ICONS={
+ private:'<circle cx="19" cy="14" r="7"/><path d="M5 40v-4c0-9 28-9 28 0v4H5"/><rect x="28" y="29" width="16" height="15" rx="4"/><path d="M32 29v-4a4 4 0 0 1 8 0v4"/><path d="M36 35v4"/>',
+ companies:'<path d="M6 43V10h20v33M26 20h16v23M3 43h42"/><path d="M12 16h3m5 0h1m-9 7h3m5 0h1m-9 7h3m5 0h1m11-3h4m-4 7h4M14 43v-7h7v7"/>',
+ talent:'<rect x="5" y="5" width="15" height="15" rx="3"/><rect x="28" y="5" width="15" height="15" rx="3"/><rect x="5" y="28" width="15" height="15" rx="3"/><rect x="28" y="28" width="15" height="15" rx="3"/>',
+ succession:'<path d="m24 3 3 6 7 1-5 5 1 7-6-3-6 3 1-7-5-5 7-1Z"/><circle cx="10" cy="29" r="4"/><circle cx="24" cy="30" r="4"/><circle cx="38" cy="29" r="4"/><path d="M2 44v-3c0-7 16-7 16 0v3m-2 0v-2c0-7 16-7 16 0v2m-2 0v-3c0-7 16-7 16 0v3"/>',
+ development:'<path d="M5 40 18 26l9 8 16-23M31 11h12v12"/>',
+ reports:'<path d="M9 3h21l11 11v31H9Z"/><path d="M30 3v12h11M15 21h19M15 27h11M15 39v-6h5v6m5 0V29h5v10m5 0V25"/>',
+ arrow:'<path d="M9 24h29M27 12l12 12-12 12"/>',
+ focus:'<circle cx="24" cy="24" r="15"/><circle cx="24" cy="24" r="8"/><path d="M24 3v7m0 28v7M3 24h7m28 0h7"/>'
+};
+function ecIcon(key){
+ return '<svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">'+(EC_ICONS[key]||EC_ICONS.reports)+'</svg>';
+}
+function ecFinish(root){
+ if(!root||!root.isConnected||!esAllowed())return;
+ root.classList.add('ec-approved');
+ var heading=root.querySelector('.es-heading');
+ if(heading&&!heading.dataset.ec){
+  heading.dataset.ec='true';
+  if(ES.view==='home'){var p=heading.querySelector('p');if(p)p.textContent='Clear insights. Confident decisions.';}
+  var art=document.createElement('span');art.className='ec-hero-art';art.setAttribute('aria-hidden','true');heading.appendChild(art);
+ }
+ root.querySelectorAll('[data-es-card]').forEach(function(card){
+  if(card.dataset.ec)return;card.dataset.ec='true';
+  var key=card.dataset.esCard,icon=card.querySelector('.es-card-icon');
+  if(icon)icon.innerHTML=ecIcon(key);
+  var content=card.querySelector('div');if(content)content.classList.add('ec-card-copy');
+  var art=document.createElement('span');art.className='ec-card-art';art.setAttribute('aria-hidden','true');card.appendChild(art);
+  var arrow=document.createElement('span');arrow.className='ec-card-arrow';arrow.setAttribute('aria-hidden','true');arrow.innerHTML=ecIcon('arrow');card.appendChild(arrow);
+ });
+ var focus=root.querySelector('.es-focus');
+ if(focus&&!focus.dataset.ec){
+  focus.dataset.ec='true';var label=focus.querySelector('strong');
+  if(label){var ico=document.createElement('span');ico.className='ec-focus-icon';ico.setAttribute('aria-hidden','true');ico.innerHTML=ecIcon('focus');label.prepend(ico);}
+ }
+ var filters=root.querySelector('.es-filters');
+ if(ES.view==='home'&&filters&&!filters.querySelector('.ec-reporting-view')){
+  var label=document.createElement('div');label.className='ec-reporting-view';
+  var title=document.createElement('span');title.textContent='Reporting view';
+  var value=document.createElement('strong');value.textContent='Latest assessments';
+  label.append(title,value);filters.appendChild(label);
+ }
+}
+var ecPreviousShell=esShell;
+esShell=function(){var root=ecPreviousShell.apply(this,arguments);ecFinish(root);return root;};
+var ecPreviousHome=esHome;
+esHome=function(host,d){var result=ecPreviousHome.apply(this,arguments);ecFinish(document.getElementById('esRoot'));return result;};
+// Observe only the executive content container, never rewrite evidence or unrelated pages.
+var ecPending=false,ecHost=document.getElementById('mainContent');
+if(ecHost)new MutationObserver(function(){
+ if(ecPending||!esAllowed())return;ecPending=true;
+ queueMicrotask(function(){ecPending=false;ecFinish(document.getElementById('esRoot'));});
+}).observe(ecHost,{childList:true,subtree:true});
+ecFinish(document.getElementById('esRoot'));
+
+</script>
+<script id="executive-mockup-graphics">
+/* Embedded vector artwork for the approved executive mockup.
+ * Decorative only; production data, routing, profile and auth remain untouched. */
+function egArtwork(kind){
+ var palette={
+ private:['#9554f5','#7134d8','#5821b1','#f0e6ff'],
+ companies:['#448ef3','#1765d5','#064ab7','#e9f2ff'],
+ talent:['#9b62ee','#733ed0','#4a1c9e','#f0e6ff'],
+ succession:['#f2bd49','#dc9c1e','#072353','#fff2ce'],
+ development:['#21c7c8','#099baf','#03556d','#dcf5f4'],
+ reports:['#496abd','#183b7b','#061d49','#e5ebff']
+ }[kind]||['#8961ee','#6333c5','#35207e','#eee7ff'];
+ var a=palette[0],b=palette[1],c=palette[2],light=palette[3];
+ var body='';
+ if(kind==='private'){
+  body='<path d="M108 0H190V190H8C63 163 101 121 111 77C119 42 112 17 108 0Z" fill="'+light+'"/>'+
+   '<path d="M137 0H190V190H43C88 159 124 109 135 62C141 35 141 16 137 0Z" fill="'+a+'"/>'+
+   '<path d="M169 0H190V190H77C104 157 142 112 157 76C170 47 171 17 169 0Z" fill="'+b+'"/>'+
+   '<path d="M190 58V190H108C125 143 162 84 190 58Z" fill="'+c+'" opacity=".72"/>'+
+   '<path d="M151 0C181 80 107 165 75 190M190 45C147 97 115 169 108 190" fill="none" stroke="white" stroke-opacity=".16"/>';
+ }else if(kind==='companies'){
+  body='<path d="M96 0H190V190H9C67 159 87 91 96 0Z" fill="'+a+'"/>'+
+   '<path d="M190 24V190H41C69 137 97 73 190 24Z" fill="'+b+'"/>'+
+   '<path d="M190 81V190H92C101 123 129 99 190 81Z" fill="'+c+'"/>'+
+   '<path d="M190 1C131 43 85 98 90 190M190 42C126 71 89 127 114 190" fill="none" stroke="white" stroke-opacity=".35"/>';
+ }else if(kind==='talent'){
+  body='<path d="M96 0H190V190H5C38 151 49 67 96 0Z" fill="'+a+'"/>'+
+   '<path d="M190 0V190H41C57 135 91 50 190 0Z" fill="'+b+'"/>'+
+   '<path d="M190 55V190H98C117 138 135 99 190 55Z" fill="'+c+'"/>';
+  for(var i=0;i<7;i++)body+='<path d="M'+(80+i*7)+' 190L190 '+(53+i*10)+'" fill="none" stroke="white" stroke-opacity="'+(i%2?.25:.45)+'" stroke-width=".8"/>';
+ }else if(kind==='succession'){
+  body='<path d="M99 0H190V190H7C28 141 49 50 99 0Z" fill="'+light+'"/>'+
+   '<path d="M151 0H190V190H31C58 126 98 50 151 0Z" fill="'+a+'"/>'+
+   '<path d="M190 0V190H65C84 119 131 34 190 0Z" fill="'+b+'"/>'+
+   '<path d="M190 65V190H77C97 142 129 84 190 65Z" fill="'+c+'"/>';
+ }else if(kind==='development'){
+  body='<path d="M115 0H190V190H10C48 152 68 65 115 0Z" fill="#85dcdd"/>'+
+   '<path d="M151 0H190V190H43C73 133 109 48 151 0Z" fill="'+a+'"/>'+
+   '<path d="M190 23V190H65C87 139 128 55 190 23Z" fill="'+b+'"/>'+
+   '<path d="M190 76V190H99C116 134 136 107 190 76Z" fill="'+c+'"/>';
+ }else{
+  body='<path d="M117 0H190V190H12C47 142 71 59 117 0Z" fill="'+a+'"/>'+
+   '<path d="M154 0H190V190H48C82 108 98 47 154 0Z" fill="'+b+'"/>'+
+   '<path d="M190 11V190H92C106 130 138 68 190 11Z" fill="'+c+'"/>'+
+   '<ellipse cx="75" cy="96" rx="33" ry="42" fill="none" stroke="white" stroke-opacity=".27"/>'+
+   '<path d="M183 0C90 54 68 109 97 190" fill="none" stroke="white" stroke-opacity=".33"/>';
+  for(var j=0;j<14;j++)body+='<path d="M'+(125+j*4)+' 190L190 '+(83+j*5)+'" stroke="#99b9ff" stroke-opacity=".28" stroke-width=".7"/>';
+ }
+ if(!['talent','reports'].includes(kind)){
+  for(var x=145;x<184;x+=9)for(var y=128;y<177;y+=9)body+='<circle cx="'+x+'" cy="'+y+'" r="1.3" fill="white" opacity=".25"/>';
+ }
+ return '<svg viewBox="0 0 190 190" preserveAspectRatio="none" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg">'+body+'</svg>';
+}
+function egHero(){
+ return '<svg viewBox="0 0 630 180" preserveAspectRatio="xMaxYMid slice" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg">'+
+ '<circle cx="322" cy="-30" r="171" fill="#8683ff" opacity=".12"/><circle cx="288" cy="188" r="180" fill="none" stroke="#c0c7ff" stroke-opacity=".24"/>'+
+ '<ellipse cx="593" cy="21" rx="148" ry="193" transform="rotate(36 593 21)" fill="none" stroke="#b7c4ff" stroke-opacity=".25"/>'+
+ '<path d="M60 169L630 88M133 112L630 169M384 179L630 34" fill="none" stroke="#abb6ff" stroke-opacity=".3"/>'+
+ '<path d="M254 146C350 144 495 120 630 68" fill="none" stroke="#d9dcff" stroke-opacity=".5"/>'+
+ '<circle cx="253" cy="146" r="4" fill="#8f8dff" opacity=".6"/></svg>';
+}
+var EG_COPY={
+ private:['My decisions','Review cases assigned to you.','Open my decisions'],
+ companies:['Company overview','Assessment progress, strengths and gaps.','Choose a company'],
+ talent:['Talent Pools','Promotion, Succession, Talent pipeline and Development.','Explore pools'],
+ succession:['Critical roles & successors','Roles needing cover and proposed successors.','View role coverage'],
+ development:['Development progress','Plans, progress and overdue actions.','Review progress'],
+ reports:['Reports','Clear monthly reports in one place.','Open reports']
+};
+function egDecorate(root){
+ if(!root||!esAllowed())return;
+ root.classList.add('eg-mockup');
+ var hero=root.querySelector('.ec-hero-art');if(hero&&!hero.dataset.eg){hero.dataset.eg='true';hero.innerHTML=egHero();}
+ root.querySelectorAll('[data-es-card]').forEach(card=>{
+  if(card.dataset.eg)return;card.dataset.eg='true';var key=card.dataset.esCard;
+  var art=card.querySelector('.ec-card-art');if(art)art.innerHTML=egArtwork(key);
+  var copy=card.querySelector('.ec-card-copy'),values=EG_COPY[key];
+  if(copy&&values){copy.querySelector('h2').textContent=values[0];copy.querySelector('p').textContent=values[1];copy.querySelector('strong').textContent=values[2];}
+ });
+ var focus=root.querySelector('.es-focus');
+ if(focus&&!focus.dataset.eg){
+  focus.dataset.eg='true';
+  var names=['Assigned cases','Role coverage','Development follow-up'];
+  var paths=['<rect x="7" y="14" width="34" height="26" rx="3"/><path d="M17 14V9h14v5M7 24h34M21 24v5h6v-5"/>',
+   '<circle cx="16" cy="17" r="6"/><circle cx="33" cy="17" r="6"/><path d="M3 39v-5c0-10 26-10 26 0v5H3m27 0h15v-5c0-7-6-10-12-10"/>',
+   '<path d="M12 33V21c0-15 24-15 24 0v12l5 5H7l5-5ZM20 42h8"/>'];
+  Array.from(focus.querySelectorAll('button')).forEach((b,i)=>{if(!names[i])return;b.textContent=names[i];var span=document.createElement('span');span.className='eg-focus-glyph';span.setAttribute('aria-hidden','true');span.innerHTML='<svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'+paths[i]+'</svg>';b.prepend(span);});
+ }
+ var filters=root.querySelector('.es-filters');
+ if(ES.view==='home'&&filters&&!filters.dataset.eg){filters.dataset.eg='true';var label=filters.querySelector('label');if(label&&label.firstChild.nodeType===3)label.firstChild.textContent='Company';}
+}
+var egPreviousFinish=ecFinish;
+ecFinish=function(root){var r=egPreviousFinish.apply(this,arguments);egDecorate(root);return r;};
+ecFinish(document.getElementById('esRoot'));
 
 </script>
 </body>
