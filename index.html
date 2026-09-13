@@ -1094,6 +1094,91 @@ body.es-executive .header-brand small{font-size:13px!important;letter-spacing:0!
 }
 
 </style>
+<style id="colleague-chat-movable-kai-style">
+/* Scoped colleague messaging. Existing role palettes remain intact. */
+:root{--cc-accent:#4338ca;--cc-top:100px}
+#pchatFab{display:none!important}
+#ccChatLaunch.cc-chat-launch{display:inline-flex!important;align-items:center;gap:8px;position:relative;padding:9px 12px;border:1px solid #aebbea80;border-radius:9px;background:#ffffff0d;color:#fff;font:600 13px/1.3 system-ui;cursor:pointer;flex-shrink:0;max-width:100%}
+#ccChatLaunch[hidden]{display:none!important}
+#ccChatLaunch[aria-expanded=true]{background:#4345a155;border-color:#a2a3ff}
+#ccChatLaunch .cc-launch-icon{width:21px;height:21px;display:inline-flex}
+#ccChatLaunch svg{width:100%;height:100%}
+.cc-unread{align-items:center;justify-content:center;min-width:20px;height:20px;border-radius:10px;padding:0 5px;background:#e34753;color:#fff;font:700 11px system-ui}
+#pchatPanel.cc-panel{position:fixed!important;right:12px!important;top:var(--cc-top)!important;bottom:12px!important;width:min(800px,calc(100vw - 24px))!important;height:auto!important;max-width:calc(100vw - 24px)!important;max-height:none!important;z-index:1210!important;display:none!important;flex-direction:column;border-radius:15px!important;border:1px solid #c4d0e1;background:white;box-shadow:-9px 8px 32px #0b244630;overflow:hidden;color:#142947;font:14px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif}
+#pchatPanel.cc-panel.open{display:flex!important}
+#pchatPanel.cc-panel *{box-sizing:border-box}
+#pchatPanel.cc-panel button{display:inline-flex!important;align-items:center;justify-content:center;cursor:pointer;font-family:system-ui!important}
+#pchatPanel.cc-panel button:disabled{opacity:.5;cursor:not-allowed}
+#pchatPanel.cc-panel h2,#pchatPanel.cc-panel h3,#pchatPanel.cc-panel p,#pchatPanel.cc-panel span,#pchatPanel.cc-panel strong{font-family:system-ui!important}
+#pchatPanel .cc-head{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:18px 22px;background:linear-gradient(115deg,#071837,#112552);border-bottom:3px solid var(--cc-accent);color:white;flex-shrink:0}
+#pchatPanel .cc-head h2{font-size:20px!important;line-height:1.3;margin:0 0 4px!important;color:white!important}
+#pchatPanel .cc-head p{font-size:13px;margin:0;color:#e1e6f2}
+#pchatPanel .cc-head-actions{display:flex;gap:9px}
+#pchatPanel .cc-head-actions button{border:0;background:transparent;color:white;font-size:24px;padding:4px 6px}
+#pchatPanel .cc-layout{display:flex;flex:1;min-height:0;min-width:0}
+#pchatPanel .cc-directory{width:32%;min-width:210px;background:#f2f6fc;border-right:1px solid #dce4f0;display:flex;flex-direction:column;min-height:0;padding:16px 0 0}
+#pchatPanel #pchatSearch{font:13px/1.4 system-ui;margin:0 12px;padding:11px 10px;width:calc(100% - 24px);border:1px solid #bdcce1;border-radius:8px;background:white}
+#pchatPanel .cc-search-hint{font-size:12px;padding:0 14px;color:#596f8b;margin:10px 0}
+#pchatPanel .cc-directory h3{font-size:14px;color:#152b4c;margin:13px 14px}
+#pchatPanel #pchatContacts{flex:1;min-height:0;overflow-y:auto;overflow-x:hidden}
+#pchatPanel .cc-contact{width:100%;min-width:0;display:flex!important;align-items:flex-start!important;justify-content:flex-start!important;gap:10px;text-align:left;padding:14px 12px;border:0;border-left:3px solid transparent;border-bottom:1px solid #e4eaf2;background:transparent;color:#182b49}
+#pchatPanel .cc-contact:hover{background:#eaf0fa}
+#pchatPanel .cc-contact.active{background:#e9eafa;border-left-color:var(--cc-accent)}
+#pchatPanel .cc-avatar{display:flex;align-items:center;justify-content:center;width:38px;height:38px;flex:0 0 38px;border-radius:50%;color:white;background:#4b54a7;font:700 13px system-ui;letter-spacing:.03em}
+#pchatPanel .cc-contact:nth-child(3n+2) .cc-avatar{background:#2870b8}
+#pchatPanel .cc-contact:nth-child(3n+3) .cc-avatar{background:#168c91}
+#pchatPanel .cc-contact-copy{display:flex;flex-direction:column;min-width:0;flex:1;gap:4px}
+#pchatPanel .cc-contact-copy strong{font-size:13px;white-space:normal;overflow-wrap:anywhere}
+#pchatPanel .cc-contact-email{font-size:11px;overflow-wrap:anywhere;color:#566c89}
+#pchatPanel .cc-preview-text{font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#536985;display:block}
+#pchatPanel .cc-thread{flex:1;min-width:0;min-height:0;display:flex;flex-direction:column;background:white}
+#pchatPanel #ccThreadHeader{display:flex;align-items:center;gap:12px;min-height:77px;padding:16px;border-bottom:1px solid #e0e7f1;flex-shrink:0}
+#pchatPanel #ccThreadHeader strong{display:block;font-size:15px;overflow-wrap:anywhere}
+#pchatPanel #ccThreadHeader small{display:block;font-size:12px;color:#60738c;overflow-wrap:anywhere}
+#pchatPanel.cc-panel .cc-thread-back{display:none!important}
+#pchatPanel #pchatMsgs{flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;padding:18px 16px;background:white}
+#pchatPanel .cc-date-divider{display:flex;align-items:center;justify-content:center;color:#6c7d94;font-size:11px;margin:10px 0 22px}
+#pchatPanel .cc-date-divider:before,#pchatPanel .cc-date-divider:after{content:"";height:1px;background:#e0e7f1;flex:1;margin:0 12px}
+#pchatPanel .cc-message{max-width:87%;width:fit-content;padding:12px 14px;margin:12px 0;border-radius:13px;background:#eff2f7;color:#1c304d}
+#pchatPanel .cc-message p{font-size:14px;line-height:1.55;margin:0;white-space:pre-wrap;overflow-wrap:anywhere}
+#pchatPanel .cc-message time{font-size:11px;display:block;margin-top:8px;color:#647691}
+#pchatPanel .cc-message.mine{margin-left:auto;background:#4e54a7;color:white;border-bottom-right-radius:3px}
+#pchatPanel .cc-message.mine time{color:#e1e5ff;text-align:right}
+#pchatPanel .cc-message.theirs{border-bottom-left-radius:3px}
+#pchatPanel .cc-empty{height:100%;min-height:170px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;color:#60738d;padding:20px}
+#pchatPanel .cc-empty h3{font-size:18px;color:#213a60;margin:12px 0}
+#pchatPanel .cc-empty p{font-size:13px;max-width:280px}
+#pchatPanel .cc-empty-icon{font-size:35px;color:#7379c4}
+#pchatPanel .cc-notice{font-size:13px;color:#526982;padding:13px;white-space:normal;overflow-wrap:anywhere}
+#pchatPanel #ccComposer{display:flex;gap:10px;align-items:center;border-top:1px solid #dce5f0;padding:14px 14px 7px;margin:0;flex-shrink:0}
+#pchatPanel #pchatText{font:14px/1.5 system-ui;min-width:0;width:100%;flex:1;resize:vertical;min-height:60px;max-height:140px;border:1px solid #bfcde0;border-radius:8px;padding:11px}
+#pchatPanel #ccSend{flex:0 0 88px;gap:7px;border:0;border-radius:8px;background:#4b51a4;color:white;min-height:52px;padding:12px;font-size:14px}
+#pchatPanel #ccStatus{min-height:20px;margin:0;padding:3px 15px 10px;font-size:11px;color:#637894;overflow-wrap:anywhere}
+#pchatPanel #ccStatus.cc-error{color:#a14d1c}
+#pchatPanel .cc-button,#pchatPanel .cc-load-older{padding:8px 12px;border:1px solid #bccce3;border-radius:7px;background:white;color:#3a4894;font-size:13px}
+#pchatPanel .cc-load-older{margin:0 auto 12px;display:flex!important}
+#pchatPanel .cc-sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)}
+#pchatPanel button:focus-visible,#ccChatLaunch:focus-visible{outline:3px solid #8b8bd7;outline-offset:2px}
+body.cc-chat-open #kaiFab{display:none!important}
+#kaiFab.kn-fab{bottom:22px;touch-action:none;user-select:none;-webkit-user-select:none;cursor:grab}
+#kaiFab.kn-fab img{pointer-events:none;-webkit-user-drag:none;user-select:none}
+#kaiFab.cc-kai-dragging{cursor:grabbing;transform:none!important;transition:none!important}
+#kaiPanel .kn-bottom{flex-wrap:wrap;gap:7px}
+@media(max-width:640px){
+ #pchatPanel.cc-panel{top:0!important;right:0!important;bottom:0!important;width:100vw!important;max-width:100vw!important;height:100dvh!important;border-radius:0!important}
+ #pchatPanel .cc-head{padding:15px 16px}
+ #pchatPanel .cc-directory{width:100%;min-width:0;border:0}
+ #pchatPanel .cc-thread{display:none}
+ #pchatPanel.cc-thread-selected .cc-directory{display:none}
+ #pchatPanel.cc-thread-selected .cc-thread{display:flex}
+ #pchatPanel.cc-panel .cc-thread-back{display:inline-flex!important;background:transparent;border:0;color:#374b88;font-size:22px;padding:5px}
+ #pchatPanel #ccSend{flex-basis:70px;padding:8px}
+ #pchatPanel #pchatText{min-height:55px}
+ #ccChatLaunch.cc-chat-launch{font-size:12px;padding:8px}
+}
+
+</style>
+<style id="cms-page-performance-style">#esRoot .fp-deferred-filter{padding:12px 20px;margin:12px 0}#esRoot .fp-deferred-filter>div{margin-top:12px;max-width:650px}#esRoot .fp-deferred-filter [hidden]{display:none!important}</style>
 </head>
 <body>
 <style>
@@ -1155,18 +1240,7 @@ body.es-executive .header-brand small{font-size:13px!important;letter-spacing:0!
 <div class="kai-chips" id="kaiChips"></div>
 <div class="kai-input"><input id="kaiText" placeholder="Ask KAI anything..." onkeydown="if(event.key==='Enter')sendKai()"><button class="btn btn-primary" style="border-radius:20px" onclick="sendKai()">Send</button></div>
 </div>
-<div class="pchat-panel" id="pchatPanel">
-<div class="pchat-head"><span id="pchatTitle">💬 Kenafric Chat</span><button onclick="togglePChat()" style="background:none;border:none;color:#fff;font-size:16px;cursor:pointer">✕</button></div>
-<div class="pchat-body">
-<div style="width:170px;flex:none;display:flex;flex-direction:column;border-right:1px solid var(--gray-200);background:var(--gray-50)">
-<input id="pchatSearch" placeholder="🔍 Search colleague..." oninput="pchatRenderContacts()" style="margin:6px;padding:6px 8px;font-size:11px;border-radius:8px">
-<div class="pchat-contacts" id="pchatContacts" style="width:auto;border-right:none;flex:1"></div>
-</div>
-<div class="pchat-thread">
-<div class="pchat-msgs" id="pchatMsgs"><p style="font-size:11px;color:var(--gray-500);padding:10px">Select a colleague to start chatting.</p></div>
-<div class="pchat-input"><input id="pchatText" placeholder="Type a message..." onkeydown="if(event.key==='Enter')sendPChat()"><button class="btn btn-primary" </div>
-</div>
-</div>
+<div class="pchat-panel" id="pchatPanel"></div>
 <script>
 /* ====== KAI AVATAR ====== */
 var KAI_AVATAR = 'kai.png'; /* put kai.png next to index.html, OR paste a data:image/png;base64,... string here */
@@ -1976,7 +2050,7 @@ async function loadSelfAssessment() {
 var __cmsRouteEpoch = typeof CN === 'undefined' ? null : CN.epoch;
 
 ((typeof CN === 'undefined' || __cmsRouteEpoch === CN.epoch) ? setContent('<div class="loading"><div class="spinner"></div>Loading...</div>') : undefined);
-const { data: emp } = await _supabase.from('employees').select('*').eq('email', APP.user.email).single();
+const { data: emp } = await fpOwnEmployee();
 if (!emp) { ((typeof CN === 'undefined' || __cmsRouteEpoch === CN.epoch) ? setContent('<div class="card"><p>Employee not found</p></div>') : undefined); return; }
 const { data: done } = await _supabase.from('assessments').select('id, ticked, hr_status').eq('employee_id', emp.employee_id).eq('type', 'Self');
 var hasRounds = done && done.length > 0;
@@ -2156,7 +2230,7 @@ async function loadManagerAssessmentView() {
 var __cmsRouteEpoch = typeof CN === 'undefined' ? null : CN.epoch;
 
 ((typeof CN === 'undefined' || __cmsRouteEpoch === CN.epoch) ? setContent('<div class="loading"><div class="spinner"></div>Loading...</div>') : undefined);
-const { data: emp } = await _supabase.from('employees').select('*').eq('email', APP.user.email).single();
+const { data: emp } = await fpOwnEmployee();
 if (!emp) { ((typeof CN === 'undefined' || __cmsRouteEpoch === CN.epoch) ? setContent('<div class="card"><p>Employee not found</p></div>') : undefined); return; }
 const { data: allResults } = await _supabase.from('assessments').select('*').eq('employee_id', emp.employee_id);
 var mgrRows = latestOnly(allResults || []).filter(r => r.type === 'Manager');
@@ -2193,7 +2267,7 @@ async function loadEmployeeGaps() {
 var __cmsRouteEpoch = typeof CN === 'undefined' ? null : CN.epoch;
 
 ((typeof CN === 'undefined' || __cmsRouteEpoch === CN.epoch) ? setContent('<div class="loading"><div class="spinner"></div>Loading...</div>') : undefined);
-const { data: emp } = await _supabase.from('employees').select('*').eq('email', APP.user.email).single();
+const { data: emp } = await fpOwnEmployee();
 if (!emp) { ((typeof CN === 'undefined' || __cmsRouteEpoch === CN.epoch) ? setContent('<div class="card"><p>Employee not found</p></div>') : undefined); return; }
 const { data: allResults } = await _supabase.from('assessments').select('*').eq('employee_id', emp.employee_id);
 var mgrResults = latestOnly(allResults || []).filter(r => r.type === 'Manager');
@@ -2225,7 +2299,7 @@ async function loadEmployeeStrengths() {
 var __cmsRouteEpoch = typeof CN === 'undefined' ? null : CN.epoch;
 
 ((typeof CN === 'undefined' || __cmsRouteEpoch === CN.epoch) ? setContent('<div class="loading"><div class="spinner"></div>Loading...</div>') : undefined);
-const { data: emp } = await _supabase.from('employees').select('*').eq('email', APP.user.email).single();
+const { data: emp } = await fpOwnEmployee();
 if (!emp) { ((typeof CN === 'undefined' || __cmsRouteEpoch === CN.epoch) ? setContent('<div class="card"><p>Employee not found</p></div>') : undefined); return; }
 const { data: allResults } = await _supabase.from('assessments').select('*').eq('employee_id', emp.employee_id);
 var mgrResults = latestOnly(allResults || []).filter(r => r.type === 'Manager');
@@ -2257,10 +2331,14 @@ async function loadEmployeeDevPlans() {
 var __cmsRouteEpoch = typeof CN === 'undefined' ? null : CN.epoch;
 
 ((typeof CN === 'undefined' || __cmsRouteEpoch === CN.epoch) ? setContent('<div class="loading"><div class="spinner"></div>Loading...</div>') : undefined);
-const { data: emp } = await _supabase.from('employees').select('*').eq('email', APP.user.email).single();
+const { data: emp } = await fpOwnEmployee();
 if (!emp) { ((typeof CN === 'undefined' || __cmsRouteEpoch === CN.epoch) ? setContent('<div class="card"><p>Employee not found</p></div>') : undefined); return; }
-const { data: plans } = await _supabase.from('dev_plans').select('*').eq('employee_id', emp.employee_id);
-const { data: reps } = await _supabase.from('dp_reports').select('*').eq('employee_id', emp.employee_id).order('month_no');
+const [planQuery, reportQuery] = await Promise.all([
+ _supabase.from('dev_plans').select('*').eq('employee_id', emp.employee_id),
+ _supabase.from('dp_reports').select('*').eq('employee_id', emp.employee_id).order('month_no')
+]);
+if(planQuery.error || reportQuery.error) throw new Error((planQuery.error || reportQuery.error).message);
+const plans=planQuery.data, reps=reportQuery.data;
 var lines = [];
 (reps || []).forEach(function(r){ if (r.emp_submitted || r.mgr_status === 'Returned') return; var d = daysUntil(r.due_date); if (d < 0) lines.push('🔴 Month ' + r.month_no + ' report <strong>OVERDUE by ' + (-d) + ' day(s)</strong> — submit now'); else if (d <= 7) lines.push('🟠 Month ' + r.month_no + ' report due in <strong>' + d + ' day(s)</strong> (' + escapeHtml(r.due_date) + ')'); else lines.push('🟢 Month ' + r.month_no + ' report due ' + escapeHtml(r.due_date)); });
 var html = countdownBanner(lines);
@@ -13300,6 +13378,420 @@ showLoginScreen=function(){knClose();knReset();return knOldLoginScreen.apply(thi
 var knRoleSelect=document.getElementById('roleSwitch');
 if(knRoleSelect)knRoleSelect.addEventListener('change',()=>{if(KN.context!==knContext()){knClose();knReset();}});
 knInit();
+
+</script>
+<script id="colleague-chat-movable-kai">
+/* Colleague-chat presentation + draggable KAI. Uses existing employees/messages
+   tables and existing authenticated client. No new permissions or AI data access. */
+var CD={identity:'',epoch:0,thread:0,contacts:[],recent:new Map(),drafts:new Map(),loading:false,
+ sending:false,messages:[],limit:50,hasOlder:false,searchTimer:null,drag:null,suppressClick:0,position:null,lastFocus:null};
+function cdIdentity(){return APP.user?String(APP.user.email||'').trim().toLowerCase():'';}
+function cdEl(tag,text,cls){var el=document.createElement(tag);if(text!=null)el.textContent=text;if(cls)el.className=cls;return el;}
+function cdBtn(text,fn,cls){var b=cdEl('button',text,cls||'cc-button');b.type='button';b.onclick=fn;return b;}
+function cdInitials(name){return String(name||'?').trim().split(/\s+/).filter(Boolean).slice(0,2).map(x=>x[0]).join('').toUpperCase();}
+function cdCurrent(token,them){return !!APP.user&&cdIdentity()===CD.identity&&token===CD.thread&&_pc.open&&them===_pc.withEmail;}
+function cdThreadVisible(){var el=document.querySelector('#pchatPanel .cc-thread');return !!el&&el.getBoundingClientRect().width>0&&el.getBoundingClientRect().height>0;}
+function cdStatus(text,error){var status=document.getElementById('ccStatus');if(status){status.textContent=text||'';status.classList.toggle('cc-error',!!error);}}
+function cdSaveDraft(){var input=document.getElementById('pchatText');if(input&&_pc.withEmail&&CD.identity===cdIdentity())CD.drafts.set(_pc.withEmail,input.value);}
+function cdSyncIdentity(){
+ var who=cdIdentity();if(who===CD.identity)return;
+ CD.epoch++;CD.thread++;CD.identity=who;CD.contacts=[];CD.recent.clear();CD.drafts.clear();CD.messages=[];
+ CD.loading=false;CD.sending=false;CD.position=null;_pc.open=false;_pc.withEmail=null;_pc.withName='';_pc.contacts=[];_pc.unread={};
+ document.getElementById('pchatPanel')?.classList.remove('open','cc-thread-selected');
+ document.body.classList.remove('cc-chat-open');var text=document.getElementById('pchatText');if(text)text.value='';
+ var search=document.getElementById('pchatSearch');if(search)search.value='';
+ document.getElementById('pchatContacts')?.replaceChildren();document.getElementById('pchatMsgs')?.replaceChildren();
+ cdThreadHeader();cdUnread();cdRestorePosition();
+}
+function cdAccent(){document.documentElement.style.setProperty('--cc-accent',{employee:'#4338ca',manager:'#0d9488',hr:'#4338ca',hohr:'#b45309',csuite:'#5554b5'}[APP.currentRole]||'#4338ca');}
+function cdUnread(){
+ var badge=document.getElementById('pchatUnread');if(!badge)return;
+ var count=Object.values(_pc.unread||{}).reduce((n,x)=>n+(Number(x)||0),0);badge.textContent=count>99?'99+':String(count);badge.style.display=count?'inline-flex':'none';
+ var launch=document.getElementById('ccChatLaunch');if(launch)launch.setAttribute('aria-label','Kenafric Chat'+(count?', '+count+' unread messages':''));
+}
+function cdEnsureLaunch(){
+ var actions=document.querySelector('.header-right');if(!actions)return;
+ var launch=document.getElementById('ccChatLaunch');
+ if(!launch){
+  launch=cdBtn('',togglePChat,'cc-chat-launch');launch.id='ccChatLaunch';launch.setAttribute('aria-controls','pchatPanel');launch.setAttribute('aria-expanded','false');
+  var icon=cdEl('span',null,'cc-launch-icon');icon.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M5 4h14a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H9l-5 4v-4H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z"/></svg>';
+  launch.append(icon,cdEl('span','Chat'));
+  var badge=document.getElementById('pchatUnread')||cdEl('span','0');badge.id='pchatUnread';badge.className='cc-unread';launch.appendChild(badge);
+  var user=actions.querySelector('.header-user');if(user)actions.insertBefore(launch,user);else actions.prepend(launch);
+ }
+ launch.hidden=!APP.user;cdAccent();cdUnread();
+}
+function cdFitChat(){
+ var header=document.querySelector('.header'),rect=header?.getBoundingClientRect(),top=rect&&rect.height&&rect.bottom>0?Math.max(8,Math.ceil(rect.bottom)+8):12;
+ top=Math.min(top,Math.max(12,innerHeight-300));
+ document.documentElement.style.setProperty('--cc-top',top+'px');
+ cdClampPosition();
+}
+function cdClose(){
+ cdSaveDraft();_pc.open=false;CD.thread++;document.getElementById('pchatPanel')?.classList.remove('open');
+ document.getElementById('pchatPanel')?.setAttribute('aria-hidden','true');document.getElementById('ccChatLaunch')?.setAttribute('aria-expanded','false');
+ document.body.classList.remove('cc-chat-open');cdClampPosition();
+ if(CD.lastFocus?.isConnected)CD.lastFocus.focus();else document.getElementById('ccChatLaunch')?.focus();
+}
+async function togglePChat(){
+ if(!APP.user){showToast('Sign in before opening colleague chat.');return;}
+ cdSyncIdentity();if(_pc.open){cdClose();return;}
+ CD.lastFocus=document.activeElement;
+ if(typeof knClose==='function')knClose();
+ _pc.open=true;document.body.classList.add('cc-chat-open');
+ var panel=document.getElementById('pchatPanel');panel.classList.add('open');panel.setAttribute('aria-hidden','false');
+ document.getElementById('ccChatLaunch')?.setAttribute('aria-expanded','true');cdFitChat();cdThreadHeader();
+ document.getElementById('pchatSearch')?.focus();
+ await pchatLoadContacts();
+ if(_pc.open&&_pc.withEmail)await pchatLoadMsgs();
+}
+async function pchatLoadContacts(){
+ if(!APP.user||!_pc.open)return;var epoch=++CD.epoch,identity=cdIdentity();CD.identity=identity;
+ var box=document.getElementById('pchatContacts');box.textContent='Finding colleagues…';
+ try{
+  var contacts=[];
+  for(var page=0;page<1000;page++){
+   var q=await _supabase.from('employees').select('employee_name,email,position').order('employee_name').order('email').range(page*500,page*500+499);
+   if(q.error)throw Error(q.error.message);
+   if(epoch!==CD.epoch||identity!==cdIdentity()||!_pc.open)return;
+   contacts=contacts.concat(q.data||[]);if((q.data||[]).length<500)break;
+   if(page===999)throw Error('The colleague directory is too large. Ask HR to check the directory.');
+  }
+  var seen=new Set();CD.contacts=contacts.filter(c=>{var email=String(c.email||'').trim().toLowerCase();if(!email||email===identity||seen.has(email))return false;seen.add(email);return true;});
+  _pc.contacts=CD.contacts;
+  // Recent correspondence is only queried for this authenticated sender/recipient.
+  var results=await Promise.all([
+   _supabase.from('messages').select('id,sender_email,recipient_email,body,created_at,read').eq('sender_email',identity).order('id',{ascending:false}).limit(50),
+   _supabase.from('messages').select('id,sender_email,recipient_email,body,created_at,read').eq('recipient_email',identity).order('id',{ascending:false}).limit(50)
+  ]);
+  if(epoch!==CD.epoch||identity!==cdIdentity()||!_pc.open)return;
+  var error=results.find(r=>r.error);
+  if(!error){
+   CD.recent.clear();results.flatMap(r=>r.data||[]).sort(cdNewest).forEach(m=>{
+    var peer=String(m.sender_email).toLowerCase()===identity?String(m.recipient_email).toLowerCase():String(m.sender_email).toLowerCase();
+    if(!CD.recent.has(peer))CD.recent.set(peer,m);
+   });
+  }
+  pchatRenderContacts();if(error)cdStatus('Colleague search is available; recent-message previews could not refresh.',true);
+ }catch(e){
+  if(epoch!==CD.epoch||identity!==cdIdentity()||!_pc.open)return;
+  box.replaceChildren(cdEl('p','Could not load colleagues: '+e.message,'cc-notice'),cdBtn('Retry',pchatLoadContacts));cdStatus('No messages were changed.',true);
+ }
+}
+function cdNewest(a,b){var t=Date.parse(b.created_at||'')-Date.parse(a.created_at||'');if(Number.isFinite(t)&&t)return t;return String(b.id).localeCompare(String(a.id),undefined,{numeric:true});}
+function pchatRenderContacts(){
+ if(!APP.user||CD.identity!==cdIdentity())return;
+ var box=document.getElementById('pchatContacts');if(!box)return;
+ var query=String(document.getElementById('pchatSearch')?.value||'').trim().toLowerCase();
+ var list=CD.contacts.filter(c=>{
+  var email=String(c.email).toLowerCase();
+  return query?[c.employee_name,c.position,c.email].join(' ').toLowerCase().includes(query):CD.recent.has(email)||Number(_pc.unread[email])>0||email===_pc.withEmail;
+ });
+ if(!query)list.sort((a,b)=>cdNewest(CD.recent.get(String(a.email).toLowerCase())||{},CD.recent.get(String(b.email).toLowerCase())||{}));
+ box.replaceChildren();
+ list.slice(0,100).forEach(c=>{
+  var email=String(c.email).trim().toLowerCase(),recent=CD.recent.get(email);
+  var row=cdBtn('',()=>pchatOpenIdx(CD.contacts.indexOf(c)),'cc-contact'+(_pc.withEmail===email?' active':''));
+  row.title=c.employee_name+' · '+email;row.setAttribute('aria-label','Chat with '+c.employee_name+' ('+email+')');
+  row.appendChild(cdEl('span',cdInitials(c.employee_name),'cc-avatar'));
+  var details=cdEl('span',null,'cc-contact-copy');details.append(cdEl('strong',c.employee_name),cdEl('small',email,'cc-contact-email'));
+  details.appendChild(cdEl('span',recent?String(recent.body||'').slice(0,95):c.position||'Open conversation','cc-preview-text'));row.appendChild(details);
+  var unread=Number(_pc.unread[email])||0;if(unread)row.appendChild(cdEl('span',unread>99?'99+':String(unread),'cc-unread'));
+  box.appendChild(row);
+ });
+ if(!list.length)box.appendChild(cdEl('p',query?'No colleagues match that search.':'Search by name to start a conversation. Recent chats appear here.','cc-notice'));
+ if(list.length>100)box.appendChild(cdEl('p','Showing 100 matches. Refine your search.','cc-notice'));
+ cdUnread();
+}
+function cdThreadHeader(){
+ var host=document.getElementById('ccThreadHeader'),input=document.getElementById('pchatText'),send=document.getElementById('ccSend');
+ if(!host)return;host.replaceChildren();
+ if(!_pc.withEmail){
+  host.appendChild(cdEl('strong','Your conversations'));
+  var msgs=document.getElementById('pchatMsgs');if(msgs){msgs.replaceChildren();var empty=cdEl('section',null,'cc-empty');empty.append(cdEl('span','◇','cc-empty-icon'),cdEl('h3','Choose a colleague to start'),cdEl('p','Find their name on the left, then open the conversation.'));msgs.appendChild(empty);}
+ }else{
+  var back=cdBtn('←',()=>{document.getElementById('pchatPanel').classList.remove('cc-thread-selected');document.getElementById('pchatSearch').focus();},'cc-thread-back');back.setAttribute('aria-label','Back to colleagues');
+  var details=cdEl('div');details.append(cdEl('strong',_pc.withName||_pc.withEmail),cdEl('small',_pc.withEmail));
+  host.append(back,cdEl('span',cdInitials(_pc.withName),'cc-avatar'),details);
+ }
+ if(input)input.disabled=!_pc.withEmail||CD.sending;
+ if(send)send.disabled=!_pc.withEmail||CD.sending;
+}
+function pchatOpenIdx(index){
+ var c=CD.contacts[index];if(!c||!APP.user)return;
+ cdSaveDraft();CD.thread++;CD.messages=[];CD.limit=50;
+ _pc.withEmail=String(c.email).trim().toLowerCase();_pc.withName=c.employee_name;
+ document.getElementById('pchatPanel').classList.add('cc-thread-selected');cdThreadHeader();
+ var input=document.getElementById('pchatText');input.value=CD.drafts.get(_pc.withEmail)||'';
+ pchatRenderContacts();cdStatus('');pchatLoadMsgs();input.focus();
+}
+function cdFormatDate(value){var date=new Date(value);return Number.isNaN(date.getTime())?'Date not recorded':date.toLocaleDateString(undefined,{year:'numeric',month:'short',day:'numeric'});}
+function cdFormatTime(value){var date=new Date(value);return Number.isNaN(date.getTime())?'':date.toLocaleTimeString(undefined,{hour:'2-digit',minute:'2-digit'});}
+async function pchatLoadMsgs(older){
+ var them=_pc.withEmail,me=cdIdentity();if(!them||!_pc.open||!me)return;
+ var token=++CD.thread,box=document.getElementById('pchatMsgs'),oldTop=box.scrollTop,oldHeight=box.scrollHeight;
+ var atEnd=box.scrollHeight-box.clientHeight-box.scrollTop<90;
+ if(!CD.messages.length)box.replaceChildren(cdEl('p','Loading conversation…','cc-notice'));
+ try{
+  var count=CD.limit,fields='id,sender_email,recipient_email,body,created_at,read';
+  var results=await Promise.all([
+   _supabase.from('messages').select(fields).eq('sender_email',me).eq('recipient_email',them).order('id',{ascending:false}).range(0,count-1),
+   _supabase.from('messages').select(fields).eq('sender_email',them).eq('recipient_email',me).order('id',{ascending:false}).range(0,count-1)
+  ]);
+  if(!cdCurrent(token,them))return;
+  var err=results.find(r=>r.error);if(err)throw Error(err.error.message);
+  var map=new Map();results.flatMap(r=>r.data||[]).forEach(m=>map.set(String(m.id),m));
+  var all=[...map.values()].sort((a,b)=>-cdNewest(a,b));CD.messages=all;CD.hasOlder=results.some(r=>(r.data||[]).length===count);
+  box.replaceChildren();
+  if(CD.hasOlder){var load=cdBtn('Load older messages',()=>{CD.limit+=50;pchatLoadMsgs(true);},'cc-load-older');box.appendChild(load);}
+  var lastDate='';
+  all.forEach(m=>{
+   var date=cdFormatDate(m.created_at);if(date!==lastDate){box.appendChild(cdEl('div',date,'cc-date-divider'));lastDate=date;}
+   var mine=String(m.sender_email).toLowerCase()===me,row=cdEl('div',null,'cc-message '+(mine?'mine':'theirs'));
+   row.append(cdEl('p',m.body||''),cdEl('time',cdFormatTime(m.created_at)));box.appendChild(row);
+  });
+  if(!all.length)box.appendChild(cdEl('p','No messages yet. Say hello.','cc-notice'));
+  if(older)box.scrollTop=oldTop+(box.scrollHeight-oldHeight);else if(atEnd||!oldHeight)box.scrollTop=box.scrollHeight;
+  cdStatus('');
+  // Mark only fetched messages from this conversation, while it remains visible.
+  var ids=all.filter(m=>String(m.sender_email).toLowerCase()===them&&!m.read).map(m=>m.id);
+  if(ids.length&&cdCurrent(token,them)&&!document.hidden&&cdThreadVisible()){
+   var marked=await _supabase.from('messages').update({read:true}).eq('sender_email',them).eq('recipient_email',me).eq('read',false).in('id',ids);
+   if(!cdCurrent(token,them))return;
+   if(marked.error)cdStatus('Conversation loaded, but the unread count could not refresh.',true);
+   else{_pc.unread[them]=Math.max(0,(Number(_pc.unread[them])||0)-ids.length);pchatRenderContacts();}
+  }
+ }catch(e){if(cdCurrent(token,them)){cdStatus('Could not load messages: '+e.message,true);if(!CD.messages.length)box.replaceChildren(cdEl('p','Conversation could not be loaded.','cc-notice'),cdBtn('Retry',()=>pchatLoadMsgs()));}}
+}
+async function sendPChat(){
+ if(CD.sending||!APP.user||!_pc.open)return;
+ var input=document.getElementById('pchatText'),text=input.value.trim(),them=_pc.withEmail,me=cdIdentity();
+ if(!them||!text)return;
+ if(!CD.contacts.some(c=>String(c.email).trim().toLowerCase()===them)){cdStatus('Choose the recipient from the colleague directory.',true);return;}
+ if(text.length>10000){cdStatus('Please shorten your message to 10,000 characters.',true);return;}
+ CD.sending=true;cdThreadHeader();cdStatus('Sending…');CD.drafts.set(them,input.value);
+ var sent=false;
+ try{
+  var result=await _supabase.from('messages').insert({sender_email:me,recipient_email:them,body:text});
+  if(result.error)throw Error(result.error.message);
+  sent=true;
+  if(cdIdentity()!==me)return;
+  CD.drafts.delete(them);CD.recent.set(them,{body:text,created_at:new Date().toISOString(),id:''});
+  if(_pc.withEmail===them){input.value='';if(_pc.open){await pchatLoadMsgs();document.getElementById('pchatMsgs').scrollTop=document.getElementById('pchatMsgs').scrollHeight;}}
+  pchatRenderContacts();
+ }catch(e){
+  if(cdIdentity()===me&&_pc.withEmail===them)cdStatus('Send was not confirmed: '+e.message+'. Your draft is kept. Check the conversation before sending again.',true);
+ }finally{
+  if(cdIdentity()===me){CD.sending=false;cdThreadHeader();if(sent&&_pc.open&&_pc.withEmail===them)cdStatus('');}
+ }
+}
+function cdInit(){
+ var panel=document.getElementById('pchatPanel');
+ panel.className='pchat-panel cc-panel';panel.setAttribute('role','dialog');panel.setAttribute('aria-labelledby','ccChatTitle');panel.setAttribute('aria-hidden','true');
+ panel.innerHTML='<header class="cc-head"><div><h2 id="ccChatTitle">Kenafric Chat</h2><p>Connect with your colleagues</p></div><div class="cc-head-actions"><button id="ccMinimize" type="button" aria-label="Minimize colleague chat">−</button><button id="ccClose" type="button" aria-label="Close colleague chat">×</button></div></header>'+
+ '<div class="cc-layout"><aside class="cc-directory"><label class="cc-sr" for="pchatSearch">Search colleagues</label><input id="pchatSearch" type="search" placeholder="Search colleagues…" autocomplete="off"><p class="cc-search-hint">Search by name to start a chat.</p><h3>Conversations</h3><div id="pchatContacts"></div></aside>'+
+ '<section class="cc-thread"><div id="ccThreadHeader"></div><div id="pchatMsgs" aria-live="polite" aria-relevant="additions text"></div>'+
+ '<form id="ccComposer"><label class="cc-sr" for="pchatText">Message to selected colleague</label><textarea id="pchatText" rows="2" maxlength="10000" placeholder="Type a message…" disabled></textarea><button id="ccSend" type="submit" disabled>➤ <span>Send</span></button></form><p id="ccStatus" role="status"></p></section></div><span id="pchatTitle" hidden></span>';
+ document.getElementById('ccMinimize').onclick=cdClose;document.getElementById('ccClose').onclick=cdClose;
+ document.getElementById('pchatSearch').oninput=()=>{clearTimeout(CD.searchTimer);CD.searchTimer=setTimeout(pchatRenderContacts,180);};
+ document.getElementById('ccComposer').onsubmit=e=>{e.preventDefault();sendPChat();};
+ document.getElementById('pchatText').oninput=cdSaveDraft;
+ document.getElementById('pchatText').onkeydown=e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendPChat();}};
+ panel.addEventListener('keydown',e=>{if(e.key==='Escape'){e.preventDefault();cdClose();}});
+ cdSyncIdentity();cdEnsureLaunch();cdThreadHeader();cdFitChat();
+ var unread=document.getElementById('pchatUnread');
+ if(unread)new MutationObserver(()=>{var launch=document.getElementById('ccChatLaunch');if(launch){var text=unread.style.display==='none'?'':unread.textContent;launch.setAttribute('aria-label','Kenafric Chat'+(text?', '+text+' unread messages':''));}}).observe(unread,{childList:true,subtree:true,attributes:true,attributeFilter:['style']});
+}
+/* Draggable KAI launcher: pointer/mouse/touch + keyboard move controls.
+   Stores only relative x/y by signed-in user on this device; no chat/evidence. */
+function cdPositionKey(){return 'cms_kai_position_v1:'+cdIdentity();}
+function cdBounds(){var b=document.getElementById('kaiFab'),rect=b?.getBoundingClientRect();return {w:rect?.width||105,h:rect?.height||58,x:Math.max(8,innerWidth-(rect?.width||105)-8),y:Math.max(8,innerHeight-(rect?.height||58)-8)};}
+function cdSetPosition(x,y,save){
+ var b=document.getElementById('kaiFab');if(!b||!APP.user)return;
+ var bounds=cdBounds();x=Math.max(8,Math.min(bounds.x,x));y=Math.max(8,Math.min(bounds.y,y));
+ b.style.left=x+'px';b.style.top=y+'px';b.style.right='auto';b.style.bottom='auto';
+ CD.position={x:bounds.x>8?(x-8)/(bounds.x-8):0,y:bounds.y>8?(y-8)/(bounds.y-8):0};
+ if(save)try{localStorage.setItem(cdPositionKey(),JSON.stringify(CD.position));}catch{showToast('KAI moved; this browser could not remember the position.');}
+}
+function cdClampPosition(){
+ if(!APP.user||!CD.position)return;
+ var bounds=cdBounds();cdSetPosition(8+CD.position.x*(bounds.x-8),8+CD.position.y*(bounds.y-8),false);
+}
+function cdRestorePosition(){
+ var b=document.getElementById('kaiFab');if(!b)return;
+ CD.position=null;['left','top','right','bottom'].forEach(x=>b.style.removeProperty(x));
+ if(!APP.user)return;
+ try{var p=JSON.parse(localStorage.getItem(cdPositionKey())||'null');if(p&&Number.isFinite(p.x)&&Number.isFinite(p.y)){CD.position={x:Math.max(0,Math.min(1,p.x)),y:Math.max(0,Math.min(1,p.y))};requestAnimationFrame(cdClampPosition);}}catch{}
+}
+function cdResetPosition(){
+ try{localStorage.removeItem(cdPositionKey());}catch{}
+ CD.position=null;var b=document.getElementById('kaiFab');if(b)['left','top','right','bottom'].forEach(x=>b.style.removeProperty(x));
+ showToast('KAI position reset to the bottom-right.');b?.focus();
+}
+function cdDragStart(e){
+ if(!APP.user||_pc.open||e.button!==0||e.isPrimary===false)return;
+ var b=e.currentTarget,r=b.getBoundingClientRect();CD.drag={id:e.pointerId,sx:e.clientX,sy:e.clientY,x:r.left,y:r.top,moved:false};
+ b.setPointerCapture(e.pointerId);
+}
+function cdDragMove(e){
+ var d=CD.drag;if(!d||d.id!==e.pointerId)return;
+ var dx=e.clientX-d.sx,dy=e.clientY-d.sy;
+ if(Math.hypot(dx,dy)>7)d.moved=true;
+ if(d.moved){e.preventDefault();e.currentTarget.classList.add('cc-kai-dragging');cdSetPosition(d.x+dx,d.y+dy,false);}
+}
+function cdDragEnd(e){
+ var d=CD.drag;if(!d||d.id!==e.pointerId)return;
+ if(d.moved){CD.suppressClick=Date.now()+500;cdSetPosition(parseFloat(e.currentTarget.style.left),parseFloat(e.currentTarget.style.top),true);}
+ e.currentTarget.classList.remove('cc-kai-dragging');CD.drag=null;
+ if(e.currentTarget.hasPointerCapture(e.pointerId))e.currentTarget.releasePointerCapture(e.pointerId);
+}
+function cdSetupDrag(){
+ var b=document.getElementById('kaiFab');if(!b||b.dataset.dragReady)return;b.dataset.dragReady='true';
+ b.title='Drag to move KAI. Click to open. Alt + arrow keys to move; Alt + Home to reset.';
+ b.setAttribute('aria-label','KAI assistant. Drag to move, or use Alt plus arrow keys. Alt plus Home resets position.');
+ b.addEventListener('pointerdown',cdDragStart);b.addEventListener('pointermove',cdDragMove);b.addEventListener('pointerup',cdDragEnd);
+ b.addEventListener('pointercancel',e=>{if(CD.drag?.moved){CD.suppressClick=Date.now()+500;cdSetPosition(CD.drag.x,CD.drag.y,false);}CD.drag=null;b.classList.remove('cc-kai-dragging');});
+ b.addEventListener('click',e=>{if(Date.now()<CD.suppressClick){e.preventDefault();e.stopImmediatePropagation();}},true);
+ b.addEventListener('keydown',e=>{
+  if(!e.altKey)return;if(e.key==='Home'){e.preventDefault();cdResetPosition();return;}
+  var dirs={ArrowLeft:[-20,0],ArrowRight:[20,0],ArrowUp:[0,-20],ArrowDown:[0,20]},delta=dirs[e.key];
+  if(delta){e.preventDefault();var r=b.getBoundingClientRect();cdSetPosition(r.left+delta[0],r.top+delta[1],true);}
+ });
+ var footer=document.querySelector('#kaiPanel .kn-bottom');if(footer&&!document.getElementById('ccResetKai')){
+  var reset=cdBtn('Reset position',cdResetPosition);reset.id='ccResetKai';footer.appendChild(reset);
+  var chat=cdBtn('Colleague chat',()=>togglePChat());chat.id='ccFromKai';footer.appendChild(chat);
+ }
+ cdRestorePosition();
+}
+var cdOldKnOpen=knOpen;
+knOpen=function(){if(_pc.open)cdClose();return cdOldKnOpen.apply(this,arguments);};
+var cdOldKnInit=knInit;
+knInit=function(){var result=cdOldKnInit.apply(this,arguments);cdSetupDrag();return result;};
+var cdOldSetupNav=setupNav;
+setupNav=function(){var result=cdOldSetupNav.apply(this,arguments);cdSyncIdentity();cdEnsureLaunch();cdSetupDrag();return result;};
+var cdOldLogout=doLogout;
+doLogout=function(){cdClose();CD.epoch++;CD.thread++;CD.drafts.clear();CD.recent.clear();CD.contacts=[];CD.messages=[];CD.identity='';CD.position=null;_pc.withEmail=null;_pc.withName='';_pc.contacts=[];_pc.unread={};
+ document.getElementById('pchatMsgs')?.replaceChildren();document.getElementById('pchatContacts')?.replaceChildren();var t=document.getElementById('pchatText');if(t)t.value='';
+ var result=cdOldLogout.apply(this,arguments);cdEnsureLaunch();return result;};
+var cdOldLoginScreen=showLoginScreen;
+showLoginScreen=function(){cdClose();var result=cdOldLoginScreen.apply(this,arguments);cdSyncIdentity();cdEnsureLaunch();return result;};
+window.addEventListener('resize',cdFitChat,{passive:true});
+window.addEventListener('beforeunload',e=>{if(CD.sending||[...CD.drafts.values()].some(v=>String(v).trim())){e.preventDefault();e.returnValue='';}});
+cdInit();cdSetupDrag();
+if(typeof ResizeObserver!=='undefined'){
+ var h=document.querySelector('.header');if(h)new ResizeObserver(cdFitChat).observe(h);
+}
+
+</script>
+<script id="cms-page-performance">
+/* Narrow, measured page-load optimizations. No offline authorization, cached
+   assessment scores, background evidence prefetching or bypass of server checks. */
+var FP={generation:0,employee:null,pending:new Map(),sessionKey:''};
+function fpIdentity(){
+ return JSON.stringify([APP.user?.email||'',APP.currentRole||'',typeof CN==='undefined'?null:CN.epoch]);
+}
+function fpInvalidate(){FP.generation++;FP.employee=null;FP.pending.clear();}
+function fpScope(){var key=fpIdentity();if(key!==FP.sessionKey){FP.sessionKey=key;fpInvalidate();}return key;}
+async function fpOwnEmployee(){
+ var scope=fpScope(),email=APP.user?.email;
+ if(!email)throw Error('Sign in before opening employee records.');
+ var generation=FP.generation,previous=FP.employee;
+ if(previous&&previous.scope===scope&&Date.now()-previous.time<5000){
+  var value=await previous.promise;
+  if(scope!==fpIdentity()||generation!==FP.generation)throw Error('The page changed. Open the page again.');
+  return structuredClone(value);
+ }
+ var item={scope,time:Date.now(),promise:null};
+ item.promise=(async()=>{
+  var r=await _supabase.from('employees').select('*').eq('email',email).single();
+  if(r.error)throw Error(r.error.message||'Could not load your employee record.');
+  return r;
+ })();
+ FP.employee=item;
+ try{
+  var result=await item.promise;
+  if(scope!==fpIdentity()||generation!==FP.generation)throw Error('The page changed. Open the page again.');
+  return structuredClone(result);
+ }catch(e){if(FP.employee===item)FP.employee=null;throw e;}
+}
+// Share only concurrent calls for these known read-only aggregates.
+// No result caching after completion; every later request reaches the server.
+var fpReadRPCs=new Set(['cms_dashboard_summary','cms_manager_summary','cms_dashboard_alerts']);
+var fpBaseRPC=_supabase.rpc.bind(_supabase);
+_supabase.rpc=function(name,args,...rest){
+ if(!fpReadRPCs.has(name)||rest.length)return fpBaseRPC(name,args,...rest);
+ var scope=fpScope(),generation=FP.generation;
+ var key=JSON.stringify([scope,name,args||{}]);
+ var entry=FP.pending.get(key);
+ if(!entry){
+  entry={promise:Promise.resolve().then(()=>fpBaseRPC(name,args))};FP.pending.set(key,entry);
+  entry.promise.finally(()=>{if(FP.pending.get(key)===entry)FP.pending.delete(key);}).catch(()=>{});
+ }
+ return entry.promise.then(r=>{
+  if(scope!==fpIdentity())throw Error('This summary belongs to a previous page. Refresh the current view.');
+  return structuredClone(r);
+ });
+};
+// Invalidate small employee-read cache before any table mutation. Do not cache writes.
+var fpBaseFrom=_supabase.from.bind(_supabase);
+_supabase.from=function(table){
+ var q=fpBaseFrom(table);
+ ['insert','update','upsert','delete'].forEach(method=>{
+  if(typeof q[method]!=='function')return;
+  var fn=q[method].bind(q);q[method]=function(...args){if(table!=='presence'&&table!=='messages')fpInvalidate();return fn(...args);};
+ });return q;
+};
+// These inspected readers use saved rows/catalogue, not the global experience library.
+['emp-mgrview','emp-gaps','emp-strengths','emp-devplans','hr-staff','hohr-staff'].forEach(id=>pfLightPages.add(id));
+// The executive landing cards contain no live figures. Render them before any
+// aggregate query; only their Company filter requires the overview response.
+var fpBaseExecutive=esOpen;
+esOpen=async function(view){
+ if(!esAllowed()||(view&&view!=='home'))return fpBaseExecutive.apply(this,arguments);
+ if(typeof prActive==='function'&&prActive()&&(PR.busy||!prDiscard()))return;
+ if(typeof PR!=='undefined'){PR.token++;PR.dirty=false;PR.host=null;}
+ ES.view='home';var token=++ES.token,role=APP.currentRole;
+ var root=esShell('Executive Overview','Clear insights. Confident decisions.');
+ var filters=esN('section',null,'card fp-deferred-filter');
+ var toggle=esB('Company filter',()=>{});
+ toggle.setAttribute('aria-expanded','false');
+ var detail=esN('div');detail.hidden=true;filters.append(toggle,detail);root.appendChild(filters);
+ var content=esN('div');root.appendChild(content);esHome(content,{});
+ content.appendChild(esN('p','Open a section for current records. Company data is fetched only when you open the filter or a report.','es-footnote'));
+ var busy=false,loaded=false;
+ toggle.onclick=async function(){
+  if(busy)return;
+  if(loaded){detail.hidden=!detail.hidden;toggle.setAttribute('aria-expanded',String(!detail.hidden));return;}
+  detail.hidden=false;toggle.setAttribute('aria-expanded','true');detail.textContent='Fetching available companies…';busy=true;
+  try{
+   var d=await xiRPC('overview',esScope());
+   if(token!==ES.token||role!==APP.currentRole||!root.isConnected||!esAllowed())return;
+   ES.data=d;XI.data=d;detail.replaceChildren();
+   var label=esSelect('Companies',d.filters?.companies||[],ES.company,value=>{ES.company=value;ES.department='';toggle.textContent=value?'Company: '+value:'Company filter';});
+   detail.appendChild(label);
+   detail.appendChild(esN('p','Company scope applies when opening company, role-coverage and development reports. Talent Pools has its own filters.','es-muted'));
+   loaded=true;busy=false;
+  }catch(e){
+   if(token!==ES.token||!root.isConnected)return;
+   busy=false;detail.replaceChildren(esN('p','Company filter could not load: '+e.message),esB('Retry company filter',()=>toggle.click()));
+  }
+ };
+ if(ES.company)toggle.textContent='Company: '+ES.company;
+ // Existing decorative modules only: no mock figures or cached dashboard snapshots.
+ if(typeof ecFinish==='function')ecFinish(root);
+};
+// Draft/login/role permissions remain in the original navigation chain.
+var fpBaseNavigate=navigateTo;
+navigateTo=function(){fpInvalidate();return fpBaseNavigate.apply(this,arguments);};
+var fpBaseRole=switchRole;
+switchRole=function(){fpInvalidate();return fpBaseRole.apply(this,arguments);};
+var fpBaseLogout=doLogout;
+doLogout=function(){fpInvalidate();return fpBaseLogout.apply(this,arguments);};
+var fpBaseLogin=doLogin;
+doLogin=function(){fpInvalidate();return fpBaseLogin.apply(this,arguments);};
+var fpBaseLoginScreen=showLoginScreen;
+showLoginScreen=function(){fpInvalidate();return fpBaseLoginScreen.apply(this,arguments);};
+document.addEventListener('visibilitychange',()=>{if(document.hidden)fpInvalidate();});
 
 </script>
 </body>
