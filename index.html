@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html>
 <head>
@@ -1189,6 +1190,42 @@ body.cc-chat-open #kaiFab{display:none!important}
 #pchatPanel .cnot-choice small{display:block;font-size:12px;color:#506580;margin-top:4px;font-weight:400}
 #pchatPanel .cnot-actions{display:flex;gap:10px;flex-wrap:wrap;margin:14px 0}
 #pchatPanel #cnotSave{background:#4338ca;color:#fff}
+
+</style>
+<style id="executive-department-docket-style">
+#dkRoot{font:14px/1.6 system-ui;color:#182b49;max-width:1400px;margin:auto;min-width:0}
+#dkRoot *{box-sizing:border-box}
+#dkRoot h1{font:750 27px/1.3 system-ui;margin:7px 0}
+#dkRoot h2{font:700 19px/1.4 system-ui;margin:9px 0}
+#dkRoot h3{font:650 15px/1.4 system-ui;margin:18px 0 8px}
+#dkRoot p{font-size:14px;line-height:1.6;overflow-wrap:anywhere;margin:7px 0}
+#dkRoot .dk-header{display:flex;gap:20px;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap}
+#dkRoot .dk-eyebrow{font-size:12px;letter-spacing:.1em;color:#596a88;font-weight:700}
+#dkRoot .dk-tabs{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:15px 0}
+#dkRoot .btn{font-size:14px;white-space:normal;max-width:100%;padding:10px 14px;margin:4px}
+#dkRoot .dk-notice,#dkRoot .dk-score-lock{background:#eef2ff;border:1px solid #cfd8f3;border-radius:9px;padding:14px;margin:15px 0;color:#41577b}
+#dkRoot .dk-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}
+#dkRoot .dk-person{margin:0;border-top:4px solid #5173ae}
+#dkRoot .dk-tag{display:inline-block;background:#edf2fa;color:#3c5880;padding:4px 9px;border-radius:6px;font-size:12px}
+#dkRoot .dk-title{display:flex;gap:14px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+#dkRoot .dk-tools{display:flex;gap:18px;flex-wrap:wrap}
+#dkRoot .dk-tools label{flex:1;min-width:220px}
+#dkRoot input,#dkRoot select,#dkRoot textarea{width:100%;min-width:0;font:14px/1.5 system-ui;padding:10px;border-radius:7px;border:1px solid #bdcce0;margin:6px 0 14px}
+#dkRoot textarea{min-height:90px;resize:vertical}
+#dkRoot label{font-size:14px;font-weight:600}
+#dkRoot .dk-stages{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+#dkRoot .dk-stages>div{padding:12px;border-radius:8px;background:#f3f6fb;overflow-wrap:anywhere}
+#dkRoot .dk-stages strong,#dkRoot .dk-stages b,#dkRoot .dk-stages span{display:block}
+#dkRoot .dk-stages span{color:#536984;font-size:13px;margin-top:5px}
+#dkRoot .dk-admin-row{display:flex;align-items:center;justify-content:space-between;gap:15px;border-bottom:1px solid #d7e1ef;padding:12px}
+#dkRoot .dk-preview{background:#f0f2ff;border:2px solid #8a93d7}
+#dkRoot summary{font-size:15px;font-weight:650;cursor:pointer}
+#dkRoot .dk-plan{padding:12px 0;border-bottom:1px solid #d4dfed}
+#dkRoot .dk-table{container-type:inline-size}
+#dkRoot table{table-layout:fixed;width:100%}
+#dkRoot td,#dkRoot th{font-size:14px;white-space:normal!important;overflow-wrap:anywhere;padding:11px}
+@media(max-width:850px){#dkRoot .dk-grid{grid-template-columns:1fr}}
+@media(max-width:500px){#dkRoot .dk-stages{grid-template-columns:1fr}#dkRoot .dk-tools label{min-width:0;flex-basis:100%}}
 
 </style>
 </head>
@@ -13463,7 +13500,7 @@ async function pchatLoadContacts(){
  try{
   var contacts=[];
   for(var page=0;page<1000;page++){
-   var q=await _supabase.from('employees').select('employee_name,email,position').order('employee_name').order('email').range(page*500,page*500+499);
+   var q=await _supabase.rpc('cms_colleague_directory',{p_page:page});
    if(q.error)throw Error(q.error.message);
    if(epoch!==CD.epoch||identity!==cdIdentity()||!_pc.open)return;
    contacts=contacts.concat(q.data||[]);if((q.data||[]).length<500)break;
@@ -13920,5 +13957,241 @@ cnotInstall();cnotInit();
 window.addEventListener('focus',()=>{if(CNOT.prefs?.desktop_enabled&&Date.now()-CNOT.lastPoll>20000){CNOT.lastPoll=Date.now();clearTimeout(CNOT.timer);cnotPoll();}});
 
 </script>
+<script id="executive-department-docket">
+/* Department progress contains NO scores. Released report snapshots are fetched
+   separately for the authenticated recipient after explicit trusted HOHR release. */
+var DK={epoch:0,view:'department',scope:'',search:'',filter:'all',page:0,rows:[],scopes:[],members:[],reports:[],cases:[],options:[],selected:null,access:null,dirty:false,draft:null,preview:null,busy:false};
+var DK_PHASES=['Awaiting my review','Returned for clarification','Recommendation submitted','Finalized by HOHR','For information'];
+function dkE(x){return escapeHtml(x==null?'':String(x));}
+function dkBtn(action,text,attrs,primary){return '<button type="button" class="btn '+(primary?'btn-primary':'btn-outline')+'" data-dk="'+action+'" '+(attrs||'')+'>'+dkE(text)+'</button>';}
+function dkLive(epoch){return epoch===DK.epoch&&!!APP.user&&!!document.getElementById('dkRoot');}
+async function dkRPC(action,data={}){
+ if(!APP.user)throw Error('Sign in first.');
+ var r=await _supabase.rpc('cms_executive_docket',{p_action:action,p_data:{...data,view_role:APP.currentRole}});
+ if(r.error)throw Error(r.error.message);return r.data;
+}
+async function dkAll(action,size=50,data={}){
+ var rows=[];for(var page=0;page<100000;page++){var batch=await dkRPC(action,{...data,page});if(!Array.isArray(batch))throw Error('Unexpected report response');
+ rows.push(...batch);if(batch.length<size)return rows;}
+ throw Error('Too many records. No incomplete totals displayed.');
+}
+function dkDiscard(){return !DK.dirty||confirm('Discard the unsaved executive-overview form?');}
+async function dkOpen(view){
+ if(!['hr','hohr','csuite'].includes(APP.currentRole))return;
+ if(DK.busy||!dkDiscard())return;
+ DK.dirty=false;DK.preview=null;DK.view=view||'department';DK.page=0;
+ var epoch=++DK.epoch,role=APP.currentRole;
+ setContent('<main id="dkRoot"><section class="card">Loading authorized '+(DK.view==='admin'?'controls':'overview')+'…</section></main>');
+ try{
+  DK.access=await dkRPC('access');if(!dkLive(epoch)||role!==APP.currentRole)return;
+  if(DK.view==='admin'){
+   var values=await Promise.all([dkRPC('scopes'),dkRPC('scope_options'),dkRPC('members'),dkAll('reports',100),dkRPC('existing_cases'),dkAll('mine')]);
+   if(!dkLive(epoch)||role!==APP.currentRole)return;
+   [DK.scopes,DK.scopeOptions,DK.members,DK.reports,DK.cases,DK.rows]=values;dkAdmin();return;
+  }
+  DK.scopes=await dkRPC('scopes');if(!dkLive(epoch)||role!==APP.currentRole)return;
+  if(DK.view==='mine')DK.rows=await dkAll('mine');
+  else{
+   var chosen=DK.scopes.find(s=>JSON.stringify([s.company,s.department])===DK.scope);
+   if(!chosen)DK.scope='';
+   DK.rows=await dkAll('department',50,chosen?{company:chosen.company,department:chosen.department}:{});
+  }
+  if(!dkLive(epoch)||role!==APP.currentRole)return;dkRender();
+ }catch(e){if(dkLive(epoch)){document.getElementById('dkRoot').innerHTML='<section class="card"><h2>Overview unavailable</h2><p>'+dkE(e.message)+'</p>'+dkBtn('reload','Retry')+'</section>';}}
+}
+function dkHeader(){
+ return '<header class="dk-header"><div><span class="dk-eyebrow">EXECUTIVE OVERSIGHT</span><h1>My decisions &amp; Department Overview</h1><p>Follow departmental progress. Open results only after HOHR releases your report.</p></div>'+dkBtn('reload','Refresh')+'</header>'+
+ '<nav class="dk-tabs">'+dkBtn('department','Department Overview','aria-pressed="'+(DK.view==='department')+'"',DK.view==='department')+
+ dkBtn('mine','My assigned reports','aria-pressed="'+(DK.view==='mine')+'"',DK.view==='mine')+
+ dkBtn('home','Executive Overview')+'</nav>';
+}
+function dkRender(){
+ var h=dkHeader();
+ if(DK.view==='department'){
+  h+='<section class="dk-notice">Only your explicitly authorized company and departments. No scores, evidence or private recommendations are included in this overview.</section>';
+  if(!DK.scopes.some(s=>s.enabled)){h+='<section class="card"><h2>No departments authorized yet</h2><p>Ask HR to record your company/department access. Routing defaults do not grant access.</p></section>';document.getElementById('dkRoot').innerHTML=h;return;}
+  h+='<section class="card dk-tools"><label>Company / department<select id="dkScope"><option value="">All my authorized departments</option>'+DK.scopes.filter(s=>s.enabled).map(s=>{var value=JSON.stringify([s.company,s.department]);return '<option value="'+dkE(value)+'" '+(value===DK.scope?'selected':'')+'>'+dkE(s.company+' / '+s.department)+'</option>';}).join('')+'</select></label><label>Find employee<input id="dkSearch" value="'+dkE(DK.search)+'" placeholder="Name, role or manager"></label></section>';
+  var rows=DK.rows.filter(r=>!DK.search||[r.name,r.position,r.manager].join(' ').toLowerCase().includes(DK.search.toLowerCase()));
+  h+='<p>'+rows.length+' employees in this view. Missing assessments mean “Not submitted”, not a zero score.</p><section class="dk-grid">';
+  rows.slice(DK.page*8,DK.page*8+8).forEach(r=>{
+   h+='<article class="card dk-person"><div class="dk-title"><h2>'+dkE(r.name)+'</h2><span class="dk-tag">'+dkE(r.company)+'</span></div><p>'+dkE(r.position)+' · '+dkE(r.department)+'</p><small>Manager: '+dkE(r.manager||'Not recorded')+'</small>'+
+    '<h3>Assessment purposes</h3>'+(r.purposes.length?r.purposes.map(c=>'<p><b>'+dkE(({promotion:'Promotion',succession:'Succession',pipeline:'Talent pipeline',development:'Development'})[c.purpose]||c.purpose)+'</b> · '+dkE(({draft:'Draft case',awaiting:'Awaiting assessments',review:'Under review',decided:'Decision recorded'})[c.status]||c.status)+(c.target?' · Target: '+dkE(c.target):'')+'</p>').join(''):'<p>Purpose not recorded in an assessment case.</p>')+
+    '<h3>Assessment stages</h3><div class="dk-stages">';
+   ['Self','Manager','Prospective Self','Prospective'].forEach(t=>{
+    var a=r.assessments.filter(a=>a.type===t);h+='<div><strong>'+dkE(t==='Prospective'?'Target-role Manager':t==='Prospective Self'?'Target-role Self':t)+'</strong><span>'+ (a.length?a.map(x=>dkE(x.stage)+' · round '+dkE(x.round)+(x.target?' · '+dkE(x.target):'')).join('<br>'):'Not submitted')+'</span></div>';
+   });
+   h+='</div><h3>Development progress</h3><p>'+r.development.approved_actions+' approved action(s) · '+r.development.completed_actions+' marked completed</p><p>Next outstanding progress due: '+dkE(r.development.next_review||'Not scheduled')+'</p><p>'+r.development.overdue+' overdue progress report(s)</p>'+
+    ((r.approved_plans||[]).length?'<details><summary>Approved development actions</summary>'+(r.approved_plans||[]).map(d=>'<div class="dk-plan"><b>'+dkE(d.competency)+'</b><p>'+dkE(d.goal)+'</p><p>'+dkE(d.action)+'</p><p>Owner: '+dkE(d.owner||'Not recorded')+' · Due: '+dkE(d.due||'Not set')+' · '+dkE(d.status||'Not recorded')+'</p></div>').join('')+'</details>':'')+
+    '<div class="dk-score-lock">'+(r.released_reports?dkBtn('employee-reports','Open my released reports','data-employee="'+dkE(r.employee_id)+'"'):'Results locked until HOHR submits a report to you.')+'</div></article>';
+  });h+='</section>'+dkPager(rows.length);
+  if(!rows.length)h+='<section class="card">No employees match this scope or search.</section>';
+ }else{
+  h+='<section class="dk-notice">Assigned to your account only. Your recommendation and HOHR’s outcome are separate. “For information” reports need no executive recommendation.</section>'+
+  '<div class="dk-tabs">'+['all',...DK_PHASES].map(t=>dkBtn('filter',t==='all'?'All reports':t,'data-value="'+dkE(t)+'"',DK.filter===t)).join('')+'</div>';
+  var rows=DK.rows.filter(r=>(DK.filter==='all'||r.stage===DK.filter)&&(!DK.employeeReports||r.employee_id===DK.employeeReports));
+  h+='<p>'+rows.length+' released reports</p><section class="dk-grid">';
+  rows.slice(DK.page*8,DK.page*8+8).forEach(r=>h+='<article class="card"><span class="dk-tag">'+dkE(r.stage)+'</span><h2>'+dkE(r.employee)+'</h2><p>'+dkE(r.position)+(r.target?' → '+dkE(r.target):'')+'</p><p><b>Purpose:</b> '+dkE(r.purpose)+'</p><p><b>HOHR outcome:</b> '+dkE(r.hohr_outcome)+'</p><p><b>Your recommendation:</b> '+dkE(r.recommendation||'Not submitted / not required')+'</p><p><b>Final HOHR outcome:</b> '+dkE(r.final_outcome||'Not finalized')+'</p><small>Released '+dkE(r.released_at)+'</small><div>'+dkBtn('report','Open report','data-id="'+dkE(r.id)+'"',true)+'</div></article>');
+  h+='</section>'+dkPager(rows.length);
+  if(!rows.length)h+='<section class="card"><h2>No reports in this view</h2><p>HOHR must explicitly release each report to your account. Older private cases are retained, but do not automatically unlock current results.</p></section>';
+ }
+ document.getElementById('dkRoot').innerHTML=h;
+}
+function dkPager(count){return count>8?'<div class="dk-tabs">'+dkBtn('prev','Previous',DK.page?'':'disabled')+'<span>Page '+(DK.page+1)+' of '+Math.ceil(count/8)+'</span>'+dkBtn('next','Next',(DK.page+1)*8>=count?'disabled':'')+'</div>':'';}
+async function dkReport(id){
+ var epoch=++DK.epoch;DK.dirty=false;DK.selected=null;
+ try{
+  var r=await dkRPC('released',{id});if(!dkLive(epoch))return;DK.selected=r;
+  var c=null;if(r.case_id){c=await exRPC('get',{id:r.case_id});if(!dkLive(epoch))return;}
+  var h=dkHeader()+'<section class="card"><h2>'+dkE(r.employee)+'</h2><p>'+dkE(r.position)+(r.target?' → '+dkE(r.target):'')+' · '+dkE(r.purpose)+'</p><p><b>HOHR outcome:</b> '+dkE(r.hohr_outcome)+'</p><p>'+dkE(r.shared_note)+'</p><small>Specifically released to this recipient on '+dkE(r.released_at)+'</small></section>'+
+  '<section class="card"><h2>Released results</h2><p>Snapshot at release, not the latest unreviewed assessment. '+dkE(r.scores.basis)+'</p><div class="dk-stages">'+
+  Object.entries(r.scores.totals||{}).map(([t,v])=>'<div><b>'+dkE(t)+'</b><span>'+dkE(v)+'%</span></div>').join('')+
+  '<div><b>Current combined</b><span>'+dkE(r.scores.current_combined??'Not released')+(r.scores.current_combined==null?'':'%')+'</span></div>'+
+  '<div><b>Target combined</b><span>'+dkE(r.scores.prospective_combined??'Not released')+(r.scores.prospective_combined==null?'':'%')+'</span></div></div>'+
+  '<details><summary>Competency details</summary><div class="dk-table"><table><thead><tr><th>Assessment</th><th>Competency</th><th>Score / 5</th><th>Percentage</th></tr></thead><tbody>'+
+  (r.scores.competencies||[]).map(x=>'<tr><td>'+dkE(x.type)+'</td><td>'+dkE(x.name)+'</td><td>'+dkE(x.score)+'</td><td>'+dkE(x.percent)+'%</td></tr>').join('')+'</tbody></table></div></details></section>';
+  if(c){
+   h+='<section class="card"><h2>Executive recommendation</h2><p>'+dkE(c.recommendation||'Awaiting your recommendation')+'</p><p>'+dkE(c.comment||'')+'</p>';
+   if(c.can_submit&&!r.finalized_at){DK.privateCase=c;h+='<label>Recommendation<select id="dkRecommend"><option value="">Select</option>'+['Endorse promotion','Recommend development','Hold','Return to HR/HOHR'].map(x=>'<option>'+x+'</option>').join('')+'</select></label><label>Reason<textarea id="dkRecommendNote"></textarea></label>'+dkBtn('recommend','Preview recommendation','','',true);}
+   h+='</section>';
+  }else h+='<section class="card"><h2>For information</h2><p>HOHR has released this outcome. No C-Suite recommendation is required.</p></section>';
+  h+='<section class="card"><h2>HOHR finalization</h2><p>'+dkE(r.final_outcome||'Not finalized')+'</p><p>'+dkE(r.final_note||'')+'</p>';
+  if(DK.access.can_release&&!r.finalized_at)h+='<label>Final outcome<input id="dkFinalOutcome"></label><label>Executive-facing note<textarea id="dkFinalNote"></textarea></label>'+dkBtn('finalize','Preview finalization');
+  h+='</section><div id="dkPreview"></div>';
+  document.getElementById('dkRoot').innerHTML=h;
+ }catch(e){if(dkLive(epoch))showToast(e.message);}
+}
+function dkAdmin(){
+ var h='<header class="dk-header"><h1>Executive access &amp; report release</h1><p>Department scope permits progress only. HOHR separately releases each result snapshot.</p></header>'+
+ '<section class="card"><h2>1. Authorize a company and department</h2><label>Executive<select id="dkExecutive"><option value="">Choose verified executive</option>'+DK.members.map(m=>'<option value="'+m.id+'">'+dkE(m.email)+'</option>').join('')+'</select></label>'+
+ '<label>Company / department<select id="dkScopeEdit"><option value="">Choose scope</option>'+DK.scopeOptions.map((s,i)=>'<option value="'+i+'">'+dkE(s.company+' / '+s.department)+'</option>').join('')+'</select></label>'+
+ '<label>Access<select id="dkEnable"><option value="true">Enable progress overview</option><option value="false">Revoke progress overview</option></select></label><label>Reason<textarea id="dkScopeReason"></textarea></label>'+dkBtn('save-scope','Preview access change')+
+ '<details><summary>Current scope permissions</summary>'+DK.scopes.map(s=>'<p>'+dkE(s.email)+' · '+dkE(s.company+' / '+s.department)+' · '+(s.enabled?'Enabled':'Revoked')+'</p>').join('')+'</details></section>';
+ if(DK.access.can_release){
+  h+='<section class="card"><h2>2. Submit a report to an executive</h2><p>A report may be for information only. It does not need a C-Suite recommendation first. Only this named recipient receives its results.</p>'+
+  '<label>Submitted HR report<select id="dkReleaseReport"><option value="">Choose report</option>'+DK.reports.map(r=>'<option value="'+r.id+'">'+dkE(r.employee_name)+' · '+dkE(r.position)+' · '+dkE(r.status)+' · Report '+r.id+'</option>').join('')+'</select></label>'+
+  '<div id="dkReleaseForm"></div></section>'+
+  '<section class="card"><h2>3. Follow up released reports</h2>'+DK.rows.map(r=>'<div class="dk-admin-row"><span>'+dkE(r.employee)+' · '+dkE(r.stage)+'</span>'+dkBtn('report','Open / finalize','data-id="'+r.id+'"')+'</div>').join('')+'</section>';
+ }else h+='<section class="card"><p>Only a trusted Head of HR account can submit result reports or finalize outcomes. Viewing the HOHR interface does not itself grant this authority.</p></section>';
+ h+='<div id="dkPreview"></div>';document.getElementById('dkRoot').innerHTML=h;
+}
+async function dkReleaseForm(id){
+ if(!id)return;
+ var epoch=++DK.epoch;DK.preview=null;
+ try{
+  DK.options=await dkRPC('release_options',{report_id:Number(id)});if(!dkLive(epoch))return;
+  var h='<label>Recipient<select id="dkReleaseExecutive"><option value="">Select executive</option>'+DK.members.map(m=>'<option value="'+m.id+'">'+dkE(m.email)+'</option>').join('')+'</select></label>'+
+  '<label>Purpose<select id="dkPurpose">'+['Promotion','Succession','Talent pipeline','Development'].map(p=>'<option>'+p+'</option>').join('')+'</select></label>'+
+  '<label>HOHR recommendation / decision<input id="dkOutcome" placeholder="Record the outcome being communicated"></label><label>Fresh executive-facing report note<textarea id="dkSharedNote" placeholder="Do not copy another executive’s private comments"></textarea></label>'+
+  '<label>Executive action<select id="dkNeeds"><option value="false">For information only</option><option value="true">Request executive recommendation</option></select></label>'+
+  '<label>Link existing private case (optional)<select id="dkExistingCase"><option value="">No existing case</option>'+DK.cases.filter(c=>String(c.report_id)===String(id)).map(c=>'<option value="'+c.id+'">'+dkE(c.name)+' · '+dkE(c.state)+'</option>').join('')+'</select></label>'+
+  '<h3>Choose exact reviewed submissions</h3>'+['Self','Manager','Prospective Self','Prospective'].map(t=>'<label>'+dkE(t)+'<select data-dk-link="'+t+'"><option value="">Not included</option>'+DK.options.map((x,i)=>({x,i})).filter(o=>o.x.type===t).map(({x,i})=>'<option value="'+i+'">Round '+x.round+' · '+dkE(x.date)+' · '+dkE(x.target||'Current role')+'</option>').join('')+'</select></label>').join('')+
+  '<p>Both current-role assessments are required. Include both target-role assessments when releasing target results. These snapshots do not change scores, award promotion or notify the employee.</p>'+dkBtn('release','Preview report release');
+  document.getElementById('dkReleaseForm').innerHTML=h;DK.dirty=false;
+ }catch(e){if(dkLive(epoch))showToast(e.message);}
+}
+function dkPreview(action,payload,title,text){
+ DK.preview={action,payload};var host=document.getElementById('dkPreview');host.innerHTML='<section class="card dk-preview"><h2>'+dkE(title)+'</h2><p>'+dkE(text)+'</p>'+dkBtn('confirm','Confirm and save',null,true)+dkBtn('cancel-preview','Cancel')+'</section>';host.scrollIntoView({block:'center',behavior:'smooth'});
+}
+document.addEventListener('input',e=>{if(e.target.closest('#dkRoot')&&e.target.matches('input,textarea,select')){DK.dirty=true;DK.preview=null;document.getElementById('dkPreview')?.replaceChildren();}});
+document.addEventListener('change',e=>{
+ if(!e.target.closest('#dkRoot'))return;
+ if(e.target.id==='dkScope'){DK.scope=e.target.value;DK.dirty=false;dkOpen('department');}
+ else if(e.target.id==='dkSearch'){DK.search=e.target.value;DK.page=0;DK.dirty=false;dkRender();}
+ else if(e.target.id==='dkReleaseReport'){DK.dirty=false;dkReleaseForm(e.target.value);}
+ else {DK.preview=null;document.getElementById('dkPreview')?.replaceChildren();}
+});
+document.addEventListener('click',async e=>{
+ var b=e.target.closest('[data-dk]');if(!b||!b.closest('#dkRoot')||DK.busy)return;
+ var action=b.dataset.dk,get=id=>document.getElementById(id)?.value||'';
+ try{
+ if(action==='department'||action==='mine'){DK.employeeReports=null;dkOpen(action);}
+ if(action==='reload')dkOpen(DK.view);
+ if(action==='home')navigateTo('ex-overview');
+ if(action==='filter'){DK.filter=b.dataset.value;DK.page=0;dkRender();}
+ if(action==='prev'){DK.page=Math.max(0,DK.page-1);dkRender();}
+ if(action==='next'){DK.page++;dkRender();}
+ if(action==='report')dkReport(b.dataset.id);
+ if(action==='employee-reports'){DK.employeeReports=b.dataset.employee;await dkOpen('mine');}
+ if(action==='save-scope'){
+  var s=DK.scopeOptions[Number(get('dkScopeEdit'))];if(get('dkScopeEdit')===''||!s||!get('dkExecutive')||get('dkScopeReason').trim().length<5)throw Error('Choose executive, scope and reason.');
+  var p={executive_id:get('dkExecutive'),company:s.company,department:s.department,enabled:get('dkEnable')==='true',reason:get('dkScopeReason').trim()};
+  dkPreview('save_scope',p,'Confirm department permission',DK.members.find(m=>m.id===p.executive_id)?.email+' · '+s.company+' / '+s.department+' · '+(p.enabled?'Enable progress-only access':'Revoke departmental access')+'. Existing named report releases remain separate.');
+ }
+ if(action==='release'){
+  var links=Array.from(document.querySelectorAll('[data-dk-link]')).filter(s=>s.value!=='').map(s=>DK.options[Number(s.value)]);
+  var p={id:crypto.randomUUID(),report_id:Number(get('dkReleaseReport')),executive_id:get('dkReleaseExecutive'),purpose:get('dkPurpose'),hohr_outcome:get('dkOutcome').trim(),shared_note:get('dkSharedNote').trim(),needs_recommendation:get('dkNeeds')==='true',case_id:get('dkExistingCase')||null,links};
+  if(!p.executive_id||p.hohr_outcome.length<3||p.shared_note.length<10)throw Error('Select the recipient and explain the HOHR outcome.');
+  dkPreview('release',p,'Confirm release of assessment results',DK.reports.find(r=>r.id===p.report_id)?.employee_name+' → '+DK.members.find(m=>m.id===p.executive_id)?.email+' · '+p.purpose+' · '+p.hohr_outcome+'. '+links.map(l=>l.type+' round '+l.round).join('; ')+'. '+(p.needs_recommendation?'Executive recommendation requested.':'For information; no executive recommendation required.')+' Shared note: '+p.shared_note);
+ }
+ if(action==='recommend'){
+  if(!get('dkRecommend')||!get('dkRecommendNote').trim())throw Error('Select recommendation and add reason.');
+  dkPreview('recommend',{id:DK.privateCase.id,version:DK.privateCase.version,recommendation:get('dkRecommend'),comment:get('dkRecommendNote').trim()},'Confirm private recommendation',get('dkRecommend')+': '+get('dkRecommendNote'));
+ }
+ if(action==='finalize')dkPreview('finalize',{id:DK.selected.id,version:DK.selected.version,outcome:get('dkFinalOutcome'),note:get('dkFinalNote')},'Confirm HOHR finalization',get('dkFinalOutcome')+': '+get('dkFinalNote'));
+ if(action==='cancel-preview'){DK.preview=null;document.getElementById('dkPreview').replaceChildren();}
+ if(action==='confirm'&&DK.preview){
+  var q=DK.preview;DK.busy=true;b.disabled=true;
+  try{
+   if(q.action==='recommend')await exRPC('submit',q.payload);else await dkRPC(q.action,q.payload);
+   DK.dirty=false;DK.preview=null;DK.busy=false;showToast('Saved. No employee message or appointment was made.');
+   if(['recommend','finalize'].includes(q.action))dkReport(DK.selected.id);else dkOpen(DK.view);
+  }catch(err){DK.busy=false;b.disabled=false;throw err;}
+ }
+ }catch(err){showToast(err.message);}
+});
+// Executive routes now read only the new metadata/released-report endpoints.
+var dkPreviousPage=loadPage;
+loadPage=function(id){
+ if(id==='hr-executive-access'||id==='hohr-executive-release')return dkOpen('admin');
+ if(APP.currentRole==='csuite'){
+  if(['ex-private','cs-reports','cs-simple-reports'].includes(id))return dkOpen('mine');
+  if(id==='assessment-cases'||id.startsWith('cs-simple-'))return dkOpen('department');
+ }
+ return dkPreviousPage.apply(this,arguments);
+};
+var dkPreviousEsOpen=esOpen;
+esOpen=async function(view){
+ if(APP.currentRole==='csuite'&&view&&view!=='home')return dkOpen(view==='reports'?'mine':'department');
+ var result=await dkPreviousEsOpen.apply(this,arguments);
+ if(APP.currentRole==='csuite'){
+  var panel=document.querySelector('#esRoot .fp-deferred-filter');
+  if(panel){panel.innerHTML='<p>Company and department access is shown in Department Overview. Scores are available only in your HOHR-released reports.</p>';
+   var b=document.createElement('button');b.className='btn btn-outline';b.type='button';b.textContent='Open Department Overview';b.onclick=()=>navigateTo('cs-simple-companies');panel.appendChild(b);}
+ }return result;
+};
+var dkPreviousPrivate=exCases;
+exCases=function(){return APP.currentRole==='csuite'?dkOpen('mine'):dkPreviousPrivate.apply(this,arguments);};
+var dkPreviousOverview=xiOpen;
+xiOpen=function(){return APP.currentRole==='csuite'?dkOpen('department'):dkPreviousOverview.apply(this,arguments);};
+var dkPreviousReport=xiReport;
+xiReport=function(id){if(APP.currentRole==='csuite'){showToast('Historical shared score reports require a new HOHR release.');return dkOpen('mine');}return dkPreviousReport.apply(this,arguments);};
+var dkPreviousNav=setupNav;
+setupNav=function(role){
+ var result=dkPreviousNav.apply(this,arguments);var side=document.getElementById('sideNav');
+ if(side&&['hr','hohr'].includes(role)){
+  var id=role==='hohr'?'hohr-executive-release':'hr-executive-access';
+  if(!side.querySelector('[data-page="'+id+'"]')){var b=document.createElement('button');b.type='button';b.className='sb-item';b.dataset.page=id;b.textContent='Executive access & release';b.onclick=()=>navigateTo(id);side.appendChild(b);}
+ }return result;
+};
+var dkPreviousRole=cnPageRole;
+cnPageRole=function(page,preferred){if(page==='hr-executive-access')return 'hr';if(page==='hohr-executive-release')return 'hohr';return dkPreviousRole.apply(this,arguments);};
+var dkPreviousLabel=getPageLabel;
+getPageLabel=function(page){return ['hr-executive-access','hohr-executive-release'].includes(page)?'Executive access & release':dkPreviousLabel.apply(this,arguments);};
+var dkPreviousNavigate=navigateTo;
+navigateTo=function(page){if(document.getElementById('dkRoot')&&(DK.busy||!dkDiscard()))return;DK.epoch++;DK.dirty=false;return dkPreviousNavigate.apply(this,arguments);};
+window.addEventListener('beforeunload',e=>{if(document.getElementById('dkRoot')&&(DK.dirty||DK.busy)){e.preventDefault();e.returnValue='';}});
+// Keep the approved card artwork, but label destinations according to the gated view.
+var dkCardCopy={
+ companies:['Department Overview','Follow stages in your authorized departments.','Open departments'],
+ talent:['Assessment purposes','Promotion, Succession, Talent pipeline and Development.','View purposes'],
+ succession:['Role & assessment stages','Track current-role and target-role submissions.','View stages'],
+ development:['Development progress','Follow approved actions, owners and dates.','View development'],
+ reports:['Released reports','Read results HOHR has submitted to you.','Open my reports']
+};
+if(typeof ES_DEST!=='undefined')ES_DEST.forEach(a=>{if(dkCardCopy[a[0]]){a[1]=dkCardCopy[a[0]][0];a[2]=dkCardCopy[a[0]][1];a[3]=dkCardCopy[a[0]][2];}});
+if(typeof EG_COPY!=='undefined')Object.entries(dkCardCopy).forEach(([k,v])=>EG_COPY[k]=v);
+
+</script>
 </body>
 </html>
+
