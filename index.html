@@ -1685,6 +1685,78 @@ body.sb-mode:has(#sideNav.nv3-sidebar) #roleBanner{
 @media(max-width:760px){#ihRoot .ih-panel{padding:18px}#ihRoot .ih-grid{grid-template-columns:1fr;gap:16px}#ihRoot .ih-confirm{padding:16px}#ihRoot .ih-list-tools label{width:100%}}
 
 </style>
+<style id="invitation-review-layout">
+/* Compact review-oriented invitations; scoped so other pages retain their themes. */
+#ihRoot.ir-compact{font:14px/1.5 system-ui!important;padding-bottom:70px;max-width:1480px}
+#ihRoot.ir-compact h1{font-size:28px!important;line-height:1.2!important;margin:6px 0 10px!important}
+#ihRoot.ir-compact h2{font-size:18px!important;line-height:1.35!important;margin:0!important}
+#ihRoot.ir-compact h3{font-size:16px!important;line-height:1.4!important}
+#ihRoot.ir-compact p{font-size:14px!important;line-height:1.5!important}
+#ihRoot.ir-compact .btn{font-size:14px!important;min-height:42px;padding:10px 14px!important}
+#ihRoot.ir-compact .ih-header{margin:4px 0 22px}
+#ihRoot.ir-compact .ih-tabs{margin:18px 0 22px}
+#ihRoot.ir-compact .ih-panel{padding:0;border:0;background:transparent;box-shadow:none}
+#ihRoot.ir-compact input,#ihRoot.ir-compact select,#ihRoot.ir-compact textarea{font-size:14px!important;min-height:44px;padding:10px 12px;margin:7px 0 0}
+#ihRoot.ir-compact label{font-size:14px!important;line-height:1.5!important}
+#ihRoot.ir-compact .ir-layout{display:grid;grid-template-columns:minmax(0,2.1fr) minmax(270px,1fr);gap:24px;align-items:start}
+#ihRoot.ir-compact .ir-form{background:var(--ih-paper);border:1px solid var(--ih-line);border-radius:10px;padding:0 24px 20px;min-width:0}
+#ihRoot.ir-compact .ir-step{padding:20px 0;border-bottom:1px solid var(--ih-line)}
+#ihRoot.ir-compact .ir-step:last-of-type{border-bottom:0}
+#ihRoot.ir-compact .ir-step>header{display:flex;align-items:center;gap:12px;margin-bottom:18px}
+#ihRoot.ir-compact .ir-step>header>span{display:grid;place-items:center;font:750 14px system-ui;width:32px;height:32px;border-radius:50%;background:oklch(93% .035 276);color:var(--ih-primary);flex-shrink:0}
+#ihRoot.ir-compact .ir-step .ih-grid{margin:12px 0 0;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}
+#ihRoot.ir-compact .ir-employee-field{grid-column:1/-1}
+#ihRoot.ir-compact .ir-employee-meta{margin:8px 0 0;font-size:14px!important;font-weight:400;overflow-wrap:anywhere}
+#ihRoot.ir-compact .ir-step .ih-readonly{padding:10px 12px;margin:16px 0 0;display:inline-block}
+#ihRoot.ir-compact .ir-step .ih-readonly small{font-size:14px}
+#ihRoot.ir-compact .ir-form-note{font-size:14px!important;color:var(--ih-muted)}
+#ihRoot.ir-compact .ir-summary{background:var(--ih-paper);border:1px solid oklch(82% .055 276);border-radius:10px;overflow:hidden;position:sticky;top:145px;padding:0 20px 22px}
+#ihRoot.ir-compact .ir-summary-title{display:flex;gap:12px;align-items:center;background:oklch(96% .023 276);padding:22px 20px;margin:0 -20px 4px;border-bottom:1px solid oklch(85% .04 276)}
+#ihRoot.ir-compact .ir-summary dl{margin:0}
+#ihRoot.ir-compact .ir-summary dl>div{display:grid;grid-template-columns:110px minmax(0,1fr);gap:12px;padding:17px 0;border-bottom:1px solid var(--ih-line);font-size:14px}
+#ihRoot.ir-compact .ir-summary dt{color:var(--ih-muted)}
+#ihRoot.ir-compact .ir-summary dd{margin:0;overflow-wrap:anywhere;font-weight:550}
+#ihRoot.ir-compact .ir-summary .btn{width:100%;margin:14px 0 6px}
+#ihRoot.ir-compact .ir-summary small{display:block;font:14px/1.5 system-ui;color:var(--ih-muted);margin-top:14px;text-align:center}
+#ihRoot.ir-compact .ir-summary-reminder{color:var(--ih-muted);font-size:14px!important;margin-top:22px}
+#ihRoot.ir-compact .ir-clear{background:none;border:0;color:var(--ih-primary);width:100%;padding:12px;font:650 14px system-ui;cursor:pointer}
+#ihRoot.ir-compact .ir-register-title{display:flex;gap:18px;align-items:center;flex-wrap:wrap;margin:0 0 20px}
+#ihRoot.ir-compact .ir-register-title span{font-size:14px;color:var(--ih-muted)}
+#ihRoot.ir-compact:has(.ir-register-title) .ih-panel,#ihRoot.ir-compact:has(.ir-personal-tabs) .ih-panel{background:var(--ih-paper);border:1px solid var(--ih-line);border-radius:10px;padding:22px}
+#ihRoot.ir-compact .ir-filter-row{display:grid;grid-template-columns:1fr 1fr .8fr 1fr 1.5fr;gap:14px;margin:0 0 22px}
+#ihRoot.ir-compact .ih-table{margin:16px 0;border:0;border-radius:0}
+#ihRoot.ir-compact th,#ihRoot.ir-compact td{font:400 14px/1.4 system-ui!important;padding:12px 8px!important;white-space:normal!important}
+#ihRoot.ir-compact th{font-weight:650!important;background:transparent;border-bottom:2px solid var(--ih-line);text-transform:none!important;letter-spacing:normal!important}
+#ihRoot.ir-compact td small{font-size:14px!important;font-weight:400;line-height:1.4}
+#ihRoot.ir-compact .ir-table th:first-child{width:17%}
+#ihRoot.ir-compact .ir-table th:nth-child(2){width:17%}
+#ihRoot.ir-compact .ir-table th:nth-child(3){width:16%}
+#ihRoot.ir-compact .ir-table .btn{font-size:14px!important;padding:7px 4px!important;min-height:32px;border:0!important;background:transparent!important;color:var(--ih-primary)!important}
+#ihRoot.ir-compact .ih-status{font:550 14px/1.3 system-ui!important;display:inline-block;white-space:normal;padding:5px 7px}
+#ihRoot.ir-compact .ir-pagination{display:flex;align-items:center;gap:12px;font-size:14px;color:var(--ih-muted);padding-top:16px}
+#ihRoot.ir-compact .ir-pagination span{margin-right:auto}
+#ihRoot.ir-compact .ir-pagination button{padding:9px 14px;border:1px solid var(--ih-line);border-radius:6px;background:var(--ih-paper);color:var(--ih-primary);font:600 14px system-ui;cursor:pointer}
+#ihRoot.ir-compact .ir-pagination button:disabled{opacity:.4;cursor:not-allowed}
+#ihRoot.ir-compact .ir-personal-tabs{display:flex;gap:12px;border-bottom:1px solid var(--ih-line);margin-bottom:18px}
+#ihRoot.ir-compact .ir-personal-tabs button{background:none;border:0;padding:12px 6px;min-height:44px;font:650 14px system-ui;color:var(--ih-muted);cursor:pointer}
+#ihRoot.ir-compact .ir-personal-tabs button[aria-pressed=true]{color:var(--ih-primary);border-bottom:2px solid var(--ih-primary)}
+#ihRoot.ir-compact .ir-due{background:oklch(97% .04 77);border:1px solid oklch(84% .05 77);border-radius:7px;padding:12px 16px;margin-bottom:14px;font-size:14px}
+#ihRoot.ir-compact .ir-invitation{display:grid;grid-template-columns:44px minmax(180px,1.4fr) minmax(180px,1.1fr) minmax(130px,1fr) auto;gap:16px;align-items:center;padding:24px 0;border-bottom:1px solid var(--ih-line)}
+#ihRoot.ir-compact .ir-invitation h3{font-size:16px!important;margin:0 0 6px}
+#ihRoot.ir-compact .ir-invitation p{margin:5px 0;font-size:14px!important}
+#ihRoot.ir-compact .ir-invitation small{display:block;font-size:14px;color:var(--ih-muted);margin:7px 0}
+#ihRoot.ir-compact .ir-work-icon{color:var(--ih-primary);background:oklch(95% .028 276);border:1px solid oklch(87% .04 276);border-radius:9px;padding:10px}
+#ihRoot.ir-compact .ir-footnote,#ihRoot.ir-compact .ir-empty{font-size:14px!important;color:var(--ih-muted);padding:18px 0}
+#ihRoot.ir-compact .ir-redo-create,#ihRoot.ir-compact .ir-redo-item{border-bottom:1px solid var(--ih-line);padding:18px 0}
+#ihRoot.ir-compact .ir-redo-create .btn,#ihRoot.ir-compact .ir-redo-item .btn{margin:16px 8px 0 0}
+#ihRoot.ir-compact .ir-redo-item small{font-size:14px;color:var(--ih-muted)}
+/* A reserved lower gutter keeps the assistant off editable fields on invitation pages only. */
+body:has(#ihRoot) #kaiFab.kn-fab{left:auto!important;top:auto!important;right:12px!important;bottom:12px!important;transform:none!important;padding:5px 10px!important;max-width:110px}
+body:has(#ihRoot) #kaiFab .kn-avatar-image{width:30px!important;height:30px!important}
+@media(max-width:1100px){#ihRoot.ir-compact .ir-layout{grid-template-columns:1fr}#ihRoot.ir-compact .ir-summary{position:static}#ihRoot.ir-compact .ir-filter-row{grid-template-columns:repeat(2,minmax(0,1fr))}#ihRoot.ir-compact .ir-invitation{grid-template-columns:44px minmax(0,1fr) auto}#ihRoot.ir-compact .ir-work-date{grid-column:2}}
+@media(max-width:650px){#ihRoot.ir-compact .ir-form{padding:0 16px 16px}#ihRoot.ir-compact .ir-step .ih-grid{grid-template-columns:1fr}#ihRoot.ir-compact .ir-filter-row{grid-template-columns:1fr}#ihRoot.ir-compact .ir-invitation{grid-template-columns:1fr}#ihRoot.ir-compact .ir-work-date{grid-column:auto}#ihRoot.ir-compact .ir-work-icon{display:none}#ihRoot.ir-compact .ir-pagination{flex-wrap:wrap}#ihRoot.ir-compact h1{font-size:25px!important}}
+
+</style>
 </head>
 <body>
 <style>
@@ -16542,5 +16614,240 @@ var ihPriorLogout=doLogout;
 doLogout=function(){IH.token++;IH.preview=null;IH.selected=null;IH.directory=[];IH.rows=[];document.getElementById('ihDueBanner')?.remove();return ihPriorLogout.apply(this,arguments);};
 
 </script>
+<script id="invitation-only-workflow">
+/* Presentation + invitation-only entry points. Supabase enforces the same rule in Invitation-Locks-Setup.sql. */
+var IR={mineTab:'todo',page:0,size:10,company:'',department:'',recipient:'',status:'',search:'',history:[],redos:[],redoSelection:null,busy:false,loadToken:0};
+var irOldRPC=ihRPC;
+ihRPC=async function(action,data={}){
+ var q=await r4Timeout(_supabase.rpc('cms_invitation_secure',{p_action:action,p_data:data}),45000,'Invitation request');
+ if(q.error)throw Error(q.error.message);return q.data;
+};
+function irEscape(v){return ihE(v);}
+function irIcon(k){return ihIcon(k);}
+function irSentDate(v){return v?new Date(v).toLocaleString('en-GB',{timeZone:'Africa/Nairobi',day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}):'Not submitted';}
+function irSelect(id,label,values,chosen){return '<label>'+label+'<select id="'+id+'"><option value="">All</option>'+values.map(v=>'<option '+(v===chosen?'selected':'')+' value="'+ihE(v)+'">'+ihE(v)+'</option>').join('')+'</select></label>';}
+function irSummary(){
+ var f=IH.form,emp=ihPerson(),pos=ihPosition(),manager=IH.managers.find(m=>m.id===f.manager);
+ var who=IH.view==='employee'?emp?.employee_name:manager?.name;
+ return '<div class="ir-summary-title">'+irIcon('mail')+'<h2>Invitation summary</h2></div><dl>'+
+ [['Recipient',who||'Not selected'],['Employee',emp?.employee_name||(f.task==='framework'?'Position framework':'Not selected')],
+ ['Current role',emp?.position||'Not applicable'],['Work',f.task==='framework'?'Set competencies':f.kind==='current'?'Current assessment':'Prospective assessment'],
+ ['Target position',pos?.position||'Not selected'],['Target department',pos?.department||'Not selected'],['Deadline',f.due?f.due+' · Nairobi':'Choose deadline']].map(([k,v])=>'<div><dt>'+ihE(k)+'</dt><dd>'+ihE(v)+'</dd></div>').join('')+
+ '</dl><p class="ir-summary-reminder">Reminder emails start on the due date and continue daily while overdue, until submission. Worker setup is required.</p>'+
+ ihButton('preview','Preview invitation',null,true)+'<button type="button" class="ir-clear" data-ir="clear">Clear form</button><small>Review before sending. No invitation sent yet.</small>';
+}
+function irAddStep(form,title,n,nodes){
+ if(!nodes.length)return;
+ var section=document.createElement('section');section.className='ir-step';
+ section.innerHTML='<header><span>'+n+'</span><h2>'+title+'</h2></header>';
+ nodes.forEach(x=>section.appendChild(x));form.appendChild(section);
+}
+function irForm(){
+ var root=document.getElementById('ihRoot'),panel=root?.querySelector('.ih-panel');if(!panel)return;
+ var f=IH.form,emp=ihPerson();
+ panel.querySelector(':scope > h2')?.remove();
+ var controls=Array.from(panel.querySelectorAll(':scope > .ih-grid'));
+ var recipient=controls.filter(g=>g.querySelector('#ihManager,#ihTask,#ihCompany'));
+ var assessment=controls.filter(g=>g.querySelector('#ihKind,#ihTargetDepartment'));
+ var timing=controls.filter(g=>g.querySelector('#ihDue'));
+ var readonly=Array.from(panel.querySelectorAll(':scope > .ih-readonly'));
+ var form=document.createElement('div');form.className='ir-form';
+ irAddStep(form,IH.view==='manager'?'Manager & assigned employee':'Employee','01',recipient);
+ irAddStep(form,f.task==='framework'?'Framework':'Assessment','02',[...assessment,...readonly]);
+ irAddStep(form,'Deadline & instructions','03',timing);
+ var name=form.querySelector('#ihEmployee');
+ if(name){
+  Array.from(name.options).forEach(o=>{var e=IH.directory.find(x=>x.id===o.value);if(e)o.textContent=e.employee_name+' · '+e.employee_id;});
+  var label=name.closest('label');label.classList.add('ir-employee-field');
+  if(emp){var detail=document.createElement('p');detail.className='ir-employee-meta';detail.textContent=emp.employee_id+' · '+emp.position+' · '+emp.email;label.appendChild(detail);}
+ }
+ var preview=panel.querySelector('#ihPreview'),button=panel.querySelector('[data-ih="preview"]');if(button)button.remove();
+ var note=panel.querySelector('.ih-note');if(note){note.className='ir-form-note';form.appendChild(note);}
+ var side=document.createElement('aside');side.id='irSummary';side.className='ir-summary';side.innerHTML=irSummary();
+ var layout=document.createElement('div');layout.className='ir-layout';layout.append(form,side);panel.replaceChildren(layout);
+ if(preview)panel.appendChild(preview);
+ var due=document.getElementById('ihDue');if(due){var note=document.createElement('small');note.textContent='End of day · Nairobi time';due.after(note);}
+}
+var irOldHeader=ihHeader;
+ihHeader=function(){
+ var h=irOldHeader();
+ if(['hr','hohr'].includes(APP.currentRole))h=h.replace('</nav>',ihButton('view','Redo requests','redos',IH.view==='redos')+'</nav>');
+ return h;
+};
+var irOldRender=ihRender;
+ihRender=function(){
+ if(IH.view==='redos'){irRedos();return;}
+ irOldRender();
+ var root=document.getElementById('ihRoot');if(!root)return;root.classList.add('ir-compact');
+ if(IH.view==='employee'||IH.view==='manager')irForm();
+ if(IH.view==='sent'||IH.view==='mine')irRegisterLayout();
+ var subtitle=root.querySelector('.ih-header p');if(subtitle)subtitle.textContent=IH.view==='mine'?'Your assigned work, deadlines and submission history.':'Choose the person, assign the work, set the deadline.';
+ if(IH.view==='employee'||IH.view==='manager')root.querySelector('.ih-reminder')?.remove();
+};
+function irRegisterLayout(){
+ var root=document.getElementById('ihRoot'),panel=root.querySelector('.ih-panel');if(!panel)return;
+ var mine=IH.view==='mine',companies=[...new Set(IH.rows.map(r=>r.company).filter(Boolean))].sort();
+ var deps=[...new Set(IH.rows.filter(r=>!IR.company||r.company===IR.company).map(r=>r.department).filter(Boolean))].sort();
+ if(mine){
+  panel.innerHTML='<nav class="ir-personal-tabs">'+[['todo','To complete'],['history','Submission history'],['redos','Redo requests']].map(([v,l])=>'<button type="button" data-ir="mine-tab" data-value="'+v+'" aria-pressed="'+(IR.mineTab===v)+'">'+l+'</button>').join('')+'</nav><div id="ihRegister"></div>';
+ }else{
+  panel.innerHTML='<header class="ir-register-title"><h2>Sent invitations</h2><span>'+IH.rows.length+' invitations</span></header><div class="ir-filter-row">'+
+  irSelect('irCompany','Company',companies,IR.company)+irSelect('irDepartment','Department',deps,IR.department)+
+  irSelect('irRecipient','Recipient',['Employee','Manager'],IR.recipient)+
+  irSelect('irStatus','Status',['Pending','Due today','Overdue','Submitted on time','Submitted late','Cancelled'],IR.status)+
+  '<label>Search<input id="irSearch" value="'+ihE(IR.search)+'" placeholder="Recipient, employee or position"></label></div><div id="ihRegister"></div>';
+ }
+ ihRegister();
+}
+function irFilterRows(){
+ return IH.rows.filter(r=>(!IR.company||r.company===IR.company)&&(!IR.department||r.department===IR.department)
+ &&(!IR.recipient||(IR.recipient==='Employee'?r.kind.startsWith('self_'):!r.kind.startsWith('self_')))
+ &&(!IR.status||r.status===IR.status)
+ &&(!IR.search||[r.recipient_email,r.employee_name,r.target_position,r.target_department].join(' ').toLowerCase().includes(IR.search.toLowerCase())));
+}
+var irOldRegister=ihRegister;
+ihRegister=function(){
+ var host=document.getElementById('ihRegister');if(!host)return;
+ if(IH.view==='mine'){
+  if(IR.mineTab==='redos'){host.innerHTML=irRedoContent();return;}
+  var rows=IH.rows.filter(r=>(APP.currentRole==='employee'?r.kind.startsWith('self_'):!r.kind.startsWith('self_'))&&(IR.mineTab==='todo'?r.state==='Pending':r.state!=='Pending'));
+  if(IR.mineTab==='todo'){
+   var due=rows.filter(r=>['Due today','Overdue'].includes(r.status));
+   host.innerHTML=(due.length?'<aside class="ir-due">'+due.length+' assigned item(s) due today or overdue. Reminders stop after submission.</aside>':'')+
+   (rows.length?rows.map(r=>'<article class="ir-invitation"><div class="ir-work-icon">'+irIcon(r.kind==='framework'?'team':'person')+'</div><div class="ir-work-title"><h3>'+ihE(ihWork(r))+'</h3><p>'+ihE(r.target_position)+' · '+ihE(r.target_department)+'</p>'+
+    (r.kind.startsWith('manager')?'<p>For '+ihE(r.employee_name)+'</p>':'')+
+    '<small>Sent '+irSentDate(r.issued_at)+'</small></div><div class="ir-work-date"><p>Due '+ihE(r.due_date)+' · End of day, Nairobi</p><small>Target '+ihDays(r.target_days)+' · Actual: running</small></div>'+
+    '<div><span class="ih-status '+(r.status==='Overdue'?'late':'')+'">'+ihE(ihCountdown(r))+'</span><small>Timeline adherence available after submission</small></div>'+ihButton('open',r.kind==='framework'?'Open framework':'Open assessment',r.id,true)+'</article>').join(''):
+    '<div class="ir-empty"><h3>No active invitations</h3><p>Assessments stay locked until HR sends an invitation for the specific role. A previous submission requires a reasoned redo request and a new invitation.</p></div>')+
+    '<p class="ir-footnote">One submission per invitation. Save draft is not submission. Assessment scores, timeline adherence and final decisions are separate.</p>';
+   return;
+  }
+  host.innerHTML=irTable(rows,true)+'<div id="irRedoForm"></div><p class="ir-footnote">Need another assessment? Open Redo requests. Existing submitted records remain unchanged.</p>';return;
+ }
+ var rows=irFilterRows();IR.page=Math.min(IR.page,Math.max(0,Math.ceil(rows.length/IR.size)-1));
+ host.innerHTML=irTable(rows.slice(IR.page*IR.size,(IR.page+1)*IR.size),false)+
+ '<div class="ir-pagination"><span>'+ (rows.length?'Showing '+(IR.page*IR.size+1)+'–'+Math.min(rows.length,(IR.page+1)*IR.size):'Showing 0')+' of '+rows.length+' invitations</span>'+
+ '<button type="button" data-ir="previous" '+(!IR.page?'disabled':'')+'>Previous</button><button type="button" data-ir="next" '+((IR.page+1)*IR.size>=rows.length?'disabled':'')+'>Next</button></div>';
+};
+function irTable(rows,mine){
+ return '<div class="ih-table ir-table"><table><thead><tr>'+['Recipient / employee','Work / position','Sent / deadline','Countdown','Status','Target / actual','Adherence','Action'].map(t=>'<th>'+t+'</th>').join('')+'</tr></thead><tbody>'+
+ rows.map(r=>'<tr><td data-label="Recipient / employee">'+ihE(r.recipient_email)+'<small>'+ihE(r.employee_name||'Position framework')+' · '+ihE(r.company)+' / '+ihE(r.department)+'</small></td>'+
+ '<td data-label="Work / position">'+ihE(ihWork(r))+'<small>'+ihE(r.target_position)+' · '+ihE(r.target_department)+'</small></td>'+
+ '<td data-label="Sent / deadline">Sent '+irSentDate(r.issued_at)+'<small>Due '+ihE(r.due_date)+' · End of day</small></td>'+
+ '<td data-label="Countdown">'+ihE(ihCountdown(r))+'</td><td data-label="Status"><span class="ih-status '+(['Overdue','Submitted late'].includes(r.status)?'late':r.submitted_at?'done':'')+'">'+ihE(r.status)+'</span></td>'+
+ '<td data-label="Target / actual">'+ihDays(r.target_days)+' / '+ihDays(r.actual_days)+(r.submitted_at?'<small>Submitted '+irSentDate(r.submitted_at)+'</small>':'')+'</td>'+
+ '<td data-label="Adherence">'+(r.adherence==null?'Not submitted':Number(r.adherence).toFixed(1)+'%')+(Number(r.late_days)>0?'<small>'+Number(r.late_days).toFixed(2)+' days late</small>':'')+'</td>'+
+ '<td data-label="Action">'+ihButton('details','View',r.id)+(IH.view==='sent'&&r.state==='Pending'?ihButton('cancel','Cancel',r.id):'')+'</td></tr>').join('')+'</tbody></table></div>'+(!rows.length?'<p class="ir-empty">No invitations match this view.</p>':'');
+}
+function irRedoContent(){
+ var requester=['employee','manager'].includes(APP.currentRole),h='';
+ if(requester)h='<section class="ir-redo-create"><h3>Request another assessment</h3><p>Choose a submitted role, give the reason and send for approval. Approval does not itself unlock an assessment: HR must send a new invitation.</p>'+
+ '<label>Previous assessment<select id="irRedoScope"><option value="">Choose employee and role</option>'+IR.history.map((r,i)=>'<option value="'+i+'">'+ihE(r.employee_name+' | '+ihWork(r)+' | '+r.target_department+' / '+r.position)+'</option>').join('')+'</select></label>'+
+ '<label>Reason<textarea id="irRedoReason" rows="3" minlength="10" maxlength="2000" placeholder="Explain why another assessment is needed"></textarea></label>'+
+ '<button class="btn btn-primary" type="button" data-ir="redo-preview">Preview redo request</button><div id="irRedoConfirm"></div>'+
+ (!IR.history.length?'<p>No matching historical role records were found for your current assessor access. Ask HR to review missing legacy framework links, not to bypass the lock.</p>':'')+'</section>';
+ h+='<h3>Redo requests & approvals</h3>'+IR.redos.map(r=>'<article class="ir-redo-item"><h3>'+ihE(r.employee_name)+' · '+ihE(ihWork(r))+'</h3><p>'+ihE(r.target_department)+' / '+ihE(r.position)+'</p><p>'+ihE(r.reason)+'</p>'+
+ '<small>Requested '+irSentDate(r.requested_at)+' · '+ihE(r.requester_email)+'</small><p><span class="ih-status">'+ihE(r.state)+'</span> '+ihE(r.review_note||'')+'</p>'+
+ (r.can_review?'<label>Review note<input id="irReview-'+r.id+'" minlength="5"></label><button class="btn" data-ir="redo-review" data-id="'+r.id+'" data-value="Approved">Approve</button><button class="btn" data-ir="redo-review" data-id="'+r.id+'" data-value="Rejected">Reject</button>':'')+'</article>').join('')+
+ (!IR.redos.length?'<p>No redo requests in this view.</p>':'')+
+ '<p class="ir-footnote">Current Self redo: line manager approval. Manager and prospective redo: HR/HOHR approval. No self-approval. HR issues a fresh, single-use invitation after approval.</p>';
+ return h;
+}
+function irRedos(){
+ var root=document.getElementById('ihRoot');if(root){root.classList.add('ir-compact');root.innerHTML=ihHeader()+'<section class="ih-panel">'+irRedoContent()+'</section><p id="ihStatus" role="status"></p>';}
+}
+var irOldOpen=ihOpen;
+ihOpen=async function(view){
+ IR.page=0;var t=++IR.loadToken;
+ if(view==='redos'&&['hr','hohr'].includes(APP.currentRole)){
+  IH.view='redos';IH.role=rptIdentity();IH.token++;setContent('<main id="ihRoot"><h1>Redo requests</h1><p>Reading pending approvals…</p></main>');
+  try{IR.redos=await ihRPC('redos');if(t===IR.loadToken)irRedos();}catch(e){ihNotice(e.message);}return;
+ }
+ await irOldOpen.apply(this,arguments);
+ if(t!==IR.loadToken||!APP.user)return;
+ if(IH.view==='mine'){
+  var viewEpoch=IH.token;
+  try{var d=await Promise.all([ihRPC('history_roles'),ihRPC('redos')]);if(t!==IR.loadToken||viewEpoch!==IH.token||IH.selected||!document.getElementById('ihRoot'))return;IR.history=d[0].filter(r=>APP.currentRole==='employee'?r.kind.startsWith('self_'):r.kind.startsWith('manager_'));IR.redos=d[1];ihRender();}catch(e){if(t===IR.loadToken&&viewEpoch===IH.token)ihNotice(e.message);}
+ }
+};
+document.addEventListener('input',e=>{
+ if(['ihInstructions','ihDue'].includes(e.target.id)){var s=document.getElementById('irSummary');if(s)s.innerHTML=irSummary();}
+ if(e.target.id==='irSearch'){IR.search=e.target.value;IR.page=0;ihRegister();}
+});
+document.addEventListener('change',e=>{
+ if(e.target.id==='ihDue'){var s=document.getElementById('irSummary');if(s)s.innerHTML=irSummary();}
+ var filters={irCompany:'company',irDepartment:'department',irRecipient:'recipient',irStatus:'status'};
+ if(filters[e.target.id]){IR[filters[e.target.id]]=e.target.value;IR.page=0;if(e.target.id==='irCompany')IR.department='';irRegisterLayout();}
+ if(['irRedoScope','irRedoReason'].includes(e.target.id)){IR.redoSelection=null;document.getElementById('irRedoConfirm')?.replaceChildren();}
+});
+document.addEventListener('input',e=>{if(e.target.id==='irRedoReason'){IR.redoSelection=null;document.getElementById('irRedoConfirm')?.replaceChildren();}});
+document.addEventListener('click',async e=>{
+ var b=e.target.closest('[data-ir]');if(!b||b.disabled||IR.busy)return;
+ var originalRoot=document.getElementById('ihRoot'),identity=rptIdentity(),loadToken=IR.loadToken;
+ var stillHere=()=>originalRoot?.isConnected&&identity===rptIdentity()&&loadToken===IR.loadToken;
+ try{
+ var a=b.dataset.ir;
+ if(a==='clear'){if(!confirm('Clear this invitation form? No invitation will be sent.'))return;IH.form=ihFresh();ihInvalidate();ihRender();}
+ if(a==='mine-tab'){IR.mineTab=b.dataset.value;irRegisterLayout();}
+ if(a==='previous'){IR.page=Math.max(0,IR.page-1);ihRegister();}
+ if(a==='next'){IR.page++;ihRegister();}
+ if(a==='redo-preview'){
+  var val=document.getElementById('irRedoScope').value,r=IR.history[Number(val)],reason=document.getElementById('irRedoReason').value.trim();
+  if(val===''||!r||reason.length<10)throw Error('Choose a submitted role and give a reason of at least 10 characters.');
+  IR.redoSelection={employee_id:r.employee_id,kind:r.kind,position_id:r.position_id,reason};
+  document.getElementById('irRedoConfirm').innerHTML='<div class="ih-confirm"><h3>Confirm redo request</h3><p>'+ihE(r.employee_name)+' · '+ihE(r.position)+'</p><p>'+ihE(reason)+'</p><button class="btn btn-primary" data-ir="redo-send">Send request for approval</button></div>';
+ }
+ if(a==='redo-send'&&IR.redoSelection){IR.busy=true;await ihRPC('request_redo',IR.redoSelection);if(!stillHere())return;IR.redoSelection=null;var rows=await ihRPC('redos');if(!stillHere())return;IR.redos=rows;irRegisterLayout();ihNotice('Redo requested. Wait for approval and a fresh HR invitation.');}
+ if(a==='redo-review'){
+  var note=document.getElementById('irReview-'+b.dataset.id).value.trim();if(note.length<5)throw Error('Give a review note of at least five characters.');
+  if(!confirm(b.dataset.value+' this redo request? A new HR invitation is still required.'))return;
+  IR.busy=true;await ihRPC('review_redo',{id:b.dataset.id,decision:b.dataset.value,note});if(!stillHere())return;var rows=await ihRPC('redos');if(!stillHere())return;IR.redos=rows;if(IH.view==='redos')irRedos();else irRegisterLayout();
+ }
+ }catch(e){if(stillHere())ihNotice(e.message);}finally{IR.busy=false;}
+});
+function irLockedEntry(){IR.mineTab='todo';return ihOpen('mine');}
+// Render no new assessment questions through any old assessment entry.
+loadSelfAssessment=irLockedEntry;
+loadAssessEmp=irLockedEntry;
+buildAssessForm=irLockedEntry;
+buildProspectiveSelfForm=irLockedEntry;
+piMine=irLockedEntry;
+piOpen=irLockedEntry;
+submitSelf=function(){showToast('Open your active invitation in My Invitations to submit.');};
+if(typeof submitAssessment==='function')submitAssessment=submitSelf;
+var irPriorPage=loadPage;
+loadPage=function(id){
+ if(['emp-selfassess','mgr-assess','emp-prosp-invites'].includes(id))return irLockedEntry();
+ if(['hr-communicate','emp-hr-messages'].includes(id)){
+  setContent('<section class="card"><h2>Use CMS Chat or Invitations</h2><p>The separate HR message page has been retired. Historical messages have not been deleted.</p></section>');return;
+ }
+ if(['hr-redo','mgr-requests'].includes(id)){if(APP.currentRole==='manager'){IR.mineTab='redos';return ihOpen('mine');}return ihOpen('redos');}
+ return irPriorPage.apply(this,arguments);
+};
+requestRedo=function(){IR.mineTab='redos';return ihOpen('mine');};
+var irPriorCompose=typeof rcCompose==='function'?rcCompose:null;
+if(irPriorCompose)rcCompose=function(){showToast('Use CMS Chat or Invitations & Follow-up.');};
+if(typeof rcInbox==='function')rcInbox=rcCompose;
+function irRetireMessages(){
+ document.querySelectorAll('[data-page="hr-communicate"],[data-page="emp-hr-messages"]').forEach(e=>e.remove());
+ document.querySelectorAll('#sideNav button,#sideNav .sb-item,#mainNav button,#mainContent button,#mainContent a').forEach(e=>{
+  var handler=e.getAttribute('onclick')||'';
+  if(['Communicate to Employee','Message employee','Messages from HR'].includes(e.textContent.trim())||/hr-communicate|emp-hr-messages/.test(handler))e.remove();
+ });
+ document.querySelectorAll('#mainContent .ed-message').forEach(e=>{if(e.textContent.includes('Messages from HR'))e.remove();});
+}
+var irPriorNav=setupNav;
+setupNav=function(){var r=irPriorNav.apply(this,arguments);irRetireMessages();return r;};
+var irPriorLoad=loadPage;
+loadPage=function(){var r=irPriorLoad.apply(this,arguments);irRetireMessages();Promise.resolve(r).then(irRetireMessages,()=>{});return r;};
+var irObs=new MutationObserver(()=>{if(document.querySelector('#mainContent .ed-message,[data-page="hr-communicate"],[data-page="emp-hr-messages"],#mainContent [onclick*="hr-communicate"],#mainContent [onclick*="emp-hr-messages"]'))irRetireMessages();});
+var irMain=document.getElementById('mainContent');if(irMain)irObs.observe(irMain,{childList:true,subtree:true});
+var irPriorLogout=doLogout;
+doLogout=function(){IR.history=[];IR.redos=[];IR.redoSelection=null;IR.loadToken++;return irPriorLogout.apply(this,arguments);};
+var irPriorSwitch=switchRole;
+switchRole=function(){IR.history=[];IR.redos=[];IR.redoSelection=null;IR.loadToken++;return irPriorSwitch.apply(this,arguments);};
+
+</script>
 </body>
 </html>
+
