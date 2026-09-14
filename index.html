@@ -1179,6 +1179,18 @@ body.cc-chat-open #kaiFab{display:none!important}
 
 </style>
 <style id="cms-page-performance-style">#esRoot .fp-deferred-filter{padding:12px 20px;margin:12px 0}#esRoot .fp-deferred-filter>div{margin-top:12px;max-width:650px}#esRoot .fp-deferred-filter [hidden]{display:none!important}</style>
+<style id="cms-chat-notifications-style">
+#pchatPanel #cnotPanel{flex-shrink:0;max-height:60%;overflow-y:auto;padding:18px;background:#f7f9ff;border-bottom:1px solid #cdd7eb;font:13px/1.5 system-ui;color:#182b49}
+#pchatPanel #cnotPanel[hidden]{display:none!important}
+#pchatPanel #cnotPanel h3{font-size:17px;margin:0 0 8px}
+#pchatPanel #cnotPanel p{font-size:12px;line-height:1.5;overflow-wrap:anywhere;margin:8px 0}
+#pchatPanel .cnot-choice{display:flex;align-items:flex-start;gap:12px;margin:16px 0 8px;font-size:13px}
+#pchatPanel .cnot-choice input{appearance:auto;width:17px!important;height:17px!important;min-width:17px!important;flex:0 0 17px;margin:3px 0;padding:0;accent-color:#4338ca}
+#pchatPanel .cnot-choice small{display:block;font-size:12px;color:#506580;margin-top:4px;font-weight:400}
+#pchatPanel .cnot-actions{display:flex;gap:10px;flex-wrap:wrap;margin:14px 0}
+#pchatPanel #cnotSave{background:#4338ca;color:#fff}
+
+</style>
 </head>
 <body>
 <style>
@@ -13407,7 +13419,7 @@ function cdAccent(){document.documentElement.style.setProperty('--cc-accent',{em
 function cdUnread(){
  var badge=document.getElementById('pchatUnread');if(!badge)return;
  var count=Object.values(_pc.unread||{}).reduce((n,x)=>n+(Number(x)||0),0);badge.textContent=count>99?'99+':String(count);badge.style.display=count?'inline-flex':'none';
- var launch=document.getElementById('ccChatLaunch');if(launch)launch.setAttribute('aria-label','Kenafric Chat'+(count?', '+count+' unread messages':''));
+ var launch=document.getElementById('ccChatLaunch');if(launch)launch.setAttribute('aria-label','CMS Chat'+(count?', '+count+' unread messages':''));
 }
 function cdEnsureLaunch(){
  var actions=document.querySelector('.header-right');if(!actions)return;
@@ -13588,7 +13600,7 @@ async function sendPChat(){
 function cdInit(){
  var panel=document.getElementById('pchatPanel');
  panel.className='pchat-panel cc-panel';panel.setAttribute('role','dialog');panel.setAttribute('aria-labelledby','ccChatTitle');panel.setAttribute('aria-hidden','true');
- panel.innerHTML='<header class="cc-head"><div><h2 id="ccChatTitle">Kenafric Chat</h2><p>Connect with your colleagues</p></div><div class="cc-head-actions"><button id="ccMinimize" type="button" aria-label="Minimize colleague chat">−</button><button id="ccClose" type="button" aria-label="Close colleague chat">×</button></div></header>'+
+ panel.innerHTML='<header class="cc-head"><div><h2 id="ccChatTitle">CMS Chat</h2><p>Connect with your colleagues</p></div><div class="cc-head-actions"><button id="ccMinimize" type="button" aria-label="Minimize colleague chat">−</button><button id="ccClose" type="button" aria-label="Close colleague chat">×</button></div></header>'+
  '<div class="cc-layout"><aside class="cc-directory"><label class="cc-sr" for="pchatSearch">Search colleagues</label><input id="pchatSearch" type="search" placeholder="Search colleagues…" autocomplete="off"><p class="cc-search-hint">Search by name to start a chat.</p><h3>Conversations</h3><div id="pchatContacts"></div></aside>'+
  '<section class="cc-thread"><div id="ccThreadHeader"></div><div id="pchatMsgs" aria-live="polite" aria-relevant="additions text"></div>'+
  '<form id="ccComposer"><label class="cc-sr" for="pchatText">Message to selected colleague</label><textarea id="pchatText" rows="2" maxlength="10000" placeholder="Type a message…" disabled></textarea><button id="ccSend" type="submit" disabled>➤ <span>Send</span></button></form><p id="ccStatus" role="status"></p></section></div><span id="pchatTitle" hidden></span>';
@@ -13600,7 +13612,7 @@ function cdInit(){
  panel.addEventListener('keydown',e=>{if(e.key==='Escape'){e.preventDefault();cdClose();}});
  cdSyncIdentity();cdEnsureLaunch();cdThreadHeader();cdFitChat();
  var unread=document.getElementById('pchatUnread');
- if(unread)new MutationObserver(()=>{var launch=document.getElementById('ccChatLaunch');if(launch){var text=unread.style.display==='none'?'':unread.textContent;launch.setAttribute('aria-label','Kenafric Chat'+(text?', '+text+' unread messages':''));}}).observe(unread,{childList:true,subtree:true,attributes:true,attributeFilter:['style']});
+ if(unread)new MutationObserver(()=>{var launch=document.getElementById('ccChatLaunch');if(launch){var text=unread.style.display==='none'?'':unread.textContent;launch.setAttribute('aria-label','CMS Chat'+(text?', '+text+' unread messages':''));}}).observe(unread,{childList:true,subtree:true,attributes:true,attributeFilter:['style']});
 }
 /* Draggable KAI launcher: pointer/mouse/touch + keyboard move controls.
    Stores only relative x/y by signed-in user on this device; no chat/evidence. */
@@ -13792,6 +13804,120 @@ doLogin=function(){fpInvalidate();return fpBaseLogin.apply(this,arguments);};
 var fpBaseLoginScreen=showLoginScreen;
 showLoginScreen=function(){fpInvalidate();return fpBaseLoginScreen.apply(this,arguments);};
 document.addEventListener('visibilitychange',()=>{if(document.hidden)fpInvalidate();});
+
+</script>
+<script id="cms-chat-notifications-module">
+/* CMS Chat naming and opt-in notifications. Generic notices only.
+ Desktop polling runs while this page remains open; no closed-browser push. */
+var CNOT={key:'',token:0,prefs:null,timer:null,busy:false,lastPoll:0,settings:false};
+function cnotKey(){return APP.user?String(APP.user.email||'').toLowerCase():'';}
+function cnotActive(key,token){return key===cnotKey()&&token===CNOT.token&&!!APP.user;}
+async function cnotRPC(action,data={}){
+ if(!APP.user)throw Error('Sign in first.');
+ var r=await _supabase.rpc('cms_chat_notifications',{p_action:action,p_data:data});
+ if(r.error)throw Error(r.error.message);return r.data;
+}
+function cnotName(){
+ var title=document.getElementById('ccChatTitle');if(title)title.textContent='CMS Chat';
+ var launcher=document.getElementById('ccChatLaunch');if(launcher){
+  var badge=document.getElementById('pchatUnread'),count=badge?.style.display==='none'?'':badge?.textContent;
+  launcher.setAttribute('aria-label','CMS Chat'+(count?', '+count+' unread messages':''));
+  launcher.title='CMS Chat';
+ }
+}
+function cnotStop(){clearTimeout(CNOT.timer);CNOT.timer=null;CNOT.token++;CNOT.key='';CNOT.prefs=null;CNOT.busy=false;CNOT.settings=false;}
+async function cnotInit(){
+ const key=cnotKey();if(!key){cnotStop();return;}
+ if(CNOT.key===key)return;
+ cnotStop();CNOT.key=key;const token=CNOT.token;
+ try{
+  const prefs=await cnotRPC('get');if(!cnotActive(key,token))return;
+  CNOT.prefs=prefs;cnotSchedule();
+ }catch{if(cnotActive(key,token))CNOT.prefs=null;}
+}
+function cnotSchedule(){clearTimeout(CNOT.timer);if(!APP.user||!CNOT.prefs?.desktop_enabled)return;CNOT.timer=setTimeout(cnotPoll,20000+Math.floor(Math.random()*3000));}
+async function cnotPoll(){
+ var key=CNOT.key,token=CNOT.token;
+ if(!cnotActive(key,token)||!CNOT.prefs?.desktop_enabled)return;
+ if(CNOT.busy){cnotSchedule();return;}
+ if(typeof Notification==='undefined'||Notification.permission!=='granted'){cnotSchedule();return;}
+ CNOT.busy=true;
+ try{
+  var items=await cnotRPC('desktop');if(!cnotActive(key,token))return;
+  // The server returns only unread new messages; unrelated open threads must not suppress alerts.
+  if(items.length){
+   var notification=new Notification('CMS Chat',{body:'You have a new message. Open CMS Chat to read it.',tag:'cms-chat-unread',silent:false});
+   notification.onclick=()=>{
+    notification.close();if(key!==cnotKey())return;
+    window.focus();if(!_pc.open)togglePChat();
+   };
+   setTimeout(()=>notification.close(),12000);
+  }
+ }catch{/* No toast storm: status is available in notification settings. */}
+ finally{if(cnotActive(key,token)){CNOT.busy=false;cnotSchedule();}}
+}
+function cnotStatus(t,error){var el=document.getElementById('cnotStatus');if(el){el.textContent=t;el.classList.toggle('cc-error',!!error);}}
+async function cnotSettings(){
+ var host=document.getElementById('cnotPanel');if(!host)return;
+ if(!host.hidden){host.hidden=true;return;}host.hidden=false;
+ host.replaceChildren(cdEl('p','Loading your notification preferences…'));
+ var key=cnotKey(),token=CNOT.token;
+ try{
+  var prefs=await cnotRPC('get');if(!cnotActive(key,token)||!host.isConnected)return;CNOT.prefs=prefs;
+  host.innerHTML='<h3>CMS Chat notifications</h3><p>Choose the alerts you want. Both are off until you enable them.</p>'+
+   '<label class="cnot-choice"><input id="cnotDesktop" type="checkbox"><span><b>Desktop alerts</b><small>While CMS is open in this browser. Alerts show no names or message text.</small></span></label>'+
+   '<p id="cnotPermission"></p><button type="button" id="cnotEnable" class="cc-button">Allow desktop notifications</button>'+
+   '<label class="cnot-choice"><input id="cnotEmail" type="checkbox"><span><b>Email reminders</b><small>For new messages still unread after about 5 minutes. At most one reminder per 15 minutes; queue volume may add delay.</small></span></label>'+
+   '<p id="cnotEmailTo"></p><p>Email contains a CMS link, not the conversation. Email service acceptance does not guarantee delivery. Turning off reminders cancels pending unsent alerts, not emails already sent.</p>'+
+   '<div class="cnot-actions"><button type="button" id="cnotSave" class="cc-button">Save preferences</button><button type="button" id="cnotDone" class="cc-button">Close</button></div><p id="cnotStatus" role="status"></p>';
+  document.getElementById('cnotDesktop').checked=!!prefs.desktop_enabled;
+  document.getElementById('cnotEmail').checked=!!prefs.email_enabled;
+  document.getElementById('cnotEmailTo').textContent='Send to your verified login email: '+prefs.email;
+  function permission(){
+   var supported=typeof Notification!=='undefined'&&window.isSecureContext;
+   var p=supported?Notification.permission:'unsupported';
+   document.getElementById('cnotPermission').textContent=p==='granted'?'Browser permission granted.':p==='denied'?'Notifications are blocked. Change this site’s notification permission in your browser.':p==='unsupported'?'Desktop notifications are not supported here. Try a supported desktop browser over HTTPS.':'Browser permission is needed before enabling desktop alerts.';
+   document.getElementById('cnotEnable').disabled=!supported||p==='denied'||p==='granted';
+  }
+  permission();
+  document.getElementById('cnotEnable').onclick=async()=>{try{await Notification.requestPermission();if(host.isConnected)permission();}catch{cnotStatus('Could not request browser permission.',true);}};
+  document.getElementById('cnotDone').onclick=()=>host.hidden=true;
+  document.getElementById('cnotSave').onclick=async()=>{
+   var desktop=document.getElementById('cnotDesktop').checked,email=document.getElementById('cnotEmail').checked;
+   if(desktop&&(typeof Notification==='undefined'||Notification.permission!=='granted')){cnotStatus('Allow notifications in your browser first, or leave desktop alerts off.',true);return;}
+   var save=document.getElementById('cnotSave');save.disabled=true;
+   try{
+    await cnotRPC('set',{desktop_enabled:desktop,email_enabled:email});
+    if(!cnotActive(key,token))return;
+    CNOT.prefs={...prefs,desktop_enabled:desktop,email_enabled:email};cnotSchedule();cnotStatus('Preferences saved. New messages will use these settings.');
+   }catch(e){if(cnotActive(key,token))cnotStatus('Could not save: '+e.message,true);}
+   finally{if(save.isConnected)save.disabled=false;}
+  };
+ }catch(e){if(cnotActive(key,token)&&host.isConnected){host.replaceChildren(cdEl('h3','Notification setup unavailable'),cdEl('p',e.message),cdBtn('Retry',()=>{host.hidden=true;cnotSettings();}));}}
+}
+function cnotInstall(){
+ cnotName();var panel=document.getElementById('pchatPanel');if(!panel)return;
+ var actions=panel.querySelector('.cc-head-actions');
+ if(actions&&!document.getElementById('cnotSettingsButton')){
+  var b=cdBtn('⚙',cnotSettings);b.id='cnotSettingsButton';b.title='Notification settings';b.setAttribute('aria-label','CMS Chat notification settings');actions.prepend(b);
+ }
+ if(!document.getElementById('cnotPanel')){
+  var settings=document.createElement('section');settings.id='cnotPanel';settings.hidden=true;
+  panel.querySelector('.cc-head').after(settings);
+ }
+}
+var cnotOldInit=cdInit;
+cdInit=function(){var r=cnotOldInit.apply(this,arguments);cnotInstall();return r;};
+var cnotOldLaunch=cdEnsureLaunch;
+cdEnsureLaunch=function(){var r=cnotOldLaunch.apply(this,arguments);cnotName();cnotInit();return r;};
+var cnotOldUnread=cdUnread;
+cdUnread=function(){var r=cnotOldUnread.apply(this,arguments);cnotName();return r;};
+var cnotOldLoginScreen=showLoginScreen;
+showLoginScreen=function(){cnotStop();return cnotOldLoginScreen.apply(this,arguments);};
+var cnotOldLogout=doLogout;
+doLogout=function(){cnotStop();return cnotOldLogout.apply(this,arguments);};
+cnotInstall();cnotInit();
+window.addEventListener('focus',()=>{if(CNOT.prefs?.desktop_enabled&&Date.now()-CNOT.lastPoll>20000){CNOT.lastPoll=Date.now();clearTimeout(CNOT.timer);cnotPoll();}});
 
 </script>
 </body>
