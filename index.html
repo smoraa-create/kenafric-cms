@@ -17868,5 +17868,55 @@ setInterval(()=>{
 })();
 
 </script>
+<script id="cms-add-one-role">
+/* Add one permission without replacing the rest. The server derives the retained set. */
+function uaRoleLabel(role){return {HR_ADMIN:'HR Admin',HEAD_HR:'Head of HR',C_SUITE:'C-Suite'}[role]||role;}
+function uaAssigned(access){
+ var roles=Array.isArray(access.reviewers)?access.reviewers.slice():access.reviewer==='BOTH'?['HR_ADMIN','HEAD_HR']:['HR_ADMIN','HEAD_HR'].includes(access.reviewer)?[access.reviewer]:[];
+ if(access.executive)roles.push('C_SUITE');
+ return [...new Set(roles.filter(r=>['HR_ADMIN','HEAD_HR','C_SUITE'].includes(r)))];
+}
+uaEdit=function(user){
+ UA.selected=user;var host=document.getElementById('uaEditor');if(!host)return;host.replaceChildren();
+ function node(tag,text){var el=document.createElement(tag);if(text!=null)el.textContent=text;return el;}
+ host.append(node('h3','Access for '+user.email),node('p','Add one role at a time. Existing roles stay assigned. Use Remove only when you want to withdraw that specific access.'));
+ var assigned=uaAssigned(user.access),list=node('section');list.setAttribute('aria-label','Currently assigned roles');
+ list.append(node('h4','Currently assigned'));
+ if(!assigned.length)list.append(node('p','No HR Admin, Head of HR or C-Suite roles assigned.'));
+ assigned.forEach(role=>{
+  var row=node('div');row.style.cssText='display:flex;align-items:center;gap:14px;margin:10px 0;padding:12px;background:#eef2ff;border-radius:10px';
+  row.append(node('strong',uaRoleLabel(role)));
+  var b=uaButton('Remove '+uaRoleLabel(role),()=>change('remove_role',role));b.dataset.uaRemove=role;row.append(b);list.append(row);
+ });host.append(list);
+ var label=node('label','Role to add');label.htmlFor='uaAddRole';host.append(label);
+ var select=node('select');select.id='uaAddRole';select.add(new Option('Choose one role',''));
+ ['HR_ADMIN','HEAD_HR','C_SUITE'].filter(r=>!assigned.includes(r)).forEach(r=>select.add(new Option(uaRoleLabel(r),r)));
+ host.append(select);
+ var add=uaButton('Add selected role',()=>change('add_role',select.value));add.id='uaAddButton';add.className='btn btn-primary';add.disabled=assigned.length===3;host.append(add);
+ if(assigned.length===3)host.append(node('p','All three roles are already assigned. Nothing else needs adding.'));
+ var reasonLabel=node('label','Reason for adding or removing this role');reasonLabel.htmlFor='uaReason';host.append(reasonLabel);
+ var reason=node('textarea');reason.id='uaReason';reason.maxLength=900;host.append(reason);
+ var emailLabel=node('label','Type the exact login email to confirm');emailLabel.htmlFor='uaConfirm';host.append(emailLabel);
+ var email=node('input');email.type='email';email.id='uaConfirm';host.append(email);
+ var status=node('p');status.id='uaChangeStatus';status.setAttribute('role','status');host.append(status);
+ async function change(action,role){
+  if(UA.busy)return;
+  if(!['HR_ADMIN','HEAD_HR','C_SUITE'].includes(role)){status.textContent='Choose one role to add.';return;}
+  if(reason.value.trim().length<5||email.value.trim().toLowerCase()!==user.email.trim().toLowerCase()){status.textContent='Enter a reason of at least five characters and the exact login email.';return;}
+  var verb=action==='add_role'?'Add':'Remove',others=assigned.filter(r=>r!==role).map(uaRoleLabel);
+  if(!confirm(verb+' '+uaRoleLabel(role)+' '+(action==='add_role'?'for ':'from ')+user.email+'? '+(others.length?'Keep: '+others.join(', ')+'.':'No other assigned roles will be changed.')))return;
+  UA.busy=true;host.querySelectorAll('button,input,textarea,select').forEach(e=>e.disabled=true);
+  try{
+   var result=await uaRPC(action,{id:user.id,role,reason:reason.value.trim(),confirm_email:email.value.trim(),expected:user.access});
+   if(!host.isConnected||UA.selected!==user)return;
+   var next={...user,access:result.access};uaEdit(next);
+   document.getElementById('uaChangeStatus').textContent=uaRoleLabel(role)+(action==='add_role'?' added.':' removed.')+' Other roles were kept. Ask this person to sign out and sign in again.';
+   var results=document.getElementById('uaResults');if(results)results.replaceChildren();await uaAudit();
+  }catch(e){if(host.isConnected)status.textContent='Change not confirmed: '+e.message+'. Search again if another administrator changed access.';}
+  finally{UA.busy=false;if(UA.selected===user&&host.isConnected){host.querySelectorAll('button,input,textarea,select').forEach(e=>e.disabled=false);add.disabled=assigned.length===3;}}
+ }
+};
+
+</script>
 </body>
 </html>
