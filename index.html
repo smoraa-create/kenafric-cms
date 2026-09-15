@@ -1757,6 +1757,42 @@ body:has(#ihRoot) #kaiFab .kn-avatar-image{width:30px!important;height:30px!impo
 @media(max-width:650px){#ihRoot.ir-compact .ir-form{padding:0 16px 16px}#ihRoot.ir-compact .ir-step .ih-grid{grid-template-columns:1fr}#ihRoot.ir-compact .ir-filter-row{grid-template-columns:1fr}#ihRoot.ir-compact .ir-invitation{grid-template-columns:1fr}#ihRoot.ir-compact .ir-work-date{grid-column:auto}#ihRoot.ir-compact .ir-work-icon{display:none}#ihRoot.ir-compact .ir-pagination{flex-wrap:wrap}#ihRoot.ir-compact h1{font-size:25px!important}}
 
 </style>
+<style id="assessment-draft-protection">
+#adRoot{font:14px/1.5 system-ui!important;color:#182b49;max-width:1320px;margin:auto;padding-bottom:70px}
+#adRoot *{box-sizing:border-box}
+#adRoot h1{font:750 26px/1.25 system-ui!important;margin:7px 0 10px;color:#182b49!important}
+#adRoot h2{font:700 18px/1.4 system-ui!important;margin:8px 0 12px;color:#182b49!important}
+#adRoot p,#adRoot label,#adRoot select,#adRoot textarea{font:14px/1.5 system-ui!important;overflow-wrap:anywhere}
+#adRoot small{font:13px/1.5 system-ui!important;color:#526780}
+#adRoot .ad-heading{display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap;margin:0 0 20px}
+#adRoot .ad-heading>div>span{font:700 11px system-ui;letter-spacing:.1em;color:#526780}
+#adRoot .ad-btn{display:inline-flex!important;align-items:center;justify-content:center;visibility:visible!important;opacity:1;padding:10px 15px!important;min-height:44px;border:1px solid #becce1!important;border-radius:7px!important;background:#fafcff!important;color:#24375a!important;font:650 14px/1.4 system-ui!important;cursor:pointer;max-width:100%;white-space:normal;box-shadow:none!important}
+#adRoot .ad-btn.ad-primary{background:#4338ca!important;color:#f9fbff!important;border-color:#4338ca!important}
+#adRoot .ad-btn:disabled{opacity:.5!important;cursor:not-allowed}
+#adRoot .ad-btn:focus-visible,#adRoot input:focus-visible,#adRoot textarea:focus-visible,#adRoot select:focus-visible{outline:3px solid #847bf0;outline-offset:3px}
+#adRoot .ad-savebar{position:sticky;top:var(--ad-sticky-top,145px);z-index:80;display:flex!important;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;background:#f5f7ff;border:1px solid #c9d3ee;border-radius:9px;padding:14px 18px;margin:16px 0 22px;box-shadow:0 3px 9px #1f30551a}
+#adRoot .ad-savebar strong{font:700 14px system-ui}
+#adRoot #adSaveStatus{margin:5px 0 0;max-width:58ch;color:#126766}
+#adRoot #adSaveStatus.ad-error{color:#a63324}
+#adRoot .ad-buttons,#adRoot .ad-footer{display:flex!important;gap:9px;flex-wrap:wrap}
+#adRoot .ad-experience{display:block!important;background:#fbfcff;border:1px solid #d1dbeb;border-radius:9px;padding:22px;margin:16px 0;min-width:0}
+#adRoot .ad-experience h2 small{margin-left:12px;font-weight:400}
+#adRoot .ad-experience>p{font-size:16px!important;margin:10px 0}
+#adRoot input:not([type=checkbox]),#adRoot textarea,#adRoot select{display:block!important;width:100%;min-width:0;max-width:100%;padding:10px 12px;margin:6px 0 14px;border:1px solid #b8c7dc;background:#fbfcff;color:#182b49;border-radius:6px;min-height:44px}
+#adRoot .ad-tick{display:flex!important;align-items:center;gap:10px;margin:18px 0}
+#adRoot .ad-tick input{width:19px;height:19px;margin:0;accent-color:#4338ca}
+#adRoot .ad-file{font-size:13px!important;color:#326263}
+#adRoot input[hidden]{display:none!important}
+#adRoot .ad-warning,#adRoot .ad-success,#adRoot .ad-versions{padding:20px;border-radius:9px;border:1px solid #dfc995;background:#fff9eb;margin:18px 0}
+#adRoot .ad-success{background:#edf9f5;border-color:#a3d1c3}
+#adRoot .ad-warning .ad-btn,#adRoot .ad-versions .ad-btn{margin:8px 8px 0 0}
+#adRoot .ad-versions{background:#f1f4fb;border-color:#c7d3e9}
+#adRoot .ad-instruction{color:#526780}
+#adRoot .ad-footer{margin:24px 0;padding:18px 0;border-top:1px solid #d1dbeb}
+#adRoot .ad-footer p{width:100%;color:#526780}
+@media(max-width:760px){#adRoot .ad-savebar{top:var(--ad-sticky-top,8px);padding:12px;gap:12px}#adRoot .ad-buttons{width:100%}#adRoot .ad-buttons .ad-btn{flex:1;padding:8px!important}#adRoot .ad-experience{padding:16px}#adRoot h1{font-size:23px!important}}
+
+</style>
 </head>
 <body>
 <style>
@@ -16848,6 +16884,325 @@ var irPriorSwitch=switchRole;
 switchRole=function(){IR.history=[];IR.redos=[];IR.redoSelection=null;IR.loadToken++;return irPriorSwitch.apply(this,arguments);};
 
 </script>
+<script id="assessment-draft-protection-module">
+/* Durable invited assessment editor. Presentation updates never change saved invitation/assessment data. */
+var AD={epoch:0,state:null};
+function adText(v){return escapeHtml(v==null?'':String(v));}
+function adOwner(){return APP.user?String(APP.user.email||'').trim().toLowerCase()+'|'+APP.currentRole:'';}
+function adActive(s){return AD.state===s&&s.identity===adOwner()&&!!document.getElementById('adRoot');}
+function adKey(id){return 'cms-invite-durable:v1:'+String(APP.user.email||'').trim().toLowerCase()+':'+id;}
+function adStable(items){
+ return JSON.stringify(items.map(x=>({id:String(x.id),ticked:!!x.ticked,rating:x.rating?Number(x.rating):null,evidence:String(x.evidence||''),
+ attachment_name:String(x.attachment_name||''),attachment_url:String(x.attachment_url||'')})).sort((a,b)=>a.id.localeCompare(b.id)));
+}
+function adItems(s){return s.items.map(i=>s.values[i.id]);}
+function adDirty(s){return adStable(adItems(s))!==s.savedSignature;}
+function adNotice(s,message,error=false){
+ if(!adActive(s))return;var el=document.getElementById('adSaveStatus');
+ if(el){el.textContent=message;el.classList.toggle('ad-error',error);}
+}
+function adTime(v){return v?new Date(v).toLocaleString('en-GB',{timeZone:'Africa/Nairobi'}):'Not yet saved';}
+async function adRPC(action,data){
+ var q=await r4Timeout(_supabase.rpc('cms_assessment_drafts',{p_action:action,p_data:data}),45000,'Assessment draft');
+ if(q.error)throw Error(q.error.message);return q.data;
+}
+function adLocal(s){
+ if(s.identity!==adOwner())return false;
+ try{
+  localStorage.setItem(s.key,JSON.stringify({schema:1,invitation:s.id,hash:s.hash,revision:s.revision,
+  dirty:adDirty(s),saved_at:s.savedAt,local_at:new Date().toISOString(),content:{items:adItems(s)}}));s.localError=false;return true;
+ }catch(e){s.localError=true;adNotice(s,'Browser backup unavailable. Keep this page open until a server save succeeds.',true);return false;}
+}
+function adCapture(s){
+ if(!adActive(s))return;
+ document.querySelectorAll('#adRoot [data-ad-item]').forEach(el=>{
+  var id=el.dataset.adItem,v=s.values[id];if(!v)return;
+  v.ticked=el.querySelector('[data-ad-field="ticked"]').checked;
+  v.evidence=el.querySelector('[data-ad-field="evidence"]').value;
+  v.rating=Number(el.querySelector('[data-ad-field="rating"]').value)||null;
+ });
+}
+function adBlank(item){return {id:String(item.id),ticked:false,evidence:'',rating:null,attachment_name:'',attachment_url:''};}
+function adMerge(s,content){
+ var records=content?.items||[],map=new Map(records.map(x=>[String(x.id),x]));
+ s.values={};s.items.forEach(i=>{s.values[i.id]={...adBlank(i),...(map.get(String(i.id))||{}),id:String(i.id)};});
+}
+function adHasInput(records){return(records||[]).some(r=>r.ticked||r.rating||String(r.evidence||'').trim()||r.attachment_name);}
+function adBtn(action,label,primary=false,extra=''){return '<button type="button" class="ad-btn '+(primary?'ad-primary':'')+'" data-ad="'+action+'" '+extra+'>'+adText(label)+'</button>';}
+function adUpdateButtons(s){
+ if(!adActive(s))return;
+ document.querySelectorAll('#adRoot [data-ad="save"]').forEach(b=>b.disabled=!s.canSave||s.submitting||s.conflict||!!s.recovery);
+ document.querySelectorAll('#adRoot [data-ad="preview"]').forEach(b=>b.disabled=!s.canSubmit||s.submitting||s.conflict||!!s.recovery||s.uploads.size>0);
+ document.querySelectorAll('#adRoot [data-ad="confirm-submit"]').forEach(b=>b.disabled=s.submitting);
+ document.querySelectorAll('#adRoot [data-ad-field]').forEach(el=>el.disabled=!s.canSave||s.submitting||s.conflict||!!s.recovery);
+}
+function adStickyOffset(){
+ var root=document.getElementById('adRoot');if(!root)return;
+ var offset=0;
+ document.querySelectorAll('body > .header,body > .nav-bar').forEach(el=>{
+  var st=getComputedStyle(el),r=el.getBoundingClientRect();
+  if(st.display!=='none'&&['sticky','fixed'].includes(st.position)&&r.height>0)offset=Math.max(offset,(parseFloat(st.top)||0)+r.height);
+ });
+ root.style.setProperty('--ad-sticky-top',Math.ceil(offset+8)+'px');
+}
+function adRender(s){
+ if(!adActive(s))return;
+ var r=s.invitation,html='<header class="ad-heading"><div><span>INVITED ASSESSMENT</span><h1>'+adText(ihWork(r))+'</h1>'+
+ '<p>'+adText(r.employee_name)+' · '+adText(r.target_department)+' / '+adText(r.target_position)+' · '+adText(r.level)+'</p>'+
+ '<small>Sent '+adTime(r.issued_at)+' · Due '+adText(r.due_date)+' (Nairobi)</small></div>'+adBtn('back','Back to My Invitations')+'</header>'+
+ '<section class="ad-savebar" aria-label="Assessment save and submit controls"><div><strong>Draft protection</strong><p id="adSaveStatus" role="status" aria-live="polite">'+adText(s.message||('Server saved: '+adTime(s.savedAt)))+'</p></div>'+
+ '<div class="ad-buttons">'+adBtn('save','Save draft')+adBtn('preview','Submit assessment',true)+adBtn('export','Download backup')+adBtn('import','Import backup')+adBtn('history','Saved versions')+'</div><input id="adImportFile" type="file" accept=".json,application/json" hidden></section>'+
+ (s.blocked?'<aside class="ad-warning"><b>Submission unavailable</b><p>'+adText(s.blocked)+'</p><p>Your saved answers are retained. A published-framework change does not erase this invitation’s draft; HR must review the appropriate next step.</p></aside>':'')+
+ '<div id="adRecovery"></div><div id="adConfirm"></div><div id="adVersions"></div>'+
+ '<p class="ad-instruction">Answers save automatically after editing. Look for “Saved to server” before leaving. Save draft does not submit; Submit assessment opens a confirmation. Uploaded proof is retained; a file still uploading is not yet saved.</p>'+
+ (r.instructions?'<p>'+adText(r.instructions)+'</p>':'')+
+ '<section class="ad-experiences">';
+ s.items.forEach((item,index)=>{
+  var v=s.values[item.id],name=s.competencies.find(c=>c.code===item.code)?.competency||item.code;
+  html+='<article class="ad-experience" data-ad-item="'+adText(item.id)+'"><h2>'+adText(name)+' <small>Experience '+(index+1)+' of '+s.items.length+'</small></h2><p>'+adText(item.text)+'</p><small>'+adText(item.classification)+'</small>'+
+  '<label class="ad-tick"><input type="checkbox" data-ad-field="ticked" '+(v.ticked?'checked':'')+' '+(!s.canSave?'disabled':'')+'>I have demonstrated this experience</label>'+
+  '<label>Evidence: action, context and result<textarea rows="3" data-ad-field="evidence" maxlength="20000" '+(!s.canSave?'readonly':'')+'>'+adText(v.evidence)+'</textarea></label>'+
+  '<label>Rating<select data-ad-field="rating" '+(!s.canSave?'disabled':'')+'><option value="">Select rating</option>'+[1,2,3,4,5].map(n=>'<option value="'+n+'" '+(Number(v.rating)===n?'selected':'')+'>'+n+' - '+adText(cmsRatingLabel(n))+': '+adText(cmsRatingDescription(n))+'</option>').join('')+'</select></label>'+
+  '<label>Supporting proof<input type="file" data-ad-field="file" accept=".pdf,.doc,.docx,.xls,.xlsx,image/*" '+(!s.canSave?'disabled':'')+'></label><p class="ad-file" data-ad-file="'+adText(item.id)+'">'+adText(v.attachment_name?'Saved proof: '+v.attachment_name:'No uploaded proof')+'</p></article>';
+ });
+ html+='</section><footer class="ad-footer">'+adBtn('save','Save draft')+adBtn('preview','Submit assessment',true)+'<p>One complete submission per invitation. Redos require a reason, approval and a fresh invitation.</p></footer>';
+ document.getElementById('adRoot').innerHTML=html;
+ adStickyOffset();
+ if(s.recovery)adRecoveryPanel(s);
+ adUpdateButtons(s);
+}
+function adRecoveryPanel(s){
+ var el=document.getElementById('adRecovery');if(!el)return;
+ el.innerHTML='<section class="ad-warning"><h2>Another saved copy is available</h2><p>'+adText(s.recovery.message)+'</p><p>No version has been silently overwritten. Download a backup before choosing which answers to use.</p>'+
+ adBtn('local-backup','Download browser copy')+adBtn('keep-server','Use server copy')+
+ (s.recovery.compatible?adBtn('restore-local','Use browser copy as draft'):'')+'</section>';
+}
+var adOldOpenWork=ihOpenWork;
+ihOpenWork=async function(id){
+ var prior=AD.state;
+ if(prior&&adActive(prior)&&!(await adCanLeave(prior)))return;
+ var row=IH.rows.find(x=>x.id===id);
+ if(row?.kind==='framework')return adOldOpenWork(id);
+ if(prior)clearTimeout(prior.timer);
+ var epoch=++AD.epoch,identity=adOwner();IH.token++;IH.role=rptIdentity();IH.selected={id};IR.loadToken++;
+ setContent('<main id="ihRoot"><section id="adRoot"><h1>Opening your saved assessment…</h1><p>Checking the invitation and server draft.</p></section></main>');
+ try{
+  var data=await adRPC('get',{id});if(epoch!==AD.epoch||identity!==adOwner()||!document.getElementById('adRoot'))return;
+  var s={id,identity,items:data.items||[],competencies:data.competencies||[],invitation:data.invitation,hash:data.framework_hash,
+  revision:data.draft?.revision||0,savedAt:data.draft?.updated_at||null,canSave:data.can_save,canSubmit:data.can_submit,blocked:data.blocked_reason,
+  values:{},savedSignature:'',key:adKey(id),timer:null,pending:null,uploads:new Map(),uploadErrors:new Set(),submitting:false,conflict:false,recovery:null};
+  AD.state=s;IH.selected=s.invitation;
+  adMerge(s,data.draft?.content);s.savedSignature=adStable(adItems(s));
+  var raw=null,legacy=null;
+  try{raw=JSON.parse(localStorage.getItem(s.key)||'null');legacy=JSON.parse(localStorage.getItem('cms-invite-hub:'+APP.user.email+':'+id)||'null');}catch{ s.message='A browser draft could not be read. Server draft is unchanged.'; }
+  if(data.draft&&data.draft.framework_hash!==s.hash){
+   s.canSubmit=false;s.canSave=false;s.blocked='The server draft belongs to a different invitation snapshot. Download saved versions and ask HR to review; answers have not been remapped.';
+  }
+  var local=raw?.content;
+  if(!local&&legacy&&typeof legacy==='object')local={items:Object.values(legacy)};
+  var validIds=new Set(s.items.map(i=>String(i.id))),compatible=local&&Array.isArray(local.items)&&local.items.every(x=>validIds.has(String(x.id)))&&(!raw||raw.hash===s.hash);
+  if(local&&Array.isArray(local.items)&&adHasInput(local.items)&&adStable(local.items)!==s.savedSignature){
+   if(!data.draft&&compatible&&s.canSave){
+    adMerge(s,local);s.message='Recovered your browser draft. Saving it to the server…';
+   }else{
+    s.recovery={content:local,compatible:!!compatible,message:raw?.dirty?'This browser has edits not confirmed on the server. Compare before continuing.':'A previous browser copy differs from the server draft. The server copy is shown below.'};
+   }
+  }
+  adRender(s);
+  if(!s.recovery&&adDirty(s)&&s.canSave)await adSave(s);
+ }catch(e){
+  if(epoch!==AD.epoch||identity!==adOwner()||!document.getElementById('adRoot'))return;
+  AD.state=null;document.getElementById('adRoot').innerHTML='<h1>Assessment could not be opened</h1><p>'+adText(e.message)+'</p><p>Install Assessment-Draft-Recovery.sql first. Do not clear browser storage or start another assessment to work around this message.</p>'+adBtn('open-retry','Retry',false,'data-id="'+adText(id)+'"')+adBtn('back','Back to invitations');
+ }
+};
+async function adSave(s){
+ if(!adActive(s)||!s.canSave||s.conflict||s.recovery)return false;
+ adCapture(s);adLocal(s);
+ if(s.pending){await s.pending;if(adActive(s)&&adDirty(s)&&!s.conflict)return adSave(s);return !adDirty(s);}
+ if(!adDirty(s)&&s.revision>0){adNotice(s,'Saved to server '+adTime(s.savedAt));return true;}
+ var content={items:JSON.parse(adStable(adItems(s)))},signature=adStable(content.items),revision=s.revision;
+ adNotice(s,'Saving to server…');
+ s.pending=(async()=>{
+  try{
+   var r=await adRPC('save',{id:s.id,framework_hash:s.hash,revision,content});
+   s.revision=r.revision;s.savedAt=r.updated_at;s.savedSignature=signature;
+   if(!adActive(s))return true;
+   adLocal(s);
+   adNotice(s,adDirty(s)?'New edits waiting to save…':'Saved to server '+adTime(r.updated_at));
+   return true;
+  }catch(e){
+   if(!adActive(s))return false;
+   if(/DRAFT_CONFLICT/.test(e.message)){
+    s.conflict=true;adNotice(s,'Another tab saved a newer version. Your local edits are backed up; compare versions before continuing.',true);
+    document.getElementById('adRecovery').innerHTML='<section class="ad-warning"><h2>Newer server draft found</h2><p>No automatic overwrite was made.</p>'+adBtn('export','Download my edits')+adBtn('compare','Load comparison')+'</section>';
+   }else adNotice(s,'Server save not confirmed: '+e.message+'. '+(s.localError?'Browser backup also unavailable.':'A browser backup was retained.'),true);
+   return false;
+  }finally{s.pending=null;adUpdateButtons(s);}
+ })();
+ var ok=await s.pending;
+ if(ok&&adActive(s)&&adDirty(s)&&!s.conflict){clearTimeout(s.timer);s.timer=setTimeout(()=>adSave(s),1000);}
+ return ok;
+}
+function adQueue(s){
+ if(!adActive(s)||!s.canSave||s.submitting)return;
+ adCapture(s);adLocal(s);s.previewSignature=null;document.getElementById('adConfirm')?.replaceChildren();
+ clearTimeout(s.timer);
+ adNotice(s,s.conflict?'Resolve the newer server draft before saving.':'Unsaved changes. Saving automatically…',s.conflict);
+ if(!s.conflict&&!s.recovery)s.timer=setTimeout(()=>adSave(s),1200);
+}
+async function adUpload(s,el){
+ var id=el.closest('[data-ad-item]').dataset.adItem,file=el.files[0];if(!file||!adActive(s)||!s.canSave)return;
+ var status=document.querySelector('#adRoot [data-ad-file="'+CSS.escape(id)+'"]');
+ var stamp=Symbol('upload');s.uploads.set(id,stamp);s.uploadErrors.delete(id);adUpdateButtons(s);status.textContent='Uploading '+file.name+'…';
+ try{
+  var clean=file.name.replace(/[^\p{L}\p{N}._ -]/gu,'_').slice(-160),path='ev/INV-'+s.id+'/'+id+'_'+crypto.randomUUID()+'_'+clean;
+  var result=await r4Timeout(_supabase.storage.from('evidence-files').upload(path,file,{upsert:false}),45000,'Proof upload');if(result.error)throw Error(result.error.message);
+  if(!adActive(s)||s.uploads.get(id)!==stamp)return;
+  s.values[id].attachment_name=file.name;s.values[id].attachment_url=_supabase.storage.from('evidence-files').getPublicUrl(path).data.publicUrl;
+  status.textContent='Uploaded proof: '+file.name;adCapture(s);adLocal(s);await adSave(s);
+ }catch(e){if(adActive(s)&&s.uploads.get(id)===stamp){s.uploadErrors.add(id);status.textContent='Upload not saved: '+e.message+'. Select the file again to retry.';}}
+ finally{if(s.uploads.get(id)===stamp)s.uploads.delete(id);adUpdateButtons(s);}
+}
+function adExport(content,name){
+ var blob=new Blob([JSON.stringify(content,null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),30000);
+}
+async function adCanLeave(s){
+ if(!s||!adActive(s))return true;
+ adCapture(s);adLocal(s);clearTimeout(s.timer);
+ if(s.submitting){adNotice(s,'Submission is still running. Wait for confirmation before leaving.',true);return false;}
+ if(s.uploads.size||s.uploadErrors.size)return confirm('Some proof files are still uploading or failed. Leaving will not preserve those files. Stay to finish or leave with the current saved answers?');
+ if(s.recovery||s.conflict)return confirm('You have unresolved draft versions. Download a backup before leaving. Leave this page?');
+ if(adDirty(s)){
+  var saved=await adSave(s);if(!adActive(s))return true;
+  if(!saved||adDirty(s))return confirm('Server saving has not been confirmed. '+(s.localError?'The browser backup also failed. ':'A local browser copy remains, but is not a server backup. ')+'Leave anyway?');
+ }
+ return true;
+}
+function adLockForm(s,lock){if(!adActive(s))return;document.querySelectorAll('#adRoot [data-ad-field]').forEach(el=>el.disabled=lock||!s.canSave);adUpdateButtons(s);}
+async function adPreview(s){
+ if(!s.canSubmit||s.recovery||s.conflict||s.submitting)return;
+ if(s.uploads.size||s.uploadErrors.size){adNotice(s,'Complete or retry proof uploads before submitting.',true);return;}
+ clearTimeout(s.timer);var ok=await adSave(s);if(!adActive(s)||!ok||adDirty(s))return;
+ s.previewSignature=adStable(adItems(s));
+ var box=document.getElementById('adConfirm');box.innerHTML='<section class="ad-warning"><h2>Confirm assessment submission</h2><p>Submit all '+s.items.length+' invited experiences for '+adText(s.invitation.employee_name)+' / '+adText(s.invitation.target_position)+'? Missing evidence or ratings still follow the saved minimum-rating policy.</p><p>One submission per invitation. HR approval is a later step. Your saved draft versions will be retained.</p>'+adBtn('confirm-submit','Confirm and submit',true)+adBtn('edit','Keep editing')+'</section>';box.scrollIntoView({block:'center',behavior:'smooth'});
+}
+async function adSubmit(s){
+ if(!adActive(s)||s.submitting||s.conflict||!s.canSubmit)return;
+ adCapture(s);if(adStable(adItems(s))!==s.previewSignature){document.getElementById('adConfirm').replaceChildren();adNotice(s,'Answers changed. Save and review submission again.',true);return;}
+ s.submitting=true;adLockForm(s,true);adNotice(s,'Submitting to HR review. Please keep this page open…');
+ try{
+  var reply=await adRPC('submit',{id:s.id,framework_hash:s.hash,revision:s.revision});
+  if(!reply.submitted)throw Error('The server did not confirm submission.');
+  s.canSave=false;s.canSubmit=false;s.invitation.state='Submitted';s.savedSignature=adStable(adItems(s));adLocal(s);
+  if(!adActive(s))return;
+  document.getElementById('adConfirm').innerHTML='<section class="ad-success"><h2>Assessment submitted</h2><p>The server confirmed your submission. Your saved versions remain retained. HR review and approval are separate.</p>'+adBtn('back','Back to My Invitations')+'</section>';
+  adNotice(s,'Submission confirmed. Answers are now read-only.');
+ }catch(e){
+  if(adActive(s)){
+   // Resolve a lost response by reading the authoritative invitation state, never by creating another assessment.
+   try{var state=await adRPC('get',{id:s.id});if(state.invitation.state==='Submitted'){
+    s.canSave=false;s.canSubmit=false;s.invitation=state.invitation;adNotice(s,'Server confirms this invitation was submitted. Your saved draft is retained.');
+    document.getElementById('adConfirm').innerHTML='<section class="ad-success"><h2>Submission confirmed</h2><p>'+adText(state.invitation.submission_ref||'Recorded by server')+'</p>'+adBtn('back','Back to My Invitations')+'</section>';return;
+   }}catch{}
+   adNotice(s,'Submission not confirmed: '+e.message+'. Saved answers are retained; do not start a new assessment.',true);
+  }
+ }finally{s.submitting=false;adLockForm(s,false);}
+}
+// Existing bottom-only controls now delegate to the durable editor when it is active.
+var adPreviousSave=ihSaveDraft;ihSaveDraft=function(){return AD.state&&adActive(AD.state)?adSave(AD.state):adPreviousSave.apply(this,arguments);};
+var adPreviousRender=ihRender;ihRender=function(){if(AD.state&&adActive(AD.state))return;return adPreviousRender.apply(this,arguments);};
+var adPreviousRegister=irRegisterLayout;irRegisterLayout=function(){if(AD.state&&adActive(AD.state))return;return adPreviousRegister.apply(this,arguments);};
+document.addEventListener('input',e=>{var s=AD.state;if(s&&e.target.closest('#adRoot [data-ad-item]'))adQueue(s);});
+document.addEventListener('change',e=>{var s=AD.state;if(!s||!e.target.closest('#adRoot [data-ad-item]'))return;
+ if(e.target.dataset.adField==='file')adUpload(s,e.target);else adQueue(s);});
+document.addEventListener('click',async e=>{
+ var b=e.target.closest('[data-ad]');if(!b||b.disabled)return;var a=b.dataset.ad,s=AD.state;
+ if(a==='open-retry')return ihOpenWork(b.dataset.id);
+ if(a==='back'){if(s&&!(await adCanLeave(s)))return;AD.epoch++;AD.state=null;IH.selected=null;return ihOpen('mine');}
+ if(!s||!adActive(s))return;
+ try{
+ if(a==='save')await adSave(s);
+ if(a==='preview')await adPreview(s);
+ if(a==='confirm-submit')await adSubmit(s);
+ if(a==='edit'){s.previewSignature=null;document.getElementById('adConfirm').replaceChildren();}
+ if(a==='export'){adCapture(s);adExport({invitation_id:s.id,framework_hash:s.hash,items:s.items,content:{items:adItems(s)},saved_at:s.savedAt},'CMS-assessment-backup-'+s.id+'.json');}
+ if(a==='import'){
+  if(!s.canSave||s.submitting||s.conflict||s.recovery){adNotice(s,'Resolve any pending version conflict before importing, and use an active invitation.',true);return;}
+  document.getElementById('adImportFile').click();
+ }
+ if(a==='local-backup'&&s.recovery)adExport({invitation_id:s.id,content:s.recovery.content},'CMS-browser-copy-'+s.id+'.json');
+ if(a==='compare'){
+  var local={items:JSON.parse(adStable(adItems(s)))},r=await adRPC('get',{id:s.id});if(!adActive(s))return;
+  s.revision=r.draft?.revision||0;s.savedAt=r.draft?.updated_at||null;s.canSave=r.can_save;s.canSubmit=r.can_submit;s.blocked=r.blocked_reason;
+  adMerge(s,r.draft?.content);s.savedSignature=adStable(adItems(s));s.conflict=false;
+  s.recovery={content:local,compatible:r.framework_hash===s.hash,message:'The latest server version is displayed. Your previous edits are retained as the browser copy until you choose.'};adRender(s);
+ }
+ if(a==='keep-server'&&s.recovery){
+  if(!confirm('Use the displayed server version? Download the browser copy first if you want to keep both.'))return;
+  // Preserve the discarded local alternative under a recovery key as well.
+  try{localStorage.setItem(s.key+':recovery:'+Date.now(),JSON.stringify(s.recovery));}catch{}
+  s.recovery=null;adLocal(s);adRender(s);
+ }
+ if(a==='restore-local'&&s.recovery?.compatible){
+  if(!confirm('Restore the browser copy as your working draft? It will create a new server version; existing server history is retained.'))return;
+  adMerge(s,s.recovery.content);s.recovery=null;adRender(s);adLocal(s);await adSave(s);
+ }
+ if(a==='history'){
+  var rows=await adRPC('history',{id:s.id});if(!adActive(s))return;
+  document.getElementById('adVersions').innerHTML='<section class="ad-versions"><h2>Saved server versions</h2><p>Download an earlier version for review. Restoring never changes submitted assessments.</p>'+
+  rows.map(r=>'<div>Version '+r.revision+' · '+adText(adTime(r.saved_at))+' '+adBtn('version-download','Download',false,'data-revision="'+r.revision+'"')+'</div>').join('')+(!rows.length?'<p>No server versions saved yet.</p>':'')+adBtn('close-history','Close')+'</section>';
+ }
+ if(a==='version-download'){var r=await adRPC('version',{id:s.id,revision:Number(b.dataset.revision)});if(adActive(s))adExport({invitation_id:s.id,...r},'CMS-draft-'+s.id+'-v'+r.revision+'.json');}
+ if(a==='close-history')document.getElementById('adVersions').replaceChildren();
+ }catch(e){adNotice(s,e.message,true);}
+});
+var adOldNavigate=navigateTo;
+navigateTo=async function(){
+ var s=AD.state;if(s&&adActive(s)&&!(await adCanLeave(s)))return;
+ if(s){clearTimeout(s.timer);AD.state=null;AD.epoch++;}
+ return adOldNavigate.apply(this,arguments);
+};
+var adOldSwitch=switchRole;
+switchRole=async function(){
+ var s=AD.state;if(s&&adActive(s)&&!(await adCanLeave(s)))return;
+ if(s){clearTimeout(s.timer);AD.state=null;AD.epoch++;}
+ return adOldSwitch.apply(this,arguments);
+};
+var adOldLogout=doLogout;
+doLogout=async function(){
+ var s=AD.state;if(s&&adActive(s)&&!(await adCanLeave(s)))return;
+ if(s){clearTimeout(s.timer);AD.state=null;AD.epoch++;}
+ return adOldLogout.apply(this,arguments);
+};
+window.addEventListener('beforeunload',e=>{
+ var s=AD.state;if(!s||!adActive(s))return;adCapture(s);adLocal(s);
+ if(adDirty(s)||s.uploads.size||s.submitting){e.preventDefault();e.returnValue='';}
+});
+document.addEventListener('visibilitychange',()=>{
+ var s=AD.state;if(!s||!adActive(s))return;
+ adCapture(s);adLocal(s);if(document.hidden&&adDirty(s)&&s.canSave&&!s.submitting)adSave(s);
+});
+document.addEventListener('change',async e=>{
+ if(e.target.id!=='adImportFile')return;
+ var s=AD.state,file=e.target.files[0];if(!s||!adActive(s)||!file)return;
+ try{
+  if(file.size>12000000)throw Error('Backup is too large.');
+  var data=JSON.parse(await file.text());if(!adActive(s))return;
+  if(data.invitation_id!==s.id)throw Error('This backup belongs to a different invitation.');
+  if(data.framework_hash&&data.framework_hash!==s.hash)throw Error('The saved framework does not match this invitation.');
+  var records=data.content?.items;if(!Array.isArray(records))throw Error('The file has no valid assessment-answer list.');
+  var ids=new Set(s.items.map(i=>String(i.id))),seen=new Set();
+  for(var v of records){
+   if(!ids.has(String(v.id))||seen.has(String(v.id)))throw Error('Backup contains duplicate or uninvited experiences.');
+   seen.add(String(v.id));
+   if(typeof v.evidence!=='string'||v.evidence.length>20000||typeof v.ticked!=='boolean'||(v.rating!==null&&![1,2,3,4,5].includes(v.rating)))throw Error('Invalid backup answer.');
+  }
+  if(!confirm('Restore '+records.length+' answer(s) for this same invitation? They will become a new saved draft version, not a submitted assessment.'))return;
+  adMerge(s,{items:records});adRender(s);adLocal(s);await adSave(s);
+ }catch(err){adNotice(s,'Backup not imported: '+err.message,true);}finally{if(e.target)e.target.value='';}
+});
+window.addEventListener('resize',adStickyOffset);
+
+</script>
 </body>
 </html>
-
