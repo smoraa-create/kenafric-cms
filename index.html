@@ -12316,7 +12316,7 @@ function hdRender(){var data=HD.data,m=hdModel(data,HD.company,HD.department),ok
  h+=hdButton('View all assessments','hr-all')+'</section></div><h2>Quick Actions</h2><div class="hd-quick">'+hdButton('Communicate to Employee','hr-communicate')+hdButton('Invite Prospective Assessment','hr-prosp-invites')+hdButton('Review Competencies','hr-comp-approvals')+hdButton('C-Suite Mapping','hr-csuite-mapping');
  if(window.CMS_ACCESS&&CMS_ACCESS.can_manage)h+=hdButton('Manage User Access','hr-user-access');h+='</div></div>';setContent(h);hdFilters();}
 function hdFilters(){var host=document.getElementById('hdFilters');if(!host)return;var data=HD.data;
- var c=document.createElement('select');c.setAttribute('aria-label','Company scope');c.add(new Option('All companies',''));Array.from(new Set(data.employees.map(e=>hdNorm(e.company)).filter(Boolean))).sort().forEach(x=>c.add(new Option(x,x)));c.value=HD.company;
+ var c=document.createElement('select');c.setAttribute('aria-label','Company scope');c.add(new Option('All companies',''));crNames(data.employees.map(e=>hdNorm(e.company))).forEach(x=>c.add(new Option(x,x)));c.value=HD.company;
  var dep=document.createElement('select');dep.setAttribute('aria-label','Department scope');dep.add(new Option('All departments',''));Array.from(new Set(data.employees.filter(e=>!HD.company||hdNorm(e.company)===HD.company).map(e=>hdNorm(e.department)).filter(Boolean))).sort().forEach(x=>dep.add(new Option(x,x)));dep.value=HD.department;
  function persist(){sessionStorage.setItem('cms_hr_scope:'+APP.user.email,JSON.stringify({company:HD.company,department:HD.department}));hdRender();}
  c.onchange=()=>{HD.company=c.value;HD.department='';persist();};dep.onchange=()=>{HD.department=dep.value;persist();};host.append(c,dep);}
@@ -12493,7 +12493,7 @@ function hhRender(){
  setContent(h);hhFilters();
 }
 function hhFilters(){var host=document.getElementById('hhFilters');if(!host)return;var employees=HH.data.employees;
- var c=document.createElement('select');c.setAttribute('aria-label','HOHR company scope');c.add(new Option('All companies',''));Array.from(new Set(employees.map(e=>hdNorm(e.company)).filter(Boolean))).sort().forEach(v=>c.add(new Option(v,v)));c.value=HH.company;
+ var c=document.createElement('select');c.setAttribute('aria-label','HOHR company scope');c.add(new Option('All companies',''));crNames(employees.map(e=>hdNorm(e.company))).forEach(v=>c.add(new Option(v,v)));c.value=HH.company;
  var d=document.createElement('select');d.setAttribute('aria-label','HOHR department scope');d.add(new Option('All departments',''));Array.from(new Set(employees.filter(e=>!HH.company||hdNorm(e.company)===HH.company).map(e=>hdNorm(e.department)).filter(Boolean))).sort().forEach(v=>d.add(new Option(v,v)));d.value=HH.department;
  c.onchange=()=>{HH.company=c.value;HH.department='';hhSaveScope();hhRender();};d.onchange=()=>{HH.department=d.value;hhSaveScope();hhRender();};host.append(c,d);
 }
@@ -12578,7 +12578,7 @@ var pfLightPages=new Set(['ex-overview','ex-private','cs-reports','mgr-setcomp',
 function pfNoLibrary(id){return pfLightPages.has(id)||id.startsWith('hr-actions-')||id.startsWith('hr-people-')||id.startsWith('hr-position-')||id==='hr-coverage'||id.startsWith('hohr-action-')||id.startsWith('hohr-overview-');}
 function pfRefreshButton(){return '<button type="button" class="btn btn-outline" onclick="pfClear();navigateTo(APP.currentPage,false)">Refresh summary</button>';}
 function pfScopeControls(hostId,scopes,state,render,save){var host=document.getElementById(hostId);if(!host)return;host.replaceChildren();
- var co=document.createElement('select');co.setAttribute('aria-label','Company scope');co.add(new Option('All companies',''));Array.from(new Set(scopes.map(x=>x.company).filter(Boolean))).sort().forEach(x=>co.add(new Option(x,x)));co.value=state.company;
+ var co=document.createElement('select');co.setAttribute('aria-label','Company scope');co.add(new Option('All companies',''));crNames(scopes.map(x=>x.company)).forEach(x=>co.add(new Option(x,x)));co.value=state.company;
  var de=document.createElement('select');de.setAttribute('aria-label','Department scope');de.add(new Option('All departments',''));Array.from(new Set(scopes.filter(x=>!state.company||x.company===state.company).map(x=>x.department).filter(Boolean))).sort().forEach(x=>de.add(new Option(x,x)));de.value=state.department;
  co.onchange=()=>{state.company=co.value;state.department='';save();render();};de.onchange=()=>{state.department=de.value;save();render();};host.append(co,de);
 }
@@ -13224,7 +13224,7 @@ function cdHome(){
  var shown=groups.filter(g=>!CDV.query||[g.name,g.company].join(' ').toLowerCase().includes(CDV.query.toLowerCase()));
  var pages=Math.max(1,Math.ceil(shown.length/9));CDV.page=Math.min(CDV.page,pages-1);
  var h=cdHeader('Calibration Review','Choose a department, then review one employee at a time.');
- h+='<section class="cal-box cd-controls"><label>Company<select data-cd-filter="company">'+calOptions(CAL.data.map(x=>x.employee.company),f.company)+'</select></label>'+
+ h+='<section class="cal-box cd-controls"><label>Company<select data-cd-filter="company">'+calOptions(crNames(CAL.data.map(x=>x.employee.company)),f.company)+'</select></label>'+
  '<label>Assessment<select data-cd-filter="kind"><option value="current" '+(f.kind==='current'?'selected':'')+'>Current role</option><option value="prospective" '+(f.kind==='prospective'?'selected':'')+'>Prospective role</option></select></label>'+
  '<label>Find a department<input data-cd-filter="query" value="'+calE(CDV.query)+'" placeholder="Department or company"></label></section>'+
  '<p class="cal-muted">'+groups.length+' department groups in scope. Each card keeps its company separate. HOHR-only access remains limited to submitted HR reports.</p>';
@@ -13418,7 +13418,7 @@ function prOptions(values,chosen,blank){return '<option value="">'+prE(blank||'A
 function prScoped(){return PR.cases.filter(c=>(!PR.company||c.company===PR.company)&&(!PR.department||c.department===PR.department));}
 function prHeader(title,sub){return '<header class="pr-header"><div><span class="pr-eyebrow">KENAFRIC CMS / '+prE(PR.role==='hr'?'HR ADMIN':PR.role==='hohr'?'HEAD OF HR':'C-SUITE')+'</span><h1>'+prE(title)+'</h1><p>'+prE(sub)+'</p></div>'+
  (PR.access.write?(PR.mode==='edit'?'':prB('new','+ New assessment case','','btn-primary')):'<span class="pr-tag">Shared cases · read only</span>')+'</header>';}
-function prFilters(){return '<div class="card pr-filters"><label>Company<select data-pr-filter="company">'+prOptions(PR.cases.map(c=>c.company),PR.company,'All companies')+'</select></label><label>Department<select data-pr-filter="department">'+prOptions(PR.cases.filter(c=>!PR.company||c.company===PR.company).map(c=>c.department),PR.department,'All departments')+'</select></label>'+prB('reload','Refresh')+'</div>';}
+function prFilters(){return '<div class="card pr-filters"><label>Company<select data-pr-filter="company">'+prOptions(crNames(PR.cases.map(c=>c.company)),PR.company,'All companies')+'</select></label><label>Department<select data-pr-filter="department">'+prOptions(PR.cases.filter(c=>!PR.company||c.company===PR.company).map(c=>c.department),PR.department,'All departments')+'</select></label>'+prB('reload','Refresh')+'</div>';}
 function prRender(){
  if(!prActive())return;
  var h='';
@@ -15055,7 +15055,7 @@ function rptRender(){
  '<section class="card"><div class="rpt-tabs" role="group" aria-label="Report scope">'+
  [['authorized','My authorized scope'],['group','Whole group'],['company','Company'],['department','Department']].map(([k,label])=>rptButton('scope',label,'data-value="'+k+'" aria-pressed="'+(RPT.scope===k)+'" '+(k==='group'&&!a.group_allowed?'disabled title="Explicit HR authorization required"':''),RPT.scope===k)).join('')+'</div>'+
  '<div class="rpt-filters"><label>Company<select id="rptCompany" '+(!['company','department'].includes(RPT.scope)?'disabled':'')+'>'+rptOptions(a.scopes.map(s=>s.company),RPT.company,'Select company')+'</select></label>'+
- '<label>Department<select id="rptDepartment" '+(RPT.scope!=='department'?'disabled':'')+'>'+rptOptions(a.scopes.filter(s=>s.company===RPT.company).map(s=>s.department),RPT.department,'Select department')+'</select></label>'+
+ '<label>Department<select id="rptDepartment" '+(RPT.scope!=='department'?'disabled':'')+'>'+rptOptions(a.scopes.filter(s=>s.company===RPT.company&&s.department).map(s=>s.department),RPT.department,'Select department')+'</select></label>'+
  '<label>Assessment<select id="rptAssessment"><option value="current" '+(RPT.assessment==='current'?'selected':'')+'>Current role</option><option value="prospective" '+(RPT.assessment==='prospective'?'selected':'')+'>Target role</option></select></label>'+
  (RPT.assessment==='prospective'?'<label>Released target role<select id="rptTarget">'+rptOptions(a.targets||[],RPT.target,'Choose one target role')+'</select></label>':'')+
  '<div><b>Data view</b><p>Latest available</p></div></div>'+
@@ -15364,7 +15364,7 @@ rptRender=function(){
  [['group','Whole group'],['company','Company'],['department','Department'],...(!hr?[['authorized','My authorized scope']]:[])].map(([k,l])=>rptButton('scope',l,'data-value="'+k+'" aria-pressed="'+(RPT.scope===k)+'" '+(k==='group'&&!a.group_allowed?'disabled aria-describedby="rptScopeHelp"':''),RPT.scope===k)).join('')+'</div>'+
  '<p id="rptScopeHelp" class="rpt-scope-help">'+rptIcon('info')+'<span>'+rptE(rptScopeHelp())+(!a.group_allowed?' Whole group needs an explicit access grant from HR.':'')+'</span></p>'+
  '<div class="rpt-filters">'+(['company','department'].includes(RPT.scope)?'<label>Company<select id="rptCompany">'+rptOptions(companies,RPT.company,'Select company')+'</select></label>':'<div class="rpt-fixed"><span>Companies</span><b>'+(RPT.scope==='group'?'All companies':'Approved scope only')+'</b></div>')+
- (RPT.scope==='department'?'<label>Department<select id="rptDepartment" '+(!RPT.company?'disabled':'')+'>'+rptOptions(a.scopes.filter(s=>s.company===RPT.company).map(s=>s.department),RPT.department,RPT.company?'Select department':'Choose company first')+'</select></label>':'<div class="rpt-fixed"><span>Departments</span><b>'+(RPT.scope==='authorized'?'Approved departments':'All in selected scope')+'</b></div>')+
+ (RPT.scope==='department'?'<label>Department<select id="rptDepartment" '+(!RPT.company?'disabled':'')+'>'+rptOptions(a.scopes.filter(s=>s.company===RPT.company&&s.department).map(s=>s.department),RPT.department,RPT.company?'Select department':'Choose company first')+'</select></label>':'<div class="rpt-fixed"><span>Departments</span><b>'+(RPT.scope==='authorized'?'Approved departments':'All in selected scope')+'</b></div>')+
  '<label>Assessment<select id="rptAssessment"><option value="current" '+(RPT.assessment==='current'?'selected':'')+'>Current role</option><option value="prospective" '+(RPT.assessment==='prospective'?'selected':'')+'>Target role</option></select></label>'+
  (RPT.assessment==='prospective'?'<label>'+(hr?'Target role':'Released target role')+'<select id="rptTarget">'+rptOptions(a.targets||[],RPT.target,'Select one target role')+'</select></label>':'<div class="rpt-fixed"><span>Assessment basis</span><b>Self + Manager</b></div>')+'</div>'+
  (RPT.scope==='company'&&!companies.length?'<p class="rpt-warning">No full-company access is assigned. Use Department or My authorized scope, or ask HR to review your access.</p>':'')+
@@ -16705,7 +16705,7 @@ function ihRender(){
   if(f.task==='assessment'){
    var dir=IH.directory;
    if(manager){var m=IH.managers.find(m=>m.id===f.manager);dir=dir.filter(e=>m&&String(e.manager_email||'').trim().toLowerCase()===String(m.email).trim().toLowerCase());}
-   var companies=[...new Set(dir.map(e=>ihKey(e.company)))].sort(),deps=[...new Set(dir.filter(e=>ihKey(e.company)===f.company).map(e=>ihKey(e.department)))].sort();
+   var companies=crNames(dir.map(e=>ihKey(e.company))),deps=[...new Set(dir.filter(e=>ihKey(e.company)===f.company).map(e=>ihKey(e.department)))].sort();
    var names=dir.filter(e=>ihKey(e.company)===f.company&&ihKey(e.department)===f.department).sort((a,b)=>(a.employee_name||'').localeCompare(b.employee_name||''));
    h+='<div class="ih-grid">'+ihField('ihCompany','Company',companies.map(c=>({value:c,label:c})),f.company,manager&&!f.manager)+
     ihField('ihDepartment','Employee department',deps.map(d=>({value:d,label:d})),f.department,!f.company)+
@@ -16980,7 +16980,7 @@ ihRender=function(){
 };
 function irRegisterLayout(){
  var root=document.getElementById('ihRoot'),panel=root.querySelector('.ih-panel');if(!panel)return;
- var mine=IH.view==='mine',companies=[...new Set(IH.rows.map(r=>r.company).filter(Boolean))].sort();
+ var mine=IH.view==='mine',companies=crNames(IH.rows.map(r=>r.company));
  var deps=[...new Set(IH.rows.filter(r=>!IR.company||r.company===IR.company).map(r=>r.department).filter(Boolean))].sort();
  if(mine){
   panel.innerHTML='<nav class="ir-personal-tabs">'+[['todo','To complete'],['history','Submission history'],['redos','Redo requests']].map(([v,l])=>'<button type="button" data-ir="mine-tab" data-value="'+v+'" aria-pressed="'+(IR.mineTab===v)+'">'+l+'</button>').join('')+'</nav><div id="ihRegister"></div>';
@@ -19359,5 +19359,147 @@ document.addEventListener('click',e=>{var b=e.target.closest('[data-hd-delete-in
 }
 /* Solid headers, Yes/No selections, tier badges and rating boxes are untouched. */
 </style>
+<script id="cms-company-registry-visibility">
+/* Registry-first company metadata; employee/result data and permission rules are untouched. */
+var CR={identity:'',companies:[],departments:[],loaded:false,pending:null};
+function crKey(){return APP.user?String(APP.user.email||'').toLowerCase()+'|'+APP.currentRole:'';}
+function crAllowed(){return !!APP.user&&['hr','hohr','csuite'].includes(APP.currentRole);}
+function crNorm(value){return String(value||'').trim().toUpperCase();}
+function crNames(existing=[]){
+ var set=new Set(existing.map(crNorm).filter(Boolean));
+ if(CR.identity===crKey()&&CR.loaded&&crAllowed())CR.companies.forEach(x=>set.add(x.name));
+ return [...set].sort();
+}
+async function crLoad(force=false){
+ if(!crAllowed())return;
+ var key=crKey();
+ if(CR.identity!==key){CR={identity:key,companies:[],departments:[],loaded:false,pending:null};}
+ if(CR.pending)return CR.pending;
+ if(CR.loaded&&!force)return;
+ var state=CR;
+ state.pending=(async()=>{
+  var r=await r4Timeout(_supabase.rpc('cms_company_directory',{}),30000,'Company registry');
+  if(r.error)throw Error('Company registry could not load: '+r.error.message);
+  if(state!==CR||key!==crKey())return;
+  if(!Array.isArray(r.data?.companies)||!Array.isArray(r.data?.departments))throw Error('Unexpected company registry response');
+  state.companies=r.data.companies.map(x=>({...x,name:crNorm(x.name)})).filter(x=>x.name);
+  state.departments=r.data.departments.map(x=>({company:crNorm(x.company),department:crNorm(x.department)}));
+  state.loaded=true;
+ })();
+ try{return await state.pending;}finally{state.pending=null;}
+}
+function crAddOptions(el){
+ if(!el||!crAllowed()||!CR.loaded||CR.identity!==crKey())return;
+ var existing=new Set(Array.from(el.options||[]).map(o=>crNorm(o.value)).filter(Boolean));
+ CR.companies.forEach(c=>{if(!existing.has(c.name)){el.appendChild(new Option(c.name,c.name));existing.add(c.name);}});
+}
+function crControls(){
+ if(!crAllowed()||!CR.loaded||CR.identity!==crKey())return;
+ // Explicit company selectors only. Never alter employees, role lists or private authorization scopes.
+ document.querySelectorAll('#aeCompanyList,#deptCompanyList,#lmCompanyList,#ihCompany,#irCompany,#piCompany,#rptCompany,select[data-cd-filter="company"],select[data-pr-filter="company"],#hdFilters select[aria-label="Company scope"],select[aria-label="HOHR company scope"]').forEach(crAddOptions);
+ var form=document.getElementById('ihRoot');
+ if(form&&IH?.form?.company&&['employee','manager'].includes(IH.view)&&IH.form.task==='assessment'){
+  var chosen=crNorm(IH.form.company),records=IH.directory||[];
+  if(IH.view==='manager'){var mgr=IH.managers.find(m=>m.id===IH.form.manager);records=records.filter(e=>mgr&&crNorm(e.manager_email)===crNorm(mgr.email));}
+  var missing=!records.some(e=>crNorm(e.company)===chosen);
+  var note=document.getElementById('crInvitationEmpty');
+  if(missing){if(!note){note=document.createElement('p');note.id='crInvitationEmpty';note.className='ih-note';form.querySelector('.ih-panel')?.append(note);}var text='No eligible employee records for '+chosen+' in this invitation selection. The company is registered; an assessment invitation needs a real employee and manager assignment.';if(note.textContent!==text)note.textContent=text;}
+  else note?.remove();
+ }
+}
+var crPage=loadPage;
+var crPageSequence=0;
+loadPage=async function(){
+ var sequence=++crPageSequence,identity=crKey();
+ if(crAllowed()){
+  try{await crLoad();}catch(e){showToast(e.message);}
+ }
+ if(sequence!==crPageSequence||identity!==crKey())return;
+ var r=await crPage.apply(this,arguments);crControls();return r;
+};
+['addCompany','registerCompany','deleteCompany','addDepartment','registerDepartment','deleteDepartment'].forEach(name=>{
+ var previous=window[name];if(typeof previous!=='function')return;
+ window[name]=async function(){var r=await previous.apply(this,arguments);CR.loaded=false;
+  try{await crLoad(true);crControls();}catch(e){showToast(e.message);}return r;};
+});
+var crReportRPC=rptRPC;
+rptRPC=async function(action,data={}){
+ var identity=crKey();
+ await crLoad(action==='access');
+ if(identity!==crKey())throw Error('Role changed. Reopen the report.');
+ var result=await crReportRPC.apply(this,arguments);
+ if(identity!==crKey())throw Error('Role changed. Reopen the report.');
+ if(action==='generate'){
+  var scope=result.scope,co=crNorm(result.company),dep=crNorm(result.department);
+  result.registry_companies=CR.companies.filter(x=>['group','authorized'].includes(scope)||x.name===co).map(x=>({...x}));
+  result.registry_departments=CR.departments.filter(x=>(['group','authorized'].includes(scope)||x.company===co)&&(scope!=='department'||x.department===dep)).map(x=>({...x}));
+ }return result;
+};
+var crGroups=rptGroups;
+var crEmployeeSummary=ebSummary;
+ebSummary=async function(force){
+ await crLoad(!!force);var original=await crEmployeeSummary.apply(this,arguments);
+ var map=new Map([...original].map(([k,c])=>[k,{...c,departments:new Map(c.departments)}]));
+ CR.companies.forEach(c=>{if(!map.has(c.name))map.set(c.name,{key:c.name,name:c.name,count:0,departments:new Map()});});
+ CR.departments.forEach(d=>{var c=map.get(d.company);if(c&&!c.departments.has(d.department))c.departments.set(d.department,{key:d.department,name:d.department,count:0});});
+ return map;
+};
+rptGroups=function(){
+ var level=arguments[0]||(RPT.report.scope==='group'?'company':'department');
+ var rows=crGroups.apply(this,arguments),seen=new Set(rows.map(r=>crNorm(r[0])));
+ if(level==='company'){
+  (RPT.report.registry_companies||[]).forEach(c=>{if(!seen.has(c.name)){rows.push([c.name,0,0,0,'No assessments yet']);seen.add(c.name);}});
+ }else{
+  (RPT.report.registry_departments||[]).forEach(d=>{var key=d.company+' / '+d.department;if(!seen.has(key)){rows.push([key,0,0,0,'No assessments yet']);seen.add(key);}});
+ }
+ return rows.sort((a,b)=>String(a[0]).localeCompare(String(b[0])));
+};
+var crDecisions=eiRenderDecisions;
+eiRenderDecisions=function(){
+ crDecisions.apply(this,arguments);
+ var root=document.getElementById('eiRoot');if(!root||!RPT.report)return;
+ if(EI.level==='company'){
+  var grid=root.querySelector('.ei-company-grid');if(!grid)return;
+  var present=new Set(Array.from(grid.querySelectorAll('[data-ei="company"]')).map(b=>crNorm(b.dataset.value)));
+  (RPT.report.registry_companies||[]).forEach((c,i)=>{
+   if(present.has(c.name))return;
+   var b=document.createElement('button');b.className='ei-unit ei-company tone-'+i%4;b.dataset.ei='company';b.dataset.value=c.name;b.type='button';
+   var deps=(RPT.report.registry_departments||[]).filter(d=>d.company===c.name).length;
+   b.innerHTML='<span class="ei-unit-icon">'+rptIcon('company')+'</span><h2>'+eiText(c.name)+'</h2><p>'+deps+' registered departments</p><dl><div><dt>Employees</dt><dd>0</dd></div><div><dt>Assessments</dt><dd>None yet</dd></div></dl><span class="ei-open">View company '+rptIcon('arrow')+'</span>';grid.append(b);
+  });
+  var count=root.querySelector('.ei-section-title>span');if(count)count.textContent=grid.querySelectorAll('[data-ei="company"]').length+' companies';
+  var note=root.querySelector('.ei-note');if(note)note.textContent='Registered companies are included even with no employees. No assessments means no score, not a zero score.';
+ }
+ if(EI.level==='department'){
+  var grid=root.querySelector('.ei-department-grid');if(!grid)return;
+  var deps=(RPT.report.registry_departments||[]).filter(d=>d.company===crNorm(EI.company));
+  var present=new Set(Array.from(grid.querySelectorAll('[data-ei="department"]')).map(b=>crNorm(b.dataset.value)));
+  deps.forEach(d=>{if(present.has(d.department))return;var b=document.createElement('button');b.type='button';b.className='ei-unit ei-department';b.dataset.ei='department';b.dataset.value=d.department;b.innerHTML='<h3>'+eiText(d.department)+'</h3><p>0 employees</p><p>No assessments yet</p>';grid.append(b);});
+  if(!RPT.model.people.some(p=>crNorm(p.company)===crNorm(EI.company))){
+   var p=document.createElement('p');p.className='ei-note';p.textContent='No employees or assessments yet for '+EI.company+'. '+(deps.length?'Registered departments are listed below.':'No departments registered yet. You can still generate a company report.');grid.before(p);
+  }
+ }
+};
+var crReportSection=rptSection;
+var crExportTables=r4Tables;
+r4Tables=function(){
+ var tables=crExportTables.apply(this,arguments);
+ if(RPT.report&&RPT.model&&!RPT.model.people.length){
+  tables.forEach(t=>{if(t.name==='Report basis')t.rows=t.rows.map(r=>r[0]==='Data basis'?[r[0],String(r[1]||'')+' No employees or assessments yet in the selected scope. Assessment scores are unavailable, not zero.']:r);});
+ }return tables;
+};
+rptSection=function(key){
+ var h=crReportSection.apply(this,arguments);
+ if(RPT.report&&RPT.model&&!RPT.model.people.length&&['company','department'].includes(RPT.report.scope)){
+  h='<aside class="rpt-lock"><strong>No employees or assessments yet</strong><p>'+rptE(RPT.report.company)+' is available as a report scope. No scores are assigned to missing assessments.</p></aside>'+h;
+ }return h;
+};
+var crMain=document.getElementById('mainContent'),crScheduled=false;
+if(crMain)new MutationObserver(()=>{
+ if(crScheduled)return;crScheduled=true;queueMicrotask(()=>{crScheduled=false;crControls();});
+}).observe(crMain,{childList:true,subtree:true});
+if(crAllowed())crLoad().then(crControls).catch(e=>showToast(e.message));
+
+</script>
 </body>
 </html>
