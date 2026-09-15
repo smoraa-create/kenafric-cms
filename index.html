@@ -2049,6 +2049,67 @@ body .header .header-brand .brand-accent{color:var(--cms-brand-accent)!important
 }
 
 </style>
+<style id="cms-classic-assessment-register-style">
+#arRoot{font:16px/1.5 system-ui;color:#223351;max-width:1800px;margin:auto}
+#arRoot *{box-sizing:border-box}
+#arRoot .ar-heading{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:18px}
+#arRoot h1{font-size:28px;margin:0;color:#14254a}
+#arRoot h2{font-size:18px;margin:12px 0}
+#arRoot p{font-size:14px;line-height:1.55}
+#arRoot .ar-button,#hrAllContent>.ar-button{border:1px solid #b1bfdd;border-radius:7px;background:#fff;color:#35429a;padding:8px 12px;font:650 14px/1.3 system-ui;cursor:pointer;min-height:36px;margin:3px;display:inline-flex;align-items:center;justify-content:center}
+#arRoot .ar-button:focus-visible,#arRoot button:focus-visible{outline:3px solid #0c8f9c;outline-offset:2px}
+#arRoot .ar-primary{background:#4544ce;color:#fff;border-color:#4544ce}
+#arRoot button:disabled{opacity:.5;cursor:not-allowed}
+#arRoot .ar-danger{color:#ae2232;background:#fff4f4}
+#arRoot .ar-company-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}
+#arRoot .ar-company{--unit:#4544ce;display:grid;grid-template-columns:34px 1fr;gap:3px 12px;align-items:center;text-align:left;padding:18px;border:1px solid #cad3e3;border-top:4px solid var(--unit);border-radius:9px;background:#f5f5ff;color:#213452;cursor:pointer;font:14px/1.4 system-ui}
+#arRoot .ar-company strong{font-size:19px}
+#arRoot .ar-company span:not(.ar-building),#arRoot .ar-company small{grid-column:2;font-size:14px}
+#arRoot .ar-building{grid-row:1/4;font-size:30px;color:var(--unit)}
+#arRoot .tone-1{--unit:#128368;background:#f0f9f5}
+#arRoot .tone-2{--unit:#bb6613;background:#fff8ed}
+#arRoot .tone-3{--unit:#b84454;background:#fff4f5}
+#arRoot .ar-company.selected{outline:2px solid var(--unit);outline-offset:1px}
+#arRoot .ar-departments{margin:18px 0 12px}
+#arRoot .ar-departments>div{display:flex;flex-wrap:wrap;gap:6px}
+#arRoot .ar-crumb{color:#35458c;font-weight:650;margin:12px 0}
+#arRoot .ar-register{background:#fff;border:1px solid #cbd5e5;border-radius:10px;overflow:hidden}
+#arRoot .ar-register>header{background:#132647;color:white;font-weight:700;font-size:18px;padding:13px 18px}
+#arRoot .ar-tools{display:grid;grid-template-columns:1.4fr 1fr 1fr 1.3fr;gap:12px;padding:16px}
+#arRoot .ar-tools label{font-size:14px}
+#arRoot .ar-tools select,#arRoot .ar-tools input{font-size:14px;min-height:42px;background:white}
+#arRoot .ar-note{padding:8px 18px;color:#56647e;font-size:14px;margin:0}
+#arRoot .ar-table-wrap{overflow-x:auto;margin:8px 16px;border:1px solid #d6deeb;border-radius:7px}
+#arRoot .ar-table{width:100%;min-width:1460px;border-collapse:collapse}
+#arRoot .ar-table th{background:#eef0fc;color:#27375d;padding:10px;font:700 14px/1.4 system-ui;text-transform:none;letter-spacing:0;border:1px solid #d6deeb}
+#arRoot .ar-table .ar-current{background:#e7edff;color:#233f91;text-align:center}
+#arRoot .ar-table .ar-prospective{background:#f0e8ff;color:#64369b;text-align:center}
+#arRoot .ar-table td{padding:14px 10px;vertical-align:top;border-bottom:1px solid #dfe5ef;font:14px/1.45 system-ui;min-width:110px}
+#arRoot .ar-table tr:nth-child(even){background:#f8faff}
+#arRoot .ar-table tr:hover td{background:#f0f4ff}
+#arRoot .ar-person{min-width:200px!important;position:sticky;left:0;background:#fff;z-index:1}
+#arRoot .ar-person strong{font-size:16px}
+#arRoot .ar-person span,#arRoot .ar-table small{display:block;font-size:14px;line-height:1.45;color:#61708a;margin-top:4px}
+#arRoot .ar-final{font-weight:750!important;color:#2b3991}
+#arRoot .ar-target-final{color:#6638a0}
+#arRoot .ar-decision{min-width:215px!important;max-width:300px}
+#arRoot .ar-decision p{margin:3px 0 10px}
+#arRoot .ar-pill{display:block;width:fit-content;padding:4px 7px;border-radius:5px;font-size:14px;margin-top:6px;background:#edf0f5;color:#526078}
+#arRoot .ar-pill.green{background:#e8f7ef;color:#176a46}
+#arRoot .ar-pill.amber{background:#fff3df;color:#96560f}
+#arRoot .ar-pill.red{background:#ffecf0;color:#a72743}
+#arRoot .ar-actions{display:flex;gap:3px;flex-wrap:wrap;min-width:150px}
+#arRoot .ar-actions details{flex-basis:100%;font-size:14px}
+#arRoot .ar-actions summary{cursor:pointer;padding:5px;color:#53617c}
+#arRoot .ar-pagination{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px;flex-wrap:wrap;font-size:14px}
+#arRoot .ar-empty{padding:24px;text-align:center;color:#53627e}
+#arRoot #arStatus{color:#a62739;padding:10px}
+#hrAllContent .score-rings[hidden]{display:none!important}
+#hrAllContent .ar-detail-summary{border-top:4px solid #4544ce}
+@media(max-width:1000px){#arRoot .ar-company-grid{grid-template-columns:repeat(2,minmax(0,1fr))}#arRoot .ar-tools{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:550px){#arRoot .ar-company-grid,#arRoot .ar-tools{grid-template-columns:1fr}#arRoot .ar-person{position:static}#arRoot .ar-heading h1{font-size:24px}}
+
+</style>
 </head>
 <body>
 <style>
@@ -19501,5 +19562,569 @@ if(crMain)new MutationObserver(()=>{
 if(crAllowed())crLoad().then(crControls).catch(e=>showToast(e.message));
 
 </script>
+<script id="cms-classic-assessment-register">
+/* Classic register. Real company metadata, all six score columns, no synthetic staff. */
+var AR={epoch:0,identity:'',directory:null,rows:[],company:'',department:'',target:'',search:'',state:'',review:'',page:0,size:15,busy:false,generated:null};
+function arE(v){return escapeHtml(v==null?'':String(v));}
+function arIdentity(){return APP.user?APP.user.email+'|'+APP.currentRole:'';}
+function arActive(t){return t===AR.epoch&&AR.identity===arIdentity()&&!!document.getElementById('arRoot');}
+async function arRPC(action,data={}){
+ var q=await r4Timeout(_supabase.rpc('cms_assessment_register',{p_action:action,p_data:{...data,view_role:APP.currentRole}}),60000,'Assessment register');
+ if(q.error)throw Error(q.error.message);return q.data;
+}
+function arButton(action,text,value='',cls=''){return '<button type="button" class="ar-button '+cls+'" data-ar="'+action+'" data-value="'+arE(value)+'">'+arE(text)+'</button>';}
+function arScore(v){return v===null||v===undefined?'Awaiting':Number(v).toFixed(1).replace(/\.0$/,'')+'%';}
+function arWaiting(s,m,value){
+ if(value!==null&&value!==undefined)return arScore(value);
+ if(s.score==null&&m.score==null)return 'Awaiting Self & Manager';
+ if(s.score==null)return 'Awaiting Self';
+ if(m.score==null)return 'Awaiting Manager';
+ return 'Awaiting compatible pair / HR review';
+}
+function arTone(state){return /^(Submitted|Reviewed|Complete)$/.test(state)?'green':/Returned|Expired|Correction|Ambiguous/.test(state)?'red':/Draft|Invited|Awaiting/.test(state)?'amber':'gray';}
+function arPill(text){return '<span class="ar-pill '+arTone(text)+'">'+arE(text)+'</span>';}
+function arSide(s){return '<strong>'+arScore(s.score)+'</strong>'+arPill(s.state)+'<small>'+arE(s.review)+(s.round?' · Round '+s.round:'')+'</small>';}
+function arFiltered(){
+ return AR.rows.filter(r=>(!AR.search||[r.name,r.employee_id,r.position,r.target].join(' ').toLowerCase().includes(AR.search.toLowerCase()))&&
+ (!AR.state||[r.current_self,r.current_manager,r.prospective_self,r.prospective_manager].some(s=>s.state===AR.state))&&
+ (!AR.review||[r.current_self,r.current_manager,r.prospective_self,r.prospective_manager].some(s=>s.review===AR.review)));
+}
+function arOptions(values,selected,title){return '<option value="">'+title+'</option>'+[...new Set(values)].filter(Boolean).sort().map(v=>'<option value="'+arE(v)+'" '+(v===selected?'selected':'')+'>'+arE(v)+'</option>').join('');}
+function arRender(){
+ var root=document.getElementById('arRoot');if(!root)return;
+ var d=AR.directory,rows=arFiltered();AR.page=Math.min(AR.page,Math.max(0,Math.ceil(rows.length/AR.size)-1));
+ var companyNames=d.companies.map(c=>c.company),preferred=['KIL','KBBL','KML SD','KML FD'];
+ companyNames.sort((a,b)=>(preferred.includes(a)?preferred.indexOf(a):99)-(preferred.includes(b)?preferred.indexOf(b):99)||a.localeCompare(b));
+ var h='<header class="ar-heading"><div><h1>All Assessments</h1><p>Company → Department → Employee</p></div><div>'+arButton('refresh','Refresh')+arButton('export','Export filtered view','','ar-primary')+'</div></header>';
+ h+='<nav class="ar-company-grid" aria-label="Choose company">'+companyNames.map(name=>{var c=d.companies.find(x=>x.company===name),tone=preferred.indexOf(name);return '<button type="button" data-ar="company" data-value="'+arE(name)+'" class="ar-company tone-'+(tone<0?0:tone)+(AR.company===name?' selected':'')+'" aria-pressed="'+(AR.company===name)+'"><span class="ar-building" aria-hidden="true">▥</span><strong>'+arE(name)+'</strong><span>'+c.employees+' '+(d.hohr_filtered?'visible employees':'employees')+'</span><small>'+(c.employees?'View departments':d.hohr_filtered?'No employees in submitted-report scope':'No employees or assessments yet')+'</small></button>';}).join('')+'</nav>';
+ h+='<section class="ar-departments"><h2>Departments'+(AR.company?' in '+arE(AR.company):'')+'</h2><div>'+arButton('department','All departments','',''+(!AR.department?'ar-primary':''))+
+ d.departments.filter(x=>!AR.company||x.company===AR.company).map(x=>arButton('department',x.department+' ('+x.employees+')',x.department,AR.department===x.department?'ar-primary':'')).join('')+'</div></section>';
+ h+='<p class="ar-crumb">'+arE(AR.company||'All companies')+' / '+arE(AR.department||'All departments')+'</p>'+
+ '<section class="ar-register"><header>Employee assessment register</header><div class="ar-tools"><label>Find employee<input id="arSearch" type="search" placeholder="Name, ID or position..." value="'+arE(AR.search)+'"></label>'+
+ '<label>Assessment status<select id="arState">'+arOptions(AR.rows.flatMap(r=>[r.current_self.state,r.current_manager.state,r.prospective_self.state,r.prospective_manager.state]),AR.state,'All statuses')+'</select></label>'+
+ '<label>HR review<select id="arReview">'+arOptions(AR.rows.flatMap(r=>[r.current_self.review,r.current_manager.review,r.prospective_self.review,r.prospective_manager.review]),AR.review,'All reviews')+'</select></label>'+
+ '<label>Prospective role<select id="arTarget">'+arOptions(AR.rows.flatMap(r=>r.targets),AR.target,'Automatic when only one target')+'</select></label></div>'+
+ '<p class="ar-note">Self and Manager scores are separate assessment components. Final role scores require both matching submissions and resolved HR review. A fresh invitation keeps the new result awaiting; historical details remain available.</p>'+
+ (d.hohr_filtered?'<p class="ar-note">Head of HR view retains the existing restriction to employees with a report submitted to HOHR. Empty registered companies remain visible.</p>':'')+
+ '<div class="ar-table-wrap"><table class="ar-table"><thead><tr><th rowspan="2">Employee / current position</th><th colspan="3" class="ar-current">Current Role</th><th colspan="3" class="ar-prospective">Prospective Role</th><th rowspan="2">Recommendation & final decision</th><th rowspan="2">Actions</th></tr>'+
+ '<tr><th>Self</th><th>Manager</th><th>Current Role Final Score</th><th>Self</th><th>Manager</th><th>Prospective Role Final Score</th></tr></thead><tbody>';
+ rows.slice(AR.page*AR.size,(AR.page+1)*AR.size).forEach(r=>{
+  var decision=r.decision;
+  h+='<tr><td class="ar-person"><strong>'+arE(r.name)+'</strong><span>'+arE(r.position)+'</span><small>'+arE(r.employee_id)+' · '+arE(r.department)+'</small></td>'+
+  '<td>'+arSide(r.current_self)+'</td><td>'+arSide(r.current_manager)+'</td><td class="ar-final">'+arE(arWaiting(r.current_self,r.current_manager,r.current_final))+'</td>'+
+  '<td>'+arSide(r.prospective_self)+'</td><td>'+arSide(r.prospective_manager)+'</td><td class="ar-final ar-target-final">'+
+  arE(!r.target?(r.targets.length>1?'Select a prospective role':AR.target?'No assessment for selected target':'Not invited for a target role'):arWaiting(r.prospective_self,r.prospective_manager,r.prospective_final))+
+  (r.target?'<small>'+arE(r.target)+'</small>':'')+'</td>'+
+  '<td class="ar-decision"><small>HR recommendation</small><p>'+arE(r.recommendation||'Not recorded')+'</p><small>Recorded final decision</small><p><b>'+arE(decision?.decision||'Not recorded')+'</b></p>'+
+  (decision?'<small>'+arE(decision.target_role||'Current / general')+' · '+arE(decision.decided_by)+' · '+arE(decision.decision_date)+'</small>':'')+'</td>'+
+  '<td><div class="ar-actions">'+arButton('view','View',r.employee_id,'ar-primary')+arButton('pdf','PDF',r.employee_id)+arButton('email','Email',r.employee_id)+
+  (APP.currentRole==='hr'?'<details><summary aria-label="More actions for '+arE(r.name)+'">More</summary>'+arButton('delete','Delete selected assessment',r.employee_id,'ar-danger')+'</details>':'')+'</div></td></tr>';
+ });
+ h+='</tbody></table></div>'+(!rows.length?'<div class="ar-empty"><h3>'+(!AR.rows.length?(d.hohr_filtered?'No employees in the submitted-report scope':'No employees or assessments yet'):'No matching employees')+'</h3><p>'+(!AR.rows.length?'This company or department remains registered. No score is assigned to missing or out-of-scope assessments.':'Change the filters to see other records.')+'</p></div>':'')+
+ '<footer class="ar-pagination"><span>'+rows.length+' matching employees · Page '+(AR.page+1)+' of '+Math.max(1,Math.ceil(rows.length/AR.size))+'</span><div>'+arButton('prev','Previous')+arButton('next','Next')+'</div></footer>'+
+ '<p class="ar-note">Latest recorded recommendation and final decision are shown separately and may refer to a historical or different target assessment. View details for the full context.</p></section><p id="arStatus" role="status"></p>';
+ root.innerHTML=h;
+ root.querySelector('[data-ar="prev"]').disabled=AR.page===0;
+ root.querySelector('[data-ar="next"]').disabled=(AR.page+1)*AR.size>=rows.length;
+ root.querySelectorAll('[data-ar="export"],[data-ar="refresh"]').forEach(b=>b.disabled=AR.busy);
+}
+loadHRAll=async function(){
+ var identity=arIdentity();if(!APP.user||!['hr','hohr'].includes(APP.currentRole))return;
+ var changed=identity!==AR.identity;AR.identity=identity;if(changed){AR.company='';AR.department='';AR.target='';AR.search='';AR.state='';AR.review='';}
+ var t=++AR.epoch;AR.busy=true;
+ setContent('<main id="arRoot"><h1>All Assessments</h1><p>Reading company and assessment records...</p></main><div id="hrAllContent"></div>');
+ try{
+  AR.directory=await arRPC('directory');if(!arActive(t))return;
+  if(!AR.directory.companies.some(c=>c.company===AR.company))AR.company=AR.directory.companies.find(c=>c.company==='KIL')?.company||AR.directory.companies[0]?.company||'';
+  await arLoad(t);
+  if(APP.hrAllTarget&&arActive(t)){var id=APP.hrAllTarget;APP.hrAllTarget=null;await arView(id);}
+ }catch(e){if(arActive(t)){AR.busy=false;document.getElementById('arRoot').innerHTML='<h1>All Assessments</h1><p>'+arE(e.message)+'</p><p>Install the matching Classic Assessment Register SQL before using this screen.</p>'+arButton('refresh','Retry');}}
+};
+async function arLoad(token){
+ var t=token||++AR.epoch;AR.busy=true;
+ try{var d=await arRPC('list',{company:AR.company,department:AR.department,target:AR.target});if(!arActive(t))return;AR.rows=d.rows;AR.generated=d.generated_at;AR.busy=false;AR.page=0;arRender();}
+ catch(e){if(arActive(t)){AR.busy=false;AR.rows=[];arRender();document.getElementById('arStatus').textContent='Could not load assessments: '+e.message;}}
+}
+async function arFresh(id){
+ var identity=arIdentity();var d=await arRPC('one',{employee_id:id,target:AR.target});
+ if(identity!==arIdentity())throw Error('Account or role changed. Reopen this register.');
+ return d.rows[0];
+}
+async function arView(id){
+ var row=await arFresh(id),identity=arIdentity(),epoch=AR.epoch;
+ if(!document.getElementById('hrAllContent'))return;
+ await loadHRAllDetail(id);
+ if(identity!==arIdentity()||epoch!==AR.epoch)return;
+ var host=document.getElementById('hrAllContent');if(!host)return;
+ host.querySelectorAll('.score-rings').forEach(el=>el.hidden=true);
+ var overview=document.createElement('section');overview.className='card ar-detail-summary';
+ var current=arWaiting(row.current_self,row.current_manager,row.current_final),prospective=row.target?arWaiting(row.prospective_self,row.prospective_manager,row.prospective_final):'Awaiting target selection';
+ overview.innerHTML='<h2>'+arE(row.name)+' · Assessment overview</h2><p>Current Role: Self '+arScore(row.current_self.score)+' | Manager '+arScore(row.current_manager.score)+' | <b>Final: '+arE(current)+'</b></p><p>Prospective Role '+arE(row.target||'not selected')+': Self '+arScore(row.prospective_self.score)+' | Manager '+arScore(row.prospective_manager.score)+' | <b>Final: '+arE(prospective)+'</b></p><p>Recorded final decision: '+arE(row.decision?.decision||'Not recorded')+'</p><p>Detailed historical calculations below retain their original submission context. They are not a substitute for the complete-pair final result above.</p>';
+ host.prepend(overview);
+ if(row.decisions?.length){
+  var history=document.createElement('details');history.className='card';var title=document.createElement('summary');title.textContent='Recorded final decision history';history.append(title);
+  row.decisions.forEach(d=>{var entry=document.createElement('p');entry.textContent=[d.decision,d.target_role||'Current / general',d.decided_by,d.decision_date,d.next_action].filter(Boolean).join(' | ');history.append(entry);});
+  overview.append(history);
+ }
+ var submitted=await sxRPC('cms_experience_review','get',{employee_id:id});
+ if(identity!==arIdentity()||epoch!==AR.epoch||!host.isConnected)return;
+ var prospectiveSelf=(submitted.rows||[]).filter(r=>r.type==='Prospective Self');
+ if(prospectiveSelf.length){
+  var section=document.createElement('section');section.className='card';section.innerHTML='<h2>Prospective Self: submitted evidence history</h2><p>Original answers, including earlier rounds. Not a combined final result.</p>';
+  prospectiveSelf.forEach(r=>{
+   var card=document.createElement('article');card.className='exp-item';
+   card.innerHTML='<h3>'+arE(r.comp_name||r.comp_code)+'</h3><p>'+arE(r.prospective_role)+' · Round '+arE(r.assessment_round||1)+' · '+arE(r.assessment_date)+'</p><p>'+arE(r.experience_text)+'</p><p>Demonstrated: '+(r.ticked?'Yes':'No')+' · Original rating: '+arE(r.proficiency_rating??'Unanswered')+'</p><p>'+arE(r.evidence||'No written evidence')+'</p>'+cmsReviewAttachmentHTML(r)+'<p>HR review: '+arE(r.hr_status||'Pending')+' · '+arE(r.hr_comment||'')+'</p>';
+   section.append(card);
+  });
+  overview.after(section);
+ }
+ var close=document.createElement('button');close.type='button';close.className='ar-button';close.textContent='Close details';close.onclick=async()=>{
+  if(typeof wcBeforeLeave==='function'&&!(await wcBeforeLeave()))return;
+  host.replaceChildren();
+ };host.prepend(close);host.scrollIntoView({block:'start',behavior:'smooth'});
+}
+function arSummaryRows(rows){
+ return rows.map(r=>[r.name,r.employee_id,r.position,r.company,r.department,arScore(r.current_self.score),arScore(r.current_manager.score),
+ arWaiting(r.current_self,r.current_manager,r.current_final),r.target||'Not selected',arScore(r.prospective_self.score),arScore(r.prospective_manager.score),
+ r.target?arWaiting(r.prospective_self,r.prospective_manager,r.prospective_final):'Awaiting target selection',
+ r.recommendation||'Not recorded',r.decision?.decision||'Not recorded',r.decision?.target_role||'',r.decision?.decided_by||'',r.decision?.decision_date||'']);
+}
+var AR_HEAD=['Employee','Employee ID','Position','Company','Department','Current Self','Current Manager','Current Role Final Score','Prospective role','Prospective Self','Prospective Manager','Prospective Role Final Score','HR recommendation','Recorded final decision','Decision target','Decision maker','Decision date'];
+async function arPDF(id){
+ var identity=arIdentity(),r=await arFresh(id),data=await sxRPC('cms_experience_review','get',{employee_id:id});
+ if(identity!==arIdentity())return;
+ var fields=arSummaryRows([r])[0],tables=[{name:'Assessment summary',head:['Field','Value'],rows:AR_HEAD.map((k,i)=>[k,fields[i]])}];
+ tables.push({name:'Status',head:['Assessment','Submission','HR review'],rows:[['Current Self',r.current_self.state,r.current_self.review],['Current Manager',r.current_manager.state,r.current_manager.review],['Prospective Self',r.prospective_self.state,r.prospective_self.review],['Prospective Manager',r.prospective_manager.state,r.prospective_manager.review]]});
+ tables.push({name:'All submitted experience history',head:['Type / target / round','Competency / experience','Original rating / demonstration','Evidence / proof','HR review'],rows:(data.rows||[]).map(x=>[x.type+' / '+(x.prospective_role||'Current')+' / '+(x.assessment_round||1),(x.comp_name||x.comp_code)+': '+x.experience_text,(x.proficiency_rating??'Unanswered')+' / '+(x.ticked?'Yes':'No'),(x.evidence||'No written evidence')+(x.attachment_name?'\nProof: '+x.attachment_name:''),(x.hr_status||'Pending')+(x.hr_comment?': '+x.hr_comment:'')])});
+ var blob=await r4BuildPdf(tables,'Assessment report: '+r.name,new Date().toISOString(),[]);
+ await arFresh(id);if(identity===arIdentity())r4Download(blob,'CMS-assessment-'+id+'.pdf');
+}
+async function arEmail(id){
+ var identity=arIdentity(),r=await arFresh(id),recipient=APP.user.email;
+ if(!confirm('Email the assessment summary for '+r.name+' to your signed-in address '+recipient+'? This does not email the employee or send a final outcome letter.'))return;
+ if(!window.emailjs)throw Error('EmailJS is not configured.');
+ r=await arFresh(id);if(identity!==arIdentity())return;
+ var cells=arSummaryRows([r])[0],message='KENAFRIC CMS ASSESSMENT SUMMARY\n'+AR_HEAD.map((k,i)=>k+': '+cells[i]).join('\n')+'\nIndividual scores are components, not final decisions. Missing pairs have no final score.';
+ await emailjs.send(EMAILJS_SERVICE_ID,EMAILJS_TEMPLATE_ID,{to_email:recipient,subject:'CMS assessment summary: '+r.name,message});
+ showToast('Email service accepted the summary for '+recipient+'.');
+}
+async function arExport(){
+ var identity=arIdentity(),snapshot={company:AR.company,department:AR.department,target:AR.target},d=await arRPC('list',snapshot);
+ if(identity!==arIdentity()||JSON.stringify(snapshot)!==JSON.stringify({company:AR.company,department:AR.department,target:AR.target}))throw Error('View changed; retry export.');
+ var old=AR.rows;AR.rows=d.rows;var filtered=arFiltered();AR.rows=old;
+ if(!window.XLSX)throw Error('Excel exporter is not available.');
+ var book=XLSX.utils.book_new(),rows=[AR_HEAD,...arSummaryRows(filtered)];
+ XLSX.utils.book_append_sheet(book,XLSX.utils.aoa_to_sheet(rows),'Assessment register');
+ XLSX.utils.book_append_sheet(book,XLSX.utils.aoa_to_sheet([['Company',AR.company],['Department',AR.department||'All'],['Search',AR.search],['Submission filter',AR.state||'All'],['HR review filter',AR.review||'All'],['Generated',d.generated_at],['Employees',filtered.length],['Basis','All matching rows, not only the visible page. No missing assessment is treated as zero.']]),'Scope');
+ var bytes=XLSX.write(book,{bookType:'xlsx',type:'array'});r4Download(new Blob([bytes],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}),'CMS-assessment-register.xlsx');
+}
+document.addEventListener('click',async e=>{
+ var b=e.target.closest('[data-ar]');if(!b||b.disabled)return;var a=b.dataset.ar,v=b.dataset.value;
+ if(a==='refresh')return loadHRAll();
+ if(AR.busy)return;
+ try{
+  if(a==='company'||a==='department'){if(typeof wcBeforeLeave==='function'&&!(await wcBeforeLeave()))return;document.getElementById('hrAllContent')?.replaceChildren();if(a==='company'){AR.company=v;AR.department='';}else AR.department=v;AR.target='';await arLoad();return;}
+  if(a==='prev'||a==='next'){AR.page+=a==='next'?1:-1;arRender();return;}
+  if(a==='delete')return sdOpen(v,AR.rows.find(r=>r.employee_id===v)?.name);
+  b.disabled=true;
+  if(a==='view')await arView(v);
+  if(a==='pdf')await arPDF(v);
+  if(a==='email')await arEmail(v);
+  if(a==='export')await arExport();
+ }catch(err){showToast(err.message);var el=document.getElementById('arStatus');if(el)el.textContent=err.message;}
+ finally{if(b.isConnected)b.disabled=false;}
+});
+document.addEventListener('change',async e=>{
+ if(!['arState','arReview','arTarget'].includes(e.target.id))return;
+ if(e.target.id==='arTarget'){AR.target=e.target.value;await arLoad();return;}
+ AR[e.target.id==='arState'?'state':'review']=e.target.value;AR.page=0;arRender();
+});
+document.addEventListener('input',e=>{if(e.target.id!=='arSearch')return;var caret=e.target.selectionStart;AR.search=e.target.value;AR.page=0;arRender();var el=document.getElementById('arSearch');el.focus();el.setSelectionRange(caret,caret);});
+var arOldPrint=printReport,arOldEmail=emailReport;
+printReport=function(id){return document.getElementById('arRoot')?arPDF(id):arOldPrint.apply(this,arguments);};
+emailReport=function(id){return document.getElementById('arRoot')?arEmail(id):arOldEmail.apply(this,arguments);};
+
+</script>
+<!-- Paste ONCE before the LAST </body>, after the Classic All Assessments module. -->
+<style id="cms-compact-register-excel">
+#arRoot .ar-heading{margin-bottom:10px;gap:10px}
+#arRoot h1{font-size:24px}
+#arRoot .ar-company-grid{gap:9px}
+#arRoot .ar-company{padding:10px 12px;gap:2px 8px;grid-template-columns:25px 1fr}
+#arRoot .ar-company strong{font-size:16px}
+#arRoot .ar-building{font-size:24px}
+#arRoot .ar-departments{margin:10px 0 6px}
+#arRoot .ar-departments h2{margin:6px 0}
+#arRoot .ar-crumb{margin:6px 0}
+#arRoot .ar-register>header{padding:9px 12px;font-size:16px}
+#arRoot .ar-tools{padding:10px 12px;gap:8px}
+#arRoot .ar-note{padding:5px 12px;line-height:1.4}
+#arRoot .ar-table-wrap{margin:6px 10px;overflow-x:auto}
+#arRoot .ar-table{width:100%!important;min-width:0!important;table-layout:fixed}
+#arRoot .ar-table th,#arRoot .ar-table td{
+ min-width:0!important;max-width:none!important;
+ padding:8px 6px;font-size:14px!important;line-height:1.35!important;
+ white-space:normal!important;overflow-wrap:anywhere;word-break:normal;
+}
+#arRoot .ar-table .ar-person{position:static;min-width:0!important}
+#arRoot .ar-person strong{font-size:14px}
+#arRoot .ar-person span,#arRoot .ar-table small{font-size:14px;line-height:1.35;margin-top:3px}
+#arRoot .ar-table .ar-decision{min-width:0!important;max-width:none!important}
+#arRoot .ar-decision p{margin:2px 0 6px}
+#arRoot .ar-pill{padding:3px 4px;font-size:14px;max-width:100%;margin-top:4px}
+#arRoot .ar-actions{min-width:0!important;display:grid;grid-template-columns:1fr;gap:3px}
+#arRoot .ar-actions .ar-button{width:100%;min-width:0;margin:0;padding:5px 6px;min-height:30px;font-size:14px}
+#arRoot .ar-actions details{min-width:0}
+#arRoot .ar-actions summary{padding:3px}
+#arRoot .ar-pagination{padding:10px 12px}
+/* On narrow screens use labelled record cards, not a clipped table or tiny text. */
+@media(max-width:1000px){
+ #arRoot .ar-table colgroup,#arRoot .ar-table thead{display:none}
+ #arRoot .ar-table,#arRoot .ar-table tbody{display:block;width:100%}
+ #arRoot .ar-table tbody tr{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));border-bottom:2px solid #bac8e3}
+ #arRoot .ar-table td{display:block;width:auto;min-width:0!important}
+ #arRoot .ar-table td:before{content:attr(data-compact-label);display:block;font-weight:700;color:#33446a;margin-bottom:6px}
+ #arRoot .ar-table .ar-person{grid-column:1/-1;background:#eef2fb}
+ #arRoot .ar-actions{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:500px){
+ #arRoot .ar-table tbody tr{grid-template-columns:1fr}
+ #arRoot .ar-company-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+ #arRoot .ar-company{grid-template-columns:1fr}
+ #arRoot .ar-company .ar-building{display:none}
+ #arRoot .ar-company span:not(.ar-building),#arRoot .ar-company small{grid-column:1}
+}
+</style>
+<script id="cms-compact-register-excel-behaviour">
+(function(){
+ if(window.cmsCompactRegisterExcel)return;
+ if(typeof arRender!=='function'||typeof arFresh!=='function')return;
+ window.cmsCompactRegisterExcel=true;
+ var labels=['Employee / current position','Current Role: Self','Current Role: Manager','Current Role Final Score',
+ 'Prospective Role: Self','Prospective Role: Manager','Prospective Role Final Score','Recommendation & final decision','Actions'];
+ function compact(){
+  var root=document.getElementById('arRoot');if(!root)return;
+  var table=root.querySelector('.ar-table');
+  if(table){
+   if(!table.querySelector('colgroup')){
+    var group=document.createElement('colgroup');
+    [17,8,8,11,8,8,11,18,11].forEach(function(width){var col=document.createElement('col');col.style.width=width+'%';group.append(col);});
+    table.prepend(group);
+   }
+   table.querySelectorAll('tbody tr').forEach(function(row){
+    Array.from(row.cells).forEach(function(cell,index){cell.dataset.compactLabel=labels[index]||'';});
+    var actions=row.querySelector('.ar-actions'),view=actions?.querySelector('[data-ar="view"]');
+    if(actions&&view&&!actions.querySelector('[data-employee-excel]')){
+     var b=document.createElement('button');b.type='button';b.className='ar-button';
+     b.textContent='Excel';b.dataset.employeeExcel=view.dataset.value;b.title='Download this employee’s assessment workbook';
+     var pdf=actions.querySelector('[data-ar="pdf"]');if(pdf)pdf.after(b);else actions.append(b);
+    }
+   });
+  }
+  var exportButton=root.querySelector('[data-ar="export"]');
+  if(exportButton)exportButton.textContent='Download Excel (filtered)';
+ }
+ var render=arRender;
+ arRender=function(){var result=render.apply(this,arguments);compact();return result;};
+ function sheet(book,name,headers,rows){
+  var ws=XLSX.utils.aoa_to_sheet([headers,...rows]);
+  ws['!cols']=headers.map(function(h){return{wch:/evidence|comment|experience/i.test(h)?55:25};});
+  ws['!autofilter']={ref:XLSX.utils.encode_range({s:{r:0,c:0},e:{r:rows.length,c:headers.length-1}})};
+  XLSX.utils.book_append_sheet(book,ws,name);
+ }
+ async function employeeExcel(id){
+  var identity=arIdentity(),target=AR.target,epoch=AR.epoch;
+  var row=await arFresh(id),data=await sxRPC('cms_experience_review','get',{employee_id:id});
+  function unchanged(){return identity===arIdentity()&&target===AR.target&&epoch===AR.epoch&&!!document.getElementById('arRoot');}
+  if(!unchanged())throw Error('View changed. Reopen this employee before exporting.');
+  if(!window.XLSX)throw Error('Excel exporter is unavailable. Reload the current full code.');
+  var book=XLSX.utils.book_new(),summary=arSummaryRows([row])[0];
+  sheet(book,'Summary',['Field','Value'],AR_HEAD.map((h,i)=>[h,summary[i]]));
+  sheet(book,'Assessment status',['Assessment','Submission status','HR review','Round','Invitation sent','Deadline'],
+   [['Current Self',row.current_self],['Current Manager',row.current_manager],['Prospective Self',row.prospective_self],['Prospective Manager',row.prospective_manager]].map(([type,s])=>[type,s.state,s.review,s.round??'',s.invitation?.issued_at||'',s.invitation?.deadline_at||'']));
+  sheet(book,'Submitted experience history',['Assessment','Target role','Round','Competency','Experience','Classification','Demonstrated','Original rating / 5','Evidence','Proof filename','Proof URL','HR status','HR comment','Assessor','Submitted date'],
+   (data.rows||[]).map(r=>[r.type,r.prospective_role||'Current role',r.assessment_round||1,r.comp_name||r.comp_code,r.experience_text,r.classification,r.ticked?'Yes':'No',r.proficiency_rating??'',r.evidence||'',r.attachment_name||'',r.attachment_url||'',r.hr_status||'Pending',r.hr_comment||'',r.assessor_email||'',r.assessment_date||'']));
+  sheet(book,'Final decisions',['Decision','Target role','Decision maker','Role at decision','Date','Next action'],
+   (row.decisions||[]).map(d=>[d.decision,d.target_role||'Current / general',d.decided_by||'',d.role_at_decision||'',d.decision_date||'',d.next_action||'']));
+  sheet(book,'Export notes',['Item','Value'],[
+   ['Employee',row.name],['Employee ID',id],['Generated',new Date().toISOString()],
+   ['Summary target',row.target||'No single target selected'],['History scope','All returned submitted experience history for this employee; not limited to the selected prospective target.'],
+   ['Scores','Original ratings and historical review states are retained. Missing final results are unavailable, not zero.'],
+   ['Files','Proof filenames and URLs only; uploaded file contents are not embedded.']]);
+  await arFresh(id);
+  if(!unchanged())throw Error('View changed before download. Export again.');
+  var bytes=XLSX.write(book,{bookType:'xlsx',type:'array'});
+  r4Download(new Blob([bytes],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}),
+   'CMS-assessment-'+String(id).replace(/[^a-zA-Z0-9_-]/g,'_')+'.xlsx');
+ }
+ document.addEventListener('click',async function(e){
+  var b=e.target.closest('[data-employee-excel]');if(!b||b.disabled||AR.busy)return;
+  b.disabled=true;
+  try{await employeeExcel(b.dataset.employeeExcel);}
+  catch(err){showToast(err.message);var status=document.getElementById('arStatus');if(status)status.textContent=err.message;}
+  finally{if(b.isConnected)b.disabled=false;}
+ });
+ compact();
+})();
+</script>
+<!-- Paste ONCE before the LAST </body>, after the compact-register/Excel patch. -->
+<style id="cms-register-small-font">
+/* Only the All Assessments register is affected. No fields or actions are removed. */
+#arRoot .ar-table th,
+#arRoot .ar-table td {
+  font-family: Arial, sans-serif !important;
+  font-size: 12px !important;
+  line-height: 1.3 !important;
+  padding: 6px 5px !important;
+  word-break: normal !important;
+  overflow-wrap: break-word !important;
+  letter-spacing: 0 !important;
+}
+#arRoot .ar-table th { font-weight: 600 !important; }
+#arRoot .ar-table .ar-person strong,
+#arRoot .ar-table td > strong,
+#arRoot .ar-table .ar-final,
+#arRoot .ar-table .ar-decision b {
+  font: 600 12px/1.3 Arial, sans-serif !important;
+}
+#arRoot .ar-table .ar-person span,
+#arRoot .ar-table small,
+#arRoot .ar-table .ar-decision p,
+#arRoot .ar-table .ar-pill,
+#arRoot .ar-table .ar-actions summary {
+  font: 400 11px/1.3 Arial, sans-serif !important;
+  letter-spacing: 0 !important;
+  word-break: normal !important;
+  overflow-wrap: break-word !important;
+}
+#arRoot .ar-table .ar-pill {
+  width: auto !important;
+  max-width: 100% !important;
+  padding: 3px 4px !important;
+  margin-top: 4px !important;
+}
+#arRoot .ar-table .ar-decision p { margin: 2px 0 5px !important; }
+#arRoot .ar-table .ar-actions { gap: 3px !important; }
+#arRoot .ar-table .ar-actions .ar-button {
+  font: 600 11px/1.2 Arial, sans-serif !important;
+  padding: 4px 5px !important;
+  min-height: 26px !important;
+  margin: 0 !important;
+}
+#arRoot .ar-table td::before {
+  font: 600 12px/1.3 Arial, sans-serif !important;
+}
+/* Keep narrow-screen record cards comfortably readable. */
+@media (max-width: 600px) {
+  #arRoot .ar-table th,
+  #arRoot .ar-table td,
+  #arRoot .ar-table .ar-person strong,
+  #arRoot .ar-table td > strong,
+  #arRoot .ar-table .ar-final,
+  #arRoot .ar-table .ar-decision b,
+  #arRoot .ar-table .ar-person span,
+  #arRoot .ar-table small,
+  #arRoot .ar-table .ar-decision p,
+  #arRoot .ar-table .ar-pill,
+  #arRoot .ar-table .ar-actions summary,
+  #arRoot .ar-table .ar-actions .ar-button {
+    font-size: 14px !important;
+  }
+  #arRoot .ar-table .ar-actions .ar-button { min-height: 36px !important; }
+}
+</style>
+<!-- Paste once before the LAST </body>, after the register, compact layout and font patches. -->
+<style id="cms-assessment-detail-cards">
+#adcRoot{background:#fff;border:1px solid #cbd6e8;border-radius:12px;padding:18px;margin:18px 0;color:#213352;font:14px/1.45 system-ui}
+#adcRoot *{box-sizing:border-box}
+#adcRoot h2{font-size:20px;margin:0 0 6px}
+#adcRoot h3{font-size:17px;margin:10px 0}
+#adcRoot p{font-size:14px;margin:7px 0}
+#adcRoot .adc-heading{display:flex;justify-content:space-between;align-items:start;gap:12px;flex-wrap:wrap}
+#adcRoot button,#adcBackToCards{font:650 14px/1.3 system-ui;border:1px solid #bcc9e1;border-radius:7px;padding:9px 12px;background:white;color:#334594;cursor:pointer}
+#adcRoot button:disabled{opacity:.5;cursor:not-allowed}
+#adcRoot button:focus-visible{outline:3px solid #167c91;outline-offset:2px}
+#adcRoot .adc-scores{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:14px 0}
+#adcRoot .adc-score{border:1px solid #c9d6f2;border-left:4px solid #3659ae;border-radius:8px;padding:12px;background:#f2f5ff}
+#adcRoot .adc-score.target{border-color:#d8c9ed;border-left-color:#7843a9;background:#f8f3ff}
+#adcRoot .adc-score .adc-components{display:flex;gap:14px;flex-wrap:wrap}
+#adcRoot .adc-score strong{font-size:16px}
+#adcRoot .adc-tiles{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:16px 0}
+#adcRoot .adc-tile{display:flex;align-items:center;gap:10px;text-align:left;min-height:72px;background:#f4f6fc;border:1px solid #c7d2e8}
+#adcRoot .adc-tile[data-adc="self"]{background:#eef5ff}
+#adcRoot .adc-tile[data-adc="manager"]{background:#edf8f3}
+#adcRoot .adc-tile[data-adc="report"]{background:#fff5e5}
+#adcRoot .adc-tile[aria-pressed="true"]{outline:2px solid #464ac0;outline-offset:1px}
+#adcRoot svg{width:25px;height:25px;flex:none}
+#adcRoot .adc-toolbar{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}
+#adcRoot .adc-toolbar button[aria-pressed="true"]{background:#4446c5;color:white;border-color:#4446c5}
+#adcRoot .adc-panel{border-top:1px solid #d3ddeb;padding-top:14px}
+#adcRoot .adc-panel[hidden]{display:none!important}
+#adcRoot .adc-empty{background:#f4f6fb;border-radius:8px;padding:18px;color:#576782}
+#adcRoot label,#adcRoot select{font-size:14px}
+#adcRoot .adc-experience{padding:14px;margin:12px 0;background:#f7f9fd;border:1px solid #d5dfef;border-radius:8px}
+#adcRoot .adc-evidence{white-space:pre-wrap;overflow-wrap:anywhere;background:white;border-radius:6px;padding:10px}
+#adcRoot .adc-meta{color:#5e6f89;font-size:14px}
+#adcRoot .adc-ratings{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin:8px 0}
+#adcRoot .adc-rating{padding:4px 8px;background:white;border:1px solid #bac8df;border-radius:5px}
+#adcRoot .adc-rating.selected{background:#4350b2;color:white}
+#adcRoot #adcStatus{color:#a52a36}
+#adcBackToCards{margin:10px 0}
+@media(max-width:850px){#adcRoot .adc-tiles{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:550px){#adcRoot .adc-scores{grid-template-columns:1fr}#adcRoot{padding:12px}#adcRoot .adc-tile{padding:10px}}
+</style>
+<script id="cms-assessment-detail-cards-behaviour">
+(function(){
+ if(window.cmsAssessmentDetailCards)return;
+ if(typeof arFresh!=='function'||typeof arView!=='function')return;
+ window.cmsAssessmentDetailCards=true;
+ var state=null,sequence=0;
+ function esc(v){return escapeHtml(v==null?'':String(v));}
+ function icon(name){
+  var paths={calc:'M4 3h16v18H4z M7 7h10 M7 11h2 M13 11h2 M7 15h2 M13 15h2',
+    self:'M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8 M4 21v-2a8 8 0 0 1 16 0v2',
+    manager:'M8 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8 M2 21v-3a6 6 0 0 1 12 0v3 M17 4a4 4 0 0 1 0 7 M18 15a5 5 0 0 1 4 5v1',
+    report:'M5 2h10l5 5v15H5z M14 2v6h6 M8 12h9 M8 16h9 M8 19h6'};
+  return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="'+paths[name]+'"/></svg>';
+ }
+ function live(s){return state===s&&s.identity===arIdentity()&&s.epoch===AR.epoch&&!!document.getElementById('adcRoot');}
+ function status(s,text){if(live(s))document.getElementById('adcStatus').textContent=text;}
+ async function mayLeave(){
+  if(typeof SR!=='undefined'&&SR.state&&typeof srAlive==='function'&&srAlive(SR.state)){
+   srCapture(SR.state);
+   if(SR.state.busy){showToast('Wait for the review save to finish.');return false;}
+   if(srPending(SR.state)&&!confirm('This review has unsaved decisions. Save them first, or leave without committing these choices?'))return false;
+  }
+  return typeof wcBeforeLeave==='function'?await wcBeforeLeave():true;
+ }
+ function scoreCard(row,target){
+  var s=target?row.prospective_self:row.current_self,m=target?row.prospective_manager:row.current_manager,v=target?row.prospective_final:row.current_final;
+  var label=target?'Prospective Role':'Current Role';
+  return '<section class="adc-score '+(target?'target':'')+'"><h3>'+label+'</h3>'+
+   (target?'<p>'+esc(row.target||'No single target selected')+'</p>':'')+
+   '<div class="adc-components"><span>Self <b>'+arScore(s.score)+'</b></span><span>Manager <b>'+arScore(m.score)+'</b></span></div>'+
+   '<p><strong>'+label+' Final Score: '+esc(target&&!row.target?'Awaiting target selection':arWaiting(s,m,v))+'</strong></p>'+
+   '<p class="adc-meta">Self: '+esc(s.state)+' · '+esc(s.review)+'<br>Manager: '+esc(m.state)+' · '+esc(m.review)+'</p></section>';
+ }
+ function render(s){
+  var host=document.getElementById('hrAllContent');if(!host)return;
+  host.innerHTML='<main id="adcRoot"><header class="adc-heading"><div><h2>'+esc(s.row.name)+'</h2><p>'+esc(s.row.position)+' · '+esc(s.row.employee_id)+'</p></div><button type="button" data-adc="close">Close details</button></header>'+
+   '<div class="adc-scores">'+scoreCard(s.row,false)+scoreCard(s.row,true)+'</div>'+
+   '<nav class="adc-tiles" aria-label="Assessment detail sections">'+
+   [['calc','Calculations'],['self','Self Assessments'],['manager','Manager Assessments'],['report','Generate HOHR Report']].map(([key,title])=>
+    '<button type="button" class="adc-tile" data-adc="'+key+'" aria-pressed="false">'+icon(key)+'<span>'+title+'</span></button>').join('')+'</nav>'+
+   '<div class="adc-toolbar"><button type="button" data-adc="review">HR Review</button><button type="button" data-adc="history">Review & decision history</button></div>'+
+   '<p id="adcHint">Choose a card to open its details. No evidence or calculation section opens automatically.</p>'+
+   '<section id="adcPanel" class="adc-panel" hidden><div class="adc-toolbar"><button type="button" data-adc="current" aria-pressed="true">Current Role</button><button type="button" data-adc="prospective" aria-pressed="false">Prospective Role</button><button type="button" data-adc="hide">Close section</button></div><div id="adcBody"></div></section>'+
+   '<section id="adcReviewPanel" class="adc-panel" hidden><button type="button" data-adc="hide">Close section</button><div id="hrRevContent"></div></section><p id="adcStatus" role="status"></p></main>';
+ }
+ arView=async function(id){
+  if(!(await mayLeave()))return;
+  var ticket=++sequence,identity=arIdentity(),epoch=AR.epoch;
+  var row=await arFresh(id);
+  if(ticket!==sequence||identity!==arIdentity()||epoch!==AR.epoch||!document.getElementById('hrAllContent'))return;
+  state={id,row,identity,epoch,kind:'current',tab:null,data:null,pending:null,tabTicket:0};
+  render(state);document.getElementById('adcRoot').scrollIntoView({block:'start',behavior:'smooth'});
+ };
+ async function data(s){
+  if(s.data)return s.data;
+  if(!s.pending)s.pending=(async()=>{
+   await arFresh(s.id);
+   var d=await sxRPC('cms_experience_review','get',{employee_id:s.id});
+   if(live(s))s.data=d;return d;
+  })();
+  try{return await s.pending;}finally{s.pending=null;}
+ }
+ function chosenTypes(s){return s.kind==='current'?['Self','Manager']:['Prospective Self','Prospective'];}
+ function matchingRows(s,d){
+  return(d.rows||[]).filter(r=>s.kind==='current'?['Self','Manager'].includes(r.type):
+   ['Prospective Self','Prospective'].includes(r.type)&&s.row.target&&String(r.prospective_role||'').trim().toUpperCase()===s.row.target.trim().toUpperCase());
+ }
+ function groups(rows){
+  var map=new Map();
+  rows.forEach(r=>{var key=JSON.stringify([r.type,r.assessment_id,r.assessment_round||1,r.framework_version||'',r.core_framework_version||'',r.prospective_role||'']);
+   if(!map.has(key))map.set(key,[]);map.get(key).push(r);});
+  return [...map.values()].sort((a,b)=>(b[0].assessment_round||1)-(a[0].assessment_round||1)||String(b[0].assessment_date).localeCompare(String(a[0].assessment_date)));
+ }
+ function evidence(s,rows,body){
+  var type=chosenTypes(s)[s.tab==='self'?0:1],sets=groups(rows.filter(r=>r.type===type));
+  if(!sets.length){body.innerHTML='<p class="adc-empty">No submitted '+esc(type)+' assessment'+(s.kind==='prospective'&&!s.row.target?' for a selected target role':'')+'. Saved drafts are not submitted evidence.</p>';return;}
+  var label=document.createElement('label');label.textContent='Submission to inspect';
+  var select=document.createElement('select');select.id='adcSubmission';sets.forEach((set,i)=>select.add(new Option('Round '+(set[0].assessment_round||1)+' · '+(set[0].assessment_date||'Date not recorded')+' · '+set.length+' experiences',String(i))));
+  label.append(select);body.replaceChildren(label);var content=document.createElement('div');body.append(content);
+  function show(){
+   var records=sets[Number(select.value)].slice().sort((a,b)=>compareCompetencyDisplay(a.comp_code,b.comp_code)||(a.experience_index||0)-(b.experience_index||0));
+   content.innerHTML='<p>Original submitted answers are read-only. Use HR Review to record a review decision.</p>'+records.map(r=>
+    '<article class="adc-experience"><h3>'+esc(r.comp_name||r.comp_code)+'</h3><p>'+esc(r.experience_text)+'</p><p class="adc-meta">'+esc(r.classification)+' · '+esc(r.assessor_email)+' · '+esc(r.assessment_date)+'</p><p>Demonstrated: <b>'+(r.ticked?'Yes':'No')+'</b></p>'+
+    '<div class="adc-ratings">Original rating '+[1,2,3,4,5].map(n=>'<span class="adc-rating '+(Number(r.proficiency_rating)===n?'selected':'')+'">'+n+'</span>').join('')+
+    '<span>'+esc(r.proficiency_rating?cmsRatingLabel(r.proficiency_rating):'Unanswered')+'</span></div><p class="adc-evidence">'+esc(r.evidence||'No written evidence')+'</p>'+cmsReviewAttachmentHTML(r)+
+    '<p>HR review: '+esc(r.hr_status||'Pending')+' · '+esc(r.hr_comment||'')+'</p></article>').join('');
+  }
+  select.onchange=show;show();
+ }
+ function calculations(s,rows,body){
+  var final=s.kind==='current'?s.row.current_final:s.row.prospective_final,types=chosenTypes(s);
+  if(final==null){body.innerHTML='<p class="adc-empty">Calculations are available here after both matching assessments and required HR review are complete. Open either assessment card to inspect the submitted side now.</p>';return;}
+  var selected=types.map(type=>groups(rows.filter(r=>r.type===type))[0]);
+  if(selected.some(g=>!g?.length)){body.textContent='The submitted pair is unavailable. Close and reopen these details to refresh.';return;}
+  // Require one latest submission per type and matching snapshots; never merge target roles.
+  var valid=selected.every((set,i)=>groups(rows.filter(r=>r.type===types[i]&&(r.assessment_round||1)===(set[0].assessment_round||1))).length===1&&set.every(r=>['Approved','Disapproved'].includes(r.hr_status)));
+  valid=valid&&selected[0][0].framework_version===selected[1][0].framework_version&&selected[0][0].core_framework_version===selected[1][0].core_framework_version;
+  if(!valid){body.textContent='Submission snapshots need review. No mismatched calculation is displayed.';return;}
+  body.innerHTML='<h3>'+ (s.kind==='current'?'Current Role':'Prospective Role')+' Final Score: '+arScore(final)+'</h3><p>Separate Self and Manager workings below; the paired result above uses the stored policy and required checks.</p>'+
+   scoreBreakdownHTML(selected[0],types[0])+scoreBreakdownHTML(selected[1],types[1]);
+ }
+ async function open(s,tab){
+  if(!live(s))return;
+  s.tab=tab;var ticket=++s.tabTicket;
+  document.querySelectorAll('#adcRoot .adc-tile').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.adc===tab)));
+  document.getElementById('adcHint').hidden=true;
+  document.getElementById('adcPanel').hidden=tab==='review';
+  document.getElementById('adcReviewPanel').hidden=tab!=='review';
+  if(tab==='review'){
+   if(!s.reviewLoaded){await arFresh(s.id);if(!live(s)||ticket!==s.tabTicket)return;await loadHRRevEmp(s.id);s.reviewLoaded=!!document.querySelector('#hrRevContent #srRoot');}
+   return;
+  }
+  var body=document.getElementById('adcBody');body.textContent='Loading the selected section...';
+  var fresh=await arFresh(s.id);if(!live(s)||ticket!==s.tabTicket)return;s.row=fresh;
+  document.querySelector('#adcRoot .adc-scores').innerHTML=scoreCard(s.row,false)+scoreCard(s.row,true);
+  var d=await data(s);if(!live(s)||ticket!==s.tabTicket)return;
+  // Refresh the evidence cache after explicit HR review may have changed it.
+  if(s.reviewLoaded){s.data=null;d=await data(s);if(!live(s)||ticket!==s.tabTicket)return;}
+  if(tab==='history'){
+   body.innerHTML='<h3>HR review history</h3>'+(d.history||[]).map(h=>'<article class="adc-experience"><b>'+esc(h.after_row?.type)+' · '+esc(h.after_row?.comp_name)+'</b><p>'+esc(h.after_row?.hr_status)+' · '+esc(h.after_row?.hr_reviewer)+' · '+esc(h.reviewed_at)+'</p><p>'+esc(h.after_row?.hr_comment)+'</p></article>').join('')+
+    (!(d.history||[]).length?'<p>No review-history entries recorded since audit logging was installed. Saved review fields remain visible in the assessment cards.</p>':'')+
+    '<h3>Recorded final decisions</h3>'+(s.row.decisions||[]).map(x=>'<article class="adc-experience"><b>'+esc(x.decision)+'</b><p>'+esc(x.target_role||'Current / general')+' · '+esc(x.decided_by)+' · '+esc(x.decision_date)+'</p><p>'+esc(x.next_action)+'</p></article>').join('')+
+    (!s.row.decisions?.length?'<p>No recorded final decision.</p>':'');
+  }else if(tab==='calc')calculations(s,matchingRows(s,d),body);
+  else evidence(s,matchingRows(s,d),body);
+ }
+ document.addEventListener('click',async function(e){
+  var b=e.target.closest('[data-adc]'),s=state;if(!b||b.disabled||!live(s))return;
+  var action=b.dataset.adc;
+  try{
+   if(action==='close'){if(!(await mayLeave()))return;sequence++;state=null;document.getElementById('hrAllContent').replaceChildren();return;}
+   if(action==='hide'){s.tabTicket++;document.getElementById('adcPanel').hidden=true;document.getElementById('adcReviewPanel').hidden=true;document.getElementById('adcHint').hidden=false;document.querySelectorAll('#adcRoot .adc-tile').forEach(x=>x.setAttribute('aria-pressed','false'));return;}
+   if(action==='report'){
+    if(!(await mayLeave()))return;
+    b.disabled=true;await arFresh(s.id);if(!live(s))return;
+    // Existing composer opens for editing. No report is saved, emailed or submitted here.
+    await openHOHRReport(s.id);
+    var host=document.getElementById('hrAllContent');if(!host||s.identity!==arIdentity())return;
+    var back=document.createElement('button');back.id='adcBackToCards';back.type='button';back.textContent='Back to assessment cards';
+    back.onclick=async()=>{if(await mayLeave())await arView(s.id);};host.prepend(back);return;
+   }
+   if(action==='current'||action==='prospective'){
+    s.kind=action;
+    document.querySelectorAll('#adcPanel [data-adc="current"],#adcPanel [data-adc="prospective"]').forEach(x=>x.setAttribute('aria-pressed',String(x.dataset.adc===action)));
+    await open(s,s.tab||'self');return;
+   }
+   if(['calc','self','manager','review','history'].includes(action)){b.disabled=true;await open(s,action);}
+  }catch(err){status(s,'Could not open this section: '+err.message);showToast(err.message);}
+  finally{if(b.isConnected)b.disabled=false;}
+ });
+})();
+</script>
 </body>
 </html>
+
