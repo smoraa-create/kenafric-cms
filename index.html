@@ -1951,8 +1951,7 @@ body .header .header-brand .brand-accent{color:var(--cms-brand-accent)!important
 #adRoot.fp-assessment .cvItemNote{grid-column:1/-1;font-size:14px}
 @media(max-width:1100px){#adRoot.fp-assessment .ad-experience{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}#adRoot.fp-assessment .fp-columns{display:none!important}}
 @media(max-width:600px){#adRoot.fp-assessment .ad-experience{grid-template-columns:1fr}#adRoot.fp-assessment .fp-competency>header{align-items:start;flex-direction:column}#adRoot.fp-assessment .fp-ratings .sx-rating{width:38px;height:38px}#adRoot.fp-assessment .ad-savebar{position:static}}
-/* Assessment-only visual override. Paste before the closing </style>
-   of <style id="cms-full-page-assessment">. No JavaScript or SQL changes. */
+/* Assessment-only visual override. Append inside the existing assessment style block. */
 #adRoot.fp-assessment .fp-competency {
   border-color: var(--fp-color);
   border-left-width: 5px;
@@ -2108,6 +2107,33 @@ body .header .header-brand .brand-accent{color:var(--cms-brand-accent)!important
 #hrAllContent .ar-detail-summary{border-top:4px solid #4544ce}
 @media(max-width:1000px){#arRoot .ar-company-grid{grid-template-columns:repeat(2,minmax(0,1fr))}#arRoot .ar-tools{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:550px){#arRoot .ar-company-grid,#arRoot .ar-tools{grid-template-columns:1fr}#arRoot .ar-person{position:static}#arRoot .ar-heading h1{font-size:24px}}
+
+</style>
+<style id="cms-competency-visibility-recovery-style">
+body :is(#mainContent,#adRoot,#fwBody,#srRoot,#arRoot,#wcPanel,dialog,.header) button[data-fv-action][data-fv-action]{color:#fff!important;font-weight:700!important;border:1px solid transparent!important;box-shadow:0 2px 5px #17255425!important}
+body :is(#mainContent,#adRoot,#fwBody,#srRoot,#arRoot,#wcPanel,dialog,.header) button[data-fv-action="primary"][data-fv-action]{background:#3548b5!important;border-color:#3548b5!important}
+body :is(#mainContent,#adRoot,#fwBody,#srRoot,#arRoot,#wcPanel,dialog,.header) button[data-fv-action="success"][data-fv-action]{background:#176b49!important;border-color:#176b49!important}
+body :is(#mainContent,#adRoot,#fwBody,#srRoot,#arRoot,#wcPanel,dialog,.header) button[data-fv-action="danger"][data-fv-action]{background:#b42332!important;border-color:#b42332!important}
+body :is(#mainContent,#adRoot,#fwBody,#srRoot,#arRoot,#wcPanel,dialog,.header) button[data-fv-action="warning"][data-fv-action]{background:#9a5109!important;border-color:#9a5109!important}
+body :is(#mainContent,#adRoot,#fwBody,#srRoot,#arRoot,#wcPanel,dialog,.header) button[data-fv-action="ai"][data-fv-action]{background:#713cb2!important;border-color:#713cb2!important}
+body :is(#mainContent,#adRoot,#fwBody,#srRoot,#arRoot,#wcPanel,dialog,.header) button[data-fv-action][data-fv-action]:disabled{background:#d7deea!important;color:#617089!important;border-color:#c3ccdc!important;opacity:1!important;box-shadow:none!important;cursor:not-allowed}
+body button[data-fv-action]:focus-visible{outline:3px solid #172554!important;outline-offset:3px}
+body button[data-fv-action][aria-pressed="true"]{outline:3px solid #172554!important;outline-offset:2px}
+#fwBody.fv-framework>.sx-guidelines[hidden]{display:none!important}
+#fwBody.fv-framework .competency-block{border:1px solid var(--fv-color,#2856b6);border-left:5px solid var(--fv-color,#2856b6);padding:0 14px 14px;background:color-mix(in srgb,var(--fv-color,#2856b6) 7%,white);overflow:hidden}
+#fwBody.fv-framework .competency-header{background:var(--fv-color,#2856b6);color:#fff;padding:13px 15px;margin:0 -14px 14px}
+#fwBody.fv-framework .competency-header strong,#fwBody.fv-framework .competency-header span{color:#fff!important}
+#fwBody.fv-framework .fv-critical-reminder,#fwBody .fv-revoked{color:#b42332!important;background:#fff0f0;border:1px solid #e5acb2;padding:12px;border-radius:7px;font:600 14px/1.5 system-ui}
+#fwBody.fv-framework .fv-instructions{background:#edf1fc;border-left:5px solid #3548b5;padding:16px;border-radius:9px;margin:12px 0}
+#fwBody .fv-instructions strong,#fwBody .fv-instructions b{color:#b42332}
+#fwBody.fv-framework select[data-fv-tier]{color:#fff!important;font-weight:700!important}
+#fwBody.fv-framework select[data-fv-tier="critical"]{background:#b42332!important}
+#fwBody.fv-framework select[data-fv-tier="important"]{background:#a95708!important}
+#fwBody.fv-framework select[data-fv-tier="value"]{background:#713cb2!important}
+#fwBody.fv-framework select:disabled{opacity:.65}
+#fwBody.fv-framework textarea{background:#fff;font-size:16px}
+.fv-recovery{padding:15px;border:1px solid #ccd5e8;border-radius:8px;margin:12px 0;background:#f7f9fd}
+.fv-recovery input,.fv-recovery textarea{margin:7px 0}
 
 </style>
 </head>
@@ -9713,7 +9739,7 @@ if (selectedMode === 'manager') {
   }
   var managedIds = new Set(scope.data || []);
   c.positions = (c.positions || []).map(function(p) {
-    return Object.assign({}, p, {can_edit: managedIds.has(p.id)});
+    return Object.assign({}, p, {can_edit: managedIds.has(p.id) && p.can_edit === true, can_view: managedIds.has(p.id)});
   });
 }
  if(!cmsCheckWeightCatalogue(c.competencies||[]))throw new Error('Published competency catalogue needs the 5/14/8 weight update.');
@@ -9768,7 +9794,7 @@ async function fwOpen(mode) {
    if(!queue.length)document.getElementById('fwBody').textContent='No submitted frameworks. Private drafts do not appear here.';
   }else{
    var positions=FW.catalogue.positions.filter(function(p){
-    if(mode==='library') return !!p.live_version && (APP.currentRole!=='manager' || p.can_edit);
+    if(mode==='library') return !!p.live_version && (APP.currentRole!=='manager' || p.can_view || p.can_edit);
     return p.can_edit;
    });
    var sel=document.createElement('select');sel.id='fwPositionChoice';
@@ -9841,7 +9867,6 @@ function fwRenderRevision(){
    }else h+='<p>'+escapeHtml(i.text)+' '+getClassificationBadge(i.classification)+'</p>';
    if(i.level)h+='<span class="badge badge-info">'+escapeHtml(i.level)+'</span>';
    h+='<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px"><button type="button" class="btn btn-outline" onclick="fwAudit(\''+i.id+'\')">AI Validate / Ideas</button>';
-   if(draft)h+='<button type="button" class="btn btn-outline" onclick="fwRemove(\''+i.id+'\')">Remove from draft</button>';
    if(review){
     h+='<button type="button" class="btn btn-outline" onclick="fwReviewEdit(\''+i.id+'\')">Edit</button>';
     h+='<button type="button" class="btn btn-success" '+(r.review[i.id]?'disabled':'')+' onclick="fwApprove(\''+i.id+'\')">'+(r.review[i.id]?'Approved for this revision':'Approve experience')+'</button>';
@@ -12892,7 +12917,7 @@ function suWindow(){try{return JSON.parse(localStorage.getItem(CMS_LOGIN_WINDOW_
 function suWindowValid(w,email){return !!(w&&typeof w.started==='number'&&typeof w.expires==='number'&&w.expires-w.started===CMS_LOGIN_WINDOW_MS&&Date.now()>=w.started&&Date.now()<w.expires&&String(w.email).toLowerCase()===String(email||'').toLowerCase());}
 window.addEventListener('storage',function(event){if(event.key===CMS_LOGIN_WINDOW_KEY&&APP.user)suCheck();});
 </script>
-<script>suStartApp();</script>
+<!-- Startup runs once after all page modules and DOM elements have loaded. -->
 <script id="cms-calibration-review-module">
 /* HR Admin + HOHR calibration workspace. Uses authenticated private RPCs.
  * AI is advisory, case/competency scoped, previewed before transmission.
@@ -17065,7 +17090,7 @@ ihRegister=function(){
  var host=document.getElementById('ihRegister');if(!host)return;
  if(IH.view==='mine'){
   if(IR.mineTab==='redos'){host.innerHTML=irRedoContent();return;}
-  var rows=IH.rows.filter(r=>(APP.currentRole==='employee'?r.kind.startsWith('self_'):!r.kind.startsWith('self_'))&&(IR.mineTab==='todo'?r.state==='Pending':r.state!=='Pending'));
+  var rows=IH.rows.filter(r=>(r.kind==='framework'||(APP.currentRole==='employee'?r.kind.startsWith('self_'):!r.kind.startsWith('self_')))&&(IR.mineTab==='todo'?r.state==='Pending':r.state!=='Pending'));
   if(IR.mineTab==='todo'){
    var due=rows.filter(r=>['Due today','Overdue'].includes(r.status));
    host.innerHTML=(due.length?'<aside class="ir-due">'+due.length+' assigned item(s) due today or overdue. Reminders stop after submission.</aside>':'')+
@@ -20186,6 +20211,395 @@ emailReport=function(id){return document.getElementById('arRoot')?arEmail(id):ar
  explain();
 })();
 </script>
+<script id="cms-invited-framework-startup-fix">
+/* Exact framework invitations grant editing, never assessment-manager authority. */
+(function(){
+ var FW_ACCESS={managers:[],recipients:[],selected:null,mail:null};
+ var originalRPC=ihRPC;
+ ihRPC=async function(action,data={}){
+  if(action==='managers'&&['hr','hohr'].includes(APP.currentRole)){
+   var identity=adOwner();
+   var managers=await originalRPC('managers',data),recipients=[];
+   for(var page=0;;page++){
+    var batch=await originalRPC('framework_recipients',{page});
+    if(!Array.isArray(batch))throw Error('Could not read verified invitation recipients.');
+    recipients.push(...batch);if(batch.length<200)break;
+   }
+   if(identity!==adOwner())throw Error('Role changed; reopen Invitations.');
+   FW_ACCESS.managers=managers;FW_ACCESS.recipients=recipients;
+   return recipients;
+  }
+  return originalRPC.apply(this,arguments);
+ };
+ var render=ihRender;
+ ihRender=function(){
+  var isHR=['hr','hohr'].includes(APP.currentRole);
+  if(isHR&&IH.view==='manager'&&IH.form){
+   var framework=IH.form.task==='framework';
+   IH.managers=framework?FW_ACCESS.recipients:FW_ACCESS.managers;
+   if(IH.form.manager&&!IH.managers.some(m=>m.id===IH.form.manager)){IH.form.manager='';IH.form.employee='';IH.preview=null;}
+  }
+  var result=render.apply(this,arguments);
+  var root=document.getElementById('ihRoot');if(!root)return result;
+  if(isHR&&IH.view==='manager'&&IH.form?.task==='framework'){
+   var label=root.querySelector('#ihManager')?.closest('label');
+   if(label?.firstChild?.nodeType===Node.TEXT_NODE)label.firstChild.textContent='Invited competency author';
+   root.querySelectorAll('.ih-note').forEach(n=>{if(n.textContent.includes('An invitation does not grant'))n.textContent='HR may invite any verified login to write this specific role framework, including their own role. This does not grant manager assessment rights, HR approval or publication rights.';});
+  }
+  if(isHR&&!root.querySelector('[data-fwi-mine]')){
+   var nav=root.querySelector('.ih-tabs');if(nav){var b=document.createElement('button');b.type='button';b.className='btn btn-outline';b.dataset.fwiMine='true';b.textContent='My assigned work';b.onclick=()=>ihOpen('mine');nav.append(b);}
+  }
+  return result;
+ };
+ var header=ihHeader;
+ // Sent rows expose queued/accepted/failed rather than pretending save means email.
+ var table=irTable;
+ irTable=function(rows,mine){
+  var html=table.apply(this,arguments);if(mine||!['hr','hohr'].includes(APP.currentRole))return html;
+  var box=document.createElement('div');box.innerHTML=html;
+  box.querySelectorAll('tbody tr').forEach((tr,i)=>{if(!rows[i])return;var cell=tr.lastElementChild;
+   var b=document.createElement('button');b.type='button';b.className='btn btn-outline';b.dataset.fwiEmail=rows[i].id;b.textContent='Email status';cell.append(b);
+  });return box.innerHTML;
+ };
+ async function mailStatus(id){
+  var r=await originalRPC('email_status',{id});
+  var cfg=r.configuration||{},text;
+  if(r.state==='accepted')text='Email service accepted the invitation email for '+r.email+'. Inbox delivery is not yet verified.';
+  else if(r.state==='failed'||r.state==='uncertain')text='Invitation saved, but email '+(r.state==='failed'?'failed':'delivery is unconfirmed')+'. Check EmailJS and the server mail log; do not issue a duplicate invitation.';
+  else if(!cfg.dispatch_configured)text='Invitation saved, but immediate email dispatch is not configured. Install the EmailJS worker and Vault setup.';
+  else text='Invitation email status: '+r.state+' for '+r.email+'. The server worker processes the queue; this is not a delivery confirmation.';
+  if(!cfg.reminder_schedule_active)text+=' The recurring reminder schedule is not active.';
+  ihNotice(text);return r;
+ }
+ document.addEventListener('click',async e=>{
+  var b=e.target.closest('[data-fwi-email]');if(!b||b.disabled)return;b.disabled=true;
+  try{await mailStatus(b.dataset.fwiEmail);}catch(err){ihNotice('Could not read email status: '+err.message);}finally{b.disabled=false;}
+ });
+ // This wrapper records the issued id, but mail is sent server-side only.
+ var issueRPC=ihRPC;
+ ihRPC=async function(action,data){
+  var r=await issueRPC.apply(this,arguments);
+  if(action==='issue'&&r?.id)FW_ACCESS.mail={id:r.id,identity:adOwner()};
+  return r;
+ };
+ var openInvites=ihOpen;
+ ihOpen=async function(view){
+  var r=await openInvites.apply(this,arguments);
+  if(view==='sent'&&FW_ACCESS.mail&&FW_ACCESS.mail.identity===adOwner()){
+   var id=FW_ACCESS.mail.id;FW_ACCESS.mail=null;
+   setTimeout(()=>{if(IH.view==='sent'&&APP.user)mailStatus(id).catch(e=>ihNotice('Invitation saved. Email status could not be checked: '+e.message));},1000);
+  }return r;
+ };
+ var pageRole=cnPageRole,load=loadPage,label=getPageLabel;
+ cnPageRole=function(page,preferred){return page==='cms-invited-framework'||page==='cms-my-assignments'?preferred:pageRole.apply(this,arguments);};
+ getPageLabel=function(page){return page==='cms-invited-framework'?'Set Invited Competencies':page==='cms-my-assignments'?'My Assigned Work':label.apply(this,arguments);};
+ if(typeof WC_PAGES!=='undefined')WC_PAGES.add('cms-invited-framework');
+ loadPage=function(page){
+  if(page==='cms-my-assignments'){IR.mineTab='todo';return ihOpen('mine');}
+  if(page==='cms-invited-framework')return fwOpen('draft');
+  return load.apply(this,arguments);
+ };
+ var openWork=ihOpenWork;
+ ihOpenWork=async function(id){
+  var row=IH.rows.find(x=>x.id===id);
+  if(row?.kind!=='framework')return openWork.apply(this,arguments);
+  var s=AD.state;if(s&&adActive(s)&&!(await adCanLeave(s)))return;
+  var identity=adOwner();
+  try{
+   var r=await ihRPC('open',{id});
+   if(identity!==adOwner())return;
+   FW_ACCESS.selected=r;SX_FW_REQUEST=r;
+   await navigateTo('cms-invited-framework');
+   if(identity!==adOwner()||APP.currentPage!=='cms-invited-framework')return;
+   var position=FW.catalogue?.positions.find(p=>p.id===r.position_id);
+   if(!position||!position.can_edit)throw Error('The active invitation does not authorize this framework. Reopen My Assigned Work.');
+   await fwDashOpen(position);
+  }catch(e){showToast(e.message);}
+ };
+ // Manager catalogue list is already filtered by the updated server invitation ids.
+ // Other roles use can_edit from that same verified backend, not a client role grant.
+ var oldSetup=setupNav;
+ setupNav=function(){
+  var r=oldSetup.apply(this,arguments);
+  if(!APP.user)return r;
+  var root=document.getElementById(APP.currentRole==='employee'?'mainNav':'sideNav');
+  if(root&&!root.querySelector('[data-page="cms-my-assignments"]')){
+   var b=document.createElement('button');b.type='button';b.dataset.page='cms-my-assignments';b.className=APP.currentRole==='employee'?'nav-btn':'sb-item';b.textContent='My Assigned Work';b.onclick=()=>navigateTo('cms-my-assignments');root.append(b);
+   if(APP.currentRole!=='employee'&&typeof cmsPolishNavigation==='function')cmsPolishNavigation();
+  }
+  return r;
+ };
+
+ /* Prevent asynchronous draft guards from delaying setupNav's default-page selection
+    until after CN.setting has been cleared. This avoids competing startup navigations. */
+ var navigation=navigateTo;
+ navigateTo=function(page,history){
+  if(typeof CN!=='undefined'&&CN.setting){CN.defaultPage=page;return;}
+  return navigation.apply(this,arguments);
+ };
+ var entering=null,enter=enterApp;
+ enterApp=function(){
+  if(entering)return entering;
+  var args=arguments;
+  entering=(async()=>{
+   try{return await enter.apply(this,args);}
+   finally{entering=null;}
+  })();return entering;
+ };
+ var started=false;
+ async function start(){
+  if(started)return;started=true;
+  try{await suStartApp();}
+  catch(e){
+   var main=document.getElementById('mainContent');if(!main)return;
+   main.textContent='CMS could not finish loading. Your browser drafts were not cleared. Reload after checking the connection, or share this message: '+e.message;
+  }
+ }
+ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start,{once:true});
+ else start();
+})();
+
+</script>
+<script id="cms-competency-visibility-recovery">
+/* Competency setup presentation and recoverable, explicitly reauthorized deleted work. */
+var FV_COLORS={FC001:'#2856b6',FC002:'#7945b5',FC003:'#087e8b',FC004:'#b95920',FC005:'#318553',PC001:'#b43870',LC001:'#754172',CC001:'#247caa',CC004:'#b64d40',CC003:'#6c7d32',CC002:'#596caf'};
+function fvTier(v){return /Critical|Must-Have/i.test(v)?'critical':/Important|Performance/i.test(v)?'important':'value';}
+function fvSafe(){return !!APP.user&&!!FW.revision&&!!document.getElementById('fwBody');}
+function fvDecorate(){
+ if(!fvSafe())return;
+ var body=document.getElementById('fwBody');body.classList.add('fv-framework');
+ body.querySelectorAll(':scope > .sx-guidelines').forEach(n=>n.hidden=true);
+ body.querySelectorAll('.competency-block').forEach(block=>{
+  var ta=block.querySelector('textarea[id^="fwt-"]'),item=ta&&FW.revision.items.find(i=>'fwt-'+i.id===ta.id);
+  var heading=block.querySelector('.competency-header strong'),code=item?.code||(APP.competencies||[]).find(c=>c.competency===heading?.textContent)?.code;
+  if(!code)return;block.style.setProperty('--fv-color',FV_COLORS[code]||'#2856b6');
+  if(['FC001','FC002','FC003','FC004'].includes(code)){
+   var count=FW.revision.items.filter(i=>i.code===code&&i.text.trim()&&i.classification==='Must-Have (Critical)').length;
+   var note=block.querySelector('.fv-critical-reminder');if(!note){note=document.createElement('p');note.className='fv-critical-reminder';block.querySelector('.competency-header')?.after(note);}
+   note.innerHTML='<strong>REQUIRED: at least 3 complete experiences, including at least 2 Critical.</strong> Critical entered: <b>'+count+'/2 minimum</b>. Add more experiences as needed.';
+  }
+  block.querySelectorAll('select').forEach(select=>{
+   select.dataset.fvTier=fvTier(select.value);
+   [...select.options].forEach(o=>{var t=fvTier(o.value);o.style.backgroundColor=({critical:'#b42332',important:'#a95708',value:'#713cb2'})[t];o.style.color='white';});
+  });
+ });
+ if(!body.querySelector('.fv-instructions')){
+  var note=document.createElement('aside');note.className='fv-instructions';note.innerHTML='<h3>Setting competencies</h3><p>Describe observable work experiences for the selected role, not an employee’s rating. Complete all seven job-related competencies in the displayed order; the four Core competencies remain separately maintained.</p><p><strong>Analytical Thinking, Judgement & Decision Making, Planning and Execution:</strong> at least <b>3 complete experiences each</b>, with at least <b>2 Critical each</b>. Continuous Learning, People Skills and Leadership: at least <b>2 experiences each</b>.</p><p>Use <b>Add experience</b> for additional entries. Save incomplete drafts; Submit and Publish stay blocked until requirements are met. An invitation grants editing only until its deadline or deletion, not HR approval or publication.</p>';body.prepend(note);
+ }
+ if(!body.querySelector('[data-fv-excel]')){
+  var b=document.createElement('button');b.type='button';b.className='btn btn-success';b.dataset.fvExcel='true';b.textContent='Download competencies (Excel)';b.onclick=fvExcel;body.append(b);
+ }
+}
+var fvRender=fwRenderRevision;fwRenderRevision=function(){var r=fvRender.apply(this,arguments);fvDecorate();return r;};
+var fvInput=fwInput;fwInput=function(){var r=fvInput.apply(this,arguments);fvDecorate();return r;};
+async function fvExcel(){
+ if(!fvSafe())return;
+ var revision=FW.revision,identity=adOwner(),items=JSON.parse(JSON.stringify(revision.items)),position={...FW.position};
+ try{
+  var checked=await fwRPC('get',{id:revision.id});if(!checked||identity!==adOwner()||FW.revision!==revision)throw Error('View changed. Reopen the framework.');
+  if(!window.XLSX)throw Error('Excel exporter unavailable.');
+  var book=XLSX.utils.book_new(),data=[['Competency code','Competency','Experience','Classification','Core level']];
+  items.sort((a,b)=>compareCompetencyDisplay(a.code,b.code)).forEach(i=>data.push([i.code,compNameOf(i.code),i.text,i.classification,i.level||'']));
+  var sheet=XLSX.utils.aoa_to_sheet(data);sheet['!cols']=[{wch:18},{wch:38},{wch:90},{wch:36},{wch:18}];XLSX.utils.book_append_sheet(book,sheet,'Role competencies');
+  var core=typeof fwCore==='function'?fwCore():null;
+  if(position.department&&core?.items?.length)XLSX.utils.book_append_sheet(book,XLSX.utils.aoa_to_sheet([data[0],...core.items.map(i=>[i.code,compNameOf(i.code),i.text,i.classification,i.level||''])]),'Published Core reference');
+  XLSX.utils.book_append_sheet(book,XLSX.utils.aoa_to_sheet([['Field','Value'],['Department',position.department||'Company-wide Core'],['Position',position.position||'Core'],['State',revision.state],['Version',revision.edit_number],['Export basis','Current visible draft; may contain edits not confirmed on server. Export does not submit or publish.'],['Generated',new Date().toISOString()]]),'Notes');
+  r4Download(new Blob([XLSX.write(book,{bookType:'xlsx',type:'array'})],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}),'CMS-competencies.xlsx');
+ }catch(e){showToast(e.message);}
+}
+/* Bold action buttons only; retain specialized score tiles, selection states and nav. */
+function fvButtons(){
+ document.querySelectorAll('button.btn,button.ad-btn,button.ar-button,#fwBody button,#wcPanel button,#srRoot [data-sr-pick]').forEach(b=>{
+  var text=b.textContent.trim(),color=b.classList.contains('btn-danger')||/\b(delete|remove|reject|disapprove)\b/i.test(text)?'danger':
+   b.classList.contains('btn-success')||/excel|download|approve|publish/i.test(text)?'success':
+   /return|cancel/i.test(text)?'warning':/AI /i.test(text)?'ai':'primary';
+  if(b.dataset.fvAction!==color)b.dataset.fvAction=color;
+ });
+}
+var fvMain=document.getElementById('mainContent');
+if(fvMain)new MutationObserver(()=>fvButtons()).observe(fvMain,{childList:true,subtree:true});
+fvButtons();
+var fvFWButtons=fwButtons;
+fwButtons=function(){var r=fvFWButtons.apply(this,arguments);if(fvSafe()&&FW.revision._fvRevoked){document.querySelectorAll('#fwBody input,#fwBody textarea,#fwBody select,#fwBody button').forEach(e=>{if(!e.hasAttribute('data-fv-excel')&&!e.hasAttribute('data-fa-download'))e.disabled=true;});}return r;};
+var fvFWRPC=fwRPC;
+fwRPC=function(action,data){if(['save','submit','edit_item'].includes(action)&&FW.revision?._fvRevoked)return Promise.reject(Error('Editing access is locked. Reopen through a new HR-authorized invitation.'));return fvFWRPC.apply(this,arguments);};
+async function fvRPC(a,d={}){var q=await _supabase.rpc('cms_deleted_work',{p_action:a,p_data:d});if(q.error)throw Error(q.error.message);return q.data;}
+var fvInvRender=ihRender;
+ihRender=function(){var r=fvInvRender.apply(this,arguments);var root=document.getElementById('ihRoot');if(root&&!document.getElementById('fvDeletedWork')&&!document.getElementById('adRoot')){var box=document.createElement('section');box.id='fvDeletedWork';box.className='ih-panel';box.innerHTML='<h3>Deleted work & permission requests</h3><p>Deleted invitations do not grant access. Ask HR to authorize a new invitation and resume compatible server-saved work.</p><button type="button" class="btn btn-primary" data-fv-load>View deleted work / requests</button><div id="fvDeletedList"></div>';root.append(box);}return r;};
+async function fvDeleted(){
+ var identity=adOwner(),rows=await fvRPC('list');if(identity!==adOwner())return;
+ var host=document.getElementById('fvDeletedList');if(!host)return;
+ host.innerHTML=rows.map(r=>'<article class="fv-recovery"><h4>'+sxE(r.department)+' / '+sxE(r.position)+'</h4><p>'+sxE(r.recipient)+' · '+sxE(r.kind)+' · Deleted '+sxE(adTime(r.deleted_at))+'</p><p>Permission: '+sxE(r.request?.state||'Not requested')+'</p>'+
+ (r.can_request&&(!r.request||r.request.state==='Rejected')?'<button class="btn btn-primary" data-fv-request="'+sxE(r.token)+'">Request permission</button>':'')+
+ (['hr','hohr'].includes(APP.currentRole)&&r.request?.state==='Pending'?'<label>New deadline<input type="date" id="fvDue-'+r.request.id+'"></label><label>HR note<textarea id="fvNote-'+r.request.id+'"></textarea></label><button class="btn btn-success" data-fv-grant="'+r.request.id+'">Authorize and restore saved work</button><button class="btn btn-danger" data-fv-reject="'+r.request.id+'">Reject request</button>':'')+'</article>').join('')||'<p>No eligible deleted unfinished invitations or pending requests.</p>';
+ fvButtons();
+}
+document.addEventListener('click',async e=>{
+ var b=e.target.closest('[data-fv-load],[data-fv-request],[data-fv-grant],[data-fv-reject]');if(!b||b.disabled)return;b.disabled=true;
+ try{
+  if(b.hasAttribute('data-fv-load'))return await fvDeleted();
+  if(b.dataset.fvRequest){var reason=prompt('Why do you need permission to resume this deleted work? At least 10 characters.');if(!reason)return;if(!confirm('Send this permission request to HR? Work stays locked until approved.'))return;await fvRPC('request',{token:b.dataset.fvRequest,reason});}
+  else{var id=b.dataset.fvGrant||b.dataset.fvReject,note=document.getElementById('fvNote-'+id).value,due_date=document.getElementById('fvDue-'+id).value,decision=b.dataset.fvGrant?'Approved':'Rejected';if(!confirm(decision==='Approved'?'Issue a new invitation with this deadline and restore compatible saved work? Existing issue-email rules apply.':'Reject this permission request?'))return;await fvRPC('review',{id,note,due_date,decision});}
+  await fvDeleted();
+ }catch(err){showToast(err.message);}finally{b.disabled=false;}
+});
+/* Revoke live editor controls after deletion, without erasing local unsaved text. */
+var FV_LOCK={busy:false,key:'',blocked:false};
+async function fvAccess(){
+ if(FV_LOCK.busy||!APP.user)return;
+ var s=typeof AD!=='undefined'?AD.state:null,isAssessment=s&&adActive(s);
+ var framework= !isAssessment&&fvSafe()&&FW.revision.state==='Draft';
+ if(!isAssessment&&!framework)return;
+ if(isAssessment&&s.invitation.state!=='Pending')return;
+ var id=isAssessment?s.id:FW.revision.id,kind=isAssessment?'assessment':'framework',identity=adOwner(),key=identity+'|'+kind+'|'+id;
+ FV_LOCK.busy=true;
+ try{
+  var result=await _supabase.rpc('cms_work_access',{p_kind:kind,p_id:id});
+  if(identity!==adOwner()||(isAssessment?AD.state!==s:FW.revision?.id!==id))return;
+  if(result.error)throw Error(result.error.message);
+  if(!result.data?.allowed){
+   if(isAssessment){adCapture(s);adLocal(s);clearTimeout(s.timer);s.canSave=false;s.canSubmit=false;adUpdateButtons(s);adNotice(s,'Access locked. Saved work retained; request permission from HR. Download any unconfirmed local edits before leaving.',true);}
+   else{
+    FW.revision._fvRevoked=true;
+    var body=document.getElementById('fwBody');body.querySelectorAll('input,textarea,select,button').forEach(x=>{if(!x.hasAttribute('data-fv-excel')&&!x.hasAttribute('data-fa-download'))x.disabled=true;});
+    if(!body.querySelector('.fv-revoked')){var note=document.createElement('p');note.className='fv-revoked';note.textContent='Editing locked: invitation deleted, expired or no longer authorized. Saved work remains retained. Request HR permission in My Assigned Work.';body.prepend(note);}
+   }
+   FV_LOCK={busy:true,key,blocked:true};
+  }
+ }catch(e){
+  if(identity===adOwner()){
+   if(isAssessment&&AD.state===s){adCapture(s);adLocal(s);s.canSave=false;s.canSubmit=false;clearTimeout(s.timer);adUpdateButtons(s);adNotice(s,'Could not verify editing permission. Your browser work is retained; reopen after connectivity returns.',true);}
+   else if(FW.revision?.id===id){FW.revision._fvRevoked=true;fwButtons();}
+   showToast('Editing paused: permission check failed. Reopen after connectivity returns. '+e.message);
+  }
+ }
+ finally{FV_LOCK.busy=false;}
+}
+setInterval(fvAccess,5000);
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)fvAccess();});
+// Clarify retention in the existing deletion preview, without bypassing confirmation.
+var fvDelete=hdDeleteOpen;
+hdDeleteOpen=async function(kind,id){await fvDelete.apply(this,arguments);if(kind!=='invitation')return;var aside=document.querySelector('#hdDeleteDialog aside');if(aside)aside.textContent='Deletes this invitation and the listed operational records, revoking its access. A restricted deletion snapshot retains the latest server-saved assessment draft and its saved versions; framework drafts remain in place. The recipient can request permission, and HR can issue a new invitation with compatible work restored. Submitted assessments are not reopened. Unconfirmed browser-only edits are not part of the server backup.';};
+
+</script>
+<!-- Paste once before the LAST closing body tag, after the earlier patches. -->
+<style id="cms-compact-tier-selector">
+#fwBody.fv-framework select[data-fv-tier] {
+ width: 155px !important;
+ max-width: 100% !important;
+ min-width: 0 !important;
+ height: 32px !important;
+ min-height: 32px !important;
+ padding: 4px 26px 4px 9px !important;
+ margin: 6px 0 !important;
+ border-radius: 6px !important;
+ font: 700 14px/1.2 Arial, sans-serif !important;
+ display: inline-block !important;
+}
+#fwBody.fv-framework select[data-fv-tier] option {
+ font: 600 14px Arial, sans-serif !important;
+}
+</style>
+<script id="cms-compact-tier-selector-labels">
+(function(){
+ if(window.cmsCompactTierSelector)return;
+ window.cmsCompactTierSelector=true;
+ var labels={
+  'Must-Have (Critical)':'Critical',
+  'Important (Performance Enhancing)':'Important',
+  'Value-Add (Developmental)':'Value-Add'
+ };
+ function compact(){
+  document.querySelectorAll('#fwBody select[data-fv-tier]').forEach(function(select){
+   Array.from(select.options).forEach(function(option){
+    var original=option.value;
+    if(!labels[original]||option.textContent===labels[original])return;
+    // Explicitly preserve the original saved value before shortening visible text.
+    option.value=original;
+    option.title=original;
+    option.textContent=labels[original];
+   });
+   var selected=select.options[select.selectedIndex];
+   if(selected)select.title=selected.value;
+   select.setAttribute('aria-label','Experience classification');
+  });
+ }
+ if(typeof fvDecorate==='function'){
+  var decorate=fvDecorate;
+  fvDecorate=function(){var result=decorate.apply(this,arguments);compact();return result;};
+ }else if(typeof fwRenderRevision==='function'){
+  var render=fwRenderRevision;
+  fwRenderRevision=function(){var result=render.apply(this,arguments);compact();return result;};
+ }
+ document.addEventListener('change',function(e){
+  if(e.target.matches('#fwBody select[data-fv-tier]'))compact();
+ });
+ compact();
+})();
+</script>
+<!-- Paste once before the LAST closing body tag, after all existing patches. -->
+<style id="cms-compact-work-backup-style">
+#mainContent > #wcPanel.wc-compact-hidden { display:none!important; }
+#mainContent > #wcPanel.wc-bottom-panel {
+ position:static!important; margin:10px 0!important; padding:12px 16px!important;
+ box-shadow:none!important;
+}
+#wcCompactToggle {
+ display:block; width:auto; margin:14px 0 6px; padding:7px 11px;
+ background:#edf1fa; color:#304775; border:1px solid #bdcce5;
+ border-radius:6px; font:600 14px/1.4 system-ui; cursor:pointer;
+}
+#wcCompactToggle:focus-visible { outline:3px solid #4338ca; outline-offset:2px; }
+</style>
+<script id="cms-compact-work-backup">
+(function(){
+ if(window.cmsCompactWorkBackup)return;
+ if(typeof wcPanel!=='function'||typeof wcStatus!=='function')return;
+ window.cmsCompactWorkBackup=true;
+ var current=null,expanded=false,failed=false,scheduled=false;
+ function update(){
+  scheduled=false;
+  var main=document.getElementById('mainContent'),panel=document.getElementById('wcPanel');
+  if(!main)return;
+  var toggle=document.getElementById('wcCompactToggle');
+  if(!panel){if(toggle)toggle.remove();return;}
+  var s=typeof WC!=='undefined'?WC.active:null;
+  if(s!==current){current=s;expanded=false;failed=false;}
+  var needsAttention=failed||!!s?.offer||!!s?.conflict||
+    !!panel.querySelector('.wcError')||
+    /unavailable|failed|failure|not confirmed|conflict|newer|choose whether|unconfirmed/i.test(s?.message||'');
+  if(!toggle){
+   toggle=document.createElement('button');toggle.id='wcCompactToggle';toggle.type='button';
+   toggle.setAttribute('aria-controls','wcPanel');
+   toggle.onclick=function(){expanded=!expanded;update();};
+   main.append(toggle);
+  }
+  panel.classList.add('wc-bottom-panel');
+  panel.classList.toggle('wc-compact-hidden',!expanded&&!needsAttention);
+  var label=needsAttention?'Backup needs attention':expanded?'Hide backup controls':'Saved work & backups';
+  if(toggle.textContent!==label)toggle.textContent=label;
+  toggle.setAttribute('aria-expanded',String(expanded||needsAttention));
+  // Move existing elements, preserving their IDs, click handlers and recovery choices.
+  if(main.lastElementChild!==panel||panel.previousElementSibling!==toggle){
+   main.append(toggle,panel);
+  }
+ }
+ var render=wcPanel;
+ wcPanel=function(s){var r=render.apply(this,arguments);update();return r;};
+ var status=wcStatus;
+ wcStatus=function(s,text,error){
+  if(typeof wcSame==='function'&&wcSame(s)){
+   if(s!==current){current=s;expanded=false;}
+   failed=!!error;
+  }
+  var r=status.apply(this,arguments);update();return r;
+ };
+ var main=document.getElementById('mainContent');
+ if(main)new MutationObserver(function(){
+  if(scheduled)return;scheduled=true;queueMicrotask(update);
+ }).observe(main,{childList:true,subtree:true});
+ update();
+})();
+</script>
 </body>
 </html>
-
