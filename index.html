@@ -20125,6 +20125,67 @@ emailReport=function(id){return document.getElementById('arRoot')?arEmail(id):ar
  });
 })();
 </script>
+<!-- Paste once before the LAST </body>, after all earlier CMS patches. -->
+<script id="cms-prospective-invitation-only">
+(function(){
+ if(window.cmsProspectiveInvitationOnly)return;
+ if(typeof ihOpen!=='function'||typeof ihRPC!=='function')return;
+ window.cmsProspectiveInvitationOnly=true;
+ var policy='Prospective assessment access is based on a valid HR invitation, not an 80% current-role score. A current-role assessment is not required to open an invited prospective assessment. The invitation must match the recipient and target role, remain within its deadline, and be unused. Existing redo and HR-renewal approvals still apply.';
+
+ // Old score-gated screens are not used to open new work.
+ // My Invitations opens the existing server-authorized editor.
+ function invitations(){
+  if(!APP.user)return;
+  if(APP.currentRole==='employee'||APP.currentRole==='manager'){
+   APP.prospTarget=null;
+   if(typeof IR!=='undefined')IR.mineTab='todo';
+   return navigateTo(APP.currentRole==='manager'?'mgr-invitation-hub':'emp-invitation-hub');
+  }
+  showToast('Use HR Invitations to issue a prospective assessment for the assigned recipient.');
+ }
+ startProsp=invitations;
+ loadManagerAssessment=invitations;
+ loadAssessEmp=invitations;
+ buildAssessForm=invitations;
+ buildProspectiveSelfForm=invitations;
+ prospectiveSelfCard=function(){
+  return '<section class="card"><h3>Prospective assessment</h3><p>'+
+   escapeHtml(policy)+'</p><button type="button" class="btn btn-primary" data-prospective-invites>Open Invitations</button></section>';
+ };
+ document.addEventListener('click',function(e){
+  if(e.target.closest('[data-prospective-invites]'))invitations();
+ });
+ function explain(){
+  var root=document.getElementById('ihRoot');if(!root||document.getElementById('adRoot'))return;
+  var note=document.getElementById('prospectiveInvitationPolicy');
+  if(!note){note=document.createElement('p');note.id='prospectiveInvitationPolicy';note.className='ih-note';root.append(note);}
+  if(note.textContent!==policy)note.textContent=policy;
+ }
+ var render=ihRender;
+ ihRender=function(){var result=render.apply(this,arguments);explain();return result;};
+ var oldOpen=ihOpen;
+ ihOpen=async function(){var result=await oldOpen.apply(this,arguments);explain();return result;};
+ var assessmentRender=adRender;
+ adRender=function(s){
+  var result=assessmentRender.apply(this,arguments);
+  if(!s||!adActive(s)||!['self_target','manager_target'].includes(s.invitation.kind))return result;
+  var root=document.getElementById('adRoot'),note=document.createElement('p');
+  note.className='ad-instruction';note.textContent='Access granted through your active prospective invitation. No minimum current-role score is required. Assessment results and final decisions remain separate.';
+  root.querySelector('.ad-heading')?.after(note);return result;
+ };
+ // Suppress the old FAQ's score-to-access wording, without changing any
+ // actual scoring, progression-pool or Critical-check calculations.
+ ['kaiAnswer','kaiLocalAnswer'].forEach(function(name){
+  var prior=window[name];if(typeof prior!=='function')return;
+  window[name]=function(question){
+   if(typeof question==='string'&&/prospective/i.test(question)&&/unlock|access|invite|eligib|80|current|start/i.test(question))return Promise.resolve(policy);
+   return prior.apply(this,arguments);
+  };
+ });
+ explain();
+})();
+</script>
 </body>
 </html>
 
