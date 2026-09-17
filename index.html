@@ -27716,6 +27716,476 @@ html body #mainContent#mainContent #ihRoot.si-polished .ir-table td:last-child b
 }
 }
 </style>
+<style id="cms-hr-development-review-layout">
+@media screen {
+body.role-hr #hrDPContent .dpr-group {
+ background:#fff;border:1px solid #d6e1ef;border-radius:12px;
+ margin:0 0 20px;overflow:hidden;box-shadow:0 3px 10px #203f6508;
+ color:#243b5a;font:14px/1.5 system-ui;
+}
+body.role-hr #hrDPContent .dpr-heading {
+ display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;
+ gap:14px;padding:17px 20px;border-bottom:1px solid #e1e8f2;
+}
+body.role-hr #hrDPContent .dpr-heading h3 {
+ display:flex;align-items:center;gap:10px;font-size:17px!important;
+ line-height:1.4!important;margin:0!important;color:#213f73;
+}
+body.role-hr #hrDPContent .dpr-heading h3::before {
+ content:"";width:31px;height:31px;flex:0 0 31px;border-radius:9px;
+ background:#eeebfa center/20px no-repeat url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%236446a5' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 18 9 12l4 3 8-10M15 5h6v6'/%3E%3C/svg%3E");
+}
+body.role-hr #hrDPContent .dpr-counts{display:flex;gap:7px;flex-wrap:wrap}
+body.role-hr #hrDPContent .dpr-chip {
+ display:inline-block;padding:4px 8px;border-radius:6px;background:#eef1fa;
+ color:#43528a;font-size:12px;white-space:nowrap;
+}
+body.role-hr #hrDPContent .dpr-chip.approved{background:#e9f6ef;color:#21694b}
+body.role-hr #hrDPContent .dpr-chip.pending{background:#fff4e3;color:#94601b}
+body.role-hr #hrDPContent .dpr-chip.disapproved{background:#fff0f2;color:#a13550}
+body.role-hr #hrDPContent .dpr-task{padding:15px 20px;border-bottom:1px solid #e1e8f2}
+body.role-hr #hrDPContent .dpr-task-label{display:block;font-size:12px;font-weight:750;letter-spacing:.06em;color:#4656a3;margin-bottom:7px}
+body.role-hr #hrDPContent .dpr-original{white-space:pre-wrap;overflow-wrap:anywhere;margin:0;line-height:1.55}
+body.role-hr #hrDPContent .dpr-scroll{overflow:auto;max-width:100%}
+body.role-hr #hrDPContent .dpr-table{width:100%;table-layout:fixed;border-collapse:collapse;min-width:0}
+body.role-hr #hrDPContent .dpr-table th {
+ background:#172b51!important;color:#fff!important;font-size:12px!important;
+ letter-spacing:.02em;line-height:1.4;padding:12px 10px!important;text-align:left;
+ border-right:1px solid #ffffff20;text-transform:none;
+}
+body.role-hr #hrDPContent .dpr-table th:nth-child(1){width:4%}
+body.role-hr #hrDPContent .dpr-table th:nth-child(2){width:38%}
+body.role-hr #hrDPContent .dpr-table th:nth-child(3){width:15%}
+body.role-hr #hrDPContent .dpr-table th:nth-child(4){width:11%}
+body.role-hr #hrDPContent .dpr-table th:nth-child(5){width:14%}
+body.role-hr #hrDPContent .dpr-table th:nth-child(6){width:18%}
+body.role-hr #hrDPContent .dpr-table td {
+ padding:13px 10px!important;border-right:1px solid #e2e9f3;
+ border-bottom:1px solid #e2e9f3;vertical-align:top;color:#263e60;
+ font-size:14px!important;line-height:1.5;overflow-wrap:anywhere;
+}
+body.role-hr #hrDPContent .dpr-table tr:nth-child(even){background:#f7faff}
+body.role-hr #hrDPContent .dpr-table tr:hover td{background:#f2f6fc}
+body.role-hr #hrDPContent .dpr-number{font-weight:700;color:#385b94}
+body.role-hr #hrDPContent .dpr-review{display:flex;flex-wrap:wrap;align-items:center;gap:6px}
+body.role-hr #hrDPContent .dpr-review button {
+ font-size:12px!important;line-height:1.3!important;padding:6px 9px!important;
+ min-height:30px!important;border-radius:6px!important;white-space:normal;
+}
+body.role-hr #hrDPContent .dpr-review .btn-success {
+ background:#f3fbf7!important;border:1px solid #7db39c!important;color:#1e6b4c!important;
+}
+body.role-hr #hrDPContent .dpr-review .btn-danger {
+ background:#fff7f8!important;border:1px solid #dda0ad!important;color:#a1334b!important;
+}
+body.role-hr #hrDPContent .dpr-review .badge {font-size:12px!important;padding:5px 8px;white-space:normal}
+body.role-hr #hrDPContent .dpr-menu{margin-top:5px}
+body.role-hr #hrDPContent .dpr-menu summary {
+ cursor:pointer;color:#526a8d;font-size:12px;display:list-item;
+ padding:5px 0;width:fit-content;
+}
+body.role-hr #hrDPContent .dpr-menu button {font-size:12px!important;margin-top:5px}
+body.role-hr #hrDPContent .dpr-invalid{background:#fff7e8!important}
+body.role-hr #hrDPContent .dpr-date-warning{display:block;color:#976017;font-size:12px;font-weight:650;margin-top:7px}
+body.role-hr #hrDPContent .dpr-footer{padding:11px 18px;background:#f5f8fd;font-size:12px;color:#54708f}
+body.role-hr #hrDPContent .dpr-download{margin:0 0 18px;display:flex;justify-content:flex-end}
+body.role-hr #hrDPContent .dpr-group :is(button,summary):focus-visible{outline:3px solid #7b97cd!important;outline-offset:2px}
+@media(max-width:1000px){
+ body.role-hr #hrDPContent .dpr-table :is(tbody,tr,td){display:block;width:100%}
+ body.role-hr #hrDPContent .dpr-table thead{display:none}
+ body.role-hr #hrDPContent .dpr-table tr{padding:12px 14px;border-bottom:1px solid #cbd9ec}
+ body.role-hr #hrDPContent .dpr-table td{display:grid;grid-template-columns:100px minmax(0,1fr);gap:10px;border:0;padding:7px 0!important}
+ body.role-hr #hrDPContent .dpr-table td::before{content:attr(data-label);font-size:12px;font-weight:700;color:#42618c}
+ body.role-hr #hrDPContent .dpr-table td>*{min-width:0}
+ body.role-hr #hrDPContent .dpr-heading,body.role-hr #hrDPContent .dpr-task{padding:14px}
+ body.role-hr #hrDPContent .dpr-review button{min-height:38px!important}
+}
+}
+</style>
+<script id="cms-hr-development-review-layout-script">
+(function(){
+ if(window.cmsHRDevelopmentReviewLayout)return;
+ window.cmsHRDevelopmentReviewLayout=true;
+ function node(tag,cls,content){
+  var el=document.createElement(tag);if(cls)el.className=cls;
+  if(content!==undefined)el.textContent=content;return el;
+ }
+ function paired(line,left,right){
+  if(!line)return null;
+  var labels=[...line.querySelectorAll(':scope > strong')];
+  if(labels.length!==2||labels[0].textContent.trim()!==left||labels[1].textContent.trim()!==right)return null;
+  var part=labels[0].nextSibling,a='',b='';
+  while(part&&part!==labels[1]){a+=part.textContent;part=part.nextSibling;}
+  if(!part)return null;part=labels[1].nextSibling;
+  while(part){b+=part.textContent;part=part.nextSibling;}
+  // Strip only the renderer's exact prefix/separator, not the stored field text.
+  if(!a.startsWith(' ')||!a.endsWith(' | ')||!b.startsWith(' '))return null;
+  return [a.slice(1,-3),b.slice(1)];
+ }
+ function read(card){
+  var comp=card.querySelector(':scope > .plan-comp'),lines=card.querySelectorAll(':scope > .plan-task');
+  if(!comp||lines.length!==3)return null;
+  var task=paired(lines[0],'Task:','Action:'),measure=paired(lines[1],'Measure:','Responsible:');
+  if(!task||!measure)return null;
+  // Monthly reports lack this exact Task/Action + Measure/Responsible structure.
+  var originalDate=lines[2].textContent;
+  var dates=originalDate.match(/^(\d{4}-\d{2}-\d{2}) to (\d{4}-\d{2}-\d{2})$/);
+  var buttons=[...card.querySelectorAll('button')],remove=buttons.find(b=>/\bdeletePlan\s*\(/.test(b.getAttribute('onclick')||''));
+  var review=buttons.filter(b=>/\bappPlan\s*\(/.test(b.getAttribute('onclick')||''));
+  var badge=card.querySelector(':scope > .badge');
+  // Leave unfamiliar cards untouched rather than dropping controls.
+  if(buttons.some(b=>b!==remove&&!review.includes(b)))return null;
+  var approval=badge?.textContent.trim().toLowerCase()||'pending';
+  return {card,competency:comp.textContent,task:task[0],action:task[1],measure:measure[0],
+   owner:measure[1],originalDate,invalid:!!dates&&dates[2]<dates[1],review,remove,badge,approval};
+ }
+ function transform(){
+  if(typeof APP==='undefined'||APP.currentRole!=='hr'||window.CMS_VIEW_CONFIG)return;
+  var root=document.getElementById('hrDPContent');if(!root)return;
+  // Each existing parent card is a separate scope; no cross-employee grouping.
+  [...root.children].forEach(function(parent){
+   if(!parent.classList.contains('card')||parent.dataset.dprDone)return;
+   var cards=[...parent.children].filter(e=>e.classList.contains('plan-card'));
+   if(!cards.length)return;
+   var entries=cards.map(read);
+   if(entries.some(x=>!x))return;
+   var groups=[];
+   // Group consecutive equal task/competency text only. Database rows are not merged
+   // or deduplicated. Every record retains its own action and original controls.
+   entries.forEach(function(item){
+    var g=groups[groups.length-1];
+    if(!g||g.competency!==item.competency||g.task!==item.task){g={competency:item.competency,task:item.task,items:[]};groups.push(g);}
+    g.items.push(item);
+   });
+   groups.forEach(function(g){
+    var section=node('section','dpr-group'),head=node('header','dpr-heading');
+    head.append(node('h3','',g.competency));
+    var counts=node('div','dpr-counts'),approved=g.items.filter(x=>x.approval==='approved').length,
+     rejected=g.items.filter(x=>x.approval==='disapproved').length,pending=g.items.length-approved-rejected;
+    counts.append(node('span','dpr-chip',g.items.length+' action'+(g.items.length===1?'':'s')));
+    if(approved)counts.append(node('span','dpr-chip approved',approved+' approved'));
+    if(rejected)counts.append(node('span','dpr-chip disapproved',rejected+' disapproved'));
+    if(pending)counts.append(node('span','dpr-chip pending',pending+' awaiting review'));
+    head.append(counts);section.append(head);
+    var task=node('div','dpr-task');task.append(node('span','dpr-task-label','TASK AS ENTERED BY MANAGER'),node('p','dpr-original',g.task));section.append(task);
+    var scroll=node('div','dpr-scroll'),table=node('table','dpr-table'),thead=node('thead'),tr=node('tr');
+    ['#','Action as entered','Measure','Responsible','Period','HR review'].forEach(x=>{var th=node('th','',x);th.scope='col';tr.append(th);});
+    thead.append(tr);table.append(thead);var body=node('tbody');
+    g.items.forEach(function(item,index){
+     var row=node('tr');
+     function cell(label,child,cls){var td=node('td',cls);td.dataset.label=label;td.append(child);row.append(td);return td;}
+     cell('Action',node('span','dpr-number',String(index+1)));
+     cell('Action as entered',node('div','dpr-original',item.action));
+     cell('Measure',node('div','dpr-original',item.measure));
+     cell('Responsible',node('div','dpr-original',item.owner));
+     var period=node('div');period.append(node('div','dpr-original',item.originalDate));
+     if(item.invalid)period.append(node('span','dpr-date-warning','Check date order: end date is before start.'));
+     cell('Period',period,item.invalid?'dpr-invalid':'');
+     var actions=node('div'),review=node('div','dpr-review');
+     if(item.badge)review.append(item.badge);
+     item.review.forEach(b=>review.append(b));actions.append(review);
+     if(item.remove){
+      var menu=node('details','dpr-menu');menu.append(node('summary','','More actions'),item.remove);actions.append(menu);
+     }
+     cell('HR review',actions);body.append(row);
+    });
+    table.append(body);scroll.append(table);section.append(scroll);
+    var invalid=g.items.filter(x=>x.invalid).length;
+    section.append(node('footer','dpr-footer','Manager-entered wording is unchanged. Approval is recorded separately for each action.'+
+     (invalid?' '+invalid+' date range'+(invalid===1?' needs':'s need')+' checking.':'')));
+    g.items[0].card.before(section);g.items.forEach(x=>x.card.remove());
+   });
+   var download=[...parent.children].find(b=>b.tagName==='BUTTON'&&/\bdownloadDPReports\s*\(/.test(b.getAttribute('onclick')||''));
+   if(download){var tools=node('div','dpr-download');download.before(tools);tools.append(download);}
+   parent.dataset.dprDone='true';
+  });
+ }
+ // Observe only DOM changes; no data read/write or extra save is triggered.
+ var timer;
+ new MutationObserver(function(){if(timer)return;timer=setTimeout(function(){timer=null;transform();},80);}).observe(document.body,{childList:true,subtree:true});
+ transform();
+})();
+</script>
+<style id="cms-dp-card-browser-style">
+@media screen {
+body.role-hr #dpCardBrowser{color:#233b5b;font:14px/1.5 system-ui;margin-bottom:18px}
+body.role-hr #mainContent #hrDPEmp[hidden]{display:none!important}
+body.role-hr #dpCardBrowser .dpb-header{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;background:#fff;border:1px solid #d4e1f0;border-left:4px solid #4658a6;border-radius:12px;padding:18px 22px}
+body.role-hr #dpCardBrowser .dpb-header h2{font-size:20px!important;margin:4px 0!important;color:#203e72}
+body.role-hr #dpCardBrowser p{margin:5px 0}
+body.role-hr #dpCardBrowser .dpb-kicker{font-size:11px;letter-spacing:.09em;font-weight:700;color:#667b9a}
+body.role-hr #dpCardBrowser .dpb-breadcrumb{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:13px 0;color:#697f9f}
+body.role-hr #dpCardBrowser .dpb-breadcrumb button{font-size:13px!important;min-height:32px;padding:6px 10px;background:#f8faff;border:1px solid #ccdbee;border-radius:7px}
+body.role-hr #dpCardBrowser .dpb-tools{display:flex;gap:15px;flex-wrap:wrap;align-items:end;justify-content:space-between;margin:16px 0}
+body.role-hr #dpCardBrowser h3{font-size:16px!important;margin:0!important}
+body.role-hr #dpCardBrowser .dpb-tools label{font-size:12px;color:#4c6484;max-width:100%;width:300px}
+body.role-hr #dpCardBrowser input{font-size:14px!important;min-height:38px;margin-top:4px;border:1px solid #cbd9eb;border-radius:8px;background:#fff}
+body.role-hr #dpCardBrowser .dpb-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+body.role-hr #mainContent #dpCardBrowser .dpb-card{
+ --dc:#385fa2;--dt:#edf3ff;display:flex;align-items:center;text-align:left;gap:12px;min-height:126px;width:100%;
+ padding:17px!important;background:linear-gradient(130deg,#fff,var(--dt))!important;color:#294669!important;
+ border:1px solid #d3dfee!important;border-top:3px solid var(--dc)!important;border-radius:12px!important;
+ box-shadow:0 3px 10px #263f6708!important;cursor:pointer;transition:box-shadow .15s,border-color .15s;
+}
+body.role-hr #mainContent #dpCardBrowser .dpb-tone-1{--dc:#247c72;--dt:#eef8f4}
+body.role-hr #mainContent #dpCardBrowser .dpb-tone-2{--dc:#76549a;--dt:#f6f0fb}
+body.role-hr #mainContent #dpCardBrowser .dpb-tone-3{--dc:#ac7829;--dt:#fff8eb}
+body.role-hr #dpCardBrowser .dpb-card:hover{box-shadow:0 5px 14px #263f6715!important}
+body.role-hr #dpCardBrowser .dpb-card-icon{display:grid;place-items:center;flex:0 0 42px;width:42px;height:42px;border-radius:10px;background:var(--dt,#edf3ff);color:var(--dc,#385fa2)}
+body.role-hr #dpCardBrowser svg{width:25px;height:25px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;pointer-events:none}
+body.role-hr #dpCardBrowser .dpb-card-copy{min-width:0;display:flex;flex-direction:column;gap:6px;overflow-wrap:anywhere}
+body.role-hr #dpCardBrowser .dpb-card-copy strong{font-size:16px!important;color:#243e65}
+body.role-hr #dpCardBrowser .dpb-card-copy span{font-size:13px;font-weight:400}
+body.role-hr #dpCardBrowser .dpb-card-copy small{font-size:12px;font-weight:400;color:#627997}
+body.role-hr #dpCardBrowser .dpb-arrow{font-size:24px;color:var(--dc);margin-left:auto}
+body.role-hr #dpCardBrowser .dpb-pager{display:flex;justify-content:center;align-items:center;gap:12px;margin-top:20px;font-size:12px;color:#587293}
+body.role-hr #dpCardBrowser .dpb-pager button{font-size:13px!important}
+body.role-hr #dpCardBrowser .dpb-person{display:flex;gap:13px;align-items:center;flex-wrap:wrap;background:#fff;border:1px solid #d3e0f0;border-radius:10px;padding:15px 18px}
+body.role-hr #dpCardBrowser .dpb-person button{margin-left:auto}
+body.role-hr #dpCardBrowser .dpb-footnote,body.role-hr #dpCardBrowser .dpb-empty{font-size:12px;color:#67809b;margin:14px 0}
+body.role-hr #dpCardBrowser button:focus-visible{outline:3px solid #7b98cc!important;outline-offset:3px}
+body.role-hr #dpCardBrowser button:disabled{opacity:.5;cursor:not-allowed}
+@media(max-width:1050px){body.role-hr #dpCardBrowser .dpb-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:650px){body.role-hr #dpCardBrowser .dpb-grid{grid-template-columns:1fr}body.role-hr #dpCardBrowser .dpb-header{padding:15px}body.role-hr #dpCardBrowser .dpb-person button{margin-left:0}}
+}
+
+body.role-hr #dpCardBrowser .dpb-employee-picker{background:#fff;border:1px solid #d3e0f0;border-radius:10px;padding:16px 18px;margin:14px 0}body.role-hr #dpCardBrowser .dpb-employee-picker label{display:block;font-size:13px;font-weight:700;margin-bottom:7px}body.role-hr #dpCardBrowser .dpb-employee-picker select{display:block;width:100%;max-width:650px;font-size:14px;padding:9px 12px;border:1px solid #c4d3e7;border-radius:8px;background:white;min-height:40px}body.role-hr #dpCardBrowser .dpb-employee-picker p{font-size:12px;color:#647b96;margin-top:8px}
+</style>
+<script id="cms-dp-card-browser">
+/* HR Development Plans navigation only. One selected employee, original plan
+   renderer and action handlers. No plan writes, edits or approvals on browsing. */
+(function(){
+ if(window.cmsDPCardBrowser)return;window.cmsDPCardBrowser=true;
+ var B={epoch:0,company:null,department:null,employee:null,people:[],companies:[],departments:[],query:'',page:0,busy:false,loaded:false};
+ function key(v){return String(v||'').trim().toUpperCase();}
+ function label(v){return String(v||'').trim()||'Not recorded';}
+ function permitted(){return APP.currentRole==='hr'&&!window.CMS_VIEW_CONFIG;}
+ function active(t){return t===B.epoch&&permitted()&&!!document.getElementById('dpCardBrowser');}
+ function esc(v){return escapeHtml(v==null?'':String(v));}
+ function button(action,title,value,cls){
+  return '<button type="button" class="'+(cls||'btn btn-outline')+'" data-dpb="'+action+'" '+(value===undefined?'':'data-value="'+esc(value)+'"')+'>'+esc(title)+'</button>';
+ }
+ var icons={
+ company:'M3 21V3h12v18 M7 7h4 M7 11h4 M7 15h4 M15 9h6v12 M1 21h22',
+ department:'M12 3v5 M4 12V8h16v4 M2 13h5v7H2z M10 13h5v7h-5z M18 13h5v7h-5z',
+ employee:'M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2 M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8'
+ };
+ function icon(type){return '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="'+icons[type]+'"/></svg>';}
+ async function all(table,fields){
+  var rows=[];for(var offset=0;;offset+=500){
+   var q=await _supabase.from(table).select(fields).order('id').range(offset,offset+499);
+   if(q.error)throw Error(q.error.message);if(!Array.isArray(q.data))throw Error('Could not read '+table);
+   rows.push(...q.data);if(q.data.length<500)return rows;
+  }
+ }
+ function names(values){
+  var map=new Map();values.forEach(v=>{var k=key(v);if(!map.has(k))map.set(k,label(v));});
+  return [...map].map(([id,name])=>({id,name})).sort((a,b)=>a.name.localeCompare(b.name));
+ }
+ function people(){return B.people.filter(p=>key(p.company)===B.company&&(B.department===null||key(p.department)===B.department));}
+ function card(kind,value,title,subtitle,meta,index){
+  return '<button type="button" class="dpb-card dpb-tone-'+index%4+'" data-dpb="'+kind+'" data-value="'+esc(value)+'">'+
+   '<span class="dpb-card-icon">'+icon(kind)+'</span><span class="dpb-card-copy"><strong>'+esc(title)+'</strong>'+
+   '<span>'+esc(subtitle)+'</span><small>'+esc(meta)+'</small></span><span class="dpb-arrow" aria-hidden="true">&#8250;</span></button>';
+ }
+ function draw(){
+  var root=document.getElementById('dpCardBrowser');if(!root||!permitted())return;
+  var employee=B.people.find(p=>p.employee_id===B.employee),co=B.companies.find(c=>key(c.name)===B.company);
+  var cname=co?.name||B.people.find(p=>key(p.company)===B.company)?.company||'Not recorded';
+  var dname=B.people.find(p=>key(p.company)===B.company&&key(p.department)===B.department)?.department||
+   B.departments.find(d=>key(d.company)===B.company&&key(d.name)===B.department)?.name||'Not recorded';
+  var level=B.company===null?'company':B.department===null?'department':'employee';
+  var h='<header class="dpb-header"><div><span class="dpb-kicker">HR ADMIN / DEVELOPMENT</span><h2>Development Plans</h2>'+
+   '<p>Choose a company, department and employee to review their plan.</p></div>'+button('refresh','Refresh directory')+'</header>';
+  h+='<nav class="dpb-breadcrumb" aria-label="Development plan location">'+button('home','All companies');
+  if(B.company!==null)h+='<span aria-hidden="true">/</span>'+button('company',label(cname),B.company);
+  if(B.department!==null)h+='<span aria-hidden="true">/</span>'+button('department',label(dname),B.department);
+  if(employee)h+='<span aria-hidden="true">/</span><strong>'+esc(employee.employee_name||employee.employee_id)+'</strong>';
+  h+='</nav>';
+  if(level==='employee'){
+   var scoped=people().slice().sort((a,b)=>String(a.employee_name||a.employee_id).localeCompare(String(b.employee_name||b.employee_id)));
+   h+='<section class="dpb-employee-picker"><label for="dpbEmployeeSelect">Employee in this department</label><select id="dpbEmployeeSelect" '+(!scoped.length?'disabled':'')+'><option value="">Choose an employee</option>'+
+    scoped.map(p=>'<option value="'+esc(p.employee_id)+'" '+(p.employee_id===B.employee?'selected':'')+'>'+esc(p.employee_name||p.employee_id)+' | '+esc(p.employee_id)+' | '+esc(p.position||'Position not recorded')+'</option>').join('')+'</select>'+
+    (!scoped.length?'<p>No employees recorded in this department.</p>':'<p>Only employees in the selected company and department appear here.</p>')+'</section>';
+  }
+  if(employee){
+   h+='<section class="dpb-person"><span class="dpb-card-icon">'+icon('employee')+'</span><div><h3>'+esc(employee.employee_name||employee.employee_id)+
+    '</h3><p>'+esc(employee.position||'Position not recorded')+' | '+esc(employee.employee_id)+'</p><small>'+
+    esc(label(employee.company))+' / '+esc(label(employee.department))+'</small></div>'+button('back','Back to employees')+'</section>';
+  }else if(level!=='employee'){
+   var list;
+   if(level==='company'){
+    list=B.companies.map(c=>({id:key(c.name),name:c.name,people:B.people.filter(p=>key(p.company)===key(c.name))}));
+   }else if(level==='department'){
+    list=names(B.departments.filter(d=>key(d.company)===B.company).map(d=>d.name).concat(people().map(p=>p.department))).map(d=>({...d,people:people().filter(p=>key(p.department)===d.id)}));
+   }else list=people().map(p=>({id:p.employee_id,name:p.employee_name||p.employee_id,person:p}));
+   var q=B.query.toLowerCase(),filtered=list.filter(r=>[r.name,r.person?.employee_id,r.person?.position].join(' ').toLowerCase().includes(q));
+   B.page=Math.min(B.page,Math.max(0,Math.ceil(filtered.length/12)-1));
+   h+='<div class="dpb-tools"><h3>'+({company:'Companies',department:'Departments',employee:'Employees'})[level]+'</h3>'+
+    '<label>Search '+level+'<input id="dpbSearch" type="search" value="'+esc(B.query)+'" placeholder="'+(level==='employee'?'Name, employee ID or position':'Search '+level)+'"></label></div>';
+   h+='<div class="dpb-grid">'+filtered.slice(B.page*12,B.page*12+12).map((r,i)=>{
+    if(level==='employee')return card(level,r.id,r.name,r.person.position||'Position not recorded','Employee ID: '+r.id,i);
+    var count=r.people.length;
+    return card(level,r.id,r.name,count+' employee'+(count===1?'':'s'),level==='company'?'Open departments':'Open employees',i);
+   }).join('')+'</div>';
+   if(!filtered.length)h+='<p class="dpb-empty">'+(q?'No matches. Try another search.':level==='employee'?'No employees recorded in this department.':'No '+level+' records available in this selection.')+'</p>';
+   h+='<div class="dpb-pager">'+button('previous','Previous')+'<span>Page '+(B.page+1)+' | '+filtered.length+' '+level+' record(s)</span>'+button('next','Next')+'</div>';
+   h+='<p class="dpb-footnote">Employee counts are directory counts, not plan or approval totals. Open an employee to see their actual plan and monthly reports.</p>';
+   root.dataset.maxPage=String(Math.max(0,Math.ceil(filtered.length/12)-1));
+  }
+  root.innerHTML=h;
+  var prev=root.querySelector('[data-dpb="previous"]'),next=root.querySelector('[data-dpb="next"]');
+  if(prev)prev.disabled=B.page===0;if(next)next.disabled=B.page>=Number(root.dataset.maxPage);
+  if(B.busy)root.querySelectorAll('button,input,select').forEach(e=>e.disabled=true);
+ }
+ async function canLeave(){
+  if(B.busy)return false;
+  if(typeof wcBeforeLeave==='function')return await wcBeforeLeave();
+  return true;
+ }
+ function clearPlan(){
+  var target=document.getElementById('hrDPContent');if(target)target.replaceChildren();
+  var select=document.getElementById('hrDPEmp');if(select)select.value='';
+ }
+ async function selectEmployee(id){
+  var p=B.people.find(p=>p.employee_id===id);
+  if(!p)throw Error('Employee is not in the loaded directory. Refresh and choose again.');
+  if(B.people.filter(x=>x.employee_id===id).length!==1)throw Error('Duplicate employee ID. Ask HR to review source records before opening a plan.');
+  B.company=key(p.company);B.department=key(p.department);B.employee=id;B.query='';B.page=0;draw();
+  var select=document.getElementById('hrDPEmp');select.value=id;
+  await loadHRDPEmp();
+ }
+ var previousOpen=loadHRDevPlans;
+ loadHRDevPlans=async function(){
+  if(!permitted())return previousOpen.apply(this,arguments);
+  var ticket=++B.epoch,wanted=APP.hrDPTarget||null;APP.hrDPTarget=null;
+  B.company=null;B.department=null;B.employee=null;B.query='';B.page=0;B.loaded=false;
+  setContent('<section id="dpCardBrowser"><h2>Development Plans</h2><p>Reading company, department and employee directory...</p></section><select id="hrDPEmp" hidden aria-hidden="true"></select><div id="hrDPContent"></div>');
+  try{
+   var results=await Promise.all([all('employees','id,employee_id,employee_name,company,department,position'),all('companies','id,name'),all('departments','id,name,company')]);
+   if(!active(ticket))return;
+   B.people=results[0];B.departments=results[2];
+   B.companies=names(results[1].map(c=>c.name).concat(B.departments.map(d=>d.company),B.people.map(p=>p.company))).map(c=>({name:c.name==='Not recorded'&&c.id===''?'':c.name}));
+   var select=document.getElementById('hrDPEmp');select.replaceChildren(new Option('Choose employee',''));
+   B.people.forEach(p=>select.add(new Option(p.employee_name||p.employee_id,p.employee_id)));
+   B.loaded=true;draw();if(wanted)await selectEmployee(wanted);
+  }catch(err){if(active(ticket)){document.getElementById('dpCardBrowser').innerHTML='<h2>Development Plans</h2><p>'+esc(err.message)+'</p><p>Directory could not be loaded completely. Existing records are unchanged.</p>'+button('refresh','Retry directory');}}
+ };
+ document.addEventListener('click',async function(event){
+  var b=event.target.closest('[data-dpb]');if(!b||b.disabled||!permitted())return;
+  var action=b.dataset.dpb;
+  try{
+   if(!await canLeave())return;
+   if(action==='refresh')return loadHRDevPlans();
+   if(action==='employee'){B.busy=true;draw();try{await selectEmployee(b.dataset.value);}finally{B.busy=false;draw();}return;}
+   B.employee=null;clearPlan();if(!['previous','next'].includes(action))B.query='';
+   if(action==='home'){B.company=null;B.department=null;B.page=0;}
+   if(action==='company'){B.company=b.dataset.value;B.department=null;B.page=0;}
+   if(action==='department'){B.department=b.dataset.value;B.page=0;}
+   if(action==='back')B.page=0;
+   if(action==='previous')B.page=Math.max(0,B.page-1);
+   if(action==='next')B.page++;
+   draw();
+  }catch(err){showToast(err.message);}
+ });
+ document.addEventListener('input',function(event){
+  if(event.target.id!=='dpbSearch'||!permitted())return;
+  var caret=event.target.selectionStart;B.query=event.target.value;B.page=0;draw();
+  var input=document.getElementById('dpbSearch');input.focus();try{input.setSelectionRange(caret,caret);}catch{}
+ });
+ document.addEventListener('change',async function(event){
+  if(event.target.id!=='dpbEmployeeSelect'||!permitted())return;
+  var id=event.target.value;
+  if(!await canLeave()){event.target.value=B.employee||'';return;}
+  if(!id){B.employee=null;clearPlan();draw();return;}
+  if(!people().some(p=>p.employee_id===id)){showToast('Choose an employee in this department.');draw();return;}
+  B.busy=true;draw();
+  try{await selectEmployee(id);}catch(err){showToast(err.message);}finally{B.busy=false;draw();}
+ });
+})();
+
+</script>
+<style id="cms-download-development-plan-style">
+body.role-hr #downloadDevelopmentPlanBar {
+ display:flex;justify-content:flex-end;gap:10px;flex-wrap:wrap;
+ margin:12px 0;font:13px/1.5 system-ui;color:#46617f;
+}
+body.role-hr #downloadDevelopmentPlanBar button {
+ background:#216d55;color:#fff;border:1px solid #216d55;
+ border-radius:8px;padding:9px 14px;font-size:13px;
+ font-weight:700;min-height:38px;cursor:pointer;
+}
+body.role-hr #downloadDevelopmentPlanBar button:disabled{opacity:.5;cursor:not-allowed}
+body.role-hr #downloadDevelopmentPlanBar button:focus-visible{outline:3px solid #78a99b;outline-offset:3px}
+</style>
+<script id="cms-download-development-plan-button">
+(function(){
+ if(window.cmsDownloadDevelopmentPlan)return;window.cmsDownloadDevelopmentPlan=true;
+ var busy=false;
+ function permitted(){return APP.currentRole==='hr'&&!window.CMS_VIEW_CONFIG;}
+ function selected(){return document.getElementById('hrDPEmp')?.value||'';}
+ function stamp(){return String(APP.user?.email||'')+'|'+APP.currentRole+'|'+selected();}
+ function message(s){var el=document.getElementById('downloadDevelopmentPlanStatus');if(el)el.textContent=s;}
+ async function download(){
+  if(busy||!permitted()||!selected())return;
+  var id=selected(),identity=stamp(),rows=[],button=document.getElementById('downloadDevelopmentPlanExcel');
+  busy=true;if(button)button.disabled=true;message('Preparing saved development plan...');
+  try{
+   if(!window.XLSX)throw Error('Excel component is missing from this file.');
+   for(var offset=0;;offset+=500){
+    var q=await _supabase.from('dev_plans')
+     .select('id,employee_id,employee_name,plan_id,comp_name,task,action,measure,responsible_party,start_date,end_date,hr_approved,status')
+     .eq('employee_id',id).order('id').range(offset,offset+499);
+    if(q.error)throw Error(q.error.message);
+    if(!Array.isArray(q.data))throw Error('Unexpected plan response');
+    if(identity!==stamp()||!permitted())return;
+    rows.push(...q.data);if(q.data.length<500)break;
+   }
+   if(!rows.length){message('No saved development plan for this employee.');return;}
+   var wb=XLSX.utils.book_new();
+   var name=rows.find(r=>r.employee_name)?.employee_name||id;
+   var summary=[
+    ['DEVELOPMENT PLAN',name],['Employee ID',id],
+    ['Downloaded at',new Date().toISOString()],
+    ['Source','Current server-saved plan actions; unsaved browser edits are not included.'],
+    ['Approval','Approval status is recorded separately for each action.'],
+    ['Dates','Dates are exported exactly as saved. Invalid ranges are flagged, not corrected.']
+   ];
+   var overview=XLSX.utils.aoa_to_sheet(summary);overview['!cols']=[{wch:22},{wch:100}];
+   XLSX.utils.book_append_sheet(wb,overview,'Overview');
+   var head=['Employee','Employee ID','Plan reference','Competency','Task as entered','Action as entered','Measure','Responsible','Start date','End date','HR approval','Work status','Date check','Action reference'];
+   var values=rows.map(r=>[
+    r.employee_name||'',r.employee_id,r.plan_id||'',r.comp_name||'',r.task||'',r.action||'',r.measure||'',
+    r.responsible_party||'',r.start_date||'',r.end_date||'',r.hr_approved||'Pending',r.status||'',
+    /^\d{4}-\d{2}-\d{2}$/.test(r.start_date||'')&&/^\d{4}-\d{2}-\d{2}$/.test(r.end_date||'')&&r.end_date<r.start_date?'End date is before start date':'',r.id
+   ]);
+   var ws=XLSX.utils.aoa_to_sheet([head,...values]);
+   // Force manager-entered strings to text cells; never interpret spreadsheet formulas.
+   Object.keys(ws).filter(k=>!k.startsWith('!')).forEach(k=>{if(typeof ws[k].v==='string'){ws[k].t='s';delete ws[k].f;}});
+   ws['!cols']=[22,16,24,34,80,70,35,22,15,15,18,18,32,26].map(wch=>({wch}));
+   ws['!autofilter']={ref:XLSX.utils.encode_range({s:{r:0,c:0},e:{r:values.length,c:head.length-1}})};
+   XLSX.utils.book_append_sheet(wb,ws,'Plan actions');
+   if(identity!==stamp()||!permitted())return;
+   XLSX.writeFile(wb,'Development-Plan-'+id.replace(/[^a-zA-Z0-9_-]/g,'_')+'.xlsx',{compression:true});
+   message('Development plan downloaded. Saved wording, dates and approval statuses retained.');
+  }catch(err){if(identity===stamp())message('Download not completed: '+err.message);}
+  finally{busy=false;if(button?.isConnected)button.disabled=!permitted()||!selected();}
+ }
+ function attach(){
+  var root=document.getElementById('hrDPContent'),bar=document.getElementById('downloadDevelopmentPlanBar');
+  if(!root||!permitted()||!selected()){bar?.remove();return;}
+  if(bar)return;
+  bar=document.createElement('div');bar.id='downloadDevelopmentPlanBar';
+  var status=document.createElement('span');status.id='downloadDevelopmentPlanStatus';status.setAttribute('role','status');
+  var button=document.createElement('button');button.type='button';button.id='downloadDevelopmentPlanExcel';
+  button.textContent='Download development plan (Excel)';button.onclick=download;button.disabled=busy;
+  bar.append(status,button);root.before(bar);
+ }
+ var timer;new MutationObserver(function(){if(timer)return;timer=setTimeout(function(){timer=null;attach();},120);}).observe(document.body,{subtree:true,childList:true});
+ document.addEventListener('change',e=>{if(['hrDPEmp','dpbEmployeeSelect'].includes(e.target.id)){message('');attach();}});
+ attach();
+})();
+</script>
 </body>
 </html>
 
