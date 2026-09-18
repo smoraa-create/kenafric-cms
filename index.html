@@ -28426,6 +28426,247 @@ Error code: ' + reply.error.code;
   if (context()) fwRenderRevision();
 })();
 </script>
+<script id="cms-framework-review-nonblocking-v2">
+(function () {
+  'use strict';
+  if (window.__cmsFrameworkReviewV2) return;
+  if (typeof fwMutate !== 'function' || typeof fwRenderRevision !== 'function') {
+    console.warn('Framework patch must be installed after the existing CMS scripts.');
+    return;
+  }
+  window.__cmsFrameworkReviewV2 = true;
+  let checking = false;
+  let requesting = false;
+  let latest = null;
+  let requestEpoch = 0;
+  function signature(items) {
+    return JSON.stringify((items || []).map(i => ({
+      id: String(i.id), code: String(i.code || ''), text: String(i.text || ''),
+      classification: String(i.classification || ''), level: String(i.level || '')
+    })).sort((a, b) => a.id.localeCompare(b.id)));
+  }
+  function context() {
+    if (!APP.user || !FW.revision || FW.revision.state !== 'Submitted'
+        || !document.getElementById('fwBody')) return null;
+    return {
+      id: FW.revision.id, sig: signature(FW.revision.items),
+      identity: String(APP.user.email) + '|' + APP.currentRole
+    };
+  }
+  function current(c) {
+    const now = context();
+    return !!now && now.id === c.id && now.sig === c.sig && now.identity === c.identity;
+  }
+  function banner(text) {
+    const host = document.getElementById('fwBody');
+    if (!host) return;
+    let box = document.getElementById('cmsFrameworkAdvisoryStatus');
+    if (!box) {
+      box = document.createElement('p');
+      box.id = 'cmsFrameworkAdvisoryStatus';
+      box.setAttribute('role', 'status');
+      box.style.cssText = 'padding:12px;background:#eef2ff;border-radius:8px;color:#312e81;font-size:14px;';
+      host.prepend(box);
+    }
+    box.textContent = text;
+  }
+  async function read(c, retry, code = null) {
+    let timer;
+    try {
+      const result = await Promise.race([
+        _supabase.rpc('cms_fw_advice_v2_status', {
+          p_revision: c.id, p_retry: !!retry, p_code: code
+        }),
+        new Promise((_, reject) => {
+          timer = setTimeout(() => reject(new Error('Advisory status timed out')), 12000);
+        })
+      ]);
+      if (result.error) throw new Error(result.error.message);
+      return result.data;
+    } finally { clearTimeout(timer); }
+  }
+  function paint(c, data) {
+    if (!current(c)) return;
+    if (!data || signature(data.items) !== c.sig) {
+      banner('Framework wording changed elsewhere. Reopen it before deciding. Older suggestions are not shown.');
+      for (const item of FW.revision.items) {
+        const out = document.getElementById('fwai-' + item.id);
+        if (out) out.textContent = 'Outdated framework snapshot. Reopen to see current suggestions.';
+      }
+      return;
+    }
+    latest = { c, data };
+    const summary = 'Whole-framework check: ' + data.state + ', '
+      + Number(data.completed || 0) + ' of ' + data.items.length
+      + ' experiences checked. Individual competency checks are shown below. HR can decide without waiting.';
+    banner(summary + (data.state === 'failed' && data.detail ? ' Last error: ' + data.detail : ''));
+    for (const button of document.querySelectorAll('[data-fw-scope-code]')) {
+      const code = button.dataset.fwScopeCode;
+      const scope = selected(data, code);
+      const status = button.parentElement.querySelector('[data-fw-scope-status]');
+      if (status) status.textContent = (scope.local ? 'This competency' : 'Whole-framework result')
+        + ': ' + scope.job.state + (scope.job.state === 'failed' && scope.job.detail
+          ? '. ' + scope.job.detail : '') + '. Advisory only.';
+      button.disabled = requesting;
+    }
+    for (const item of FW.revision.items) {
+      const out = document.getElementById('fwai-' + item.id);
+      if (!out) continue;
+      out.replaceChildren();
+      out.style.cssText = 'font-size:14px;margin-top:8px;color:#475569;';
+      const scope = selected(data, item.code);
+      const state = scope.job.state;
+      const notes = scope.job.findings && scope.job.findings[item.id];
+      if (Array.isArray(notes)) {
+        if (!notes.length) {
+          out.textContent = 'AI found no concerns in this saved '
+            + (scope.local ? 'competency' : 'framework')
+            + ' check. This is not HR approval.';
+        } else {
+          for (const note of notes) {
+            const p = document.createElement('p');
+            p.style.cssText = 'background:#fff8ed;border-left:3px solid #b45309;padding:10px;margin:6px 0;';
+            p.textContent = 'AI suggestion: ' + String(note);
+            out.append(p);
+          }
+        }
+      } else {
+        out.textContent = state === 'failed'
+          ? 'Not checked: AI unavailable. Human review can continue.'
+          : 'Suggestions pending for this saved wording. Human review can continue.';
+      }
+    }
+  }
+  function selected(data, code) {
+    const local = data.scopes && data.scopes[code];
+    // A newer whole-framework request supersedes older competency results.
+    if (local && (!data.requested_at ||
+        Date.parse(local.requested_at) >= Date.parse(data.requested_at))) {
+      return { job: local, local: true };
+    }
+    return { job: data, local: false };
+  }
+  function attachControls() {
+    const c = context();
+    const host = document.getElementById('fwBody');
+    if (!host) return;
+    // Submitted framework editor only. Private draft tools remain unchanged.
+    if (!c) return;
+    const groups = new Map();
+    for (const item of FW.revision.items) {
+      const out = document.getElementById('fwai-' + item.id);
+      const section = out && out.closest('.competency-block');
+      if (section && !groups.has(item.code)) groups.set(item.code, section);
+    }
+    for (const [code, section] of groups) {
+      section.querySelectorAll('button[onclick]').forEach(b => {
+        if (/^\s*fwAudit\s*\(/.test(b.getAttribute('onclick') || '')) b.hidden = true;
+      });
+      if (section.querySelector('[data-fw-scope-code]')) continue;
+      const bar = document.createElement('div');
+      bar.style.cssText = 'display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:12px 0;font-size:14px;';
+      const button = document.createElement('button');
+      button.type = 'button'; button.className = 'btn btn-outline';
+      button.dataset.fwScopeCode = code;
+      button.textContent = 'Validate this competency';
+      button.onclick = () => request(code);
+      const status = document.createElement('span');
+      status.dataset.fwScopeStatus = ''; status.setAttribute('role', 'status');
+      status.textContent = 'Checks all experiences in this competency only.';
+      bar.append(button, status);
+      const heading = section.querySelector('.competency-header');
+      if (heading) heading.after(bar); else section.prepend(bar);
+    }
+    if (!document.getElementById('cmsValidateAllFramework')) {
+      const footer = document.createElement('div'); footer.id = 'cmsValidateAllFramework';
+      footer.style.cssText = 'margin-top:20px;padding:16px;border:1px solid #cbd5e1;border-radius:10px;font-size:14px;';
+      const button = document.createElement('button');
+      button.type = 'button'; button.className = 'btn btn-primary';
+      button.textContent = 'Validate all competencies';
+      button.onclick = () => request(null);
+      const note = document.createElement('p');
+      note.textContent = 'Checks every competency in this submitted revision, including cross-competency duplication. Separately published Core content is not changed. HR approvals are unaffected.';
+      footer.append(button, note); host.append(footer);
+    }
+  }
+  async function request(code) {
+    const c = context();
+    if (!c || FW.busy || requesting) return;
+    if (code !== null && !FW.revision.items.some(i => i.code === code)) return;
+    const name = code === null ? 'ALL competencies in this submitted framework'
+      : String(compNameOf(code) || code) + ' only';
+    if (!confirm('Run advisory validation for ' + name + '? This does not change HR decisions.')) return;
+    requesting = true;
+    requestEpoch++;
+    banner('Requesting ' + name + '. HR decisions remain available.');
+    try {
+      paint(c, await read(c, true, code));
+    } catch (error) {
+      if (current(c)) banner('Could not confirm the advisory request: ' + error.message
+        + '. No fallback whole-framework check was requested. Refresh status before retrying.');
+    } finally {
+      requesting = false;
+      document.querySelectorAll('[data-fw-scope-code]').forEach(b => b.disabled = false);
+    }
+  }
+  async function refresh(retry) {
+    const c = context();
+    if (!c || checking || requesting) return;
+    checking = true;
+    const epoch = requestEpoch;
+    try {
+      const data = await read(c, retry);
+      if (epoch === requestEpoch) paint(c, data);
+    }
+    catch (error) {
+      if (current(c)) banner('AI status unavailable: ' + error.message + '. HR decisions remain available.');
+    } finally { checking = false; }
+  }
+  const oldRender = fwRenderRevision;
+  fwRenderRevision = function () {
+    const result = oldRender.apply(this, arguments);
+    const c = context();
+    if (c) {
+      attachControls();
+      banner('Loading saved advisory flags. HR can decide without waiting.');
+      for (const item of FW.revision.items) {
+        const out = document.getElementById('fwai-' + item.id);
+        if (out) out.textContent = 'Loading suggestions for the current saved wording...';
+      }
+      if (latest && current(latest.c)) paint(c, latest.data);
+      void refresh(false);
+    }
+    return result;
+  };
+  // Keep the existing autosave-aware fwSave wrapper and all fwRPC guards.
+  window.caFrameworkSubmit = async function () {
+    if (FW.busy || !FW.revision || FW.revision.state !== 'Draft') return false;
+    if (fwMinimums(FW.revision).length) { fwButtons(); return false; }
+    if (!confirm('Submit this complete framework to HR / HOHR? AI suggestions will be checked separately and will not block HR decisions.')) return false;
+    return fwMutate('submit', { items: FW.revision.items });
+  };
+  fwApprove = async function (id) {
+    const r = FW.revision;
+    if (FW.busy || !r || r.state !== 'Submitted' || !fwIsReviewer()) return false;
+    if (!(r.items || []).some(i => String(i.id) === String(id))) return false;
+    if (r.review && r.review[id]) return false;
+    // No AI call, AI confirmation or AI mutation here.
+    return fwMutate('approve_item', { item_id: id });
+  };
+  const oldAudit = fwAudit;
+  fwAudit = function (id) {
+    const c = context();
+    if (!c) return oldAudit.apply(this, arguments);
+    const item = (FW.revision.items || []).find(i => String(i.id) === String(id));
+    if (!item) return Promise.resolve(null);
+    return request(item.code);
+  };
+  setInterval(() => {
+    if (!document.hidden && context() && !FW.busy) void refresh(false);
+  }, 5000);
+  if (context()) fwRenderRevision();
+})();
+</script>
 </body>
 </html>
 
