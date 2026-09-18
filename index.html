@@ -28186,6 +28186,246 @@ body.role-hr #downloadDevelopmentPlanBar button:focus-visible{outline:3px solid 
  attach();
 })();
 </script>
+<script id="cms-email-status-visible-v1">
+(function () {
+  'use strict';
+  if (window.__cmsEmailStatusVisibleV1) return;
+  window.__cmsEmailStatusVisibleV1 = true;
+
+  document.addEventListener('click', function (event) {
+    var target = event.target;
+    if (!(target instanceof Element)) return;
+    var button = target.closest('[data-fwi-email]');
+    if (!button) return;
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    if (button.disabled) return;
+    openStatus(button);
+  }, true);
+
+  async function openStatus(button) {
+    if (document.getElementById('cmsEmailStatusDialog')) return;
+    var id = button.getAttribute('data-fwi-email');
+    var dialog = document.createElement('dialog');
+    dialog.id = 'cmsEmailStatusDialog';
+    dialog.style.cssText = 'width:min(620px,92vw);max-height:85vh;overflow:auto;margin:auto;padding:24px;border:1px solid #cbd5e1;border-radius:12px;color:#1e293b;background:#fff;';
+    var title = document.createElement('h2');
+    title.textContent = 'Invitation email status';
+    var status = document.createElement('p');
+    status.setAttribute('role', 'status');
+    status.setAttribute('aria-live', 'polite');
+    status.style.cssText = 'white-space:pre-wrap;overflow-wrap:anywhere;margin:16px 0;';
+    status.textContent = 'Checking the saved email status. This does not send an email...';
+    var close = document.createElement('button');
+    close.type = 'button';
+    close.className = 'btn btn-outline';
+    close.textContent = 'Close';
+    close.addEventListener('click', function () { dialog.close(); });
+    dialog.addEventListener('close', function () { dialog.remove(); });
+    dialog.append(title, status, close);
+    document.body.appendChild(dialog);
+    dialog.showModal();
+    button.disabled = true;
+    var timer;
+    try {
+      if (!id) throw new Error('This row has no invitation reference. Reopen Sent invitations.');
+      if (typeof _supabase === 'undefined') throw new Error('Database connection is unavailable. Reload the CMS.');
+      var reply = await Promise.race([
+        _supabase.rpc('cms_invitation_secure', {
+          p_action: 'email_status',
+          p_data: { id: id }
+        }),
+        new Promise(function (_, reject) {
+          timer = setTimeout(function () {
+            reject(new Error('No status response within 20 seconds. Email delivery is unknown. This check did not send or resend anything.'));
+          }, 20000);
+        })
+      ]);
+      if (reply.error) {
+        var errorText = reply.error.message || 'Email status request failed.';
+        if (reply.error.code) errorText += '
+Error code: ' + reply.error.code;
+        throw new Error(errorText);
+      }
+      var result = reply.data;
+      if (!result || typeof result !== 'object' || Array.isArray(result)) {
+        throw new Error('The server returned no usable email-status information. Delivery is unknown.');
+      }
+      var config = result.configuration || {};
+      var lines = ['Recipient: ' + (result.email || 'Not returned'),
+        'Email state: ' + (result.state || 'Not returned')];
+      if (result.state === 'accepted') {
+        lines.push('The email service accepted the request. Inbox delivery is not confirmed.');
+      } else if (result.state === 'failed' || result.state === 'uncertain') {
+        lines.push('Email failed or delivery is unconfirmed. Do not create a duplicate invitation.');
+      } else {
+        lines.push('This status does not confirm inbox delivery.');
+      }
+      lines.push('Immediate dispatch configured: ' +
+        (typeof config.dispatch_configured === 'boolean' ? (config.dispatch_configured ? 'Yes' : 'No') : 'Not reported'));
+      lines.push('Reminder schedule active: ' +
+        (typeof config.reminder_schedule_active === 'boolean' ? (config.reminder_schedule_active ? 'Yes' : 'No') : 'Not reported'));
+      if (dialog.isConnected) status.textContent = lines.join('
+
+');
+    } catch (error) {
+      if (dialog.isConnected) status.textContent = 'Could not confirm email status:
+
+' + (error.message || String(error));
+    } finally {
+      clearTimeout(timer);
+      button.disabled = false;
+    }
+  }
+})();
+</script>
+<script id="cms-framework-review-nonblocking-v1">
+(function () {
+  'use strict';
+  if (window.__cmsFrameworkReviewV1) return;
+  if (typeof fwMutate !== 'function' || typeof fwRenderRevision !== 'function') {
+    console.warn('Framework patch must be installed after the existing CMS scripts.');
+    return;
+  }
+  window.__cmsFrameworkReviewV1 = true;
+  let checking = false;
+  function signature(items) {
+    return JSON.stringify((items || []).map(i => ({
+      id: String(i.id), code: String(i.code || ''), text: String(i.text || ''),
+      classification: String(i.classification || ''), level: String(i.level || '')
+    })).sort((a, b) => a.id.localeCompare(b.id)));
+  }
+  function context() {
+    if (!APP.user || !FW.revision || FW.revision.state !== 'Submitted'
+        || !document.getElementById('fwBody')) return null;
+    return {
+      id: FW.revision.id, sig: signature(FW.revision.items),
+      identity: String(APP.user.email) + '|' + APP.currentRole
+    };
+  }
+  function current(c) {
+    const now = context();
+    return !!now && now.id === c.id && now.sig === c.sig && now.identity === c.identity;
+  }
+  function banner(text) {
+    const host = document.getElementById('fwBody');
+    if (!host) return;
+    let box = document.getElementById('cmsFrameworkAdvisoryStatus');
+    if (!box) {
+      box = document.createElement('p');
+      box.id = 'cmsFrameworkAdvisoryStatus';
+      box.setAttribute('role', 'status');
+      box.style.cssText = 'padding:12px;background:#eef2ff;border-radius:8px;color:#312e81;font-size:14px;';
+      host.prepend(box);
+    }
+    box.textContent = text;
+  }
+  async function read(c, retry) {
+    let timer;
+    try {
+      const result = await Promise.race([
+        _supabase.rpc('cms_fw_advice_v1_status', { p_revision: c.id, p_retry: !!retry }),
+        new Promise((_, reject) => {
+          timer = setTimeout(() => reject(new Error('Advisory status timed out')), 12000);
+        })
+      ]);
+      if (result.error) throw new Error(result.error.message);
+      return result.data;
+    } finally { clearTimeout(timer); }
+  }
+  function paint(c, data) {
+    if (!current(c)) return;
+    if (!data || signature(data.items) !== c.sig) {
+      banner('Framework wording changed elsewhere. Reopen it before deciding. Older suggestions are not shown.');
+      for (const item of FW.revision.items) {
+        const out = document.getElementById('fwai-' + item.id);
+        if (out) out.textContent = 'Outdated framework snapshot. Reopen to see current suggestions.';
+      }
+      return;
+    }
+    const state = data.state;
+    banner(state === 'ready' ? 'AI suggestions ready. Advisory only: HR decides.'
+      : state === 'failed' ? 'AI check unavailable. HR can still edit, approve or return; AI Validate / Ideas can retry.'
+      : 'AI ' + (state === 'running' ? 'check in progress' : 'check queued')
+        + '. ' + Number(data.completed || 0) + ' of ' + data.items.length
+        + ' checked. HR decisions do not need to wait.');
+    for (const item of FW.revision.items) {
+      const out = document.getElementById('fwai-' + item.id);
+      if (!out) continue;
+      out.replaceChildren();
+      out.style.cssText = 'font-size:14px;margin-top:8px;color:#475569;';
+      const notes = data.findings && data.findings[item.id];
+      if (Array.isArray(notes)) {
+        if (!notes.length) {
+          out.textContent = 'AI found no concerns in this saved framework snapshot. This is not HR approval.';
+        } else {
+          for (const note of notes) {
+            const p = document.createElement('p');
+            p.style.cssText = 'background:#fff8ed;border-left:3px solid #b45309;padding:10px;margin:6px 0;';
+            p.textContent = 'AI suggestion: ' + String(note);
+            out.append(p);
+          }
+        }
+      } else {
+        out.textContent = state === 'failed'
+          ? 'Not checked: AI unavailable. Human review can continue.'
+          : 'Suggestions pending for this saved wording. Human review can continue.';
+      }
+    }
+  }
+  async function refresh(retry) {
+    const c = context();
+    if (!c || checking) return;
+    checking = true;
+    try { paint(c, await read(c, retry)); }
+    catch (error) {
+      if (current(c)) banner('AI status unavailable: ' + error.message + '. HR decisions remain available.');
+    } finally { checking = false; }
+  }
+  const oldRender = fwRenderRevision;
+  fwRenderRevision = function () {
+    const result = oldRender.apply(this, arguments);
+    const c = context();
+    if (c) {
+      banner('Loading saved advisory flags. HR can decide without waiting.');
+      for (const item of FW.revision.items) {
+        const out = document.getElementById('fwai-' + item.id);
+        if (out) out.textContent = 'Loading suggestions for the current saved wording...';
+      }
+      void refresh(false);
+    }
+    return result;
+  };
+  // Keep the existing autosave-aware fwSave wrapper and all fwRPC guards.
+  window.caFrameworkSubmit = async function () {
+    if (FW.busy || !FW.revision || FW.revision.state !== 'Draft') return false;
+    if (fwMinimums(FW.revision).length) { fwButtons(); return false; }
+    if (!confirm('Submit this complete framework to HR / HOHR? AI suggestions will be checked separately and will not block HR decisions.')) return false;
+    return fwMutate('submit', { items: FW.revision.items });
+  };
+  fwApprove = async function (id) {
+    const r = FW.revision;
+    if (FW.busy || !r || r.state !== 'Submitted' || !fwIsReviewer()) return false;
+    if (!(r.items || []).some(i => String(i.id) === String(id))) return false;
+    if (r.review && r.review[id]) return false;
+    // No AI call, AI confirmation or AI mutation here.
+    return fwMutate('approve_item', { item_id: id });
+  };
+  const oldAudit = fwAudit;
+  fwAudit = function (id) {
+    const c = context();
+    if (!c) return oldAudit.apply(this, arguments);
+    if (FW.busy || checking) return Promise.resolve(null);
+    if (!(FW.revision.items || []).some(i => String(i.id) === String(id))) return Promise.resolve(null);
+    if (!confirm('Request a fresh advisory check of this whole framework, including duplicate checks? Existing HR decisions will not change.')) return Promise.resolve(null);
+    return refresh(true);
+  };
+  setInterval(() => {
+    if (!document.hidden && context() && !FW.busy) void refresh(false);
+  }, 5000);
+  if (context()) fwRenderRevision();
+})();
+</script>
 </body>
 </html>
 
