@@ -28520,6 +28520,1693 @@ Error code: ' + reply.error.code;
   if (context()) fwRenderRevision();
 })();
 </script>
+<style id="cms-approval-reference-style-v1">
+/* Scoped to the submitted-framework review screen only. */
+#fwScreen.cms-approval-reference {
+  --apr-navy:#101e61;--apr-gold:#f4b844;--apr-blue:#3264dc;
+  background:#fff!important;border:1px solid #e4ebf8!important;
+  border-radius:18px!important;padding:26px!important;
+  box-shadow:0 12px 38px rgba(29,55,111,.12)!important;
+  color:#172658;position:relative;isolation:isolate;
+}
+#fwScreen.cms-approval-reference > .apr-hero {
+  display:flex;align-items:center;gap:26px;margin:0 0 22px;
+}
+#fwScreen.cms-approval-reference .apr-icon {
+  width:76px;height:76px;flex:0 0 76px;display:grid;place-items:center;
+  border-radius:50%;background:#e6eaff;
+}
+#fwScreen.cms-approval-reference .apr-icon svg {width:48px;height:48px}
+#fwScreen.cms-approval-reference .apr-heading {
+  border-left:3px solid var(--apr-gold);padding-left:28px;min-width:0;
+}
+#fwScreen.cms-approval-reference .apr-heading h2 {
+  color:var(--apr-navy);font-size:26px;line-height:1.22;
+  font-weight:800;letter-spacing:-.5px;margin:0 0 7px;
+}
+#fwScreen.cms-approval-reference .apr-heading p {
+  color:#5d6c91;font-size:18px;line-height:1.5;margin:0;
+}
+#fwScreen.cms-approval-reference #fwChoice {position:relative;margin:0 0 22px}
+#fwScreen.cms-approval-reference #fwRevisionChoice {
+  width:100%;min-height:54px;background:#fff!important;
+  color:#263b74!important;border:2px solid #bfd0f4!important;
+  border-radius:9px!important;padding:12px 44px 12px 52px!important;
+  font:inherit;font-size:17px!important;cursor:pointer;
+}
+#fwScreen.cms-approval-reference #fwRevisionChoice:focus-visible {
+  outline:3px solid #f4b844;outline-offset:3px;
+}
+#fwScreen.cms-approval-reference .apr-select-icon {
+  position:absolute;left:17px;top:50%;transform:translateY(-50%);
+  width:25px;height:25px;color:#2a478d;pointer-events:none;
+}
+#fwScreen.cms-approval-reference .apr-notice {
+  display:flex;align-items:center;gap:18px;position:relative;
+  background:linear-gradient(105deg,#edf3ff,#e8f0ff);
+  border-left:6px solid #4378ee;border-radius:10px;
+  padding:20px;margin:0 0 20px;min-height:108px;
+}
+#fwScreen.cms-approval-reference .apr-info {
+  display:grid;place-items:center;flex:0 0 42px;width:42px;height:42px;
+  border-radius:50%;background:linear-gradient(135deg,#3976ee,#243baa);
+  color:#fff;font:700 27px Georgia,serif;
+}
+#fwScreen.cms-approval-reference .apr-notice-copy {
+  border-left:1px solid #a8b9dc;padding-left:18px;flex:1;min-width:0;
+}
+#fwScreen.cms-approval-reference .apr-notice-copy strong {
+  display:block;color:#18296d;font-size:16px;line-height:1.5;
+}
+#fwScreen.cms-approval-reference .apr-notice-copy p {
+  margin:4px 0 0;color:#5978b2;font-size:16px;line-height:1.5;
+}
+#fwScreen.cms-approval-reference .apr-seal {
+  flex:0 0 120px;width:120px;height:96px;border-radius:55% 55% 15% 35%;
+  display:grid;place-items:center;background:linear-gradient(140deg,#d5ddff,#f6f8ff);
+}
+#fwScreen.cms-approval-reference .apr-seal svg {width:80px;height:80px}
+#fwScreen.cms-approval-reference > .apr-wave {
+  display:block;width:calc(100% + 52px);height:46px;margin:24px -26px -26px;
+  border-radius:0 0 18px 18px;overflow:hidden;pointer-events:none;
+}
+#fwScreen.cms-approval-reference .apr-original-heading {display:none!important}
+@media(max-width:640px) {
+  #fwScreen.cms-approval-reference{padding:18px!important}
+  #fwScreen.cms-approval-reference > .apr-hero{gap:14px;align-items:flex-start}
+  #fwScreen.cms-approval-reference .apr-icon{width:50px;height:50px;flex-basis:50px}
+  #fwScreen.cms-approval-reference .apr-icon svg{width:35px;height:35px}
+  #fwScreen.cms-approval-reference .apr-heading{padding-left:14px}
+  #fwScreen.cms-approval-reference .apr-heading h2{font-size:22px}
+  #fwScreen.cms-approval-reference .apr-heading p{font-size:16px}
+  #fwScreen.cms-approval-reference .apr-notice{padding:16px 12px;gap:12px}
+  #fwScreen.cms-approval-reference .apr-seal{display:none}
+  #fwScreen.cms-approval-reference #fwRevisionChoice{font-size:16px!important}
+  #fwScreen.cms-approval-reference > .apr-wave{width:calc(100% + 36px);margin:20px -18px -18px}
+}
+</style>
+<script id="cms-approval-reference-layout-v1">
+(function(){
+  'use strict';
+  if(window.__cmsApprovalReferenceLayoutV1)return;
+  window.__cmsApprovalReferenceLayoutV1=true;
+  const seal='<svg viewBox="0 0 80 80" fill="none" aria-hidden="true"><rect x="14" y="8" width="48" height="59" rx="5" fill="white" stroke="#172663" stroke-width="4"/><path d="M24 23h28M24 34h23M24 45h14" stroke="#172663" stroke-width="4" stroke-linecap="round"/><path d="m49 61-4 15 10-6 9 6-3-17" fill="#f4b844"/><circle cx="55" cy="55" r="12" fill="#fff" stroke="#f4b844" stroke-width="6"/></svg>';
+  function element(tag,cls,text){const e=document.createElement(tag);e.className=cls;if(text)e.textContent=text;return e;}
+  function decorate(){
+    const screen=document.getElementById('fwScreen');
+    if(!screen)return;
+    const select=screen.querySelector('#fwRevisionChoice');
+    // The existing review selector is the scope boundary, not a guessed role.
+    if(!select){
+      if(screen.classList.contains('cms-approval-reference')){
+        screen.classList.remove('cms-approval-reference');
+        screen.querySelectorAll('[data-apr-owned]').forEach(e=>e.remove());
+        screen.querySelectorAll('.apr-original-heading').forEach(e=>e.classList.remove('apr-original-heading'));
+      }
+      return;
+    }
+    screen.classList.add('cms-approval-reference');
+    if(!select.hasAttribute('aria-label'))select.setAttribute('aria-label','Select submitted competency framework');
+    if(!screen.querySelector('.apr-hero')){
+      const title=Array.from(screen.children).find(e=>e.classList.contains('card-title'));
+      const subtitle=title&&title.nextElementSibling&&title.nextElementSibling.tagName==='P'?title.nextElementSibling:null;
+      const hero=element('header','apr-hero');hero.dataset.aprOwned='';
+      const icon=element('div','apr-icon');icon.innerHTML=seal;icon.setAttribute('aria-hidden','true');
+      const heading=element('div','apr-heading');
+      heading.append(element('h2','',title?title.textContent:'Competency Approvals & Publication'));
+      heading.append(element('p','',subtitle?subtitle.textContent:'Approve each experience, then publish the complete position in one action.'));
+      if(title)title.classList.add('apr-original-heading');
+      if(subtitle)subtitle.classList.add('apr-original-heading');
+      hero.append(icon,heading);screen.prepend(hero);
+    }
+    const choice=screen.querySelector('#fwChoice');
+    if(choice&&!choice.querySelector('.apr-select-icon')){
+      const icon=element('span','apr-select-icon');icon.dataset.aprOwned='';icon.setAttribute('aria-hidden','true');
+      icon.innerHTML='<svg viewBox="0 0 24 24" fill="none" width="25" height="25"><path d="m3 8 9-5 9 5-9 5-9-5Zm0 5 9 5 9-5M3 17l9 5 9-5" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>';
+      choice.append(icon);
+    }
+    if(choice&&!screen.querySelector('.apr-notice')){
+      const notice=element('aside','apr-notice');notice.dataset.aprOwned='';notice.setAttribute('aria-label','Editing and invitation guidance');
+      const info=element('span','apr-info','i');info.setAttribute('aria-hidden','true');
+      const copy=element('div','apr-notice-copy');
+      copy.append(element('strong','','Editing controls follow the current lock, submission and recovery status.'));
+      copy.append(element('p','','For expired unfinished work, request HR renewal from My Invitations.'));
+      const art=element('div','apr-seal');art.setAttribute('aria-hidden','true');art.innerHTML=seal;
+      notice.append(info,copy,art);choice.after(notice);
+    }
+    if(!screen.querySelector('.apr-wave')){
+      const wave=element('div','apr-wave');wave.dataset.aprOwned='';wave.setAttribute('aria-hidden','true');
+      wave.innerHTML='<svg viewBox="0 0 1200 50" preserveAspectRatio="none" width="100%" height="100%"><path d="M0 0C65 49 170 6 310 50H0Z" fill="#111f52"/><path d="M0 29C92 55 160 25 272 50" fill="none" stroke="#deb054" stroke-width="3"/></svg>';
+      screen.append(wave);
+    }
+  }
+  let scheduled=false;
+  const observer=new MutationObserver(()=>{
+    if(scheduled)return;scheduled=true;
+    requestAnimationFrame(()=>{scheduled=false;decorate();});
+  });
+  function start(){observer.observe(document.getElementById('mainContent')||document.body,{childList:true,subtree:true});decorate();}
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start,{once:true});else start();
+})();
+</script>
+<style id="cms-approval-compact-v1">
+/* Append AFTER the reference-style patch. Review page only. */
+#fwScreen.cms-approval-reference {
+  font-family: "Segoe UI", Inter, Roboto, Arial, sans-serif;
+  font-size:14px;line-height:1.5;
+  padding:20px!important;border-radius:12px!important;
+  box-shadow:0 4px 18px rgba(29,55,111,.07)!important;
+}
+#fwScreen.cms-approval-reference > .apr-hero{gap:16px;margin-bottom:16px}
+#fwScreen.cms-approval-reference .apr-icon{width:48px;height:48px;flex-basis:48px}
+#fwScreen.cms-approval-reference .apr-icon svg{width:32px;height:32px}
+#fwScreen.cms-approval-reference .apr-heading{padding-left:18px;border-left-width:2px}
+#fwScreen.cms-approval-reference .apr-heading h2{font-size:20px;line-height:1.3;letter-spacing:-.3px;font-weight:700;margin-bottom:4px}
+#fwScreen.cms-approval-reference .apr-heading p{font-size:14px;line-height:1.5}
+#fwScreen.cms-approval-reference #fwChoice{margin-bottom:16px}
+#fwScreen.cms-approval-reference #fwRevisionChoice{min-height:42px;padding:8px 36px 8px 42px!important;font-size:14px!important;border-width:1px!important;border-radius:7px!important}
+#fwScreen.cms-approval-reference .apr-select-icon{left:13px;width:20px;height:20px}
+#fwScreen.cms-approval-reference .apr-select-icon svg{width:20px;height:20px}
+#fwScreen.cms-approval-reference .apr-notice{min-height:76px;padding:14px;gap:12px;border-left-width:4px;margin-bottom:16px}
+#fwScreen.cms-approval-reference .apr-info{width:30px;height:30px;flex-basis:30px;font-size:21px}
+#fwScreen.cms-approval-reference .apr-notice-copy{padding-left:12px}
+#fwScreen.cms-approval-reference .apr-notice-copy strong,
+#fwScreen.cms-approval-reference .apr-notice-copy p{font-size:14px;line-height:1.5}
+#fwScreen.cms-approval-reference .apr-seal{width:74px;height:62px;flex-basis:74px}
+#fwScreen.cms-approval-reference .apr-seal svg{width:52px;height:52px}
+#fwScreen.cms-approval-reference #fwBody{font-family:inherit;font-size:14px!important}
+#fwScreen.cms-approval-reference #fwBody :is(p,span,label,li,small,input,textarea,select,button){font-family:inherit;font-size:14px!important;line-height:1.5!important}
+#fwScreen.cms-approval-reference #fwBody :is(h3,h4,.competency-name,.card-title){font-family:inherit;font-size:16px!important;line-height:1.4!important;font-weight:700}
+#fwScreen.cms-approval-reference #fwBody .competency-block{padding:14px!important;margin-bottom:12px!important;border-radius:9px!important}
+#fwScreen.cms-approval-reference #fwBody .exp-item{padding:12px!important;margin:8px 0!important;border-radius:7px!important}
+/* Replace the existing #fwBody button rule in cms-approval-compact-v1. */
+#fwScreen.cms-approval-reference #fwBody button {
+  font-size:14px!important;
+  font-weight:600!important;
+  line-height:1.2!important;
+  padding:5px 10px!important;
+  min-height:30px;
+  height:auto!important;
+  min-width:0!important;
+  width:auto!important;
+  flex:0 0 auto!important;
+  border-radius:6px!important;
+  box-shadow:none!important;
+  letter-spacing:normal!important;
+  text-transform:none!important;
+  white-space:normal;
+}
+@media(max-width:640px){
+ #fwScreen.cms-approval-reference{padding:14px!important}
+ #fwScreen.cms-approval-reference .apr-heading h2{font-size:18px}
+ #fwScreen.cms-approval-reference .apr-heading{padding-left:12px}
+ #fwScreen.cms-approval-reference > .apr-hero{gap:12px}
+ #fwScreen.cms-approval-reference .apr-seal{display:none}
+ #fwScreen.cms-approval-reference #fwBody :is(input,textarea,select),
+ #fwScreen.cms-approval-reference #fwRevisionChoice{font-size:16px!important}
+ #fwScreen.cms-approval-reference #fwBody button{min-height:44px}
+ #fwScreen.cms-approval-reference > .apr-wave{width:calc(100% + 28px);margin:16px -14px -14px}
+}
+</style>
+<script id="cms-development-interface-v1">
+(function () {
+ 'use strict';
+ if (window.CMS_VIEW_CONFIG || window.__cmsDevelopmentUIV1) return;
+ if (typeof loadEmployeeDevPlans !== 'function' || typeof _supabase === 'undefined') {
+  console.warn('Development interface must be installed after the existing CMS scripts.'); return;
+ }
+ window.__cmsDevelopmentUIV1 = true;
+ let active = null;
+ const allowedMime = {
+  pdf:'application/pdf',jpg:'image/jpeg',jpeg:'image/jpeg',png:'image/png',txt:'text/plain',
+  docx:'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  xlsx:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  pptx:'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+  mp4:'video/mp4',mp3:'audio/mpeg'
+ };
+ const css = `
+ #cmsDevelopmentV1{--dv-navy:#18234c;--dv-blue:#364dcc;--dv-teal:#177c6d;color:var(--dv-navy);font:14px/1.55 Arial,sans-serif;margin:0 0 20px;background:#f4f6fb;padding:20px;border-radius:14px}
+ #cmsDevelopmentV1 *{box-sizing:border-box}
+ #cmsDevelopmentV1 h2{font-size:25px;margin:0 0 4px;color:var(--dv-navy)}
+ #cmsDevelopmentV1 h3{font-size:18px;margin:0 0 10px;color:var(--dv-navy)}
+ #cmsDevelopmentV1 h4{font-size:16px;margin:0 0 8px}
+ #cmsDevelopmentV1 p{margin:6px 0 12px;overflow-wrap:anywhere}
+ #cmsDevelopmentV1 .dv-muted{color:#596579}
+ #cmsDevelopmentV1 .dv-row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+ #cmsDevelopmentV1 .dv-toolbar{margin:16px 0}
+ #cmsDevelopmentV1 .dv-grid{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(300px,1fr);gap:18px;align-items:start}
+ #cmsDevelopmentV1 .dv-panel{background:white;border:1px solid #dce3ef;border-radius:10px;padding:18px;min-width:0}
+ #cmsDevelopmentV1 .dv-list{display:flex;gap:8px;overflow:auto;padding:4px 0 12px;margin-bottom:12px}
+ #cmsDevelopmentV1 .dv-choice{flex:0 0 240px;text-align:left;background:#fff;border:1px solid #d9e1ee;padding:10px 12px;white-space:normal}
+ #cmsDevelopmentV1 .dv-choice[aria-pressed=true]{border:2px solid var(--dv-blue);background:#eef2ff}
+ #cmsDevelopmentV1 .dv-choice small{display:block;color:#596579;font-size:13px;margin-top:4px}
+ #cmsDevelopmentV1 button{font:600 14px/1.3 Arial,sans-serif;min-height:34px;min-width:0;width:auto;padding:8px 12px;border-radius:7px;border:1px solid #cbd5e1;background:#fff;color:var(--dv-navy);box-shadow:none;cursor:pointer;letter-spacing:normal;text-transform:none}
+ #cmsDevelopmentV1 button.dv-primary{background:var(--dv-blue);border-color:var(--dv-blue);color:#fff}
+ #cmsDevelopmentV1 button.dv-verify{background:var(--dv-teal);border-color:var(--dv-teal);color:#fff}
+ #cmsDevelopmentV1 button:disabled{opacity:.55;cursor:not-allowed}
+ #cmsDevelopmentV1 input,#cmsDevelopmentV1 textarea,#cmsDevelopmentV1 select{font:14px/1.5 Arial,sans-serif;color:#18234c;border:1px solid #cbd5e1;border-radius:7px;padding:9px;width:100%;background:#fff;margin:4px 0 10px}
+ #cmsDevelopmentV1 input[type=file]{font-size:13px}
+ #cmsDevelopmentV1 textarea{min-height:88px;resize:vertical}
+ #cmsDevelopmentV1 label{display:block;font-weight:600;margin-top:10px}
+ #cmsDevelopmentV1 .dv-search{max-width:420px;margin:0}
+ #cmsDevelopmentV1 .dv-pill{display:inline-block;border-radius:5px;background:#eef2ff;color:#364dcc;padding:3px 8px;font-size:13px;font-weight:600}
+ #cmsDevelopmentV1 .dv-ok{background:#def6ec;color:#146b50}
+ #cmsDevelopmentV1 .dv-warn{background:#fff4de;color:#79530c}
+ #cmsDevelopmentV1 .dv-notice{padding:12px;border-radius:8px;background:#eef2ff;border:1px solid #dce4fa;margin:10px 0}
+ #cmsDevelopmentV1 .dv-error{background:#fff0ee;color:#9b2520;border-color:#e8b3ae}
+ #cmsDevelopmentV1 .dv-meta{background:#f4f6fb;padding:12px;border-radius:8px;margin:12px 0}
+ #cmsDevelopmentV1 .dv-track{height:8px;background:#e5e9f0;border-radius:8px;overflow:hidden;margin:6px 0 14px}
+ #cmsDevelopmentV1 .dv-fill{height:100%;background:var(--dv-teal);border-radius:8px}
+ #cmsDevelopmentV1 .dv-mile{margin:10px 0;border:1px solid #dce3ef;border-left:3px solid #c5cde3;border-radius:8px;padding:12px}
+ #cmsDevelopmentV1 .dv-mile.selected{border-color:var(--dv-teal);background:#f8fcfc}
+ #cmsDevelopmentV1 .dv-mile>button{width:100%;text-align:left;border:0;background:transparent;padding:2px 0;display:flex;justify-content:space-between;gap:10px;align-items:center}
+ #cmsDevelopmentV1 .dv-file{border:1px solid #dce3ef;border-radius:8px;padding:10px;margin:8px 0;overflow-wrap:anywhere}
+ #cmsDevelopmentV1 .dv-drop{border:2px dashed #bac9df;padding:16px;border-radius:10px;background:#f8faff;margin:12px 0}
+ #cmsDevelopmentV1 .dv-drop.drag{border-color:var(--dv-blue);background:#eef2ff}
+ #cmsDevelopmentV1 .dv-history{white-space:pre-wrap;font-size:14px;max-height:260px;overflow:auto;background:#f5f7fb;padding:12px;border-radius:8px}
+ #cmsDevelopmentV1 details>summary{cursor:pointer;color:#364dcc;font-weight:600;padding:8px 0}
+ #cmsDevelopmentV1 fieldset{border:0;padding:0;margin:0;min-width:0}
+ #cmsDevelopmentV1 :focus-visible{outline:3px solid #8097f2;outline-offset:2px}
+ .cms-development-legacy-v1{margin:16px 0;border:1px solid #dce3ef;border-radius:10px;padding:14px;background:#fff}
+ .cms-development-legacy-v1>summary{cursor:pointer;font-size:16px;font-weight:600;color:#18234c}
+ @media(max-width:900px){#cmsDevelopmentV1{padding:12px}#cmsDevelopmentV1 .dv-grid{grid-template-columns:1fr}#cmsDevelopmentV1 h2{font-size:22px}}
+ `;
+ const style = document.createElement('style'); style.id='cms-development-interface-style-v1';style.textContent=css;document.head.append(style);
+ function el(tag, text, cls, parent) {
+  const n=document.createElement(tag); if(text!=null)n.textContent=String(text);if(cls)n.className=cls;if(parent)parent.append(n);return n;
+ }
+ function key() {return JSON.stringify([APP.user?.email,APP.currentRole,APP.currentPage,typeof CN==='undefined'?null:CN.epoch]);}
+ function current(s) {return active===s&&s.host.isConnected&&s.key===key()&&!window.CMS_VIEW_CONFIG;}
+ function notice(s,text,error=false) {if(!current(s))return;s.message.textContent=text;s.message.className='dv-notice'+(error?' dv-error':'');}
+ function button(parent,text,handler,cls) {
+  const b=el('button',text,cls,parent);b.type='button';
+  b.addEventListener('click',()=>Promise.resolve().then(handler).catch(e=>{
+   if(active)notice(active,e.message||String(e),true);
+  }));return b;
+ }
+ function field(parent,label,id,value,type='textarea') {
+  const l=el('label',label,null,parent);l.htmlFor=id;
+  const x=el(type==='textarea'?'textarea':'input',null,null,parent);
+  x.id=id;x.name=id;if(type!=='textarea')x.type=type;x.value=value||'';return x;
+ }
+ function stamp(s) {return 'dv1-'+s.item.action.id+'-v'+s.item.version;}
+ function preserve() {try {if(typeof suSaveAll==='function')suSaveAll();}catch(e){console.warn('Development draft backup failed.');}}
+ function discard(s) {
+  if(s.busy){notice(s,'Wait for the current request to finish.');return false;}
+  if(s.dirty&&!window.confirm('Leave these unsaved development edits? Save a backup or save your progress first.'))return false;
+  preserve();return true;
+ }
+ async function rpc(action,data) {
+  if(window.CMS_VIEW_CONFIG)throw Error('This interface is not available in read-only View as user.');
+  const r=await _supabase.rpc('cms_development_v1',{p_action:action,p_data:data});
+  if(r.error)throw Error(r.error.message||'Development request failed.');
+  if(r.data==null)throw Error('No development response returned.');return r.data;
+ }
+ function lock(s,on) {s.busy=on;if(current(s)){s.host.inert=on;s.host.setAttribute('aria-busy',String(on));}}
+ async function work(s,fn) {
+  if(!current(s)||s.busy)return;
+  lock(s,true);
+  try {await fn();} catch(e) {notice(s,(e.message||String(e))+' Your form is still here. If the outcome is uncertain, reload before retrying.',true);}
+  finally {lock(s,false);}
+ }
+ function edits(s) {
+  const prefix=stamp(s);
+  return Array.from(s.host.querySelectorAll('textarea,input')).filter(x=>x.type!=='file'&&x.type!=='search'&&x.id.startsWith(prefix)).map(x=>({suffix:x.id.slice(prefix.length),value:x.value}));
+ }
+ function restoreEdits(s,values) {
+  let changed=false;
+  for(const v of values||[]){
+   const x=document.getElementById(stamp(s)+v.suffix);
+   if(x&&x.value!==v.value){x.value=v.value;changed=true;}
+  }
+  if(changed)s.dirty=true;
+ }
+ function adopt(s,item,keepEdits=false) {
+  if(!current(s))return;
+  if(!item?.action?.id||!Array.isArray(item.milestones))throw Error('Unexpected development response.');
+  const values=keepEdits?edits(s):null;
+  const i=s.items.findIndex(x=>x.action.id===item.action.id);if(i>=0)s.items[i]=item;
+  s.item=item;if(!item.milestones.some(m=>m.id===s.mid))s.mid=item.milestones[0]?.id||null;
+  s.dirty=false;render(s);if(values)restoreEdits(s,values);
+ }
+ async function mutate(s,action,data={}) {
+  if(!current(s))throw Error('The page changed. Reopen this action.');
+  return rpc(action,{action_id:s.item.action.id,version:s.item.version,...data});
+ }
+ function editable(s) {
+  return s.scope==='self'&&s.item.is_employee&&s.item.phase==='Active'&&
+   String(s.item.action.hr_approved||'').trim().toLowerCase()==='approved'&&
+   String(s.item.action.status||'').trim().toLowerCase()==='active'&&!s.item.source_changed;
+ }
+ function reviewable(s) {return s.scope==='team'&&s.item.is_manager&&!s.item.source_changed;}
+ async function list(s,page=0) {
+  const r=await rpc('list',{scope:s.scope,page});if(!current(s))return;
+  if(!Array.isArray(r.items))throw Error('Unexpected development list response.');
+  s.items=r.items;s.page=r.page;s.more=r.has_more;s.item=r.items[0]||null;s.mid=null;s.dirty=false;render(s);
+  notice(s,r.items.length?'Choose an action and its deliverable.':'No actions are available in this scope.');
+ }
+ function render(s) {
+  if(!current(s))return;
+  s.body.replaceChildren();
+  const tools=el('div',null,'dv-row dv-toolbar',s.body);
+  const search=el('input',null,'dv-search',tools);search.type='search';search.placeholder='Filter actions on this page';search.setAttribute('aria-label','Filter actions on this page');
+  button(tools,'Reload',()=>{if(discard(s))return work(s,()=>list(s,s.page));});
+  if(s.page>0)button(tools,'Previous 25',()=>{if(discard(s))return work(s,()=>list(s,s.page-1));});
+  if(s.more)button(tools,'Next 25',()=>{if(discard(s))return work(s,()=>list(s,s.page+1));});
+  el('span','Page '+(s.page+1),'dv-muted',tools);
+  const choices=el('div',null,'dv-list',s.body);
+  s.items.forEach(it=>{
+   const p=it.action;
+   const b=button(choices,(s.scope==='self'?'':(p.employee_name||'Employee')+' Â· ')+(p.comp_name||'Competency'),async()=>{
+    if(!discard(s))return;await work(s,async()=>adopt(s,await rpc('get',{action_id:p.id})));
+   },'dv-choice');
+   b.setAttribute('aria-pressed',String(s.item?.action.id===p.id));
+   el('small',p.action||p.task||'Development action',null,b);
+   el('small',it.progress==null?'Deliverables not published':it.progress+'% verified',null,b);
+   b.dataset.search=[p.employee_name,p.comp_name,p.task,p.action].join(' ').toLowerCase();
+  });
+  search.addEventListener('input',()=>{for(const b of choices.children)b.hidden=!b.dataset.search.includes(search.value.toLowerCase());});
+  if(!s.item){el('p','No development actions to show.','dv-muted',s.body);return;}
+  const it=s.item,p=it.action;
+  const grid=el('div',null,'dv-grid',s.body),left=el('section',null,'dv-panel',grid),right=el('aside',null,'dv-panel',grid);
+  el('span',p.comp_name||'Competency','dv-pill',left);
+  el('h3',p.action||'Development action',null,left);
+  if(s.scope!=='self')el('p',p.employee_name||'Employee',null,left);
+  const full=el('details',null,null,left);el('summary','Task and success measure',null,full);
+  el('p',p.task||'No task supplied.',null,full);el('p','Measure: '+(p.measure||'Not supplied'),null,full);
+  el('p','Responsible: '+(p.responsible_party||'Not supplied')+' Â· Due: '+(p.end_date||'Not supplied'),'dv-meta',left);
+  el('span','Plan: '+(p.status||'Pending')+' Â· HR: '+(p.hr_approved||'Pending'),'dv-pill',left);
+  if(p.progress_notes){const old=el('details',null,null,left);el('summary','Earlier action updates',null,old);el('p',p.progress_notes,'dv-history',old);}
+  if(it.source_changed)el('p','The underlying action changed. Ask HR to resolve it before submitting or reviewing.','dv-notice dv-warn',left);
+  const pct=it.progress;
+  el('p',pct==null?'Progress: awaiting published deliverables':pct+'% verified Â· '+it.verified+' of '+it.total+' deliverables',null,left);
+  if(pct!=null){const track=el('div',null,'dv-track',left);track.setAttribute('role','progressbar');track.setAttribute('aria-label','Manager-verified development progress');track.setAttribute('aria-valuenow',String(pct));track.setAttribute('aria-valuemin','0');track.setAttribute('aria-valuemax','100');el('div',null,'dv-fill',track).style.width=Math.max(0,Math.min(100,Number(pct)||0))+'%';}
+  if(reviewable(s)&&it.phase!=='Active'){editor(s,left);}
+  else if(!it.milestones.length){el('p','Your manager must define and publish measurable deliverables before evidence can be submitted.','dv-notice',left);}
+  else {
+   if(it.phase!=='Active')el('p','These deliverables are a manager draft. Submission opens after publication.','dv-notice',left);
+   if(!it.milestones.some(m=>m.id===s.mid))s.mid=it.milestones[0].id;
+   for(const m of it.milestones){
+    const box=el('section',null,'dv-mile'+(m.id===s.mid?' selected':''),left);
+    const b=button(box,m.ordinal+'. '+m.title,()=>{if(!discard(s))return;s.mid=m.id;s.dirty=false;render(s);});
+    b.setAttribute('aria-expanded',String(m.id===s.mid));el('span',m.state,'dv-pill'+(m.state==='Verified'?' dv-ok':m.state==='Returned'?' dv-warn':''),b);
+    if(m.id!==s.mid)continue;
+    el('p','Success measure: '+m.success_measure,null,box);el('p','Due: '+m.due_date,'dv-muted',box);
+    if(m.manager_comment)el('p','Manager feedback: '+m.manager_comment,'dv-notice',box);
+    if(editable(s)&&['Not started','In progress','Returned'].includes(m.state)){
+     const note=field(box,'Progress update',stamp(s)+'-'+m.id+'-note',m.employee_note);note.maxLength=10000;
+     const row=el('div',null,'dv-row',box);
+     button(row,'Save progress',()=>work(s,async()=>{preserve();adopt(s,await mutate(s,'save_note',{milestone_id:m.id,note:note.value}));notice(s,'Progress note saved. This does not increase the verified percentage.');}));
+     button(row,'Submit for manager review',()=>{
+      if(!note.value.trim())throw Error('Write your progress update first.');
+      if(!window.confirm('Submit this deliverable to your manager? The note and evidence will be locked until returned.'))return;
+      return work(s,async()=>{preserve();adopt(s,await mutate(s,'submit',{milestone_id:m.id,note:note.value}));notice(s,'Submitted for manager review. No email notification is sent by this new workflow.');});
+     },'dv-primary');
+    }else el('p',m.employee_note||'No employee update yet.','dv-history',box);
+    if(reviewable(s)&&m.state==='Submitted'){
+     const comment=field(box,'Review comment (required when returning)',stamp(s)+'-'+m.id+'-review','');comment.maxLength=5000;
+     const row=el('div',null,'dv-row',box);
+     for(const decision of ['Verified','Returned'])button(row,decision==='Verified'?'Verify deliverable':'Return with feedback',()=>{
+      if(decision==='Returned'&&!comment.value.trim())throw Error('Add a comment explaining what needs to change.');
+      if(!window.confirm(decision==='Verified'?'Confirm that this deliverable meets its agreed success measure? This will increase verified progress.':'Return this deliverable so the employee can revise it?'))return;
+      return work(s,async()=>{preserve();adopt(s,await mutate(s,'review',{milestone_id:m.id,decision,comment:comment.value}));notice(s,decision==='Verified'?'Deliverable verified. Progress recalculated.':'Returned with feedback.');});
+     },decision==='Verified'?'dv-verify':'');
+    }
+   }
+  }
+  evidence(s,right);
+  const hist=el('details',null,null,left);el('summary','Review and submission history',null,hist);
+  let historyPage=0;const log=el('div',null,null,hist);
+  button(hist,'Load next 50 history entries',()=>work(s,async()=>{
+   const entries=await rpc('history',{action_id:it.action.id,page:historyPage});if(!current(s))return;
+   if(!Array.isArray(entries))throw Error('Unexpected history response.');
+   if(!entries.length)el('p','No more history.',null,log);
+   for(const ev of entries){
+    const detail=el('details',null,'dv-file',log);el('summary',ev.event+' Â· '+new Date(ev.recorded_at).toLocaleString(),null,detail);
+    const ms=ev.snapshot?.milestone;
+    if(ms){el('p',ms.title+' Â· '+ms.state,null,detail);el('p',ms.employee_note||'No note','dv-history',detail);if(ms.manager_comment)el('p','Manager: '+ms.manager_comment,null,detail);}
+    const defs=ev.snapshot?.definition;if(Array.isArray(defs))for(const d of defs)el('p',d.ordinal+'. '+d.title+' Â· '+d.success_measure,null,detail);
+    if(ev.snapshot?.evidence?.length)el('p','Evidence captured: '+ev.snapshot.evidence.map(e=>e.name).join(', '),null,detail);
+   }historyPage++;
+  }));
+  el('p','Development progress is separate from competency scores. Existing monthly reports remain below.','dv-muted',s.body);
+ }
+ function editor(s,parent){
+  el('h4','Define measurable deliverables',null,parent);
+  el('p','Each deliverable has equal weight. Publish only after agreeing the list: it cannot be edited after publication.','dv-notice',parent);
+  const rows=el('div',null,null,parent);let serial=0;
+  function add(data={}){
+   const idx=serial++,box=el('div',null,'dv-mile',rows),base=stamp(s)+'-definition-'+idx;
+   const title=field(box,'Deliverable',base+'-title',data.title,'text');title.maxLength=300;
+   const measure=field(box,'What demonstrates completion?',base+'-measure',data.success_measure);measure.maxLength=2000;
+   const due=field(box,'Due date',base+'-due',data.due_date,'date');
+   box._values=()=>({title:title.value,success_measure:measure.value,due_date:due.value});
+   button(box,'Remove draft row',()=>{if(window.confirm('Remove this row from the unsaved draft?')){preserve();box.remove();s.dirty=true;}});
+  }
+  if(s.item.milestones.length)s.item.milestones.forEach(add);else add();
+  button(parent,'Add deliverable',()=>{if(rows.children.length>=20)throw Error('Maximum 20 deliverables per action.');add();s.dirty=true;});
+  const row=el('div',null,'dv-row dv-toolbar',parent);
+  button(row,'Save deliverable draft',()=>{
+   const milestones=Array.from(rows.children).map(x=>x._values());
+   if(!milestones.length||milestones.some(x=>!x.title.trim()||!x.success_measure.trim()||!x.due_date))throw Error('Each deliverable needs a title, success measure and due date.');
+   return work(s,async()=>{preserve();adopt(s,await mutate(s,'configure',{milestones}));notice(s,'Draft saved. Publish it when the deliverables have been agreed.');});
+  },'dv-primary');
+  if(s.item.phase==='Draft')button(row,'Publish saved deliverables',()=>{
+   if(s.dirty)throw Error('Save the deliverable draft before publishing.');
+   if(!window.confirm('Publish this agreed list? Its deliverables and denominator will be locked. Future changes require a controlled amendment.'))return;
+   return work(s,async()=>{adopt(s,await mutate(s,'publish'));notice(s,'Deliverables published. The employee can now submit updates and evidence.');});
+  });
+ }
+ function safeURL(raw){try{const u=new URL(raw);return u.protocol==='https:'&&!u.username&&!u.password?u.href:null;}catch(e){return null;}}
+ function evidence(s,parent) {
+  el('h3','Evidence & attachments',null,parent);
+  const m=s.item.milestones.find(x=>x.id===s.mid);
+  if(!m){el('p','Select a published deliverable to attach evidence.','dv-muted',parent);return;}
+  el('p','For: '+m.title,'dv-muted',parent);
+  const edit=editable(s)&&['Not started','In progress','Returned'].includes(m.state);
+  if(edit){
+   const drop=el('div',null,'dv-drop',parent);el('strong','Choose or drop a supporting file',null,drop);
+   el('p','PDF, JPG, PNG, TXT, DOCX, XLSX, PPTX, MP4 or MP3. Up to 20 MB per file; 20 items per deliverable.','dv-muted',drop);
+   const f=field(drop,'Select file',stamp(s)+'-'+m.id+'-file','','file');f.accept='.pdf,.jpg,.jpeg,.png,.txt,.docx,.xlsx,.pptx,.mp4,.mp3';
+   const evidenceNote=field(drop,'Evidence note',stamp(s)+'-'+m.id+'-evidence-note','');evidenceNote.maxLength=2000;
+   button(drop,'Upload file',()=>upload(s,m,f.files?.[0],evidenceNote.value),'dv-primary');
+   drop.addEventListener('dragover',e=>{e.preventDefault();drop.classList.add('drag');});
+   drop.addEventListener('dragleave',()=>drop.classList.remove('drag'));
+   drop.addEventListener('drop',e=>{
+    e.preventDefault();drop.classList.remove('drag');
+    if(e.dataTransfer.files.length!==1){notice(s,'Upload one file at a time.',true);return;}
+    const file=e.dataTransfer.files[0];
+    if(window.confirm('Upload '+file.name+' to this deliverable?'))upload(s,m,file,evidenceNote.value);
+   });
+   const link=el('details',null,null,parent);el('summary','Add a supporting link',null,link);
+   const name=field(link,'Link title',stamp(s)+'-'+m.id+'-link-title','','text');name.maxLength=200;
+   const url=field(link,'HTTPS address',stamp(s)+'-'+m.id+'-link-url','','url');url.maxLength=2048;
+   const note=field(link,'Link note',stamp(s)+'-'+m.id+'-link-note','');note.maxLength=2000;
+   button(link,'Save link',()=>work(s,async()=>{
+    const href=safeURL(url.value);if(!href)throw Error('Use an HTTPS link without a username or password.');
+    preserve();adopt(s,await mutate(s,'add_link',{milestone_id:m.id,name:name.value,note:note.value,url:href}),true);notice(s,'Link saved. Its external sharing permissions are unchanged. Progress-note edits remain unsaved until you save them.');
+   }));
+  }
+  el('h4','Attached evidence',null,parent);
+  if(!m.evidence?.length)el('p','No evidence attached. An upload alone never increases progress.','dv-muted',parent);
+  for(const e of m.evidence||[]){
+   const box=el('div',null,'dv-file',parent);el('strong',e.name,null,box);
+   if(e.note)el('p',e.note,null,box);
+   if(!e.ready){
+    el('p','Pending upload: complete it or cancel the empty reservation before submitting.','dv-warn',box);
+    if(edit){
+     button(box,'Complete uploaded file',()=>work(s,async()=>{adopt(s,await mutate(s,'complete_file',{milestone_id:m.id,evidence_id:e.id}),true);notice(s,'Evidence recorded.');}));
+     button(box,'Cancel empty reservation',()=>{
+      if(!window.confirm('Cancel this pending reservation? It can only be canceled if no file has been uploaded.'))return;
+      return work(s,async()=>{adopt(s,await mutate(s,'cancel_upload',{milestone_id:m.id,evidence_id:e.id}),true);notice(s,'Empty reservation canceled.');});
+     });
+    }continue;
+   }
+   if(e.kind==='link'){
+    const url=safeURL(e.url);
+    if(url){const a=el('a','Open external link',null,box);a.href=url;a.target='_blank';a.rel='noopener noreferrer';a.referrerPolicy='no-referrer';}
+   }else{
+    el('p',Math.ceil(Number(e.size||0)/1024)+' KB','dv-muted',box);
+    button(box,'Download',()=>work(s,async()=>{
+     const r=await _supabase.storage.from('cms-development-private-v1').download(e.object_path);
+     if(r.error)throw Error(r.error.message);if(!current(s))return;
+     const url=URL.createObjectURL(r.data),a=el('a');a.href=url;a.download=String(e.name).replace(/[\\/]/g,'_');document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),60000);
+     notice(s,'Download requested. Only open files from sources you trust.');
+    }));
+   }
+  }
+  el('p','New files use private storage. Your authorized manager and HR can review them. External links follow their host permissions; old monthly-report attachments are not migrated.','dv-notice',parent);
+ }
+ async function upload(s,m,file,note){
+  return work(s,async()=>{
+   if(!file)throw Error('Choose a file first.');
+   const ext=file.name.split('.').pop().toLowerCase(),mime=allowedMime[ext];
+   if(!mime||file.size<1||file.size>20971520)throw Error('Use a supported file type, up to 20 MB.');
+   if(file.name.length>200)throw Error('Shorten the filename to 200 characters or fewer.');
+   preserve();
+   const values=edits(s);
+   // Store a visible, resumable reservation before uploading. A network failure
+   // never creates a fake successful evidence entry or resubmits the deliverable.
+   const response=await mutate(s,'reserve_file',{milestone_id:m.id,name:file.name,note,mime_type:mime,size:file.size});
+   if(!current(s))return;
+   const reservation=response.upload;
+   if(!reservation?.id||!reservation.path)throw Error('Upload reservation missing. Reload before retrying.');
+   s.item=response;const idx=s.items.findIndex(x=>x.action.id===response.action.id);if(idx>=0)s.items[idx]=response;
+   try{
+    notice(s,'Uploading '+file.name+'...');
+    const result=await _supabase.storage.from('cms-development-private-v1').upload(reservation.path,file,{contentType:mime,upsert:false});
+    if(result.error)throw Error(result.error.message);
+    if(!current(s))return;
+    adopt(s,await mutate(s,'complete_file',{milestone_id:m.id,evidence_id:reservation.id}));
+    restoreEdits(s,values);
+    notice(s,'File uploaded and recorded. Progress changes only when your manager verifies the deliverable.');
+   }catch(e){
+    if(current(s)){render(s);restoreEdits(s,values);notice(s,'Upload not confirmed: '+(e.message||e)+'. Use Complete uploaded file if the upload succeeded, or Cancel empty reservation if no file was stored.',true);}
+   }
+  });
+ }
+ async function mount(scope,original,args){
+  const before=key();
+  // Preserve legacy rendering, monthly-report forms, their field IDs and handlers.
+  await original.apply(this,args);
+  if(before!==key()||window.CMS_VIEW_CONFIG)return;
+  const main=document.getElementById('mainContent');if(!main)return;
+  document.getElementById('cmsDevelopmentV1')?.remove();
+  const host=el('section');host.id='cmsDevelopmentV1';main.prepend(host);
+  const s={host,key:before,scope,items:[],item:null,mid:null,page:0,more:false,dirty:false,busy:false};
+  active=s;
+  el('h2',scope==='self'?'My Development Plan':scope==='team'?'Team Development Reviews':'Development Oversight',null,host);
+  el('p',scope==='self'?'Track agreed deliverables, share progress and attach evidence.':scope==='team'?'Define measurable deliverables and verify submitted results.':'Inspect evidence, verified progress and review history.','dv-muted',host);
+  s.message=el('p','Loading verified development progress...','dv-notice',host);s.message.setAttribute('role','status');s.message.setAttribute('aria-live','polite');
+  s.body=el('div',null,null,host);
+  host.addEventListener('input',e=>{if(e.target.matches('textarea,input:not([type=search]):not([type=file])'))s.dirty=true;});
+  // The legacy area stays available for the existing monthly process and plan creation.
+  // Nothing is deleted; this also provides a usable fallback if the new API fails.
+  const old=Array.from(main.children).filter(x=>x!==host&&!['wcPanel','suDraftToolbar'].includes(x.id));
+  const legacy=el('details',null,'cms-development-legacy-v1',main);
+  el('summary',scope==='self'?'Monthly reports & earlier action updates':scope==='team'?'Create plans & existing monthly report reviews':'Existing plan approvals & monthly reports',null,legacy);
+  el('p','Existing workflow retained. Its older attachment storage and notification behavior are unchanged.','dv-muted',legacy);
+  for(const n of old)legacy.append(n);
+  await work(s,()=>list(s,0));
+  if(!s.items.length&&s.message.classList.contains('dv-error'))legacy.open=true;
+ }
+ const employee=loadEmployeeDevPlans,manager=loadManagerDevPlans,hr=loadHRDevPlans,hohr=loadHOHRDevPlans;
+ loadEmployeeDevPlans=function(...a){return mount.call(this,'self',employee,a);};
+ loadManagerDevPlans=function(...a){return mount.call(this,'team',manager,a);};
+ loadHRDevPlans=function(...a){return mount.call(this,'hr',hr,a);};
+ loadHOHRDevPlans=function(...a){return mount.call(this,'hr',hohr,a);};
+ // Add record/version context to the existing local and server draft mechanisms.
+ if(typeof suContext==='function'){
+  const original=suContext;
+  suContext=function(){const c=original();if(active&&current(active)&&active.item){
+   c.developmentAction=active.item.action.id;c.developmentVersion=active.item.version;c.developmentMilestone=active.mid||'';
+  }return c;};
+ }
+ window.addEventListener('beforeunload',e=>{if(active&&current(active)&&(active.dirty||active.busy)){preserve();e.preventDefault();e.returnValue='';}});
+})();
+</script><script id="cms-development-viewer-addon-v1">
+(function(){
+ 'use strict';
+ if(window.CMS_VIEW_CONFIG||window.__cmsDevelopmentViewerAddonV1)return;
+ try{
+  if(typeof window.CMS_VIEW_TEMPLATE!=='string')throw Error('Viewer template is missing.');
+  const decode=s=>new TextDecoder().decode(Uint8Array.from(atob(s),c=>c.charCodeAt(0)));
+  const original=decode(window.CMS_VIEW_TEMPLATE);
+  if(original.includes('cms-development-readonly-ui-v1'))throw Error('Development viewer patch is already present.');
+  let hash=2166136261;
+  for(let i=0;i<original.length;i++)hash=Math.imul(hash^original.charCodeAt(i),16777619)>>>0;
+  if(hash!==81715361||original.length!==3751636)throw Error('Viewer template changed. Stop and request a matching patch.');
+  const fragment=decode([
+  "PHNjcmlwdCBpZD0iY21zLWRldmVsb3BtZW50LXJlYWRvbmx5LXVpLXYxIj4oZnVuY3Rpb24oKXsKICd1c2Ugc3RyaWN0JzsKIGlmKCF3aW5kb3cuQ01TX1ZJRVdfQ09ORklHfHx3aW5k",
+  "b3cuQ01TX1ZJRVdfQ09ORklHLnJvbGUhPT0nZW1wbG95ZWUnfHx3aW5kb3cuX19jbXNEZXZlbG9wbWVudFJlYWRWaWV3VjEpcmV0dXJuOwogaWYodHlwZW9mIGxvYWRFbXBsb3llZURl",
+  "dlBsYW5zIT09J2Z1bmN0aW9uJ3x8dHlwZW9mIF9zdXBhYmFzZT09PSd1bmRlZmluZWQnKXJldHVybjsKIHdpbmRvdy5fX2Ntc0RldmVsb3BtZW50UmVhZFZpZXdWMT10cnVlOwogbGV0",
+  "IGFjdGl2ZT1udWxsOwogY29uc3Qgc3R5bGU9ZG9jdW1lbnQuY3JlYXRlRWxlbWVudCgnc3R5bGUnKTtzdHlsZS50ZXh0Q29udGVudD0iXG4gI2Ntc0RldmVsb3BtZW50VjF7LS1kdi1u",
+  "YXZ5OiMxODIzNGM7LS1kdi1ibHVlOiMzNjRkY2M7LS1kdi10ZWFsOiMxNzdjNmQ7Y29sb3I6dmFyKC0tZHYtbmF2eSk7Zm9udDoxNHB4LzEuNTUgQXJpYWwsc2Fucy1zZXJpZjttYXJn",
+  "aW46MCAwIDIwcHg7YmFja2dyb3VuZDojZjRmNmZiO3BhZGRpbmc6MjBweDtib3JkZXItcmFkaXVzOjE0cHh9XG4gI2Ntc0RldmVsb3BtZW50VjEgKntib3gtc2l6aW5nOmJvcmRlci1i",
+  "b3h9XG4gI2Ntc0RldmVsb3BtZW50VjEgaDJ7Zm9udC1zaXplOjI1cHg7bWFyZ2luOjAgMCA0cHg7Y29sb3I6dmFyKC0tZHYtbmF2eSl9XG4gI2Ntc0RldmVsb3BtZW50VjEgaDN7Zm9u",
+  "dC1zaXplOjE4cHg7bWFyZ2luOjAgMCAxMHB4O2NvbG9yOnZhcigtLWR2LW5hdnkpfVxuICNjbXNEZXZlbG9wbWVudFYxIGg0e2ZvbnQtc2l6ZToxNnB4O21hcmdpbjowIDAgOHB4fVxu",
+  "ICNjbXNEZXZlbG9wbWVudFYxIHB7bWFyZ2luOjZweCAwIDEycHg7b3ZlcmZsb3ctd3JhcDphbnl3aGVyZX1cbiAjY21zRGV2ZWxvcG1lbnRWMSAuZHYtbXV0ZWR7Y29sb3I6IzU5NjU3",
+  "OX1cbiAjY21zRGV2ZWxvcG1lbnRWMSAuZHYtcm93e2Rpc3BsYXk6ZmxleDtnYXA6MTBweDthbGlnbi1pdGVtczpjZW50ZXI7ZmxleC13cmFwOndyYXB9XG4gI2Ntc0RldmVsb3BtZW50",
+  "VjEgLmR2LXRvb2xiYXJ7bWFyZ2luOjE2cHggMH1cbiAjY21zRGV2ZWxvcG1lbnRWMSAuZHYtZ3JpZHtkaXNwbGF5OmdyaWQ7Z3JpZC10ZW1wbGF0ZS1jb2x1bW5zOm1pbm1heCgwLDEu",
+  "NTVmcikgbWlubWF4KDMwMHB4LDFmcik7Z2FwOjE4cHg7YWxpZ24taXRlbXM6c3RhcnR9XG4gI2Ntc0RldmVsb3BtZW50VjEgLmR2LXBhbmVse2JhY2tncm91bmQ6d2hpdGU7Ym9yZGVy",
+  "OjFweCBzb2xpZCAjZGNlM2VmO2JvcmRlci1yYWRpdXM6MTBweDtwYWRkaW5nOjE4cHg7bWluLXdpZHRoOjB9XG4gI2Ntc0RldmVsb3BtZW50VjEgLmR2LWxpc3R7ZGlzcGxheTpmbGV4",
+  "O2dhcDo4cHg7b3ZlcmZsb3c6YXV0bztwYWRkaW5nOjRweCAwIDEycHg7bWFyZ2luLWJvdHRvbToxMnB4fVxuICNjbXNEZXZlbG9wbWVudFYxIC5kdi1jaG9pY2V7ZmxleDowIDAgMjQw",
+  "cHg7dGV4dC1hbGlnbjpsZWZ0O2JhY2tncm91bmQ6I2ZmZjtib3JkZXI6MXB4IHNvbGlkICNkOWUxZWU7cGFkZGluZzoxMHB4IDEycHg7d2hpdGUtc3BhY2U6bm9ybWFsfVxuICNjbXNE",
+  "ZXZlbG9wbWVudFYxIC5kdi1jaG9pY2VbYXJpYS1wcmVzc2VkPXRydWVde2JvcmRlcjoycHggc29saWQgdmFyKC0tZHYtYmx1ZSk7YmFja2dyb3VuZDojZWVmMmZmfVxuICNjbXNEZXZl",
+  "bG9wbWVudFYxIC5kdi1jaG9pY2Ugc21hbGx7ZGlzcGxheTpibG9jaztjb2xvcjojNTk2NTc5O2ZvbnQtc2l6ZToxM3B4O21hcmdpbi10b3A6NHB4fVxuICNjbXNEZXZlbG9wbWVudFYx",
+  "IGJ1dHRvbntmb250OjYwMCAxNHB4LzEuMyBBcmlhbCxzYW5zLXNlcmlmO21pbi1oZWlnaHQ6MzRweDttaW4td2lkdGg6MDt3aWR0aDphdXRvO3BhZGRpbmc6OHB4IDEycHg7Ym9yZGVy",
+  "LXJhZGl1czo3cHg7Ym9yZGVyOjFweCBzb2xpZCAjY2JkNWUxO2JhY2tncm91bmQ6I2ZmZjtjb2xvcjp2YXIoLS1kdi1uYXZ5KTtib3gtc2hhZG93Om5vbmU7Y3Vyc29yOnBvaW50ZXI7",
+  "bGV0dGVyLXNwYWNpbmc6bm9ybWFsO3RleHQtdHJhbnNmb3JtOm5vbmV9XG4gI2Ntc0RldmVsb3BtZW50VjEgYnV0dG9uLmR2LXByaW1hcnl7YmFja2dyb3VuZDp2YXIoLS1kdi1ibHVl",
+  "KTtib3JkZXItY29sb3I6dmFyKC0tZHYtYmx1ZSk7Y29sb3I6I2ZmZn1cbiAjY21zRGV2ZWxvcG1lbnRWMSBidXR0b24uZHYtdmVyaWZ5e2JhY2tncm91bmQ6dmFyKC0tZHYtdGVhbCk7",
+  "Ym9yZGVyLWNvbG9yOnZhcigtLWR2LXRlYWwpO2NvbG9yOiNmZmZ9XG4gI2Ntc0RldmVsb3BtZW50VjEgYnV0dG9uOmRpc2FibGVke29wYWNpdHk6LjU1O2N1cnNvcjpub3QtYWxsb3dl",
+  "ZH1cbiAjY21zRGV2ZWxvcG1lbnRWMSBpbnB1dCwjY21zRGV2ZWxvcG1lbnRWMSB0ZXh0YXJlYSwjY21zRGV2ZWxvcG1lbnRWMSBzZWxlY3R7Zm9udDoxNHB4LzEuNSBBcmlhbCxzYW5z",
+  "LXNlcmlmO2NvbG9yOiMxODIzNGM7Ym9yZGVyOjFweCBzb2xpZCAjY2JkNWUxO2JvcmRlci1yYWRpdXM6N3B4O3BhZGRpbmc6OXB4O3dpZHRoOjEwMCU7YmFja2dyb3VuZDojZmZmO21h",
+  "cmdpbjo0cHggMCAxMHB4fVxuICNjbXNEZXZlbG9wbWVudFYxIGlucHV0W3R5cGU9ZmlsZV17Zm9udC1zaXplOjEzcHh9XG4gI2Ntc0RldmVsb3BtZW50VjEgdGV4dGFyZWF7bWluLWhl",
+  "aWdodDo4OHB4O3Jlc2l6ZTp2ZXJ0aWNhbH1cbiAjY21zRGV2ZWxvcG1lbnRWMSBsYWJlbHtkaXNwbGF5OmJsb2NrO2ZvbnQtd2VpZ2h0OjYwMDttYXJnaW4tdG9wOjEwcHh9XG4gI2Nt",
+  "c0RldmVsb3BtZW50VjEgLmR2LXNlYXJjaHttYXgtd2lkdGg6NDIwcHg7bWFyZ2luOjB9XG4gI2Ntc0RldmVsb3BtZW50VjEgLmR2LXBpbGx7ZGlzcGxheTppbmxpbmUtYmxvY2s7Ym9y",
+  "ZGVyLXJhZGl1czo1cHg7YmFja2dyb3VuZDojZWVmMmZmO2NvbG9yOiMzNjRkY2M7cGFkZGluZzozcHggOHB4O2ZvbnQtc2l6ZToxM3B4O2ZvbnQtd2VpZ2h0OjYwMH1cbiAjY21zRGV2",
+  "ZWxvcG1lbnRWMSAuZHYtb2t7YmFja2dyb3VuZDojZGVmNmVjO2NvbG9yOiMxNDZiNTB9XG4gI2Ntc0RldmVsb3BtZW50VjEgLmR2LXdhcm57YmFja2dyb3VuZDojZmZmNGRlO2NvbG9y",
+  "OiM3OTUzMGN9XG4gI2Ntc0RldmVsb3BtZW50VjEgLmR2LW5vdGljZXtwYWRkaW5nOjEycHg7Ym9yZGVyLXJhZGl1czo4cHg7YmFja2dyb3VuZDojZWVmMmZmO2JvcmRlcjoxcHggc29s",
+  "aWQgI2RjZTRmYTttYXJnaW46MTBweCAwfVxuICNjbXNEZXZlbG9wbWVudFYxIC5kdi1lcnJvcntiYWNrZ3JvdW5kOiNmZmYwZWU7Y29sb3I6IzliMjUyMDtib3JkZXItY29sb3I6I2U4",
+  "YjNhZX1cbiAjY21zRGV2ZWxvcG1lbnRWMSAuZHYtbWV0YXtiYWNrZ3JvdW5kOiNmNGY2ZmI7cGFkZGluZzoxMnB4O2JvcmRlci1yYWRpdXM6OHB4O21hcmdpbjoxMnB4IDB9XG4gI2Nt",
+  "c0RldmVsb3BtZW50VjEgLmR2LXRyYWNre2hlaWdodDo4cHg7YmFja2dyb3VuZDojZTVlOWYwO2JvcmRlci1yYWRpdXM6OHB4O292ZXJmbG93OmhpZGRlbjttYXJnaW46NnB4IDAgMTRw",
+  "eH1cbiAjY21zRGV2ZWxvcG1lbnRWMSAuZHYtZmlsbHtoZWlnaHQ6MTAwJTtiYWNrZ3JvdW5kOnZhcigtLWR2LXRlYWwpO2JvcmRlci1yYWRpdXM6OHB4fVxuICNjbXNEZXZlbG9wbWVu",
+  "dFYxIC5kdi1taWxle21hcmdpbjoxMHB4IDA7Ym9yZGVyOjFweCBzb2xpZCAjZGNlM2VmO2JvcmRlci1sZWZ0OjNweCBzb2xpZCAjYzVjZGUzO2JvcmRlci1yYWRpdXM6OHB4O3BhZGRp",
+  "bmc6MTJweH1cbiAjY21zRGV2ZWxvcG1lbnRWMSAuZHYtbWlsZS5zZWxlY3RlZHtib3JkZXItY29sb3I6dmFyKC0tZHYtdGVhbCk7YmFja2dyb3VuZDojZjhmY2ZjfVxuICNjbXNEZXZl",
+  "bG9wbWVudFYxIC5kdi1taWxlPmJ1dHRvbnt3aWR0aDoxMDAlO3RleHQtYWxpZ246bGVmdDtib3JkZXI6MDtiYWNrZ3JvdW5kOnRyYW5zcGFyZW50O3BhZGRpbmc6MnB4IDA7ZGlzcGxh",
+  "eTpmbGV4O2p1c3RpZnktY29udGVudDpzcGFjZS1iZXR3ZWVuO2dhcDoxMHB4O2FsaWduLWl0ZW1zOmNlbnRlcn1cbiAjY21zRGV2ZWxvcG1lbnRWMSAuZHYtZmlsZXtib3JkZXI6MXB4",
+  "IHNvbGlkICNkY2UzZWY7Ym9yZGVyLXJhZGl1czo4cHg7cGFkZGluZzoxMHB4O21hcmdpbjo4cHggMDtvdmVyZmxvdy13cmFwOmFueXdoZXJlfVxuICNjbXNEZXZlbG9wbWVudFYxIC5k",
+  "di1kcm9we2JvcmRlcjoycHggZGFzaGVkICNiYWM5ZGY7cGFkZGluZzoxNnB4O2JvcmRlci1yYWRpdXM6MTBweDtiYWNrZ3JvdW5kOiNmOGZhZmY7bWFyZ2luOjEycHggMH1cbiAjY21z",
+  "RGV2ZWxvcG1lbnRWMSAuZHYtZHJvcC5kcmFne2JvcmRlci1jb2xvcjp2YXIoLS1kdi1ibHVlKTtiYWNrZ3JvdW5kOiNlZWYyZmZ9XG4gI2Ntc0RldmVsb3BtZW50VjEgLmR2LWhpc3Rv",
+  "cnl7d2hpdGUtc3BhY2U6cHJlLXdyYXA7Zm9udC1zaXplOjE0cHg7bWF4LWhlaWdodDoyNjBweDtvdmVyZmxvdzphdXRvO2JhY2tncm91bmQ6I2Y1ZjdmYjtwYWRkaW5nOjEycHg7Ym9y",
+  "ZGVyLXJhZGl1czo4cHh9XG4gI2Ntc0RldmVsb3BtZW50VjEgZGV0YWlscz5zdW1tYXJ5e2N1cnNvcjpwb2ludGVyO2NvbG9yOiMzNjRkY2M7Zm9udC13ZWlnaHQ6NjAwO3BhZGRpbmc6",
+  "OHB4IDB9XG4gI2Ntc0RldmVsb3BtZW50VjEgZmllbGRzZXR7Ym9yZGVyOjA7cGFkZGluZzowO21hcmdpbjowO21pbi13aWR0aDowfVxuICNjbXNEZXZlbG9wbWVudFYxIDpmb2N1cy12",
+  "aXNpYmxle291dGxpbmU6M3B4IHNvbGlkICM4MDk3ZjI7b3V0bGluZS1vZmZzZXQ6MnB4fVxuIC5jbXMtZGV2ZWxvcG1lbnQtbGVnYWN5LXYxe21hcmdpbjoxNnB4IDA7Ym9yZGVyOjFw",
+  "eCBzb2xpZCAjZGNlM2VmO2JvcmRlci1yYWRpdXM6MTBweDtwYWRkaW5nOjE0cHg7YmFja2dyb3VuZDojZmZmfVxuIC5jbXMtZGV2ZWxvcG1lbnQtbGVnYWN5LXYxPnN1bW1hcnl7Y3Vy",
+  "c29yOnBvaW50ZXI7Zm9udC1zaXplOjE2cHg7Zm9udC13ZWlnaHQ6NjAwO2NvbG9yOiMxODIzNGN9XG4gQG1lZGlhKG1heC13aWR0aDo5MDBweCl7I2Ntc0RldmVsb3BtZW50VjF7cGFk",
+  "ZGluZzoxMnB4fSNjbXNEZXZlbG9wbWVudFYxIC5kdi1ncmlke2dyaWQtdGVtcGxhdGUtY29sdW1uczoxZnJ9I2Ntc0RldmVsb3BtZW50VjEgaDJ7Zm9udC1zaXplOjIycHh9fVxuICI7",
+  "ZG9jdW1lbnQuaGVhZC5hcHBlbmQoc3R5bGUpOwogZnVuY3Rpb24gZWwodGFnLHRleHQsY2xzLHBhcmVudCl7Y29uc3Qgbj1kb2N1bWVudC5jcmVhdGVFbGVtZW50KHRhZyk7aWYodGV4",
+  "dCE9bnVsbCluLnRleHRDb250ZW50PVN0cmluZyh0ZXh0KTtpZihjbHMpbi5jbGFzc05hbWU9Y2xzO2lmKHBhcmVudClwYXJlbnQuYXBwZW5kKG4pO3JldHVybiBuO30KIGZ1bmN0aW9u",
+  "IGlkZW50aXR5KCl7cmV0dXJuIEpTT04uc3RyaW5naWZ5KFtDTVNfVklFV19DT05GSUcudGFyZ2V0LmlkLENNU19WSUVXX0NPTkZJRy5ub25jZSxBUFAuY3VycmVudFJvbGUsQVBQLmN1",
+  "cnJlbnRQYWdlLHR5cGVvZiBDTj09PSd1bmRlZmluZWQnP251bGw6Q04uZXBvY2hdKTt9CiBmdW5jdGlvbiBjdXJyZW50KHMpe3JldHVybiBhY3RpdmU9PT1zJiZzLmhvc3QuaXNDb25u",
+  "ZWN0ZWQmJnMuaWRlbnRpdHk9PT1pZGVudGl0eSgpO30KIGZ1bmN0aW9uIG1lc3NhZ2Uocyx0ZXh0LGVycm9yPWZhbHNlKXtpZihjdXJyZW50KHMpKXtzLm1lc3NhZ2UudGV4dENvbnRl",
+  "bnQ9dGV4dDtzLm1lc3NhZ2UuY2xhc3NOYW1lPSdkdi1ub3RpY2UnKyhlcnJvcj8nIGR2LWVycm9yJzonJyk7fX0KIGZ1bmN0aW9uIGJ1dHRvbihzLHBhcmVudCx0ZXh0LGZuKXtjb25z",
+  "dCBiPWVsKCdidXR0b24nLHRleHQsbnVsbCxwYXJlbnQpO2IudHlwZT0nYnV0dG9uJztiLmFkZEV2ZW50TGlzdGVuZXIoJ2NsaWNrJyxhc3luYygpPT57aWYoIWN1cnJlbnQocyl8fHMu",
+  "YnVzeSlyZXR1cm47cy5idXN5PXRydWU7cy5ob3N0LmluZXJ0PXRydWU7dHJ5e2F3YWl0IGZuKCk7fWNhdGNoKGUpe21lc3NhZ2UocyxlLm1lc3NhZ2V8fFN0cmluZyhlKSx0cnVlKTt9",
+  "ZmluYWxseXtzLmJ1c3k9ZmFsc2U7cy5ob3N0LmluZXJ0PWZhbHNlO319KTtyZXR1cm4gYjt9CiBmdW5jdGlvbiBkaXNhYmxlZChwYXJlbnQsdGV4dCl7Y29uc3QgYj1lbCgnYnV0dG9u",
+  "Jyx0ZXh0LG51bGwscGFyZW50KTtiLnR5cGU9J2J1dHRvbic7Yi5kaXNhYmxlZD10cnVlO2IudGl0bGU9J1VuYXZhaWxhYmxlIGluIHJlYWQtb25seSBWaWV3IGFzIFVzZXInO3JldHVy",
+  "biBiO30KIGFzeW5jIGZ1bmN0aW9uIHJlYWQoYWN0aW9uLGRhdGEpewogIGlmKCFbJ2xpc3QnLCdnZXQnLCdoaXN0b3J5J10uaW5jbHVkZXMoYWN0aW9uKSl0aHJvdyBFcnJvcignUmVh",
+  "ZC1vbmx5IHByZXZpZXc6IGFjdGlvbiBibG9ja2VkLicpOwogIGNvbnN0IHI9YXdhaXQgX3N1cGFiYXNlLnJwYygnY21zX2RldmVsb3BtZW50X3YxJyx7cF9hY3Rpb246YWN0aW9uLHBf",
+  "ZGF0YTpkYXRhfSk7CiAgaWYoci5lcnJvcil0aHJvdyBFcnJvcihyLmVycm9yLm1lc3NhZ2V8fCdWaWV3ZXIgcmVhZCBmYWlsZWQuJyk7aWYoci5kYXRhPT1udWxsKXRocm93IEVycm9y",
+  "KCdObyB2aWV3ZXIgZGF0YSByZXR1cm5lZC4nKTtyZXR1cm4gci5kYXRhOwogfQogYXN5bmMgZnVuY3Rpb24gbGlzdChzLHBhZ2UpewogIGNvbnN0IHI9YXdhaXQgcmVhZCgnbGlzdCcs",
+  "e3Njb3BlOidzZWxmJyxwYWdlfSk7aWYoIWN1cnJlbnQocykpcmV0dXJuOwogIGlmKCFBcnJheS5pc0FycmF5KHIuaXRlbXMpKXRocm93IEVycm9yKCdVbmV4cGVjdGVkIGRldmVsb3Bt",
+  "ZW50IHJlc3BvbnNlLicpOwogIHMuaXRlbXM9ci5pdGVtcztzLnBhZ2U9ci5wYWdlO3MubW9yZT1yLmhhc19tb3JlO3MuaXRlbT1yLml0ZW1zWzBdfHxudWxsO3JlbmRlcihzKTsKICBt",
+  "ZXNzYWdlKHMsJ0xpdmUgc2F2ZWQgZGF0YSBmb3IgdGhlIHNlbGVjdGVkIGVtcGxveWVlLiBBbGwgdXBkYXRlcywgZXZpZGVuY2UgdXBsb2FkcywgcmV2aWV3cyBhbmQgZG93bmxvYWRz",
+  "IGFyZSBkaXNhYmxlZCBpbiB0aGlzIHN1cHBvcnQgdmlldy4nKTsKIH0KIGZ1bmN0aW9uIHJlbmRlcihzKXsKICBpZighY3VycmVudChzKSlyZXR1cm47cy5ib2R5LnJlcGxhY2VDaGls",
+  "ZHJlbigpOwogIGNvbnN0IHRvb2xiYXI9ZWwoJ2RpdicsbnVsbCwnZHYtcm93IGR2LXRvb2xiYXInLHMuYm9keSk7CiAgYnV0dG9uKHMsdG9vbGJhciwnUmVsb2FkJywoKT0+bGlzdChz",
+  "LHMucGFnZSkpOwogIGlmKHMucGFnZT4wKWJ1dHRvbihzLHRvb2xiYXIsJ1ByZXZpb3VzIDI1JywoKT0+bGlzdChzLHMucGFnZS0xKSk7CiAgaWYocy5tb3JlKWJ1dHRvbihzLHRvb2xi",
+  "YXIsJ05leHQgMjUnLCgpPT5saXN0KHMscy5wYWdlKzEpKTsKICBlbCgnc3BhbicsJ1BhZ2UgJysocy5wYWdlKzEpLCdkdi1tdXRlZCcsdG9vbGJhcik7CiAgY29uc3QgY2hvaWNlcz1l",
+  "bCgnZGl2JyxudWxsLCdkdi1saXN0JyxzLmJvZHkpOwogIHMuaXRlbXMuZm9yRWFjaCgoaXQsaSk9PnsKICAgY29uc3QgY2FyZD1lbCgnZGl2JyxudWxsLCdkdi1jaG9pY2UnLGNob2lj",
+  "ZXMpO2NhcmQuc2V0QXR0cmlidXRlKCdhcmlhLWN1cnJlbnQnLFN0cmluZyhzLml0ZW0/LmFjdGlvbi5pZD09PWl0LmFjdGlvbi5pZCkpOwogICBlbCgnc3Ryb25nJyxpdC5hY3Rpb24u",
+  "Y29tcF9uYW1lfHwnQ29tcGV0ZW5jeScsbnVsbCxjYXJkKTsKICAgZWwoJ3AnLGl0LmFjdGlvbi5hY3Rpb258fGl0LmFjdGlvbi50YXNrfHwnRGV2ZWxvcG1lbnQgYWN0aW9uJyxudWxs",
+  "LGNhcmQpOwogICBlbCgnc21hbGwnLGl0LnByb2dyZXNzPT1udWxsPydEZWxpdmVyYWJsZXMgbm90IHB1Ymxpc2hlZCc6aXQucHJvZ3Jlc3MrJyUgdmVyaWZpZWQnLG51bGwsY2FyZCk7",
+  "CiAgIC8vIFVzZSBhIGZpeGVkIHNhZmUgbGFiZWwuIEV4aXN0aW5nIHZpZXdlciBjbGljayBndWFyZHMgaW5zcGVjdCBidXR0b24gdGV4dDsKICAgLy8gdGFzayB0ZXh0IGNvbnRhaW5p",
+  "bmcgd29yZHMgc3VjaCBhcyAic3VibWl0IiBpcyBjb250ZW50LCBub3QgYSB3cml0ZSBjb250cm9sLgogICBidXR0b24ocyxjYXJkLCdJbnNwZWN0IGFjdGlvbiAnKyhzLnBhZ2UqMjUr",
+  "aSsxKSxhc3luYygpPT57CiAgICBjb25zdCBpdGVtPWF3YWl0IHJlYWQoJ2dldCcse2FjdGlvbl9pZDppdC5hY3Rpb24uaWR9KTtpZighY3VycmVudChzKSlyZXR1cm47CiAgICBpZigh",
+  "aXRlbT8uYWN0aW9uPy5pZHx8IUFycmF5LmlzQXJyYXkoaXRlbS5taWxlc3RvbmVzKSl0aHJvdyBFcnJvcignVW5leHBlY3RlZCBhY3Rpb24gcmVzcG9uc2UuJyk7CiAgICBzLml0ZW09",
+  "aXRlbTtyZW5kZXIocyk7CiAgIH0pOwogIH0pOwogIGlmKCFzLml0ZW0pe2VsKCdwJywnVGhpcyBlbXBsb3llZSBoYXMgbm8gZGV2ZWxvcG1lbnQgYWN0aW9ucyBhdmFpbGFibGUgaW4g",
+  "dGhlIGN1cnJlbnQgc3VwcG9ydCBzZXNzaW9uLicsJ2R2LW5vdGljZScscy5ib2R5KTtyZXR1cm47fQogIGNvbnN0IGl0PXMuaXRlbSxwPWl0LmFjdGlvbjsKICBjb25zdCBncmlkPWVs",
+  "KCdkaXYnLG51bGwsJ2R2LWdyaWQnLHMuYm9keSksbGVmdD1lbCgnc2VjdGlvbicsbnVsbCwnZHYtcGFuZWwnLGdyaWQpLHJpZ2h0PWVsKCdhc2lkZScsbnVsbCwnZHYtcGFuZWwnLGdy",
+  "aWQpOwogIGVsKCdzcGFuJyxwLmNvbXBfbmFtZXx8J0NvbXBldGVuY3knLCdkdi1waWxsJyxsZWZ0KTtlbCgnaDMnLHAuYWN0aW9ufHwnRGV2ZWxvcG1lbnQgYWN0aW9uJyxudWxsLGxl",
+  "ZnQpOwogIGVsKCdwJyxwLmVtcGxveWVlX25hbWV8fENNU19WSUVXX0NPTkZJRy50YXJnZXQuZW1haWwsJ2R2LW11dGVkJyxsZWZ0KTsKICBjb25zdCB0YXNrPWVsKCdkZXRhaWxzJyxu",
+  "dWxsLG51bGwsbGVmdCk7ZWwoJ3N1bW1hcnknLCdUYXNrIGFuZCBzdWNjZXNzIG1lYXN1cmUnLG51bGwsdGFzayk7ZWwoJ3AnLHAudGFza3x8J05vIHRhc2sgc3VwcGxpZWQuJyxudWxs",
+  "LHRhc2spO2VsKCdwJywnTWVhc3VyZTogJysocC5tZWFzdXJlfHwnTm90IHN1cHBsaWVkJyksbnVsbCx0YXNrKTsKICBlbCgncCcsJ1Jlc3BvbnNpYmxlOiAnKyhwLnJlc3BvbnNpYmxl",
+  "X3BhcnR5fHwnTm90IHN1cHBsaWVkJykrJyDCtyBEdWU6ICcrKHAuZW5kX2RhdGV8fCdOb3Qgc3VwcGxpZWQnKSwnZHYtbWV0YScsbGVmdCk7CiAgZWwoJ3NwYW4nLCdQbGFuOiAnKyhw",
+  "LnN0YXR1c3x8J1BlbmRpbmcnKSsnIMK3IEhSOiAnKyhwLmhyX2FwcHJvdmVkfHwnUGVuZGluZycpLCdkdi1waWxsJyxsZWZ0KTsKICBpZihwLnByb2dyZXNzX25vdGVzKXtjb25zdCBw",
+  "cmlvcj1lbCgnZGV0YWlscycsbnVsbCxudWxsLGxlZnQpO2VsKCdzdW1tYXJ5JywnRWFybGllciBhY3Rpb24gdXBkYXRlcycsbnVsbCxwcmlvcik7ZWwoJ3AnLHAucHJvZ3Jlc3Nfbm90",
+  "ZXMsJ2R2LWhpc3RvcnknLHByaW9yKTt9CiAgaWYoaXQuc291cmNlX2NoYW5nZWQpZWwoJ3AnLCdUaGUgdW5kZXJseWluZyBhY3Rpb24gaGFzIGNoYW5nZWQuIEZ1cnRoZXIgc3VibWlz",
+  "c2lvbnMgYW5kIHJldmlld3MgbmVlZCBIUiByZXNvbHV0aW9uLicsJ2R2LW5vdGljZSBkdi13YXJuJyxsZWZ0KTsKICBlbCgncCcsaXQucHJvZ3Jlc3M9PW51bGw/J1Byb2dyZXNzOiBh",
+  "d2FpdGluZyBwdWJsaXNoZWQgZGVsaXZlcmFibGVzJzppdC5wcm9ncmVzcysnJSB2ZXJpZmllZCDCtyAnK2l0LnZlcmlmaWVkKycgb2YgJytpdC50b3RhbCsnIGRlbGl2ZXJhYmxlcycs",
+  "bnVsbCxsZWZ0KTsKICBpZihpdC5wcm9ncmVzcyE9bnVsbCl7Y29uc3QgdHJhY2s9ZWwoJ2RpdicsbnVsbCwnZHYtdHJhY2snLGxlZnQpO3RyYWNrLnNldEF0dHJpYnV0ZSgncm9sZScs",
+  "J3Byb2dyZXNzYmFyJyk7dHJhY2suc2V0QXR0cmlidXRlKCdhcmlhLWxhYmVsJywnVmVyaWZpZWQgZGV2ZWxvcG1lbnQgcHJvZ3Jlc3MnKTt0cmFjay5zZXRBdHRyaWJ1dGUoJ2FyaWEt",
+  "dmFsdWVub3cnLFN0cmluZyhpdC5wcm9ncmVzcykpO3RyYWNrLnNldEF0dHJpYnV0ZSgnYXJpYS12YWx1ZW1pbicsJzAnKTt0cmFjay5zZXRBdHRyaWJ1dGUoJ2FyaWEtdmFsdWVtYXgn",
+  "LCcxMDAnKTtlbCgnZGl2JyxudWxsLCdkdi1maWxsJyx0cmFjaykuc3R5bGUud2lkdGg9TWF0aC5tYXgoMCxNYXRoLm1pbigxMDAsTnVtYmVyKGl0LnByb2dyZXNzKXx8MCkpKyclJzt9",
+  "CiAgZWwoJ2gzJywnRGVsaXZlcmFibGVzJyxudWxsLGxlZnQpOwogIGlmKCFpdC5taWxlc3RvbmVzLmxlbmd0aCllbCgncCcsJ1RoZSBtYW5hZ2VyIGhhcyBub3QgZGVmaW5lZCBkZWxp",
+  "dmVyYWJsZXMgZm9yIHRoaXMgYWN0aW9uIHlldC4gVGhlIG5ldyBsYXlvdXQgaXMgaW5zdGFsbGVkOyBubyBtaWxlc3RvbmVzIG9yIHBlcmNlbnRhZ2UgaGF2ZSBiZWVuIGludmVudGVk",
+  "LicsJ2R2LW5vdGljZScsbGVmdCk7CiAgZWxzZSBpZihpdC5waGFzZSE9PSdBY3RpdmUnKWVsKCdwJywnTWFuYWdlciBkcmFmdDogdGhlc2UgZGVsaXZlcmFibGVzIGFyZSBub3QgcHVi",
+  "bGlzaGVkIHlldC4nLCdkdi1ub3RpY2UnLGxlZnQpOwogIGZvcihjb25zdCBtIG9mIGl0Lm1pbGVzdG9uZXMpewogICBjb25zdCBib3g9ZWwoJ2RldGFpbHMnLG51bGwsJ2R2LW1pbGUn",
+  "LGxlZnQpO2JveC5vcGVuPWl0Lm1pbGVzdG9uZXMubGVuZ3RoPT09MTsKICAgZWwoJ3N1bW1hcnknLG0ub3JkaW5hbCsnLiAnK20udGl0bGUrJyDCtyAnK20uc3RhdGUsbnVsbCxib3gp",
+  "OwogICBlbCgncCcsJ1N1Y2Nlc3MgbWVhc3VyZTogJyttLnN1Y2Nlc3NfbWVhc3VyZSxudWxsLGJveCk7ZWwoJ3AnLCdEdWU6ICcrbS5kdWVfZGF0ZSwnZHYtbXV0ZWQnLGJveCk7CiAg",
+  "IGVsKCdwJyxtLmVtcGxveWVlX25vdGV8fCdObyBzYXZlZCBwcm9ncmVzcyB1cGRhdGUgeWV0LicsJ2R2LWhpc3RvcnknLGJveCk7CiAgIGlmKG0ubWFuYWdlcl9jb21tZW50KWVsKCdw",
+  "JywnTWFuYWdlciBmZWVkYmFjazogJyttLm1hbmFnZXJfY29tbWVudCwnZHYtbm90aWNlJyxib3gpOwogICBlbCgncCcsJ0V2aWRlbmNlIGl0ZW1zOiAnKyhtLmV2aWRlbmNlfHxbXSku",
+  "bGVuZ3RoLCdkdi1tdXRlZCcsYm94KTsKICB9CiAgY29uc3QgcHJldmlldz1lbCgnZGl2JyxudWxsLCdkdi1tZXRhJyxsZWZ0KTtlbCgnc3Ryb25nJywnUHJvZ3Jlc3MgdXBkYXRlJyxu",
+  "dWxsLHByZXZpZXcpOwogIGNvbnN0IG5vdGU9ZWwoJ3RleHRhcmVhJyxudWxsLG51bGwscHJldmlldyk7bm90ZS5kaXNhYmxlZD10cnVlO25vdGUucGxhY2Vob2xkZXI9J0VtcGxveWVl",
+  "IHVwZGF0ZXMgYXJlIGVudGVyZWQgZnJvbSB0aGVpciBvd24gc2lnbmVkLWluIGFjY291bnQuJztub3RlLnNldEF0dHJpYnV0ZSgnYXJpYS1sYWJlbCcsJ1Byb2dyZXNzIHVwZGF0ZSwg",
+  "cmVhZC1vbmx5IHByZXZpZXcnKTsKICBjb25zdCByb3c9ZWwoJ2RpdicsbnVsbCwnZHYtcm93JyxwcmV2aWV3KTtkaXNhYmxlZChyb3csJ1NhdmUgcHJvZ3Jlc3MnKTtkaXNhYmxlZChy",
+  "b3csJ1N1Ym1pdCBmb3IgbWFuYWdlciByZXZpZXcnKTsKICBlbCgnaDMnLCdFdmlkZW5jZSAmIGF0dGFjaG1lbnRzJyxudWxsLHJpZ2h0KTsKICBjb25zdCBkcm9wPWVsKCdkaXYnLG51",
+  "bGwsJ2R2LWRyb3AnLHJpZ2h0KTtlbCgnc3Ryb25nJywnU3VwcG9ydGluZyBldmlkZW5jZScsbnVsbCxkcm9wKTtlbCgncCcsJ0ZpbGVzIGFuZCBsaW5rcyBhcmUgYXR0YWNoZWQgdG8g",
+  "aW5kaXZpZHVhbCBkZWxpdmVyYWJsZXMuIFVwbG9hZCBjb250cm9scyBhcmUgZGlzYWJsZWQgaW4gVmlldyBhcyBVc2VyLicsJ2R2LW11dGVkJyxkcm9wKTsKICBjb25zdCBldmlkZW5j",
+  "ZUJ1dHRvbnM9ZWwoJ2RpdicsbnVsbCwnZHYtcm93Jyxkcm9wKTtkaXNhYmxlZChldmlkZW5jZUJ1dHRvbnMsJ1VwbG9hZCBmaWxlJyk7ZGlzYWJsZWQoZXZpZGVuY2VCdXR0b25zLCdB",
+  "ZGQgbGluaycpOwogIGxldCBldmlkZW5jZUNvdW50PTA7CiAgZm9yKGNvbnN0IG0gb2YgaXQubWlsZXN0b25lcyl7CiAgIGlmKCEobS5ldmlkZW5jZXx8W10pLmxlbmd0aCljb250aW51",
+  "ZTsKICAgZWwoJ2g0JyxtLnRpdGxlLG51bGwscmlnaHQpOwogICBmb3IoY29uc3QgZSBvZiBtLmV2aWRlbmNlKXtldmlkZW5jZUNvdW50Kys7Y29uc3QgaXRlbT1lbCgnZGl2JyxudWxs",
+  "LCdkdi1maWxlJyxyaWdodCk7ZWwoJ3N0cm9uZycsZS5uYW1lLG51bGwsaXRlbSk7aWYoZS5ub3RlKWVsKCdwJyxlLm5vdGUsbnVsbCxpdGVtKTsKICAgIGVsKCdwJywoZS5yZWFkeT8n",
+  "UmVjb3JkZWQnOidQZW5kaW5nIHVwbG9hZCcpKycgwrcgJysoZS5raW5kPT09J2xpbmsnPydFeHRlcm5hbCBsaW5rJzpNYXRoLmNlaWwoTnVtYmVyKGUuc2l6ZXx8MCkvMTAyNCkrJyBL",
+  "QicpLCdkdi1tdXRlZCcsaXRlbSk7CiAgICBkaXNhYmxlZChpdGVtLGUua2luZD09PSdsaW5rJz8nT3BlbiBsaW5rIChibG9ja2VkKSc6J0Rvd25sb2FkIChibG9ja2VkKScpOwogICB9",
+  "CiAgfQogIGlmKCFldmlkZW5jZUNvdW50KWVsKCdwJywnTm8gZXZpZGVuY2UgcmVjb3JkZWQgZm9yIHRoaXMgYWN0aW9uIHlldC4nLCdkdi1tdXRlZCcscmlnaHQpOwogIGVsKCdwJywn",
+  "UmVhZC1vbmx5IHN1cHBvcnQgcHJldmlldy4gRmlsZSBjb250ZW50cywgZXh0ZXJuYWwgbGlua3MgYW5kIGRvd25sb2FkcyByZW1haW4gYmxvY2tlZDsgZXZpZGVuY2UgbmFtZXMgYW5k",
+  "IHNhdmVkIG5vdGVzIGFyZSBzaG93bi4nLCdkdi1ub3RpY2UnLHJpZ2h0KTsKICBjb25zdCBoaXN0b3J5PWVsKCdkZXRhaWxzJyxudWxsLG51bGwsbGVmdCk7ZWwoJ3N1bW1hcnknLCdS",
+  "ZXZpZXcgaGlzdG9yeScsbnVsbCxoaXN0b3J5KTtsZXQgcGFnZT0wO2NvbnN0IGxvZz1lbCgnZGl2JyxudWxsLG51bGwsaGlzdG9yeSk7CiAgY29uc3QgbW9yZT1idXR0b24ocyxoaXN0",
+  "b3J5LCdFYXJsaWVyIGVudHJpZXMnLGFzeW5jKCk9PnsKICAgY29uc3QgZW50cmllcz1hd2FpdCByZWFkKCdoaXN0b3J5Jyx7YWN0aW9uX2lkOnAuaWQscGFnZX0pO2lmKCFjdXJyZW50",
+  "KHMpfHwhaGlzdG9yeS5pc0Nvbm5lY3RlZClyZXR1cm47CiAgIGlmKCFBcnJheS5pc0FycmF5KGVudHJpZXMpKXRocm93IEVycm9yKCdVbmV4cGVjdGVkIGhpc3RvcnkgcmVzcG9uc2Uu",
+  "Jyk7CiAgIGlmKCFlbnRyaWVzLmxlbmd0aCl7ZWwoJ3AnLCdObyBtb3JlIHJlY29yZGVkIGhpc3RvcnkuJyxudWxsLGxvZyk7bW9yZS5kaXNhYmxlZD10cnVlO3JldHVybjt9CiAgIGZv",
+  "cihjb25zdCBldiBvZiBlbnRyaWVzKXtjb25zdCBkZXQ9ZWwoJ2RldGFpbHMnLG51bGwsJ2R2LWZpbGUnLGxvZyk7ZWwoJ3N1bW1hcnknLGV2LmV2ZW50KycgwrcgJytuZXcgRGF0ZShl",
+  "di5yZWNvcmRlZF9hdCkudG9Mb2NhbGVTdHJpbmcoKSxudWxsLGRldCk7CiAgICBjb25zdCBtPWV2LnNuYXBzaG90Py5taWxlc3RvbmU7aWYobSl7ZWwoJ3AnLG0udGl0bGUrJyDCtyAn",
+  "K20uc3RhdGUsbnVsbCxkZXQpO2VsKCdwJyxtLmVtcGxveWVlX25vdGV8fCdObyBub3RlJywnZHYtaGlzdG9yeScsZGV0KTtpZihtLm1hbmFnZXJfY29tbWVudCllbCgncCcsJ01hbmFn",
+  "ZXI6ICcrbS5tYW5hZ2VyX2NvbW1lbnQsbnVsbCxkZXQpO30KICAgIGlmKEFycmF5LmlzQXJyYXkoZXYuc25hcHNob3Q/LmRlZmluaXRpb24pKWZvcihjb25zdCBkIG9mIGV2LnNuYXBz",
+  "aG90LmRlZmluaXRpb24pZWwoJ3AnLGQub3JkaW5hbCsnLiAnK2QudGl0bGUrJyDCtyAnK2Quc3VjY2Vzc19tZWFzdXJlLG51bGwsZGV0KTsKICAgfXBhZ2UrKzsKICB9KTsKICBlbCgn",
+  "cCcsJ0RldmVsb3BtZW50IHByb2dyZXNzIGlzIHNlcGFyYXRlIGZyb20gY29tcGV0ZW5jeSBzY29yZXMuIFRoaXMgY2hhbmdlIGFmZmVjdHMgb25seSB0aGUgRW1wbG95ZWUgZGV2ZWxv",
+  "cG1lbnQgcHJldmlldzsgb3RoZXIgdmlld2VyIHBhZ2VzIGFuZCB0aGUgYWN0dWFsIGVtcGxveWVlIHdvcmtmbG93IGFyZSB1bmNoYW5nZWQuJywnZHYtbXV0ZWQnLHMuYm9keSk7CiB9",
+  "CiBsb2FkRW1wbG95ZWVEZXZQbGFucz1hc3luYyBmdW5jdGlvbigpewogIGlmKENNU19WSUVXX0NPTkZJRy5yb2xlIT09J2VtcGxveWVlJylyZXR1cm47CiAgY29uc3QgbWFpbj1kb2N1",
+  "bWVudC5nZXRFbGVtZW50QnlJZCgnbWFpbkNvbnRlbnQnKTtpZighbWFpbilyZXR1cm47CiAgbWFpbi5yZXBsYWNlQ2hpbGRyZW4oKTtjb25zdCBob3N0PWVsKCdzZWN0aW9uJyk7aG9z",
+  "dC5pZD0nY21zRGV2ZWxvcG1lbnRWMSc7bWFpbi5hcHBlbmQoaG9zdCk7CiAgY29uc3Qgcz17aG9zdCxpZGVudGl0eTppZGVudGl0eSgpLGl0ZW1zOltdLGl0ZW06bnVsbCxwYWdlOjAs",
+  "bW9yZTpmYWxzZSxidXN5OnRydWV9O2FjdGl2ZT1zOwogIGVsKCdoMicsJ015IERldmVsb3BtZW50IFBsYW4nLG51bGwsaG9zdCk7ZWwoJ3AnLCdFbXBsb3llZSBsYXlvdXQgwrcgUmVh",
+  "ZC1vbmx5IHN1cGVydXNlciBwcmV2aWV3JywnZHYtbXV0ZWQnLGhvc3QpOwogIHMubWVzc2FnZT1lbCgncCcsJ0xvYWRpbmcgdGhlIHNlbGVjdGVkIGVtcGxveWVl4oCZcyBkZXZlbG9w",
+  "bWVudCBhY3Rpb25zLi4uJywnZHYtbm90aWNlJyxob3N0KTtzLm1lc3NhZ2Uuc2V0QXR0cmlidXRlKCdyb2xlJywnc3RhdHVzJyk7cy5tZXNzYWdlLnNldEF0dHJpYnV0ZSgnYXJpYS1s",
+  "aXZlJywncG9saXRlJyk7cy5ib2R5PWVsKCdkaXYnLG51bGwsbnVsbCxob3N0KTsKICB0cnl7YXdhaXQgbGlzdChzLDApO31jYXRjaChlKXttZXNzYWdlKHMsZS5tZXNzYWdlfHxTdHJp",
+  "bmcoZSksdHJ1ZSk7YnV0dG9uKHMscy5ib2R5LCdUcnkgYWdhaW4nLCgpPT5saXN0KHMsMCkpO31maW5hbGx5e3MuYnVzeT1mYWxzZTt9CiB9Owp9KSgpOwoKPC9zY3JpcHQ+",
+  ].join(''));
+  const end=original.lastIndexOf('</body>');
+  if(end<0)throw Error('Viewer closing body tag is missing.');
+  const updated=original.slice(0,end)+fragment+'\n'+original.slice(end);
+  const bytes=new TextEncoder().encode(updated);let binary='';
+  for(let i=0;i<bytes.length;i+=16384)binary+=String.fromCharCode(...bytes.subarray(i,i+16384));
+  window.CMS_VIEW_TEMPLATE=btoa(binary);
+  window.__cmsDevelopmentViewerAddonV1=true;
+ }catch(e){
+  console.error('Development viewer setup:',e.message);
+  const n=document.createElement('p');n.textContent='Development viewer patch was not applied: '+e.message;
+  n.setAttribute('role','alert');n.style.cssText='padding:12px;background:#fff0ee;color:#9b2520';document.body.append(n);
+ }
+})();
+</script>
+<script id="cms-development-modern-presentation-v1">
+(function(){
+ 'use strict';
+ if(window.__cmsModernDevelopmentPackageV1)return;
+ window.__cmsModernDevelopmentPackageV1=true;
+function cmsModernDevelopmentLayoutV1() {
+ 'use strict';
+ if (window.__cmsModernDevelopmentLayoutV1) return;
+ window.__cmsModernDevelopmentLayoutV1 = true;
+ const rootId = 'cmsDevelopmentV1';
+ const css = `
+ #cmsDevelopmentV1.cms-modern-development{--dv-navy:#18234c;--dv-blue:#364dcc;--dv-teal:#177c6d;background:#f5f7fc;border:0;border-radius:12px;padding:20px;margin:12px 0 24px;font:15px/1.6 Arial,sans-serif;color:#18234c}
+ #cmsDevelopmentV1.cms-modern-development *{box-sizing:border-box}
+ #cmsDevelopmentV1.cms-modern-development h2{font-size:26px;line-height:1.25;margin:0 0 6px;letter-spacing:-.4px}
+ #cmsDevelopmentV1.cms-modern-development h3{font-size:19px;line-height:1.5;margin:0 0 10px}
+ #cmsDevelopmentV1.cms-modern-development h4{font-size:16px;margin:0 0 10px}
+ #cmsDevelopmentV1.cms-modern-development p{line-height:1.65}
+ #cmsDevelopmentV1.cms-modern-development .dv-notice{font-size:14px;padding:10px 14px;border-radius:8px}
+ #cmsDevelopmentV1.cms-modern-development .dv-toolbar{margin:12px 0;gap:10px}
+ #cmsDevelopmentV1.cms-modern-development button{font:600 14px/1.35 Arial,sans-serif;min-height:36px;max-width:100%;padding:8px 12px;border-radius:7px;box-shadow:none;white-space:normal}
+ #cmsDevelopmentV1.cms-modern-development input,
+ #cmsDevelopmentV1.cms-modern-development textarea,
+ #cmsDevelopmentV1.cms-modern-development select{font-size:15px}
+ #cmsDevelopmentV1.cms-modern-development button:disabled{opacity:1;color:#748096;background:#f1f4f8;border-color:#e0e5ed;cursor:not-allowed;box-shadow:none}
+ #cmsDevelopmentV1 .cmd-shell{display:grid;grid-template-columns:280px minmax(0,1fr);gap:18px;align-items:start}
+ #cmsDevelopmentV1 .cmd-sidebar{background:#fff;border:1px solid #dce3ef;border-radius:12px;padding:18px;min-width:0}
+ #cmsDevelopmentV1 .cmd-sidebar h3{font-size:16px;margin:0}
+ #cmsDevelopmentV1 .cmd-sidebar>p{font-size:14px;color:#64718a;margin:4px 0 14px}
+ #cmsDevelopmentV1 .cmd-workspace{min-width:0}
+ #cmsDevelopmentV1 .cmd-band{padding:14px 18px;background:#fff;border:1px solid #dce3ef;border-radius:10px;margin-bottom:14px}
+ #cmsDevelopmentV1 .cmd-band>small{font-size:13px;display:block;color:#364dcc;font-weight:700;letter-spacing:.7px;margin-bottom:3px}
+ #cmsDevelopmentV1 .cmd-band .dv-pill{font-size:17px;line-height:1.45;background:transparent;color:#18234c;padding:0;text-transform:none}
+ #cmsDevelopmentV1 .cmd-action-header{padding:18px 20px;background:#fff;border:1px solid #dce3ef;border-radius:10px;margin-bottom:14px}
+ #cmsDevelopmentV1 .cmd-eyebrow{display:block;color:#364dcc;font-size:13px;font-weight:700;letter-spacing:.7px;margin-bottom:6px}
+ #cmsDevelopmentV1 .cmd-action-header .dv-meta{font-size:14px;padding:10px 12px;background:#f4f6fa;border-radius:8px}
+ #cmsDevelopmentV1 .cmd-action-header details>summary{font-size:14px}
+ #cmsDevelopmentV1 .cmd-action-header .dv-pill{font-size:13px}
+ #cmsDevelopmentV1.cms-modern-development .dv-grid{grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:14px}
+ #cmsDevelopmentV1.cms-modern-development .dv-panel{border-radius:10px;padding:18px;border-color:#dce3ef;box-shadow:none;min-width:0}
+ #cmsDevelopmentV1 .cmd-sidebar .dv-list{display:flex;flex-direction:column;gap:8px;overflow:visible;padding:0;margin:0;counter-reset:cmd-action}
+ #cmsDevelopmentV1 .cmd-sidebar .dv-choice{position:relative;display:block;flex:none;width:100%;min-width:0;padding:12px 12px 12px 43px;border:1px solid transparent;border-radius:9px;background:#fff;text-align:left;font-size:14px;font-weight:500;counter-increment:cmd-action}
+ #cmsDevelopmentV1 .cmd-sidebar .dv-choice::before{content:counter(cmd-action);position:absolute;top:13px;left:8px;width:25px;height:25px;display:flex;align-items:center;justify-content:center;border:1px solid #a5b2d7;border-radius:50%;background:#fff;color:#364dcc;font-size:13px;font-weight:700}
+ #cmsDevelopmentV1 .cmd-sidebar .dv-choice::after{content:"";position:absolute;width:1px;left:20px;top:40px;bottom:-7px;background:#dce3ef}
+ #cmsDevelopmentV1 .cmd-sidebar .dv-choice:last-child::after{display:none}
+ #cmsDevelopmentV1 .cmd-sidebar .dv-choice[hidden]{display:none!important}
+ #cmsDevelopmentV1 .cmd-sidebar .dv-choice[aria-pressed=true],
+ #cmsDevelopmentV1 .cmd-sidebar .dv-choice[aria-current=true]{background:#eef2ff;border:1px solid #c8d3fc}
+ #cmsDevelopmentV1 .cmd-sidebar .dv-choice[aria-pressed=true]::before,
+ #cmsDevelopmentV1 .cmd-sidebar .dv-choice[aria-current=true]::before{background:#364dcc;color:#fff;border-color:#364dcc}
+ #cmsDevelopmentV1 .cmd-sidebar .cmd-action-name{font-size:14px;font-weight:600;line-height:1.5;color:#18234c;margin:0 0 5px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+ #cmsDevelopmentV1 .cmd-sidebar .cmd-context{display:block;color:#6b7690;font-size:13px;line-height:1.4;margin:0 0 6px}
+ #cmsDevelopmentV1 .cmd-sidebar .dv-choice small{font-size:13px;color:#64718a;line-height:1.4}
+ #cmsDevelopmentV1 .cmd-sidebar .dv-choice>button{font-size:13px;min-height:30px;padding:5px 8px;margin-top:7px;background:#fff}
+ #cmsDevelopmentV1 .cmd-sidebar.cmd-shared-competency .cmd-context{display:none}
+ #cmsDevelopmentV1 .cmd-progress>h3{font-size:17px}
+ #cmsDevelopmentV1 .cmd-progress>.dv-notice{background:#fff8e9;color:#735115;border-color:#efdbad}
+ #cmsDevelopmentV1 .cmd-progress .dv-mile{border-radius:8px;margin:10px 0;padding:12px}
+ #cmsDevelopmentV1 .cmd-history{background:#fff;border:1px solid #dce3ef;border-radius:9px;padding:10px 15px;margin-top:14px}
+ #cmsDevelopmentV1 .cmd-history>summary{font-size:14px}
+ #cmsDevelopmentV1.cms-modern-development .dv-drop{padding:16px;border-color:#becbe4;background:#f8faff;border-radius:9px}
+ #cmsDevelopmentV1.cms-modern-development .dv-drop p{font-size:14px}
+ #cmsDevelopmentV1 .cmd-list-note{font-size:13px;color:#64718a;margin:14px 0 0}
+ @media(min-width:1450px){#cmsDevelopmentV1 .cmd-shell{grid-template-columns:305px minmax(0,1fr)}}
+ @media(max-width:1150px){#cmsDevelopmentV1.cms-modern-development .dv-grid{grid-template-columns:minmax(0,1fr)}#cmsDevelopmentV1 .cmd-shell{grid-template-columns:260px minmax(0,1fr)}}
+ @media(max-width:760px){#cmsDevelopmentV1.cms-modern-development{padding:12px}#cmsDevelopmentV1 .cmd-shell{grid-template-columns:minmax(0,1fr)}#cmsDevelopmentV1 .cmd-sidebar{padding:14px}#cmsDevelopmentV1 .cmd-action-header{padding:16px}#cmsDevelopmentV1.cms-modern-development h2{font-size:23px}#cmsDevelopmentV1 .cmd-sidebar .dv-list{max-height:360px;overflow:auto}#cmsDevelopmentV1 .cmd-sidebar .dv-choice{padding-right:10px}}
+ `;
+ const style = document.createElement('style');
+ style.id = 'cms-development-modern-layout-style-v1';
+ style.textContent = css;
+ document.head.append(style);
+ function make(tag, cls, text) {
+  const n=document.createElement(tag);n.className=cls;
+  if(text!=null)n.textContent=text;
+  return n;
+ }
+ function reflow() {
+  const root=document.getElementById(rootId);
+  if(!root)return;
+  if(!root.classList.contains('cms-modern-development'))root.classList.add('cms-modern-development');
+  const grid=root.querySelector('.dv-grid');
+  if(!grid||grid.dataset.cmsModernLayout==='1')return;
+  const body=grid.parentElement;
+  const list=Array.from(body.children).find(n=>n.classList.contains('dv-list'));
+  const left=grid.children[0],right=grid.children[1];
+  if(!list||!left||!right||!left.classList.contains('dv-panel')||!right.classList.contains('dv-panel'))return;
+  const children=Array.from(left.children);
+  // Split only on established renderer boundaries. Unknown versions remain intact.
+  const progressIndex=children.findIndex(n=>n.tagName==='P'&&
+   (/^Progress:/.test(n.textContent.trim())||/^\d+(?:\.\d+)?% verified/.test(n.textContent.trim())));
+  if(progressIndex<0)return;
+  grid.dataset.cmsModernLayout='1';
+  const shell=make('div','cmd-shell'),sidebar=make('aside','cmd-sidebar');
+  const workspace=make('div','cmd-workspace'),header=make('section','cmd-action-header');
+  const band=make('section','cmd-band');
+  sidebar.setAttribute('aria-label','Development actions');
+  sidebar.append(make('h3','','Development actions'),make('p','','Choose an action to inspect'));
+  // Move original controls, never clone them: values, disabled states and handlers survive.
+  body.insertBefore(shell,grid);shell.append(sidebar,workspace);sidebar.append(list);
+  const cards=Array.from(list.children);
+  let contexts=[];
+  cards.forEach(card=>{
+   if(card.tagName==='BUTTON'){
+    const texts=Array.from(card.childNodes).filter(n=>n.nodeType===3&&n.textContent.trim());
+    const context=make('span','cmd-context');
+    texts.forEach(n=>context.append(n));card.prepend(context);
+    const small=Array.from(card.children).filter(n=>n.tagName==='SMALL');
+    if(small[0]){small[0].classList.add('cmd-action-name');card.title=small[0].textContent;}
+    contexts.push(context.textContent.trim());
+   }else{
+    const context=Array.from(card.children).find(n=>n.tagName==='STRONG');
+    const action=Array.from(card.children).find(n=>n.tagName==='P');
+    if(context){context.classList.add('cmd-context');contexts.push(context.textContent.trim());}
+    if(action){action.classList.add('cmd-action-name');card.title=action.textContent;}
+   }
+  });
+  // Suppress repeated competency headings only for the employee-only lists.
+  // Preserve employee identifiers when manager/HR lists contain multiple people.
+  const employeePreview=window.CMS_VIEW_CONFIG?.role==='employee';
+  const employeePage=typeof APP!=='undefined'&&APP.currentPage==='emp-devplans';
+  if((employeePreview||employeePage)&&contexts.length===cards.length&&new Set(contexts).size===1)
+   sidebar.classList.add('cmd-shared-competency');
+  sidebar.append(make('p','cmd-list-note','Actions on this page. Full wording appears in the selected action.'));
+  const competency=children[0]?.classList.contains('dv-pill')?children[0]:null;
+  if(competency){band.append(make('small','','COMPETENCY'),competency);workspace.append(band);}
+  header.append(make('small','cmd-eyebrow','SELECTED ACTION'));
+  for(const n of children.slice(0,progressIndex))if(n!==competency)header.append(n);
+  workspace.append(header,grid);
+  left.classList.add('cmd-progress');
+  if(left.firstElementChild?.tagName!=='H3')left.prepend(make('h3','','Deliverables & progress'));
+  // One history disclosure spans the workspace; its bound handler is retained.
+  for(const n of Array.from(left.children)){
+   if(n.tagName!=='DETAILS')continue;
+   const summary=Array.from(n.children).find(c=>c.tagName==='SUMMARY');
+   if(summary&&/^Review (?:and submission )?history$/i.test(summary.textContent.trim())){
+    n.classList.add('cmd-history');workspace.append(n);
+   }
+  }
+  // Prevent two Deliverables headings in the read-only renderer.
+  for(const n of Array.from(left.children))
+   if(n.tagName==='H3'&&n.textContent.trim()==='Deliverables')n.remove();
+ }
+ const main=document.getElementById('mainContent');
+ if(!main)return;
+ let queued=false;
+ const observer=new MutationObserver(()=>{
+  if(queued)return;queued=true;
+  queueMicrotask(()=>{queued=false;reflow();});
+ });
+ observer.observe(main,{childList:true,subtree:true});
+ reflow();
+}
+
+ cmsModernDevelopmentLayoutV1();
+ // Patch only the in-memory viewer template AFTER the existing viewer add-on.
+ // The parent bridge, isolation, authentication and server reads are unchanged.
+ if(window.CMS_VIEW_CONFIG)return;
+ try{
+  if(typeof window.CMS_VIEW_TEMPLATE!=='string')throw Error('Viewer template unavailable.');
+  const decode=x=>new TextDecoder().decode(Uint8Array.from(atob(x),c=>c.charCodeAt(0)));
+  const original=decode(window.CMS_VIEW_TEMPLATE);
+  if(!original.includes('cms-development-readonly-ui-v1'))throw Error('Place this presentation script AFTER cms-development-viewer-addon-v1.');
+  if(original.includes('cms-development-modern-embedded-v1'))return;
+  const end=original.lastIndexOf('</body>');
+  if(end<0)throw Error('Viewer closing body tag not found.');
+  const fragment=decode([
+ "PHNjcmlwdCBpZD0iY21zLWRldmVsb3BtZW50LW1vZGVybi1lbWJlZGRlZC12MSI+CmZ1bmN0aW9uIGNtc01vZGVybkRldmVsb3BtZW50TGF5b3V0VjEoKSB7CiAndXNlIHN0cmljdCc7",
+ "CiBpZiAod2luZG93Ll9fY21zTW9kZXJuRGV2ZWxvcG1lbnRMYXlvdXRWMSkgcmV0dXJuOwogd2luZG93Ll9fY21zTW9kZXJuRGV2ZWxvcG1lbnRMYXlvdXRWMSA9IHRydWU7CiBjb25z",
+ "dCByb290SWQgPSAnY21zRGV2ZWxvcG1lbnRWMSc7CiBjb25zdCBjc3MgPSBgCiAjY21zRGV2ZWxvcG1lbnRWMS5jbXMtbW9kZXJuLWRldmVsb3BtZW50ey0tZHYtbmF2eTojMTgyMzRj",
+ "Oy0tZHYtYmx1ZTojMzY0ZGNjOy0tZHYtdGVhbDojMTc3YzZkO2JhY2tncm91bmQ6I2Y1ZjdmYztib3JkZXI6MDtib3JkZXItcmFkaXVzOjEycHg7cGFkZGluZzoyMHB4O21hcmdpbjox",
+ "MnB4IDAgMjRweDtmb250OjE1cHgvMS42IEFyaWFsLHNhbnMtc2VyaWY7Y29sb3I6IzE4MjM0Y30KICNjbXNEZXZlbG9wbWVudFYxLmNtcy1tb2Rlcm4tZGV2ZWxvcG1lbnQgKntib3gt",
+ "c2l6aW5nOmJvcmRlci1ib3h9CiAjY21zRGV2ZWxvcG1lbnRWMS5jbXMtbW9kZXJuLWRldmVsb3BtZW50IGgye2ZvbnQtc2l6ZToyNnB4O2xpbmUtaGVpZ2h0OjEuMjU7bWFyZ2luOjAg",
+ "MCA2cHg7bGV0dGVyLXNwYWNpbmc6LS40cHh9CiAjY21zRGV2ZWxvcG1lbnRWMS5jbXMtbW9kZXJuLWRldmVsb3BtZW50IGgze2ZvbnQtc2l6ZToxOXB4O2xpbmUtaGVpZ2h0OjEuNTtt",
+ "YXJnaW46MCAwIDEwcHh9CiAjY21zRGV2ZWxvcG1lbnRWMS5jbXMtbW9kZXJuLWRldmVsb3BtZW50IGg0e2ZvbnQtc2l6ZToxNnB4O21hcmdpbjowIDAgMTBweH0KICNjbXNEZXZlbG9w",
+ "bWVudFYxLmNtcy1tb2Rlcm4tZGV2ZWxvcG1lbnQgcHtsaW5lLWhlaWdodDoxLjY1fQogI2Ntc0RldmVsb3BtZW50VjEuY21zLW1vZGVybi1kZXZlbG9wbWVudCAuZHYtbm90aWNle2Zv",
+ "bnQtc2l6ZToxNHB4O3BhZGRpbmc6MTBweCAxNHB4O2JvcmRlci1yYWRpdXM6OHB4fQogI2Ntc0RldmVsb3BtZW50VjEuY21zLW1vZGVybi1kZXZlbG9wbWVudCAuZHYtdG9vbGJhcntt",
+ "YXJnaW46MTJweCAwO2dhcDoxMHB4fQogI2Ntc0RldmVsb3BtZW50VjEuY21zLW1vZGVybi1kZXZlbG9wbWVudCBidXR0b257Zm9udDo2MDAgMTRweC8xLjM1IEFyaWFsLHNhbnMtc2Vy",
+ "aWY7bWluLWhlaWdodDozNnB4O21heC13aWR0aDoxMDAlO3BhZGRpbmc6OHB4IDEycHg7Ym9yZGVyLXJhZGl1czo3cHg7Ym94LXNoYWRvdzpub25lO3doaXRlLXNwYWNlOm5vcm1hbH0K",
+ "ICNjbXNEZXZlbG9wbWVudFYxLmNtcy1tb2Rlcm4tZGV2ZWxvcG1lbnQgaW5wdXQsCiAjY21zRGV2ZWxvcG1lbnRWMS5jbXMtbW9kZXJuLWRldmVsb3BtZW50IHRleHRhcmVhLAogI2Nt",
+ "c0RldmVsb3BtZW50VjEuY21zLW1vZGVybi1kZXZlbG9wbWVudCBzZWxlY3R7Zm9udC1zaXplOjE1cHh9CiAjY21zRGV2ZWxvcG1lbnRWMS5jbXMtbW9kZXJuLWRldmVsb3BtZW50IGJ1",
+ "dHRvbjpkaXNhYmxlZHtvcGFjaXR5OjE7Y29sb3I6Izc0ODA5NjtiYWNrZ3JvdW5kOiNmMWY0Zjg7Ym9yZGVyLWNvbG9yOiNlMGU1ZWQ7Y3Vyc29yOm5vdC1hbGxvd2VkO2JveC1zaGFk",
+ "b3c6bm9uZX0KICNjbXNEZXZlbG9wbWVudFYxIC5jbWQtc2hlbGx7ZGlzcGxheTpncmlkO2dyaWQtdGVtcGxhdGUtY29sdW1uczoyODBweCBtaW5tYXgoMCwxZnIpO2dhcDoxOHB4O2Fs",
+ "aWduLWl0ZW1zOnN0YXJ0fQogI2Ntc0RldmVsb3BtZW50VjEgLmNtZC1zaWRlYmFye2JhY2tncm91bmQ6I2ZmZjtib3JkZXI6MXB4IHNvbGlkICNkY2UzZWY7Ym9yZGVyLXJhZGl1czox",
+ "MnB4O3BhZGRpbmc6MThweDttaW4td2lkdGg6MH0KICNjbXNEZXZlbG9wbWVudFYxIC5jbWQtc2lkZWJhciBoM3tmb250LXNpemU6MTZweDttYXJnaW46MH0KICNjbXNEZXZlbG9wbWVu",
+ "dFYxIC5jbWQtc2lkZWJhcj5we2ZvbnQtc2l6ZToxNHB4O2NvbG9yOiM2NDcxOGE7bWFyZ2luOjRweCAwIDE0cHh9CiAjY21zRGV2ZWxvcG1lbnRWMSAuY21kLXdvcmtzcGFjZXttaW4t",
+ "d2lkdGg6MH0KICNjbXNEZXZlbG9wbWVudFYxIC5jbWQtYmFuZHtwYWRkaW5nOjE0cHggMThweDtiYWNrZ3JvdW5kOiNmZmY7Ym9yZGVyOjFweCBzb2xpZCAjZGNlM2VmO2JvcmRlci1y",
+ "YWRpdXM6MTBweDttYXJnaW4tYm90dG9tOjE0cHh9CiAjY21zRGV2ZWxvcG1lbnRWMSAuY21kLWJhbmQ+c21hbGx7Zm9udC1zaXplOjEzcHg7ZGlzcGxheTpibG9jaztjb2xvcjojMzY0",
+ "ZGNjO2ZvbnQtd2VpZ2h0OjcwMDtsZXR0ZXItc3BhY2luZzouN3B4O21hcmdpbi1ib3R0b206M3B4fQogI2Ntc0RldmVsb3BtZW50VjEgLmNtZC1iYW5kIC5kdi1waWxse2ZvbnQtc2l6",
+ "ZToxN3B4O2xpbmUtaGVpZ2h0OjEuNDU7YmFja2dyb3VuZDp0cmFuc3BhcmVudDtjb2xvcjojMTgyMzRjO3BhZGRpbmc6MDt0ZXh0LXRyYW5zZm9ybTpub25lfQogI2Ntc0RldmVsb3Bt",
+ "ZW50VjEgLmNtZC1hY3Rpb24taGVhZGVye3BhZGRpbmc6MThweCAyMHB4O2JhY2tncm91bmQ6I2ZmZjtib3JkZXI6MXB4IHNvbGlkICNkY2UzZWY7Ym9yZGVyLXJhZGl1czoxMHB4O21h",
+ "cmdpbi1ib3R0b206MTRweH0KICNjbXNEZXZlbG9wbWVudFYxIC5jbWQtZXllYnJvd3tkaXNwbGF5OmJsb2NrO2NvbG9yOiMzNjRkY2M7Zm9udC1zaXplOjEzcHg7Zm9udC13ZWlnaHQ6",
+ "NzAwO2xldHRlci1zcGFjaW5nOi43cHg7bWFyZ2luLWJvdHRvbTo2cHh9CiAjY21zRGV2ZWxvcG1lbnRWMSAuY21kLWFjdGlvbi1oZWFkZXIgLmR2LW1ldGF7Zm9udC1zaXplOjE0cHg7",
+ "cGFkZGluZzoxMHB4IDEycHg7YmFja2dyb3VuZDojZjRmNmZhO2JvcmRlci1yYWRpdXM6OHB4fQogI2Ntc0RldmVsb3BtZW50VjEgLmNtZC1hY3Rpb24taGVhZGVyIGRldGFpbHM+c3Vt",
+ "bWFyeXtmb250LXNpemU6MTRweH0KICNjbXNEZXZlbG9wbWVudFYxIC5jbWQtYWN0aW9uLWhlYWRlciAuZHYtcGlsbHtmb250LXNpemU6MTNweH0KICNjbXNEZXZlbG9wbWVudFYxLmNt",
+ "cy1tb2Rlcm4tZGV2ZWxvcG1lbnQgLmR2LWdyaWR7Z3JpZC10ZW1wbGF0ZS1jb2x1bW5zOm1pbm1heCgwLDEuMWZyKSBtaW5tYXgoMCwxZnIpO2dhcDoxNHB4fQogI2Ntc0RldmVsb3Bt",
+ "ZW50VjEuY21zLW1vZGVybi1kZXZlbG9wbWVudCAuZHYtcGFuZWx7Ym9yZGVyLXJhZGl1czoxMHB4O3BhZGRpbmc6MThweDtib3JkZXItY29sb3I6I2RjZTNlZjtib3gtc2hhZG93Om5v",
+ "bmU7bWluLXdpZHRoOjB9CiAjY21zRGV2ZWxvcG1lbnRWMSAuY21kLXNpZGViYXIgLmR2LWxpc3R7ZGlzcGxheTpmbGV4O2ZsZXgtZGlyZWN0aW9uOmNvbHVtbjtnYXA6OHB4O292ZXJm",
+ "bG93OnZpc2libGU7cGFkZGluZzowO21hcmdpbjowO2NvdW50ZXItcmVzZXQ6Y21kLWFjdGlvbn0KICNjbXNEZXZlbG9wbWVudFYxIC5jbWQtc2lkZWJhciAuZHYtY2hvaWNle3Bvc2l0",
+ "aW9uOnJlbGF0aXZlO2Rpc3BsYXk6YmxvY2s7ZmxleDpub25lO3dpZHRoOjEwMCU7bWluLXdpZHRoOjA7cGFkZGluZzoxMnB4IDEycHggMTJweCA0M3B4O2JvcmRlcjoxcHggc29saWQg",
+ "dHJhbnNwYXJlbnQ7Ym9yZGVyLXJhZGl1czo5cHg7YmFja2dyb3VuZDojZmZmO3RleHQtYWxpZ246bGVmdDtmb250LXNpemU6MTRweDtmb250LXdlaWdodDo1MDA7Y291bnRlci1pbmNy",
+ "ZW1lbnQ6Y21kLWFjdGlvbn0KICNjbXNEZXZlbG9wbWVudFYxIC5jbWQtc2lkZWJhciAuZHYtY2hvaWNlOjpiZWZvcmV7Y29udGVudDpjb3VudGVyKGNtZC1hY3Rpb24pO3Bvc2l0aW9u",
+ "OmFic29sdXRlO3RvcDoxM3B4O2xlZnQ6OHB4O3dpZHRoOjI1cHg7aGVpZ2h0OjI1cHg7ZGlzcGxheTpmbGV4O2FsaWduLWl0ZW1zOmNlbnRlcjtqdXN0aWZ5LWNvbnRlbnQ6Y2VudGVy",
+ "O2JvcmRlcjoxcHggc29saWQgI2E1YjJkNztib3JkZXItcmFkaXVzOjUwJTtiYWNrZ3JvdW5kOiNmZmY7Y29sb3I6IzM2NGRjYztmb250LXNpemU6MTNweDtmb250LXdlaWdodDo3MDB9",
+ "CiAjY21zRGV2ZWxvcG1lbnRWMSAuY21kLXNpZGViYXIgLmR2LWNob2ljZTo6YWZ0ZXJ7Y29udGVudDoiIjtwb3NpdGlvbjphYnNvbHV0ZTt3aWR0aDoxcHg7bGVmdDoyMHB4O3RvcDo0",
+ "MHB4O2JvdHRvbTotN3B4O2JhY2tncm91bmQ6I2RjZTNlZn0KICNjbXNEZXZlbG9wbWVudFYxIC5jbWQtc2lkZWJhciAuZHYtY2hvaWNlOmxhc3QtY2hpbGQ6OmFmdGVye2Rpc3BsYXk6",
+ "bm9uZX0KICNjbXNEZXZlbG9wbWVudFYxIC5jbWQtc2lkZWJhciAuZHYtY2hvaWNlW2hpZGRlbl17ZGlzcGxheTpub25lIWltcG9ydGFudH0KICNjbXNEZXZlbG9wbWVudFYxIC5jbWQt",
+ "c2lkZWJhciAuZHYtY2hvaWNlW2FyaWEtcHJlc3NlZD10cnVlXSwKICNjbXNEZXZlbG9wbWVudFYxIC5jbWQtc2lkZWJhciAuZHYtY2hvaWNlW2FyaWEtY3VycmVudD10cnVlXXtiYWNr",
+ "Z3JvdW5kOiNlZWYyZmY7Ym9yZGVyOjFweCBzb2xpZCAjYzhkM2ZjfQogI2Ntc0RldmVsb3BtZW50VjEgLmNtZC1zaWRlYmFyIC5kdi1jaG9pY2VbYXJpYS1wcmVzc2VkPXRydWVdOjpi",
+ "ZWZvcmUsCiAjY21zRGV2ZWxvcG1lbnRWMSAuY21kLXNpZGViYXIgLmR2LWNob2ljZVthcmlhLWN1cnJlbnQ9dHJ1ZV06OmJlZm9yZXtiYWNrZ3JvdW5kOiMzNjRkY2M7Y29sb3I6I2Zm",
+ "Zjtib3JkZXItY29sb3I6IzM2NGRjY30KICNjbXNEZXZlbG9wbWVudFYxIC5jbWQtc2lkZWJhciAuY21kLWFjdGlvbi1uYW1le2ZvbnQtc2l6ZToxNHB4O2ZvbnQtd2VpZ2h0OjYwMDts",
+ "aW5lLWhlaWdodDoxLjU7Y29sb3I6IzE4MjM0YzttYXJnaW46MCAwIDVweDtkaXNwbGF5Oi13ZWJraXQtYm94Oy13ZWJraXQtbGluZS1jbGFtcDozOy13ZWJraXQtYm94LW9yaWVudDp2",
+ "ZXJ0aWNhbDtvdmVyZmxvdzpoaWRkZW59CiAjY21zRGV2ZWxvcG1lbnRWMSAuY21kLXNpZGViYXIgLmNtZC1jb250ZXh0e2Rpc3BsYXk6YmxvY2s7Y29sb3I6IzZiNzY5MDtmb250LXNp",
+ "emU6MTNweDtsaW5lLWhlaWdodDoxLjQ7bWFyZ2luOjAgMCA2cHh9CiAjY21zRGV2ZWxvcG1lbnRWMSAuY21kLXNpZGViYXIgLmR2LWNob2ljZSBzbWFsbHtmb250LXNpemU6MTNweDtj",
+ "b2xvcjojNjQ3MThhO2xpbmUtaGVpZ2h0OjEuNH0KICNjbXNEZXZlbG9wbWVudFYxIC5jbWQtc2lkZWJhciAuZHYtY2hvaWNlPmJ1dHRvbntmb250LXNpemU6MTNweDttaW4taGVpZ2h0",
+ "OjMwcHg7cGFkZGluZzo1cHggOHB4O21hcmdpbi10b3A6N3B4O2JhY2tncm91bmQ6I2ZmZn0KICNjbXNEZXZlbG9wbWVudFYxIC5jbWQtc2lkZWJhci5jbWQtc2hhcmVkLWNvbXBldGVu",
+ "Y3kgLmNtZC1jb250ZXh0e2Rpc3BsYXk6bm9uZX0KICNjbXNEZXZlbG9wbWVudFYxIC5jbWQtcHJvZ3Jlc3M+aDN7Zm9udC1zaXplOjE3cHh9CiAjY21zRGV2ZWxvcG1lbnRWMSAuY21k",
+ "LXByb2dyZXNzPi5kdi1ub3RpY2V7YmFja2dyb3VuZDojZmZmOGU5O2NvbG9yOiM3MzUxMTU7Ym9yZGVyLWNvbG9yOiNlZmRiYWR9CiAjY21zRGV2ZWxvcG1lbnRWMSAuY21kLXByb2dy",
+ "ZXNzIC5kdi1taWxle2JvcmRlci1yYWRpdXM6OHB4O21hcmdpbjoxMHB4IDA7cGFkZGluZzoxMnB4fQogI2Ntc0RldmVsb3BtZW50VjEgLmNtZC1oaXN0b3J5e2JhY2tncm91bmQ6I2Zm",
+ "Zjtib3JkZXI6MXB4IHNvbGlkICNkY2UzZWY7Ym9yZGVyLXJhZGl1czo5cHg7cGFkZGluZzoxMHB4IDE1cHg7bWFyZ2luLXRvcDoxNHB4fQogI2Ntc0RldmVsb3BtZW50VjEgLmNtZC1o",
+ "aXN0b3J5PnN1bW1hcnl7Zm9udC1zaXplOjE0cHh9CiAjY21zRGV2ZWxvcG1lbnRWMS5jbXMtbW9kZXJuLWRldmVsb3BtZW50IC5kdi1kcm9we3BhZGRpbmc6MTZweDtib3JkZXItY29s",
+ "b3I6I2JlY2JlNDtiYWNrZ3JvdW5kOiNmOGZhZmY7Ym9yZGVyLXJhZGl1czo5cHh9CiAjY21zRGV2ZWxvcG1lbnRWMS5jbXMtbW9kZXJuLWRldmVsb3BtZW50IC5kdi1kcm9wIHB7Zm9u",
+ "dC1zaXplOjE0cHh9CiAjY21zRGV2ZWxvcG1lbnRWMSAuY21kLWxpc3Qtbm90ZXtmb250LXNpemU6MTNweDtjb2xvcjojNjQ3MThhO21hcmdpbjoxNHB4IDAgMH0KIEBtZWRpYShtaW4t",
+ "d2lkdGg6MTQ1MHB4KXsjY21zRGV2ZWxvcG1lbnRWMSAuY21kLXNoZWxse2dyaWQtdGVtcGxhdGUtY29sdW1uczozMDVweCBtaW5tYXgoMCwxZnIpfX0KIEBtZWRpYShtYXgtd2lkdGg6",
+ "MTE1MHB4KXsjY21zRGV2ZWxvcG1lbnRWMS5jbXMtbW9kZXJuLWRldmVsb3BtZW50IC5kdi1ncmlke2dyaWQtdGVtcGxhdGUtY29sdW1uczptaW5tYXgoMCwxZnIpfSNjbXNEZXZlbG9w",
+ "bWVudFYxIC5jbWQtc2hlbGx7Z3JpZC10ZW1wbGF0ZS1jb2x1bW5zOjI2MHB4IG1pbm1heCgwLDFmcil9fQogQG1lZGlhKG1heC13aWR0aDo3NjBweCl7I2Ntc0RldmVsb3BtZW50VjEu",
+ "Y21zLW1vZGVybi1kZXZlbG9wbWVudHtwYWRkaW5nOjEycHh9I2Ntc0RldmVsb3BtZW50VjEgLmNtZC1zaGVsbHtncmlkLXRlbXBsYXRlLWNvbHVtbnM6bWlubWF4KDAsMWZyKX0jY21z",
+ "RGV2ZWxvcG1lbnRWMSAuY21kLXNpZGViYXJ7cGFkZGluZzoxNHB4fSNjbXNEZXZlbG9wbWVudFYxIC5jbWQtYWN0aW9uLWhlYWRlcntwYWRkaW5nOjE2cHh9I2Ntc0RldmVsb3BtZW50",
+ "VjEuY21zLW1vZGVybi1kZXZlbG9wbWVudCBoMntmb250LXNpemU6MjNweH0jY21zRGV2ZWxvcG1lbnRWMSAuY21kLXNpZGViYXIgLmR2LWxpc3R7bWF4LWhlaWdodDozNjBweDtvdmVy",
+ "ZmxvdzphdXRvfSNjbXNEZXZlbG9wbWVudFYxIC5jbWQtc2lkZWJhciAuZHYtY2hvaWNle3BhZGRpbmctcmlnaHQ6MTBweH19CiBgOwogY29uc3Qgc3R5bGUgPSBkb2N1bWVudC5jcmVh",
+ "dGVFbGVtZW50KCdzdHlsZScpOwogc3R5bGUuaWQgPSAnY21zLWRldmVsb3BtZW50LW1vZGVybi1sYXlvdXQtc3R5bGUtdjEnOwogc3R5bGUudGV4dENvbnRlbnQgPSBjc3M7CiBkb2N1",
+ "bWVudC5oZWFkLmFwcGVuZChzdHlsZSk7CiBmdW5jdGlvbiBtYWtlKHRhZywgY2xzLCB0ZXh0KSB7CiAgY29uc3Qgbj1kb2N1bWVudC5jcmVhdGVFbGVtZW50KHRhZyk7bi5jbGFzc05h",
+ "bWU9Y2xzOwogIGlmKHRleHQhPW51bGwpbi50ZXh0Q29udGVudD10ZXh0OwogIHJldHVybiBuOwogfQogZnVuY3Rpb24gcmVmbG93KCkgewogIGNvbnN0IHJvb3Q9ZG9jdW1lbnQuZ2V0",
+ "RWxlbWVudEJ5SWQocm9vdElkKTsKICBpZighcm9vdClyZXR1cm47CiAgaWYoIXJvb3QuY2xhc3NMaXN0LmNvbnRhaW5zKCdjbXMtbW9kZXJuLWRldmVsb3BtZW50Jykpcm9vdC5jbGFz",
+ "c0xpc3QuYWRkKCdjbXMtbW9kZXJuLWRldmVsb3BtZW50Jyk7CiAgY29uc3QgZ3JpZD1yb290LnF1ZXJ5U2VsZWN0b3IoJy5kdi1ncmlkJyk7CiAgaWYoIWdyaWR8fGdyaWQuZGF0YXNl",
+ "dC5jbXNNb2Rlcm5MYXlvdXQ9PT0nMScpcmV0dXJuOwogIGNvbnN0IGJvZHk9Z3JpZC5wYXJlbnRFbGVtZW50OwogIGNvbnN0IGxpc3Q9QXJyYXkuZnJvbShib2R5LmNoaWxkcmVuKS5m",
+ "aW5kKG49Pm4uY2xhc3NMaXN0LmNvbnRhaW5zKCdkdi1saXN0JykpOwogIGNvbnN0IGxlZnQ9Z3JpZC5jaGlsZHJlblswXSxyaWdodD1ncmlkLmNoaWxkcmVuWzFdOwogIGlmKCFsaXN0",
+ "fHwhbGVmdHx8IXJpZ2h0fHwhbGVmdC5jbGFzc0xpc3QuY29udGFpbnMoJ2R2LXBhbmVsJyl8fCFyaWdodC5jbGFzc0xpc3QuY29udGFpbnMoJ2R2LXBhbmVsJykpcmV0dXJuOwogIGNv",
+ "bnN0IGNoaWxkcmVuPUFycmF5LmZyb20obGVmdC5jaGlsZHJlbik7CiAgLy8gU3BsaXQgb25seSBvbiBlc3RhYmxpc2hlZCByZW5kZXJlciBib3VuZGFyaWVzLiBVbmtub3duIHZlcnNp",
+ "b25zIHJlbWFpbiBpbnRhY3QuCiAgY29uc3QgcHJvZ3Jlc3NJbmRleD1jaGlsZHJlbi5maW5kSW5kZXgobj0+bi50YWdOYW1lPT09J1AnJiYKICAgKC9eUHJvZ3Jlc3M6Ly50ZXN0KG4u",
+ "dGV4dENvbnRlbnQudHJpbSgpKXx8L15cZCsoPzpcLlxkKyk/JSB2ZXJpZmllZC8udGVzdChuLnRleHRDb250ZW50LnRyaW0oKSkpKTsKICBpZihwcm9ncmVzc0luZGV4PDApcmV0dXJu",
+ "OwogIGdyaWQuZGF0YXNldC5jbXNNb2Rlcm5MYXlvdXQ9JzEnOwogIGNvbnN0IHNoZWxsPW1ha2UoJ2RpdicsJ2NtZC1zaGVsbCcpLHNpZGViYXI9bWFrZSgnYXNpZGUnLCdjbWQtc2lk",
+ "ZWJhcicpOwogIGNvbnN0IHdvcmtzcGFjZT1tYWtlKCdkaXYnLCdjbWQtd29ya3NwYWNlJyksaGVhZGVyPW1ha2UoJ3NlY3Rpb24nLCdjbWQtYWN0aW9uLWhlYWRlcicpOwogIGNvbnN0",
+ "IGJhbmQ9bWFrZSgnc2VjdGlvbicsJ2NtZC1iYW5kJyk7CiAgc2lkZWJhci5zZXRBdHRyaWJ1dGUoJ2FyaWEtbGFiZWwnLCdEZXZlbG9wbWVudCBhY3Rpb25zJyk7CiAgc2lkZWJhci5h",
+ "cHBlbmQobWFrZSgnaDMnLCcnLCdEZXZlbG9wbWVudCBhY3Rpb25zJyksbWFrZSgncCcsJycsJ0Nob29zZSBhbiBhY3Rpb24gdG8gaW5zcGVjdCcpKTsKICAvLyBNb3ZlIG9yaWdpbmFs",
+ "IGNvbnRyb2xzLCBuZXZlciBjbG9uZSB0aGVtOiB2YWx1ZXMsIGRpc2FibGVkIHN0YXRlcyBhbmQgaGFuZGxlcnMgc3Vydml2ZS4KICBib2R5Lmluc2VydEJlZm9yZShzaGVsbCxncmlk",
+ "KTtzaGVsbC5hcHBlbmQoc2lkZWJhcix3b3Jrc3BhY2UpO3NpZGViYXIuYXBwZW5kKGxpc3QpOwogIGNvbnN0IGNhcmRzPUFycmF5LmZyb20obGlzdC5jaGlsZHJlbik7CiAgbGV0IGNv",
+ "bnRleHRzPVtdOwogIGNhcmRzLmZvckVhY2goY2FyZD0+ewogICBpZihjYXJkLnRhZ05hbWU9PT0nQlVUVE9OJyl7CiAgICBjb25zdCB0ZXh0cz1BcnJheS5mcm9tKGNhcmQuY2hpbGRO",
+ "b2RlcykuZmlsdGVyKG49Pm4ubm9kZVR5cGU9PT0zJiZuLnRleHRDb250ZW50LnRyaW0oKSk7CiAgICBjb25zdCBjb250ZXh0PW1ha2UoJ3NwYW4nLCdjbWQtY29udGV4dCcpOwogICAg",
+ "dGV4dHMuZm9yRWFjaChuPT5jb250ZXh0LmFwcGVuZChuKSk7Y2FyZC5wcmVwZW5kKGNvbnRleHQpOwogICAgY29uc3Qgc21hbGw9QXJyYXkuZnJvbShjYXJkLmNoaWxkcmVuKS5maWx0",
+ "ZXIobj0+bi50YWdOYW1lPT09J1NNQUxMJyk7CiAgICBpZihzbWFsbFswXSl7c21hbGxbMF0uY2xhc3NMaXN0LmFkZCgnY21kLWFjdGlvbi1uYW1lJyk7Y2FyZC50aXRsZT1zbWFsbFsw",
+ "XS50ZXh0Q29udGVudDt9CiAgICBjb250ZXh0cy5wdXNoKGNvbnRleHQudGV4dENvbnRlbnQudHJpbSgpKTsKICAgfWVsc2V7CiAgICBjb25zdCBjb250ZXh0PUFycmF5LmZyb20oY2Fy",
+ "ZC5jaGlsZHJlbikuZmluZChuPT5uLnRhZ05hbWU9PT0nU1RST05HJyk7CiAgICBjb25zdCBhY3Rpb249QXJyYXkuZnJvbShjYXJkLmNoaWxkcmVuKS5maW5kKG49Pm4udGFnTmFtZT09",
+ "PSdQJyk7CiAgICBpZihjb250ZXh0KXtjb250ZXh0LmNsYXNzTGlzdC5hZGQoJ2NtZC1jb250ZXh0Jyk7Y29udGV4dHMucHVzaChjb250ZXh0LnRleHRDb250ZW50LnRyaW0oKSk7fQog",
+ "ICAgaWYoYWN0aW9uKXthY3Rpb24uY2xhc3NMaXN0LmFkZCgnY21kLWFjdGlvbi1uYW1lJyk7Y2FyZC50aXRsZT1hY3Rpb24udGV4dENvbnRlbnQ7fQogICB9CiAgfSk7CiAgLy8gU3Vw",
+ "cHJlc3MgcmVwZWF0ZWQgY29tcGV0ZW5jeSBoZWFkaW5ncyBvbmx5IGZvciB0aGUgZW1wbG95ZWUtb25seSBsaXN0cy4KICAvLyBQcmVzZXJ2ZSBlbXBsb3llZSBpZGVudGlmaWVycyB3",
+ "aGVuIG1hbmFnZXIvSFIgbGlzdHMgY29udGFpbiBtdWx0aXBsZSBwZW9wbGUuCiAgY29uc3QgZW1wbG95ZWVQcmV2aWV3PXdpbmRvdy5DTVNfVklFV19DT05GSUc/LnJvbGU9PT0nZW1w",
+ "bG95ZWUnOwogIGNvbnN0IGVtcGxveWVlUGFnZT10eXBlb2YgQVBQIT09J3VuZGVmaW5lZCcmJkFQUC5jdXJyZW50UGFnZT09PSdlbXAtZGV2cGxhbnMnOwogIGlmKChlbXBsb3llZVBy",
+ "ZXZpZXd8fGVtcGxveWVlUGFnZSkmJmNvbnRleHRzLmxlbmd0aD09PWNhcmRzLmxlbmd0aCYmbmV3IFNldChjb250ZXh0cykuc2l6ZT09PTEpCiAgIHNpZGViYXIuY2xhc3NMaXN0LmFk",
+ "ZCgnY21kLXNoYXJlZC1jb21wZXRlbmN5Jyk7CiAgc2lkZWJhci5hcHBlbmQobWFrZSgncCcsJ2NtZC1saXN0LW5vdGUnLCdBY3Rpb25zIG9uIHRoaXMgcGFnZS4gRnVsbCB3b3JkaW5n",
+ "IGFwcGVhcnMgaW4gdGhlIHNlbGVjdGVkIGFjdGlvbi4nKSk7CiAgY29uc3QgY29tcGV0ZW5jeT1jaGlsZHJlblswXT8uY2xhc3NMaXN0LmNvbnRhaW5zKCdkdi1waWxsJyk/Y2hpbGRy",
+ "ZW5bMF06bnVsbDsKICBpZihjb21wZXRlbmN5KXtiYW5kLmFwcGVuZChtYWtlKCdzbWFsbCcsJycsJ0NPTVBFVEVOQ1knKSxjb21wZXRlbmN5KTt3b3Jrc3BhY2UuYXBwZW5kKGJhbmQp",
+ "O30KICBoZWFkZXIuYXBwZW5kKG1ha2UoJ3NtYWxsJywnY21kLWV5ZWJyb3cnLCdTRUxFQ1RFRCBBQ1RJT04nKSk7CiAgZm9yKGNvbnN0IG4gb2YgY2hpbGRyZW4uc2xpY2UoMCxwcm9n",
+ "cmVzc0luZGV4KSlpZihuIT09Y29tcGV0ZW5jeSloZWFkZXIuYXBwZW5kKG4pOwogIHdvcmtzcGFjZS5hcHBlbmQoaGVhZGVyLGdyaWQpOwogIGxlZnQuY2xhc3NMaXN0LmFkZCgnY21k",
+ "LXByb2dyZXNzJyk7CiAgaWYobGVmdC5maXJzdEVsZW1lbnRDaGlsZD8udGFnTmFtZSE9PSdIMycpbGVmdC5wcmVwZW5kKG1ha2UoJ2gzJywnJywnRGVsaXZlcmFibGVzICYgcHJvZ3Jl",
+ "c3MnKSk7CiAgLy8gT25lIGhpc3RvcnkgZGlzY2xvc3VyZSBzcGFucyB0aGUgd29ya3NwYWNlOyBpdHMgYm91bmQgaGFuZGxlciBpcyByZXRhaW5lZC4KICBmb3IoY29uc3QgbiBvZiBB",
+ "cnJheS5mcm9tKGxlZnQuY2hpbGRyZW4pKXsKICAgaWYobi50YWdOYW1lIT09J0RFVEFJTFMnKWNvbnRpbnVlOwogICBjb25zdCBzdW1tYXJ5PUFycmF5LmZyb20obi5jaGlsZHJlbiku",
+ "ZmluZChjPT5jLnRhZ05hbWU9PT0nU1VNTUFSWScpOwogICBpZihzdW1tYXJ5JiYvXlJldmlldyAoPzphbmQgc3VibWlzc2lvbiApP2hpc3RvcnkkL2kudGVzdChzdW1tYXJ5LnRleHRD",
+ "b250ZW50LnRyaW0oKSkpewogICAgbi5jbGFzc0xpc3QuYWRkKCdjbWQtaGlzdG9yeScpO3dvcmtzcGFjZS5hcHBlbmQobik7CiAgIH0KICB9CiAgLy8gUHJldmVudCB0d28gRGVsaXZl",
+ "cmFibGVzIGhlYWRpbmdzIGluIHRoZSByZWFkLW9ubHkgcmVuZGVyZXIuCiAgZm9yKGNvbnN0IG4gb2YgQXJyYXkuZnJvbShsZWZ0LmNoaWxkcmVuKSkKICAgaWYobi50YWdOYW1lPT09",
+ "J0gzJyYmbi50ZXh0Q29udGVudC50cmltKCk9PT0nRGVsaXZlcmFibGVzJyluLnJlbW92ZSgpOwogfQogY29uc3QgbWFpbj1kb2N1bWVudC5nZXRFbGVtZW50QnlJZCgnbWFpbkNvbnRl",
+ "bnQnKTsKIGlmKCFtYWluKXJldHVybjsKIGxldCBxdWV1ZWQ9ZmFsc2U7CiBjb25zdCBvYnNlcnZlcj1uZXcgTXV0YXRpb25PYnNlcnZlcigoKT0+ewogIGlmKHF1ZXVlZClyZXR1cm47",
+ "cXVldWVkPXRydWU7CiAgcXVldWVNaWNyb3Rhc2soKCk9PntxdWV1ZWQ9ZmFsc2U7cmVmbG93KCk7fSk7CiB9KTsKIG9ic2VydmVyLm9ic2VydmUobWFpbix7Y2hpbGRMaXN0OnRydWUs",
+ "c3VidHJlZTp0cnVlfSk7CiByZWZsb3coKTsKfQoKY21zTW9kZXJuRGV2ZWxvcG1lbnRMYXlvdXRWMSgpOwo8L3NjcmlwdD4=",
+  ].join(''));
+  const updated=original.slice(0,end)+fragment+'\n'+original.slice(end);
+  const bytes=new TextEncoder().encode(updated);let binary='';
+  for(let i=0;i<bytes.length;i+=16384)binary+=String.fromCharCode(...bytes.subarray(i,i+16384));
+  window.CMS_VIEW_TEMPLATE=btoa(binary);
+ }catch(e){
+  console.error('Modern development presentation:',e.message);
+  const warning=document.createElement('p');warning.textContent='Modern development viewer presentation was not applied: '+e.message;
+  warning.setAttribute('role','alert');warning.style.cssText='padding:12px;background:#fff0ee;color:#9b2520';document.body.append(warning);
+ }
+})();
+</script>
+<script id="cms-manager-development-tabs-v1">
+(function(){
+ 'use strict';
+ if(window.CMS_VIEW_CONFIG||window.__cmsManagerTabsPackageV1)return;
+ if(typeof loadManagerDevPlans!=='function'||typeof _supabase==='undefined'){
+  console.error('Manager tabs must be installed after the existing CMS scripts.');return;
+ }
+ function cmsManagerTabsV1() {
+ 'use strict';
+ if(window.__cmsManagerTabsV1 || typeof loadManagerDevPlans!=='function' || typeof _supabase==='undefined')return;
+ const preview=!!window.CMS_VIEW_CONFIG;
+ if(preview&&window.CMS_VIEW_CONFIG.role!=='manager')return;
+ window.__cmsManagerTabsV1=true;
+ let active=null,serial=0;
+ const CSS=`#cmsManagerTabsV1{--mt-navy:#101942;--mt-indigo:#3934e8;--mt-teal:#00816e;--mt-line:#d7ddea;background:#fff;color:var(--mt-navy);font:14px/1.55 Arial,sans-serif;max-width:1240px;margin:12px auto 28px;padding:0 24px 18px;border:1px solid #e3e7ef;border-radius:12px;box-shadow:0 8px 30px #15224b08}
+#cmsManagerTabsV1 *{box-sizing:border-box}
+#cmsManagerTabsV1 [hidden]{display:none!important}
+#cmsManagerTabsV1 h2{font:700 24px/1.3 Arial,sans-serif;letter-spacing:-.4px;margin:0 0 18px;color:var(--mt-navy)}
+#cmsManagerTabsV1 h3{font:700 17px/1.4 Arial,sans-serif;margin:0 0 5px;color:var(--mt-navy)}
+#cmsManagerTabsV1 h4{font-size:14px;font-weight:700;margin:16px 0 6px;color:var(--mt-navy)}
+#cmsManagerTabsV1 p{margin:6px 0 10px;overflow-wrap:anywhere}
+#cmsManagerTabsV1 button,#cmsManagerTabsV1 a.mt-outline{font:600 14px/1.35 Arial,sans-serif;padding:8px 13px;min-height:36px;border:1px solid var(--mt-line);border-radius:6px;background:#fff;color:var(--mt-navy);cursor:pointer;text-transform:none;letter-spacing:normal;box-shadow:none;max-width:100%;width:auto;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;gap:6px;white-space:normal}
+#cmsManagerTabsV1 button:disabled{opacity:1;background:#f2f4f8;color:#697489;border-color:#dce1e9;cursor:not-allowed}
+#cmsManagerTabsV1 button.mt-primary{background:var(--mt-indigo);border-color:var(--mt-indigo);color:#fff;box-shadow:0 3px 8px #3934e829}
+#cmsManagerTabsV1 button.mt-verify{background:var(--mt-teal);border-color:var(--mt-teal);color:#fff}
+#cmsManagerTabsV1 button.mt-outline,#cmsManagerTabsV1 a.mt-outline{border-color:#a9a5ff;color:#302ad3}
+#cmsManagerTabsV1 button.mt-text-button{border-color:transparent;background:transparent;color:#302ad3;padding-left:0}
+#cmsManagerTabsV1 button:disabled.mt-primary,#cmsManagerTabsV1 button:disabled.mt-verify{background:#edf0f7;color:#697489;border-color:#dce1e9;box-shadow:none}
+#cmsManagerTabsV1 .mt-tabs{display:flex;gap:22px;border-bottom:1px solid var(--mt-line);padding:0;margin-bottom:24px}
+#cmsManagerTabsV1 .mt-tabs>button{flex:1;border:0;border-radius:0;border-bottom:3px solid transparent;padding:17px 8px 14px;background:transparent;font-weight:700}
+#cmsManagerTabsV1 .mt-tabs>button[aria-selected=true]{color:var(--mt-indigo);border-bottom-color:var(--mt-indigo)}
+#cmsManagerTabsV1 .mt-workspace{padding-bottom:12px}
+#cmsManagerTabsV1 .mt-muted{color:#58667e}
+#cmsManagerTabsV1 .mt-count{color:#3934e8;font-weight:600;margin-left:60px}
+#cmsManagerTabsV1 .mt-card,#cmsManagerTabsV1 .mt-review-card{background:#fff;border:1px solid var(--mt-line);border-radius:9px;padding:20px;margin:0 0 16px;min-width:0}
+#cmsManagerTabsV1 .mt-plan-head{display:flex;gap:12px;align-items:flex-start;flex-wrap:wrap}
+#cmsManagerTabsV1 .mt-avatar{width:46px;height:46px;flex:0 0 46px;display:flex;align-items:center;justify-content:center;border-radius:50%;background:#3029ce;color:#fff;font-size:17px;font-weight:700}
+#cmsManagerTabsV1 .mt-grow{flex:1;min-width:160px}
+#cmsManagerTabsV1 .mt-badges{display:flex;gap:7px;flex-wrap:wrap}
+#cmsManagerTabsV1 .mt-pill{display:inline-block;background:#f0efff;border:1px solid #dddaff;color:#373399;border-radius:5px;padding:3px 8px;font-size:14px;margin:0 6px 5px 0}
+#cmsManagerTabsV1 .mt-ok{background:#f0fbf6;border-color:#b4dfca;color:#00634e}
+#cmsManagerTabsV1 .mt-warn{background:#fff8ed!important;border-color:#f1d6a9!important;color:#865016!important}
+#cmsManagerTabsV1 .mt-notice{padding:12px 14px;border:1px solid #dcdcff;background:#f6f6ff;border-radius:8px;font-size:14px;margin:12px 0}
+#cmsManagerTabsV1 .mt-error{background:#fff2f0;border-color:#edb8b0;color:#9a2b22}
+#cmsManagerTabsV1 .mt-footer{display:flex;justify-content:flex-end;gap:12px;flex-wrap:wrap;margin-top:16px}
+#cmsManagerTabsV1 .mt-filterbar{display:flex;align-items:flex-end;gap:14px;margin:0 0 18px;flex-wrap:wrap}
+#cmsManagerTabsV1 .mt-filterbar>.mt-field{flex:1;min-width:180px;margin:0}
+#cmsManagerTabsV1 .mt-field{display:flex;flex-direction:column;gap:6px;font-size:14px;font-weight:600;margin:0 0 16px;min-width:0}
+#cmsManagerTabsV1 input,#cmsManagerTabsV1 select,#cmsManagerTabsV1 textarea{width:100%;min-width:0;max-width:100%;margin:0;padding:9px 11px;border:1px solid #cbd3e1;border-radius:6px;background:#fff;color:var(--mt-navy);font:400 14px/1.5 Arial,sans-serif;box-shadow:none}
+#cmsManagerTabsV1 input:disabled,#cmsManagerTabsV1 select:disabled,#cmsManagerTabsV1 textarea:disabled{background:#f4f6fa;color:#647087}
+#cmsManagerTabsV1 textarea{min-height:86px;resize:vertical}
+#cmsManagerTabsV1 .mt-form-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:0 20px}
+#cmsManagerTabsV1 .mt-action-box{padding:18px;border:1px solid #bcb8ff;background:linear-gradient(115deg,#fafaff,#fff);border-radius:8px;margin:14px 0}
+#cmsManagerTabsV1 .mt-action-box>h3{color:#342be0;font-size:16px;margin-bottom:14px}
+#cmsManagerTabsV1 .mt-actions-list{padding-left:24px;margin:8px 0 18px;list-style:decimal}
+#cmsManagerTabsV1 .mt-actions-list li{padding-left:6px;margin:8px 0;overflow-wrap:anywhere}
+#cmsManagerTabsV1 .mt-actions-list li::marker{color:var(--mt-indigo);font-weight:700}
+#cmsManagerTabsV1 .mt-subtabs{display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap}
+#cmsManagerTabsV1 .mt-subtabs button[aria-selected=true]{background:#eeedff;border-color:#a9a5ff;color:#302ad3}
+#cmsManagerTabsV1 .mt-subtabs button[aria-selected=false]{background:#f4f5f8;border-color:#e4e7ef;color:var(--mt-navy)}
+#cmsManagerTabsV1 .mt-evidence{padding:12px;border:1px solid #dce2ed;border-radius:7px;margin:8px 0;background:#f8f9fd;overflow-wrap:anywhere}
+#cmsManagerTabsV1 .mt-evidence button,#cmsManagerTabsV1 .mt-evidence a{margin-top:8px}
+#cmsManagerTabsV1 .mt-pre{white-space:pre-wrap;overflow-wrap:anywhere}
+#cmsManagerTabsV1 summary{cursor:pointer;font-weight:600;padding:4px 0}
+#cmsManagerTabsV1 .mt-plan-layout{display:grid;grid-template-columns:240px minmax(0,1fr);gap:20px;align-items:start;margin-top:20px}
+#cmsManagerTabsV1 .mt-action-link{width:100%;justify-content:flex-start;text-align:left;margin-top:10px}
+#cmsManagerTabsV1 .mt-action-link[aria-current=true]{background:#eeedff;border-color:#a9a5ff;color:#302ad3}
+#cmsManagerTabsV1 .mt-action-caption{font-size:14px;color:#5a6680;margin:5px 0 14px}
+#cmsManagerTabsV1 .mt-track{height:8px;background:#e7ebf3;border-radius:20px;overflow:hidden;margin-bottom:18px}
+#cmsManagerTabsV1 .mt-track>div{height:100%;background:var(--mt-teal)}
+#cmsManagerTabsV1 :focus-visible{outline:3px solid #8d8af4;outline-offset:3px}
+@media(min-width:1050px){#cmsManagerTabsV1 #mt-panel-create{max-width:860px;margin:0 auto}#cmsManagerTabsV1 .mt-plan-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}#cmsManagerTabsV1 .mt-plan-list>.mt-card{margin:0}}
+@media(max-width:720px){#cmsManagerTabsV1{padding:0 14px 14px;margin:8px 0 20px}#cmsManagerTabsV1 .mt-tabs{gap:0}#cmsManagerTabsV1 .mt-tabs>button{font-size:14px;padding:15px 5px 12px}#cmsManagerTabsV1 .mt-plan-layout,#cmsManagerTabsV1 .mt-form-grid{grid-template-columns:minmax(0,1fr)}#cmsManagerTabsV1 .mt-card,#cmsManagerTabsV1 .mt-review-card{padding:15px}#cmsManagerTabsV1 .mt-count{margin-left:0}#cmsManagerTabsV1 .mt-badges{width:100%}#cmsManagerTabsV1 .mt-footer{justify-content:flex-start}#cmsManagerTabsV1 h2{font-size:22px}}
+
+#cmsManagerTabsV1 .mt-steps{display:flex;gap:10px;margin:0 0 18px;flex-wrap:wrap}#cmsManagerTabsV1 .mt-steps .mt-step{flex:1;border:0;border-bottom:2px solid #c7c5f8;border-radius:0;color:#373399;background:#fafaff}
+`;
+ // A single continuous plan surface, with shared headings rather than repeated cards.
+ // Keep the approved navy/indigo theme; use tabular dates for quick comparison.
+ const columnsCSS=`
+ #cmsManagerTabsV1 .mt-plan-list{display:block}
+ #cmsManagerTabsV1 .mt-plan-list>.mt-card{margin:0 0 20px}
+ #cmsManagerTabsV1 .mt-plan-objective{margin:10px 0 16px;padding:9px 12px;background:#f5f6fc;border-radius:7px}
+ #cmsManagerTabsV1 .mt-plan-objective>summary{color:#373399;font-size:14px}
+ #cmsManagerTabsV1 .mt-plan-objective .mt-objective{margin:10px 0 4px;font-size:16px;line-height:1.6}
+ #cmsManagerTabsV1 .mt-table-scroll{max-width:100%;min-width:0;overflow-x:auto;border:1px solid #d7ddea;border-radius:8px;margin-top:8px}
+ #cmsManagerTabsV1 .mt-plan-table{display:table;width:100%;min-width:1110px;table-layout:fixed;border-collapse:collapse;margin:0;background:#fff;font:14px/1.55 Arial,sans-serif}
+ #cmsManagerTabsV1 .mt-plan-table caption{text-align:left;padding:12px 14px;font-weight:700;color:#101942;background:#f7f8fc;caption-side:top}
+ #cmsManagerTabsV1 .mt-plan-table thead{display:table-header-group}
+ #cmsManagerTabsV1 .mt-plan-table tbody{display:table-row-group}
+ #cmsManagerTabsV1 .mt-plan-table tr{display:table-row;background:transparent}
+ #cmsManagerTabsV1 .mt-plan-table th,#cmsManagerTabsV1 .mt-plan-table td{display:table-cell;padding:12px 10px;border:0;border-bottom:1px solid #e2e6f0;vertical-align:top;text-align:left;white-space:normal;overflow-wrap:anywhere;font-size:14px;line-height:1.55;color:#101942}
+ #cmsManagerTabsV1 .mt-plan-table thead th{background:#eeedff;color:#302985;font-weight:700;letter-spacing:0;text-transform:none}
+ #cmsManagerTabsV1 .mt-plan-table tbody th{font-weight:500}
+ #cmsManagerTabsV1 .mt-plan-table tbody tr:nth-child(even){background:#f8f9fd}
+ #cmsManagerTabsV1 .mt-plan-table tbody tr:last-child>*{border-bottom:0}
+ #cmsManagerTabsV1 .mt-plan-table td.mt-date{font-variant-numeric:tabular-nums;white-space:nowrap}
+ #cmsManagerTabsV1 .mt-plan-table .mt-pill{margin:0 0 5px;padding:3px 6px;line-height:1.4}
+ #cmsManagerTabsV1 .mt-plan-table .mt-progress-text{font-weight:700;color:#00634e;display:block}
+ #cmsManagerTabsV1 .mt-plan-table .mt-secondary{display:block;color:#647087;font-size:14px;margin-top:4px}
+ #cmsManagerTabsV1 .mt-plan-table .mt-row-control{margin-top:8px;min-height:32px;padding:5px 8px}
+ #cmsManagerTabsV1 .mt-table-help{font-size:14px;color:#647087;margin:6px 0}
+ @media(max-width:720px){#cmsManagerTabsV1 .mt-plan-table{min-width:1040px}}
+ `;
+ const st=document.createElement('style');st.id='cms-manager-tabs-style-v1';st.textContent=CSS+columnsCSS;document.head.append(st);
+ function node(tag,text,cls,parent){const n=document.createElement(tag);if(text!=null)n.textContent=String(text);if(cls)n.className=cls;if(parent)parent.append(n);return n;}
+ function identity(){return JSON.stringify([APP.user?.id,APP.user?.email,APP.currentRole,APP.currentPage,typeof CN==='undefined'?null:CN.epoch,window.CMS_VIEW_CONFIG?.nonce]);}
+ function current(s){return active===s&&s.key===identity()&&s.host.isConnected;}
+ function msg(s,text,error=false){if(!current(s))return;s.message.textContent=text;s.message.className='mt-notice'+(error?' mt-error':'');}
+ function button(s,p,text,fn,cls='',write=false){
+  const b=node('button',text,cls,p);b.type='button';
+  if(preview&&write){b.disabled=true;b.title='Unavailable in read-only View as User';return b;}
+  b.addEventListener('click',async()=>{if(!current(s)||s.busy)return;try{await fn();}catch(e){msg(s,e.message||String(e),true);}});
+  return b;
+ }
+ async function busy(s,fn){
+  if(!current(s)||s.busy)return;s.busy=true;s.host.inert=true;s.host.setAttribute('aria-busy','true');
+  try{return await fn();}catch(e){msg(s,(e.message||String(e))+' No success is assumed. Keep this page open; check the saved record before retrying.',true);}
+  finally{s.busy=false;s.host.inert=false;s.host.setAttribute('aria-busy','false');}
+ }
+ function field(p,label,value='',type='text',id=''){
+  const wrap=node('div',null,'mt-field',p);const lab=node('label',label,null,wrap);
+  const x=node(type==='textarea'?'textarea':type==='select'?'select':'input',null,null,wrap);
+  if(!['textarea','select'].includes(type))x.type=type;
+  x.id=id||'mt-field-'+(++serial);lab.htmlFor=x.id;x.value=value??'';return x;
+ }
+ function option(sel,value,label){const o=node('option',label,null,sel);o.value=value;return o;}
+ function notice(p,text,cls=''){return node('p',text,'mt-notice '+cls,p);}
+ function pill(p,text,cls=''){return node('span',text,'mt-pill '+cls,p);}
+ function card(p){return node('section',null,'mt-card',p);}
+ function url(raw){try{const u=new URL(raw);return u.protocol==='https:'&&!u.username&&!u.password?u.href:null;}catch{return null;}}
+ async function api(action,data={}){
+  if(preview&&!['list','get','history'].includes(action))throw Error('Read-only preview: changes are blocked.');
+  const r=await _supabase.rpc('cms_development_v1',{p_action:action,p_data:data});
+  if(r.error)throw Error(r.error.message);if(r.data==null)throw Error('No development response returned.');return r.data;
+ }
+ async function checkpoint(action,data){
+  if(preview)throw Error('Saved-work changes are unavailable in preview.');
+  const r=await _supabase.rpc('cms_work_checkpoints',{p_action:action,p_data:data});
+  if(r.error)throw Error(r.error.message);if(!r.data)throw Error('Saved-work response missing.');return r.data;
+ }
+ async function tableAll(s,make){
+  const all=[];
+  for(let page=0;page<=200;page++){
+   const r=await make().range(page*500,page*500+499);
+   if(r.error)throw Error(r.error.message);
+   if(!current(s))throw Error('The page changed.');
+   if(!Array.isArray(r.data))throw Error('Unexpected list response.');
+   all.push(...r.data);if(r.data.length<500)return all;
+  }
+  throw Error('This list exceeds the page limit. No partial total is being shown.');
+ }
+ async function fetchActions(s){
+  const all=[],seen=new Set();
+  for(let page=0;page<=2000;page++){
+   const r=await api('list',{scope:'team',page});
+   if(!current(s))return;
+   if(!Array.isArray(r.items)||Number(r.page)!==page)throw Error('Unexpected development page.');
+   for(const it of r.items){if(!it?.action?.id||!Array.isArray(it.milestones))throw Error('Unexpected action data.');if(seen.has(it.action.id))throw Error('Plans changed during loading. Refresh to get a consistent list.');seen.add(it.action.id);all.push(it);}
+   if(!r.has_more){s.items=all;s.actionError='';return;}
+   msg(s,'Loading development actions: '+all.length+' read...');
+  }
+  throw Error('Development page limit exceeded. No partial total is shown.');
+ }
+ async function fetchTeam(s){
+  const email=String(APP.user?.email||'');if(!email)throw Error('Signed-in manager email is missing.');
+  s.team=(await tableAll(s,()=>_supabase.from('employees').select('*').eq('manager_email',email).order('employee_id'))).filter(e=>String(e.email||'').toLowerCase()!==email.toLowerCase());
+  s.teamError='';
+ }
+ async function fetchReports(s){
+  if(s.teamError)throw Error('The employee list is unavailable; monthly reports cannot be scoped safely.');
+  const rows=[];
+  for(let i=0;i<s.team.length;i+=200){
+   const ids=s.team.slice(i,i+200).map(e=>e.employee_id);
+   rows.push(...await tableAll(s,()=>_supabase.from('dp_reports').select('*').in('employee_id',ids).order('id')));
+  }
+  s.reports=rows;s.reportError='';
+ }
+ function groups(s){
+  const map=new Map();
+  for(const it of s.items){const p=it.action,k=JSON.stringify([p.employee_id,p.plan_id||p.id]);if(!map.has(k))map.set(k,[]);map.get(k).push(it);}
+  return [...map.values()].sort((a,b)=>String(a[0].action.employee_name||'').localeCompare(String(b[0].action.employee_name||''))||String(b[0].action.created_date||'').localeCompare(String(a[0].action.created_date||'')));
+ }
+ function adopt(s,it){
+  if(!current(s))return;
+  if(!it?.action?.id||!Array.isArray(it.milestones))throw Error('Unexpected action response.');
+  const i=s.items.findIndex(x=>x.action.id===it.action.id);if(i>=0)s.items[i]=it;else s.items.push(it);
+ }
+ function approved(it){return String(it.action.hr_approved||'').toLowerCase()==='approved'&&String(it.action.status||'').toLowerCase()==='active';}
+ function canManage(it){return !preview&&it.is_manager&&!it.is_employee&&!it.source_changed&&approved(it);}
+ function backed(s){if(!preview&&typeof suSaveAll==='function')suSaveAll();}
+ function leaveDetail(s){
+  if(s.detailDirty&&!window.confirm('Leave these unsaved deliverable edits?'))return false;
+  backed(s);s.detailDirty=false;return true;
+ }
+ function setTab(s,tab){
+  if(!leaveDetail(s))return;
+  s.tab=tab;
+  for(const [k,b] of Object.entries(s.tabs)){b.setAttribute('aria-selected',String(k===tab));b.tabIndex=k===tab?0:-1;s.panels[k].hidden=k!==tab;}
+  if(tab==='existing')renderExisting(s);
+  if(tab==='reports')renderReports(s);
+  msg(s,preview?'Read-only Manager view: no creation, saving, review decisions or file access.':'Development progress is separate from competency assessment scores.');
+ }
+ function shell(s){
+  const tabs=node('nav',null,'mt-tabs',s.host);tabs.setAttribute('role','tablist');tabs.setAttribute('aria-label','Development workspaces');
+  s.tabs={};s.panels={};
+  for(const [key,label] of [['existing','Existing Plans'],['create','Create Plan'],['reports','Reports']]){
+   const b=button(s,tabs,label,()=>setTab(s,key));b.id='mt-tab-'+key;b.setAttribute('role','tab');b.setAttribute('aria-controls','mt-panel-'+key);s.tabs[key]=b;
+   const p=node('section',null,'mt-workspace',s.host);p.id='mt-panel-'+key;p.setAttribute('role','tabpanel');p.setAttribute('aria-labelledby',b.id);s.panels[key]=p;
+   b.addEventListener('keydown',e=>{const keys=Object.keys(s.tabs),i=keys.indexOf(key);let j;if(e.key==='ArrowRight')j=(i+1)%3;if(e.key==='ArrowLeft')j=(i+2)%3;if(e.key==='Home')j=0;if(e.key==='End')j=2;if(j!==undefined){e.preventDefault();if(!s.busy){setTab(s,keys[j]);s.tabs[keys[j]].focus();}}});
+  }
+  s.message=node('p','Loading your development workspaces...','mt-notice',s.host);s.message.setAttribute('role','status');s.message.setAttribute('aria-live','polite');
+  s.host.addEventListener('input',e=>{
+   if(s.panels.create.contains(e.target)&&!e.target.matches('[data-mt-picker]'))s.createDirty=true;
+   if(e.target.closest('.mt-detail'))s.detailDirty=true;
+  });
+ }
+ function renderExisting(s){
+  const p=s.panels.existing;p.replaceChildren();node('h2','Existing Plans',null,p);
+  if(s.actionError){notice(p,'Plans unavailable: '+s.actionError,'mt-error');button(s,p,'Refresh plans',()=>refresh(s),'mt-outline');return;}
+  const row=node('div',null,'mt-filterbar',p);
+  const q=field(row,'Find a plan',s.search||'','search','mt-search');q.placeholder='Search employee or competency';q.dataset.mtPicker='1';
+  const status=field(row,'Plan status','','select','mt-status');status.dataset.mtPicker='1';option(status,'','All statuses');
+  [...new Set(s.items.map(it=>it.action.status||'Pending'))].sort().forEach(x=>option(status,x,x));status.value=s.status||'';
+  button(s,row,'Refresh',()=>refresh(s),'mt-outline');
+  const list=node('div',null,'mt-plan-list',p);
+  function draw(){
+   list.replaceChildren();s.search=q.value;s.status=status.value;
+   const g=groups(s).filter(g=>g.some(it=>[it.action.employee_name,it.action.employee_id,it.action.comp_name,it.action.task,it.action.action].join(' ').toLowerCase().includes(q.value.toLowerCase()))&&(!status.value||g.some(it=>(it.action.status||'Pending')===status.value)));
+   if(!g.length)notice(list,s.items.length?'No plans match these filters.':'No development plans are available for your team.');
+   for(const items of g){
+    const a=items[0].action,c=card(list),head=node('div',null,'mt-plan-head',c);
+    node('span',(a.employee_name||'Employee').split(/\s+/).map(x=>x[0]).slice(0,2).join(''),'mt-avatar',head);
+    const who=node('div',null,'mt-grow',head);node('h3',a.employee_name||a.employee_id,null,who);
+    node('p',[...new Set(items.map(it=>it.action.comp_name||'Competency'))].join(' / '),'mt-muted',who);
+    const badges=node('div',null,'mt-badges',head),statuses=[...new Set(items.map(it=>it.action.status||'Pending'))],hrs=[...new Set(items.map(it=>it.action.hr_approved||'Pending'))];
+    pill(badges,statuses.length===1?statuses[0]:'Mixed action statuses',statuses[0]==='Active'?'mt-ok':'');
+    pill(badges,hrs.length===1?'HR '+hrs[0]:'Mixed HR approvals',hrs[0]==='Approved'?'mt-ok':'');
+    node('p',items.length+' action'+(items.length===1?'':'s'),'mt-count',c);
+    const objectives=[...new Set(items.map(it=>it.action.task).filter(Boolean))];
+    if(objectives.length){
+     const objective=node('details',null,'mt-plan-objective',c);node('summary','Plan objective',null,objective);
+     objectives.forEach(t=>node('p',t,'mt-objective',objective));
+    }
+    const scroll=node('div',null,'mt-table-scroll',c);
+    scroll.tabIndex=0;scroll.setAttribute('role','region');scroll.setAttribute('aria-label','Action plan columns for '+(a.employee_name||a.employee_id));
+    const table=node('table',null,'mt-plan-table',scroll);node('caption','Plan actions',null,table);
+    const colgroup=node('colgroup',null,null,table);
+    [25,21,13,9,9,11,12].forEach(width=>node('col',null,null,colgroup).style.width=width+'%');
+    const thead=node('thead',null,null,table),tr=node('tr',null,null,thead);
+    for(const label of ['Action','Success measure','Responsible person','Start date','Due date','Status','Verified progress']){
+     node('th',label,null,tr).scope='col';
+    }
+    const tbody=node('tbody',null,null,table);
+    const displayDate=value=>{
+     if(!value)return 'Not set';
+     const match=String(value).match(/^(\d{4})-(\d{2})-(\d{2})(?:$|T)/);
+     if(!match)return String(value);
+     const months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+     const month=months[Number(match[2])-1];return month?match[3]+' '+month+' '+match[1]:String(value);
+    };
+    items.forEach((it,i)=>{
+     const row=node('tr',null,null,tbody),action=it.action;
+     const actionCell=node('th',null,null,row);actionCell.scope='row';
+     node('div',action.action||'Action not named',null,actionCell);
+     // Fixed action labels also remain navigable under the isolated viewer's safety filter.
+     button(s,actionCell,'Inspect action '+(i+1),()=>busy(s,async()=>{
+      const fresh=await api('get',{action_id:action.id});if(!current(s))return;
+      adopt(s,fresh);showPlan(s,items.map(x=>x.action.id),fresh.action.id);
+     }),'mt-outline mt-row-control');
+     node('td',action.measure||'Not supplied',null,row);
+     node('td',action.responsible_party||'Not assigned',null,row);
+     node('td',displayDate(action.start_date),'mt-date',row);
+     node('td',displayDate(action.end_date),'mt-date',row);
+     const statusCell=node('td',null,null,row);
+     pill(statusCell,action.status||'Pending',action.status==='Active'?'mt-ok':'');
+     node('span','HR '+(action.hr_approved||'Pending'),'mt-secondary',statusCell);
+     const progressCell=node('td',null,null,row);
+     if(it.progress==null)node('span',it.phase==='Draft'?'Draft deliverables':'Not published','mt-muted',progressCell);
+     else{
+      node('span',it.progress+'%','mt-progress-text',progressCell);
+      node('span',it.verified+' / '+it.total+' verified','mt-secondary',progressCell);
+     }
+    });
+    node('p','On smaller screens, scroll the table sideways to see every column.','mt-table-help',c);
+    if(items.some(it=>it.progress==null))notice(c,'Deliverables not published for '+items.filter(it=>it.progress==null).length+' action(s).','mt-warn');
+    const foot=node('div',null,'mt-footer',c);button(s,foot,'Open plan',()=>busy(s,async()=>{const it=await api('get',{action_id:items[0].action.id});if(!current(s))return;adopt(s,it);showPlan(s,items.map(x=>x.action.id),it.action.id);}), 'mt-outline');
+   }
+  }
+  q.addEventListener('input',draw);status.addEventListener('change',draw);draw();
+  notice(p,'Inside each plan: Actions  /  Deliverables  /  Evidence  /  Verified progress');
+  notice(p,'Progress appears after deliverables are published. Only manager verification increases it.','mt-warn');
+ }
+ async function refresh(s){
+  return busy(s,async()=>{if(!leaveDetail(s))return;await fetchActions(s);if(current(s)){renderExisting(s);renderReports(s);msg(s,'Development plans refreshed.');}});
+ }
+ function showPlan(s,ids,selected){
+  const p=s.panels.existing;p.replaceChildren();
+  button(s,p,'Back to plans',()=>{if(leaveDetail(s))renderExisting(s);},'mt-outline');
+  const items=ids.map(id=>s.items.find(x=>x.action.id===id)).filter(Boolean),it=items.find(x=>x.action.id===selected)||items[0];if(!it){renderExisting(s);return;}
+  node('h2',it.action.employee_name||'Development Plan',null,p);
+  const layout=node('div',null,'mt-plan-layout',p),nav=card(layout),body=node('div',null,'mt-detail',layout);
+  node('h3','Plan actions',null,nav);
+  items.forEach((x,i)=>{
+   const b=button(s,nav,'Inspect action '+(i+1),()=>{if(!leaveDetail(s))return;return busy(s,async()=>{const fresh=await api('get',{action_id:x.action.id});if(!current(s))return;adopt(s,fresh);showPlan(s,ids,x.action.id);});},'mt-action-link');
+   b.setAttribute('aria-current',String(x.action.id===it.action.id));node('p',x.action.action||x.action.task||'Development action','mt-action-caption',nav);
+  });
+  renderDetail(s,body,it,()=>showPlan(s,ids,it.action.id));
+ }
+ function progress(p,it){
+  if(it.progress==null){notice(p,'Awaiting published deliverables.','mt-warn');return;}
+  node('p',it.progress+'% verified | '+it.verified+' of '+it.total+' deliverables',null,p);
+  const track=node('div',null,'mt-track',p);track.setAttribute('role','progressbar');track.setAttribute('aria-label','Manager-verified progress');track.setAttribute('aria-valuemin','0');track.setAttribute('aria-valuemax','100');track.setAttribute('aria-valuenow',String(it.progress));
+  node('div',null,null,track).style.width=Math.max(0,Math.min(100,Number(it.progress)||0))+'%';
+ }
+ function renderDetail(s,p,it,redraw){
+  const a=it.action,head=card(p);pill(head,a.comp_name||'Competency');node('h3',a.action||'Development action',null,head);
+  node('p',a.task||'No objective supplied.',null,head);node('p','Success measure: '+(a.measure||'Not supplied'),null,head);
+  node('p','Responsible: '+(a.responsible_party||'Not supplied')+' | Due: '+(a.end_date||'Not supplied'),'mt-muted',head);
+  pill(head,(a.status||'Pending')+' | HR '+(a.hr_approved||'Pending'));
+  if(it.source_changed)notice(head,'The source action changed. HR must resolve it before any deliverable changes or decisions.','mt-warn');
+  const work=card(p);node('h3','Deliverables & verified progress',null,work);progress(work,it);
+  if(it.phase!=='Active'&&canManage(it))editor(s,work,it,redraw);
+  else{
+   if(it.phase!=='Active')notice(work,preview?'Read-only preview. The assigned manager defines and publishes deliverables after HR approval.':'The assigned manager can configure deliverables after this action is HR approved and Active.');
+   for(const m of it.milestones)renderMilestone(s,work,it,m,redraw);
+   if(!it.milestones.length)notice(work,'No deliverables have been configured. No sample deliverables or progress have been added.');
+  }
+  const history=node('details',null,'mt-card',p);node('summary','Review and submission history',null,history);
+  let page=0;const entries=node('div',null,null,history);
+  button(s,history,'Earlier entries',()=>busy(s,async()=>{
+   const r=await api('history',{action_id:a.id,page});if(!current(s)||!entries.isConnected)return;
+   if(!Array.isArray(r))throw Error('Unexpected history response.');
+   for(const ev of r){const c=node('details',null,'mt-evidence',entries);node('summary',ev.event+' | '+new Date(ev.recorded_at).toLocaleString(),null,c);const ms=ev.snapshot?.milestone;if(ms){node('p',ms.title+' | '+ms.state,null,c);node('p',ms.employee_note||'No employee note.','mt-pre',c);node('p',ms.manager_comment||'No manager comment.','mt-pre',c);}for(const d of ev.snapshot?.definition||[])node('p',d.title+': '+d.success_measure,null,c);if(ev.snapshot?.evidence?.length)node('p','Evidence: '+ev.snapshot.evidence.map(e=>e.name).join(', '),null,c);}
+   page++;if(r.length<50)notice(entries,'End of available history.');
+  }),'mt-outline');
+ }
+ async function mutate(s,it,action,data){
+  if(preview)throw Error('Read-only view.');
+  const out=await api(action,{action_id:it.action.id,version:it.version,...data});if(!current(s))return null;adopt(s,out);s.detailDirty=false;return out;
+ }
+ function editor(s,p,it,redraw){
+  notice(p,'Agree measurable deliverables first. Each has equal weight; publication locks the list.');
+  const rows=node('div',null,null,p);let n=0;
+  function add(d={}){
+   if(rows.children.length>=20)throw Error('Maximum 20 deliverables per action.');
+   const box=node('div',null,'mt-action-box',rows),key='mt-def-'+it.action.id+'-v'+it.version+'-'+n++;
+   const title=field(box,'Deliverable',d.title,'text',key+'-title');title.maxLength=300;
+   const measure=field(box,'Success measure',d.success_measure,'textarea',key+'-measure');measure.maxLength=2000;
+   const due=field(box,'Due date',d.due_date,'date',key+'-due');
+   box.read=()=>({title:title.value.trim(),success_measure:measure.value.trim(),due_date:due.value});
+   button(s,box,'Remove draft row',()=>{if(window.confirm('Remove this unsaved deliverable row?')){backed(s);box.remove();s.detailDirty=true;}},'mt-outline',true);
+  }
+  if(it.milestones.length)it.milestones.forEach(add);else add();
+  const tools=node('div',null,'mt-footer',p);
+  button(s,tools,'Add deliverable',()=>{add();s.detailDirty=true;},'mt-outline',true);
+  button(s,tools,'Save deliverable draft',()=>busy(s,async()=>{
+   const milestones=[...rows.children].map(x=>x.read());if(!milestones.length||milestones.some(x=>!x.title||!x.success_measure||!x.due_date))throw Error('Every deliverable needs a title, success measure and due date.');
+   backed(s);if(await mutate(s,it,'configure',{milestones})){redraw();msg(s,'Deliverable draft saved. It is not published yet.');}
+  }),'mt-primary',true);
+  if(it.phase==='Draft')button(s,tools,'Publish saved deliverables',()=>busy(s,async()=>{
+   if(s.detailDirty)throw Error('Save your deliverable edits before publishing.');
+   if(!window.confirm('Publish this agreed list? Deliverables and their equal-weight denominator will be locked.'))return;
+   if(await mutate(s,it,'publish',{})){redraw();msg(s,'Deliverables published. Employee updates are now available.');}
+  }),'mt-outline',true);
+ }
+ function evidence(s,p,it,m){
+  node('h4','Evidence',null,p);
+  if(!m.evidence?.length)node('p','No evidence attached.','mt-muted',p);
+  for(const e of m.evidence||[]){
+   const line=node('div',null,'mt-evidence',p);node('strong',e.name||'Supporting evidence',null,line);if(e.note)node('p',e.note,'mt-pre',line);
+   if(!e.ready){pill(line,'Upload not completed','mt-warn');continue;}
+   if(preview){node('p','Metadata only in read-only View as User.','mt-muted',line);continue;}
+   if(e.kind==='link'){
+    const href=url(e.url);if(href){const a=node('a','View evidence','mt-outline',line);a.href=href;a.target='_blank';a.rel='noopener noreferrer';a.referrerPolicy='no-referrer';}else notice(line,'The saved link is not a valid HTTPS address.','mt-error');
+   }else button(s,line,'View evidence',()=>busy(s,async()=>{
+    const r=await _supabase.storage.from('cms-development-private-v1').download(e.object_path);if(r.error)throw Error(r.error.message);if(!current(s))return;
+    const href=URL.createObjectURL(r.data),a=node('a');a.href=href;a.download=String(e.name||'evidence').replace(/[\\/]/g,'_');document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(href),60000);
+    msg(s,'Evidence download requested. Only open files from trusted sources.');
+   }),'mt-outline');
+  }
+ }
+ function renderMilestone(s,p,it,m,redraw){
+  const c=node('section',null,'mt-review-card',p),head=node('div',null,'mt-plan-head',c);
+  const title=node('div',null,'mt-grow',head);node('h3',m.title,null,title);node('p',it.action.employee_name||it.action.employee_id,'mt-muted',title);
+  pill(head,m.state==='Submitted'?'Awaiting manager review':m.state,m.state==='Verified'?'mt-ok':m.state==='Submitted'||m.state==='Returned'?'mt-warn':'');
+  node('p','Success measure: '+m.success_measure,null,c);node('p','Due: '+m.due_date,'mt-muted',c);
+  node('h4','Employee update',null,c);node('p',m.employee_note||'No employee update yet.','mt-pre',c);evidence(s,c,it,m);
+  if(m.manager_comment){node('h4','Manager feedback',null,c);node('p',m.manager_comment,'mt-pre',c);}
+  if(m.state==='Submitted'){
+   const comment=field(c,'Manager feedback','','textarea','mt-review-'+it.action.id+'-v'+it.version+'-'+m.id);comment.maxLength=5000;
+   if(!canManage(it))comment.disabled=true;
+   const row=node('div',null,'mt-footer',c);
+   for(const decision of ['Verified','Returned']){
+    const b=button(s,row,decision==='Verified'?'Verify deliverable':'Return with feedback',()=>busy(s,async()=>{
+     if(!canManage(it))throw Error('Only the assigned manager can review an unchanged Active, HR-approved action.');
+     if(decision==='Returned'&&!comment.value.trim())throw Error('Feedback is required when returning a deliverable.');
+     if(!window.confirm(decision==='Verified'?'Verify that this deliverable meets its success measure?':'Return this deliverable with your feedback?'))return;
+     backed(s);if(await mutate(s,it,'review',{milestone_id:m.id,decision,comment:comment.value.trim()})){redraw();msg(s,decision==='Verified'?'Deliverable verified. Progress recalculated; competency scores are unchanged.':'Returned with feedback. The employee can revise and resubmit.');}
+    }),decision==='Verified'?'mt-verify':'mt-outline',true);
+    if(!canManage(it))b.disabled=true;
+   }
+  }
+ }
+ function renderReports(s){
+  const p=s.panels.reports;p.replaceChildren();node('h2','Reports & Reviews',null,p);
+  const tabs=node('div',null,'mt-subtabs',p);tabs.setAttribute('role','tablist');tabs.setAttribute('aria-label','Report type');
+  for(const [key,label] of [['deliverables','Deliverable reviews'],['monthly','Monthly reports']]){
+   const b=button(s,tabs,label,()=>{if(leaveDetail(s)){s.reportTab=key;renderReports(s);}},'mt-outline');b.setAttribute('role','tab');b.setAttribute('aria-selected',String(s.reportTab===key));
+  }
+  const body=node('section',null,null,p);
+  if(s.reportTab==='monthly'){renderMonthly(s,body);return;}
+  if(s.actionError){notice(body,'Deliverable reviews unavailable: '+s.actionError,'mt-error');return;}
+  const filters=node('div',null,'mt-filterbar',body),emp=field(filters,'Employee','','select','mt-review-employee'),state=field(filters,'Review status','','select','mt-review-state');
+  emp.dataset.mtPicker=state.dataset.mtPicker='1';option(emp,'','All employees');
+  const emps=new Map(s.items.map(x=>[x.action.employee_id,x.action.employee_name||x.action.employee_id]));[...emps].sort((a,b)=>a[1].localeCompare(b[1])).forEach(([id,name])=>option(emp,id,name));emp.value=s.reviewEmp||'';
+  [['Submitted','Awaiting manager review'],['','All submitted / reviewed'],['Returned','Returned'],['Verified','Verified']].forEach(([v,t])=>option(state,v,t));state.value=s.reviewState??'Submitted';
+  button(s,filters,'Refresh reviews',()=>refresh(s),'mt-outline');
+  const list=node('div',null,null,body);
+  function draw(){
+   s.reviewEmp=emp.value;s.reviewState=state.value;list.replaceChildren();let count=0;
+   for(const it of s.items){if(emp.value&&it.action.employee_id!==emp.value)continue;
+    for(const m of it.milestones){if(!['Submitted','Returned','Verified'].includes(m.state)||(state.value&&m.state!==state.value))continue;count++;renderMilestone(s,list,it,m,()=>renderReports(s));}
+   }
+   if(!count)notice(list,'No deliverables match these review filters.');
+  }
+  emp.addEventListener('change',()=>{if(leaveDetail(s))draw();else emp.value=s.reviewEmp||'';});state.addEventListener('change',()=>{if(leaveDetail(s))draw();else state.value=s.reviewState??'Submitted';});draw();
+  list.addEventListener('input',()=>s.detailDirty=true);
+  notice(body,'Monthly reports stay separate: review the monthly report, then approve and send to HR.');
+  notice(body,'HR acknowledgement applies to monthly reports, not to each deliverable. Earlier review decisions remain in history.');
+ }
+ function renderMonthly(s,p){
+  notice(p,'Existing workflow: employee monthly report > manager review > HR acknowledgement.');
+  if(s.reportError){notice(p,'Monthly reports unavailable: '+s.reportError,'mt-error');return;}
+  const filters=node('div',null,'mt-filterbar',p),emp=field(filters,'Employee','','select','mt-month-employee'),status=field(filters,'Review status','','select','mt-month-status');
+  option(emp,'','All employees');s.team.forEach(x=>option(emp,x.employee_id,x.employee_name||x.employee_id));emp.value=s.monthEmp||'';
+  [['Pending','Awaiting manager review'],['','All reports'],['Approved','Approved by manager'],['Returned','Returned'],['Not submitted','Not submitted']].forEach(([v,t])=>option(status,v,t));status.value=s.monthStatus??'Pending';
+  button(s,filters,'Refresh monthly reports',()=>busy(s,async()=>{if(!leaveDetail(s))return;await fetchReports(s);if(current(s))renderReports(s);}), 'mt-outline');
+  const list=node('div',null,null,p);list.addEventListener('input',()=>s.detailDirty=true);
+  function draw(){
+   s.monthEmp=emp.value;s.monthStatus=status.value;list.replaceChildren();let count=0;
+   for(const r of s.reports){
+    const state=r.mgr_status==='Returned'?'Returned':!r.emp_submitted?'Not submitted':r.mgr_status||'Pending';
+    if((emp.value&&r.employee_id!==emp.value)||(status.value&&state!==status.value))continue;count++;
+    const c=card(list);node('h3',(r.employee_name||r.employee_id)+' | Month '+r.month_no,null,c);pill(c,state);pill(c,'HR '+(r.hr_status||'Pending'));
+    node('p','Due: '+(r.due_date||'Not supplied')+' | Plan: '+(r.plan_id||'Not supplied'),'mt-muted',c);node('p',r.task||'',null,c);node('p',r.report_text||'No employee report yet.','mt-pre',c);
+    if(r.attachment_url){const href=url(r.attachment_url);if(href&&!preview){const a=node('a',r.attachment_name||'View monthly attachment','mt-outline',c);a.href=href;a.target='_blank';a.rel='noopener noreferrer';a.referrerPolicy='no-referrer';}else node('p',(r.attachment_name||'Attachment')+(preview?' | Metadata only in preview':' | Invalid link'),'mt-muted',c);}
+    if(r.ai_note)notice(c,'Advisory note: '+r.ai_note);
+    if(r.mgr_comment)node('p','Manager feedback: '+r.mgr_comment,'mt-pre',c);
+    if(r.hr_comment)node('p','HR acknowledgement: '+r.hr_comment,'mt-pre',c);
+    if(r.emp_submitted&&r.mgr_status==='Pending'){
+     const comment=field(c,'Manager feedback (required when returning)','','textarea','dprc-'+r.id);if(preview)comment.disabled=true;
+     const tools=node('div',null,'mt-footer',c);
+     for(const ok of [true,false])button(s,tools,ok?'Approve & Send to HR':'Return to Employee',()=>busy(s,async()=>{
+      if(!ok&&!comment.value.trim())throw Error('Feedback is required when returning the report.');
+      if(!window.confirm(ok?'Approve this monthly report and notify HR using the existing workflow?':'Return this monthly report and notify the employee using the existing workflow?'))return;
+      if(typeof decideDPReport!=='function')throw Error('Existing monthly-report handler is missing.');
+      backed(s);s.detailDirty=false;
+      await decideDPReport(r.id,ok);
+     }),ok?'mt-verify':'mt-outline',true);
+    }
+   }
+   if(!count)notice(list,'No monthly reports match these filters.');
+  }
+  emp.addEventListener('change',()=>{if(leaveDetail(s))draw();else emp.value=s.monthEmp||'';});status.addEventListener('change',()=>{if(leaveDetail(s))draw();else status.value=s.monthStatus??'Pending';});draw();
+ }
+ async function gaps(s,id){
+  const results=await tableAll(s,()=>_supabase.from('assessments').select('*').eq('employee_id',id).order('id'));
+  const manager=latestOnly(results).filter(r=>r.type==='Manager');
+  const formatted=manager.map(r=>({'Employee ID':r.employee_id,'Competency Code':r.comp_code,'Type':r.type,'Ticked':r.ticked,'Evidence':r.evidence,'HR_Status':r.hr_status,'Rating':r.proficiency_rating,'Scoring Rule':r.scoring_rule||'legacy-zero','Classification':r.scoring_rule==='floor-one-v1'?r.classification:undefined,'Weight Profile':r.weight_profile,'Weight Policy':r.weight_policy}));
+  const out=[];for(const c of APP.competencies||[]){const score=calculateCompetencyScore(id,c.code,'Manager',formatted),pct=Math.round(score.score/5*100);if(score.total>0&&pct<70)out.push({code:c.code,name:c.competency,pct});}return out;
+ }
+ function draftScope(id){return {page:'mgr-devplans',role:'manager',editor:'manager-three-tabs-v1',employee:id};}
+ function renderCreate(s){
+  const p=s.panels.create;p.replaceChildren();node('h2','Create Development Plan',null,p);
+  const steps=node('nav',null,'mt-steps',p);steps.setAttribute('aria-label','Plan preparation');
+  for(const [text,target] of [['1  Employee & gap','#mt-create-employee'],['2  Actions & measures','.mt-action-box'],['3  Review','.mt-footer']]){
+   button(s,steps,text,()=>{const e=p.querySelector(target);if(e){e.scrollIntoView({block:'center',behavior:'auto'});e.querySelector?.('input,textarea,button')?.focus();if(e.matches('input,select'))e.focus();}},'mt-step');
+  }
+  notice(p,'Choose an assessed gap, define actions and measures, then review before sending to HR.');
+  if(preview)notice(p,'Read-only layout preview. Create, draft and submission controls are disabled.');
+  if(s.teamError){notice(p,'Employee list unavailable: '+s.teamError,'mt-error');return;}
+  const emp=field(p,'Employee','','select','mt-create-employee');emp.dataset.mtPicker='1';option(emp,'','Select employee');s.team.forEach(e=>option(emp,e.employee_id,e.employee_name||e.employee_id));if(preview)emp.disabled=true;
+  const body=node('div',null,null,p);
+  s.empSelect=emp;s.createBody=body;
+  emp.addEventListener('change',()=>{
+   const id=emp.value;
+   if(s.createDirty&&!window.confirm('Change employee and leave unsaved plan edits? Save draft first to keep them.')){emp.value=s.createEmployee||'';return;}
+   s.createEmployee=id;s.createDirty=false;
+   if(!id){body.replaceChildren();s.form=null;return;}
+   return busy(s,async()=>{
+    body.replaceChildren();notice(body,'Loading assessed gaps and saved draft...');
+    const available=await gaps(s,id);if(!current(s))return;
+    let saved=null,error='';try{saved=await checkpoint('get',{scope:draftScope(id)});}catch(e){error=e.message;}
+    if(!current(s))return;buildForm(s,body,available,saved,error);
+   });
+  });
+  if(preview)buildForm(s,body,[],null,'');
+ }
+ function buildForm(s,p,available,saved,error){
+  p.replaceChildren();
+  const form={available,saved,version:saved?.version||0,ready:!!saved,pending:null,submitted:false,uncertain:false};
+  s.form=form;
+  if(error)notice(p,'Server draft saving is unavailable: '+error+'. Do not leave unsaved work.','mt-error');
+  const gap=field(p,'Competency gap','','select','mt-create-gap');option(gap,'','Select assessed gap');available.forEach(g=>option(gap,g.code,g.name+' ('+g.pct+'%)'));
+  const objective=field(p,'Development objective','','textarea','mt-create-objective');objective.placeholder='What should improve?';objective.maxLength=2000;
+  const rows=node('div',null,null,p);let n=0;
+  function add(d={}){
+   if(rows.children.length>=20)throw Error('Maximum 20 actions per plan in this form.');
+   const box=node('section',null,'mt-action-box',rows),i=n++;node('h3','Action '+(rows.children.length),null,box);
+   const grid=node('div',null,'mt-form-grid',box),a=field(grid,'Action',d.action,'text','mt-create-action-'+i),m=field(grid,'Success measure',d.measure,'text','mt-create-measure-'+i);
+   a.placeholder='Describe the action';m.placeholder='What proves completion?';a.maxLength=m.maxLength=2000;
+   const responsible=field(grid,'Responsible person',d.responsible,'text','mt-create-responsible-'+i);responsible.placeholder='Employee / manager / supporting person';responsible.maxLength=300;
+   const start=field(grid,'Start date',d.start,'date','mt-create-start-'+i),end=field(grid,'Due date',d.end,'date','mt-create-end-'+i),period=field(grid,'Period (optional)',d.period,'text','mt-create-period-'+i);period.maxLength=100;
+   box.read=()=>({action:a.value.trim(),measure:m.value.trim(),responsible:responsible.value.trim(),start:start.value,end:end.value,period:period.value.trim()});
+   button(s,box,'Remove action',()=>{if(window.confirm('Remove this unsaved action?')){backed(s);box.remove();[...rows.children].forEach((c,j)=>c.querySelector('h3').textContent='Action '+(j+1));s.createDirty=true;}},'mt-text-button',true);
+  }
+  add();
+  form.read=()=>({employee_id:s.createEmployee,comp_code:gap.value,objective:objective.value.trim(),actions:[...rows.children].map(x=>x.read()),pending:form.pending,submitted:form.submitted});
+  function restore(data){
+   if(!data||data.employee_id!==s.createEmployee||!Array.isArray(data.actions)||data.actions.length<1||data.actions.length>20)throw Error('This saved draft does not match the selected employee/form.');
+   if(data.submitted)throw Error('This saved draft has already been submitted. Open the existing plan instead.');
+   if(data.comp_code&&!available.some(x=>x.code===data.comp_code)&&!data.pending)throw Error('The saved competency is no longer an eligible assessed gap. Use Saved work to download and review the earlier draft.');
+   if(data.pending&&(!Array.isArray(data.pending.rows)||!data.pending.rows.length||data.pending.rows.some(r=>r.employee_id!==s.createEmployee||r.plan_id!==data.pending.plan_id||String(r.created_by).toLowerCase()!==String(APP.user.email).toLowerCase())))throw Error('The saved submission reference does not match this employee and manager. Ask HR to inspect it.');
+   gap.value=data.comp_code||'';objective.value=data.objective||'';rows.replaceChildren();data.actions.forEach(add);form.pending=data.pending||null;form.uncertain=!!form.pending;s.createDirty=false;
+   if(form.pending){lockForm();notice(p,'This draft has a submission reference. Use Check submission before making another plan.','mt-warn');}
+  }
+  const existing=saved?.body?.data;
+  if(existing&&!existing.submitted){
+   const offer=notice(p,'A saved plan draft is available. Restore it or explicitly start a new draft.');form.offer=true;
+   button(s,offer,'Restore saved draft',()=>{if(window.confirm('Restore this saved draft into the form?')){restore(existing);form.offer=false;offer.remove();msg(s,'Draft restored for review. Nothing has been submitted.');}},'mt-outline',true);
+   button(s,offer,'Start new draft',()=>{if(window.confirm('Start a new draft? Earlier saved versions remain in Saved work history.')){form.offer=false;offer.remove();s.createDirty=true;}},'mt-outline',true);
+  }
+  const addButton=button(s,p,'+ Add action',()=>{add();s.createDirty=true;},'mt-text-button',true);
+  const tools=node('div',null,'mt-footer',p);
+  const saveButton=button(s,tools,'Save draft',()=>busy(s,async()=>{await savePlanDraft(s,form);if(current(s))msg(s,'Draft saved to your private server work backup. It is not an HR submission.');}),'mt-outline',true);
+  const sendButton=button(s,tools,'Send to HR for approval',()=>submitPlan(s,form),'mt-primary',true);
+  button(s,tools,'Check submission',()=>busy(s,async()=>{await checkSubmission(s,form);}), 'mt-outline',true);
+  form.lock=lockForm;
+  function lockForm(){gap.disabled=objective.disabled=addButton.disabled=saveButton.disabled=sendButton.disabled=true;rows.querySelectorAll('input,textarea,button').forEach(x=>x.disabled=true);empLock();}
+  function empLock(){if(s.empSelect)s.empSelect.disabled=true;}
+  if(preview)p.querySelectorAll('input,textarea,select,button').forEach(x=>x.disabled=true);
+  if(!available.length&&!preview){notice(p,'No eligible manager-assessed gaps below 70% were found. Existing plans remain in Existing Plans.','mt-warn');sendButton.disabled=true;}
+  notice(p,'Save draft stores a private work backup. Sending creates plan actions with Pending Approval; HR approval remains required.');
+ }
+ async function savePlanDraft(s,form){
+  if(!form.ready)throw Error('Server draft saving is unavailable. Keep the form open.');
+  if(form.offer)throw Error('Choose Restore saved draft or Start new draft before saving.');
+  const data=form.read(),r=await checkpoint('save',{scope:draftScope(data.employee_id),version:form.version,body:{kind:'fields',signature:'manager-three-tabs-plan-v1',data}});
+  if(!current(s))return;
+  if(!r.saved||!Number.isInteger(r.version))throw Error('Draft save was not confirmed.');
+  form.version=r.version;s.createDirty=false;return r;
+ }
+ function makeRows(s,data){
+  const emp=s.team.find(e=>e.employee_id===data.employee_id),g=s.form.available.find(g=>g.code===data.comp_code);
+  if(!emp||!g)throw Error('Select a current team employee and an eligible competency gap.');
+  if(!data.objective||!data.actions.length||data.actions.some(a=>!a.action||!a.measure||!a.responsible||!a.start||!a.end||a.end<a.start))throw Error('Complete the objective, each action, success measure, responsible person and valid start/due dates.');
+  const today=new Date().toISOString().slice(0,10),plan='DP-'+crypto.randomUUID();
+  return data.actions.map(a=>({id:crypto.randomUUID(),plan_id:plan,employee_id:emp.employee_id,employee_name:emp.employee_name,position:emp.position,comp_code:g.code,comp_name:g.name,task:data.objective,action:a.action,measure:a.measure,responsible_party:a.responsible,period:a.period,start_date:a.start,end_date:a.end,status:'Pending Approval',progress_notes:'',hr_approved:'',created_date:today,created_by:APP.user.email}));
+ }
+ async function submitPlan(s,form){
+  return busy(s,async()=>{
+   if(form.offer)throw Error('Resolve the saved draft choice first.');
+   if(form.submitted||form.pending)throw Error('A submission reference already exists. Use Check submission, not another insert.');
+   const data=form.read(),rows=makeRows(s,data);
+   if(!window.confirm('Send this plan with '+rows.length+' action(s) to HR for approval?'))return;
+   // Persist immutable IDs before writing. A failed/uncertain request cannot silently become a duplicate plan.
+   form.pending={plan_id:rows[0].plan_id,rows,attempted:false};
+   try{await savePlanDraft(s,form);}catch(e){form.pending=null;throw e;}
+   if(!current(s))return;form.lock();
+   form.pending.attempted=true;
+   try{await savePlanDraft(s,form);}catch(e){form.uncertain=true;throw e;}
+   if(!current(s))return;
+   const result=await _supabase.from('dev_plans').insert(rows);
+   if(!current(s))return;
+   if(result.error){form.uncertain=true;throw Error('Plan insert was not confirmed: '+result.error.message+'. Use Check submission.');}
+   await finishSubmission(s,form,true);
+  });
+ }
+ async function checkSubmission(s,form){
+  if(!form.pending){msg(s,'This form has no pending submission reference.');return;}
+  const pending=form.pending;
+  const rows=await tableAll(s,()=>_supabase.from('dev_plans').select('*').eq('plan_id',pending.plan_id).order('id'));
+  if(!current(s))return;
+  if(!rows.length){
+   msg(s,'No saved plan with this reference was found. The same IDs can be retried without creating a second plan.');
+   if(!window.confirm('Retry this saved submission using the same action IDs and values? If the earlier request completed, duplicate IDs will be rejected.'))return;
+   const r=await _supabase.from('dev_plans').insert(pending.rows);if(r.error)throw Error(r.error.message+' Use Check submission again; do not create a new plan.');
+   if(current(s))await finishSubmission(s,form,true);return;
+  }
+  const expected=new Map(pending.rows.map(r=>[r.id,r]));
+  if(rows.length!==expected.size||rows.some(r=>!expected.has(r.id)||r.employee_id!==expected.get(r.id).employee_id))throw Error('The saved plan differs from this submission reference. Ask HR to inspect it; no retry was made.');
+  await finishSubmission(s,form,false);
+ }
+ async function finishSubmission(s,form,notify){
+  if(!current(s))return;form.submitted=true;form.uncertain=false;form.lock();s.createDirty=false;
+  let note='Plan saved with Pending Approval. ';
+  try{await savePlanDraft(s,form);}catch{note+='The draft completion marker could not be saved; keep the submission reference. ';}
+  if(!current(s))return;
+  if(notify&&typeof notifyHR==='function'){
+   try{await notifyHR('New Development Plan Submitted','A development plan for '+(form.pending.rows[0].employee_name||'your employee')+' has been submitted and awaits HR approval.');note+='The existing HR notification handler was called; delivery is not verified.';}catch{note+='HR notification was not confirmed. The plan itself is saved.';}
+  }else note+='No notification was replayed during the recovery check.';
+  try{await fetchActions(s);}catch(e){s.actionError=e.message;}
+  if(current(s)){renderExisting(s);renderReports(s);msg(s,note);}
+ }
+ const previous=loadManagerDevPlans;
+ loadManagerDevPlans=async function(){
+  if(APP.currentRole!=='manager')return previous.apply(this,arguments);
+  if(active&&current(active)&&(active.createDirty||active.detailDirty)){
+   if(!window.confirm('Reload development plans and leave unsaved edits? Save draft first if needed.'))return;backed(active);
+  }
+  const old=active,main=document.getElementById('mainContent');if(!main)return;
+  const s={key:identity(),items:[],team:[],reports:[],busy:false,tab:old&&current(old)?old.tab:'existing',reportTab:old&&current(old)?old.reportTab:'deliverables',createDirty:false,detailDirty:false};
+  main.replaceChildren();s.host=node('section',null,null,main);s.host.id='cmsManagerTabsV1';active=s;shell(s);
+  for(const [k,p] of Object.entries(s.panels))p.hidden=k!==s.tab;
+  await busy(s,async()=>{
+   try{await fetchActions(s);}catch(e){s.actionError=e.message;}
+   if(!current(s))return;
+   try{await fetchTeam(s);}catch(e){s.teamError=e.message;}
+   if(!current(s))return;
+   try{await fetchReports(s);}catch(e){s.reportError=e.message;}
+   if(!current(s))return;
+   renderCreate(s);setTab(s,s.tab);
+  });
+ };
+ if(!preview&&typeof suContext==='function'){
+  const old=suContext;suContext=function(){const c=old();if(active&&current(active)){c.managerDevelopmentTab=active.tab;c.managerDevelopmentEmployee=active.createEmployee||'';}return c;};
+ }
+ window.addEventListener('beforeunload',e=>{if(!preview&&active&&current(active)&&(active.createDirty||active.detailDirty||active.busy)){backed(active);e.preventDefault();e.returnValue='';}});
+}
+
+ cmsManagerTabsV1();
+ window.__cmsManagerTabsPackageV1=true;
+ try{
+  if(typeof window.CMS_VIEW_TEMPLATE!=='string')throw Error('The isolated viewer template is missing.');
+  const original=new TextDecoder().decode(Uint8Array.from(atob(window.CMS_VIEW_TEMPLATE),c=>c.charCodeAt(0)));
+  if(original.includes('cms-manager-tabs-readonly-v1'))throw Error('Manager viewer layout is already present; do not install it twice.');
+  let hash=2166136261;for(let i=0;i<original.length;i++)hash=Math.imul(hash^original.charCodeAt(i),16777619)>>>0;
+  // Exact reviewed template states: original, Employee viewer add-on, then modern Employee presentation.
+  const accepted=[[3751636,81715361],[3766005,3857438597],[3777207,4102682073]];
+  if(!accepted.some(([length,fp])=>length===original.length&&fp===hash))throw Error('Viewer template differs from the reviewed version. Stop and request a matching update.');
+  const end=original.lastIndexOf('</body>');
+  if(end<0)throw Error('Viewer closing body tag is missing.');
+  const fragment='<script id="cms-manager-tabs-readonly-v1">'+cmsManagerTabsV1.toString()+'\ncmsManagerTabsV1();\n</scr'+'ipt>\n';
+  const updated=original.slice(0,end)+fragment+original.slice(end);
+  const bytes=new TextEncoder().encode(updated);let binary='';
+  for(let i=0;i<bytes.length;i+=16384)binary+=String.fromCharCode(...bytes.subarray(i,i+16384));
+  window.CMS_VIEW_TEMPLATE=btoa(binary);
+ }catch(e){
+  console.error('Manager viewer layout:',e.message);
+  const warning=document.createElement('p');warning.textContent='Manager read-only viewer layout was not applied: '+e.message;
+  warning.setAttribute('role','alert');warning.style.cssText='padding:12px;background:#fff2f0;color:#9a2b22';document.body.append(warning);
+ }
+})();
+</script>
 </body>
 </html>
 
