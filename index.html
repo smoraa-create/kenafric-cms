@@ -11472,17 +11472,26 @@ function fwRenderRevision(){
  document.getElementById('fwBody').innerHTML=h;fwButtons();
 }
 function fwNoteHTML(i){try{var n=JSON.parse(i.ai_note || '');return n.text===i.text?qualityResultHTML(n.result):'';}catch(e){return '';}}
+function cmsFrameworkTypingSaveV1(){
+ var job=FW._typingSaveV1,r=FW.revision;
+ return !!job&&job.revision===r&&r.state==='Draft'&&!r._fvRevoked&&
+  !!FW.position?.can_edit&&!window.CMS_VIEW_CONFIG&&!!APP.user&&
+  job.identity===String(APP.user.email||'').trim().toLowerCase()+'|'+APP.currentRole;
+}
 function fwButtons(){
  if(!FW.revision)return;
  var body=document.getElementById('fwBody');
- if(body)body.querySelectorAll('textarea, select').forEach(function(el){el.disabled=FW.busy;});
+ if(body)body.querySelectorAll('textarea, select').forEach(function(el){
+  var disabled=FW.busy&&!cmsFrameworkTypingSaveV1();
+  if(el.disabled!==disabled)el.disabled=disabled;
+ });
  var missing=fwMinimums(FW.revision),unapproved=FW.revision.items.filter(i=>!FW.revision.review[i.id]).length;
  var el=document.getElementById('fwProgress');if(el)el.textContent=missing.length?missing.join(' · '):FW.revision.state==='Draft'?'All required fields complete. Ready to submit.':unapproved?unapproved+' experiences still need approval. Nothing new is live yet.':'All experiences approved. Ready for final publication.';
  var submit=document.getElementById('fwSubmit');if(submit)submit.disabled=FW.busy||missing.length>0;
  var pub=document.getElementById('fwPublish');if(pub)pub.disabled=FW.busy||missing.length>0||unapproved>0;
 }
 function fwInput(id,key,value){
- if(FW.busy)return;var i=FW.revision.items.find(i=>i.id===id);if(!i)return;
+ if(FW.busy&&!cmsFrameworkTypingSaveV1())return;var i=FW.revision.items.find(i=>i.id===id);if(!i)return;
  i[key]=value;i.ai_note=null;FW.dirty=true;var out=document.getElementById('fwai-'+id);if(out)out.textContent='Not validated after this edit.';fwButtons();
 }
 function fwAdd(code){
@@ -20811,7 +20820,8 @@ document.addEventListener('click',e=>{var b=e.target.closest('[data-hd-delete-in
     }
     var r=FW.revision,sent=JSON.parse(JSON.stringify(r.items)),sentSig=signature(sent),edit=r.edit_number;
     if(sentSig===s.saved){FW.dirty=false;return true;}
-    localCopy(s);FW.busy=true;fwButtons();controls(s);
+    localCopy(s);FW._typingSaveV1={revision:r,identity:s.identity};
+    FW.busy=true;fwButtons();controls(s);
     message(s,'Saving competency draft to server...',false);
     var task=(async function(){
       try{
@@ -20837,6 +20847,7 @@ document.addEventListener('click',e=>{var b=e.target.closest('[data-hd-delete-in
         message(s,'Server save not confirmed: '+e.message+'. '+(s.localOK?'A browser copy is retained.':'Download a copy before leaving.'),true);
         return false;
       }finally{
+        if(FW._typingSaveV1&&FW._typingSaveV1.revision===r)FW._typingSaveV1=null;
         if(live(s)&&FW.revision===r){
           FW.busy=false;fwButtons();controls(s);
         }
@@ -34052,6 +34063,1150 @@ body #mainContent#mainContent #e360Root .e360-meta strong {
 }
 </style>
 <!-- END: CMS COMPACT EMPLOYEE 360 IDENTITY V1 -->
+<!-- START: CMS TRANSPARENT BRAND V2 -->
+<script id="cms-transparent-brand-loader-v2">
+(function(){
+ 'use strict';
+ var id='cms-transparent-brand-v2';
+ if(document.getElementById(id))return;
+ var imageURL=new URL('kenafric-transparent-brand-v2.webp',document.baseURI).href;
+ var selectors=[
+ 'html:root body > .header .header-brand.header-brand.header-brand.header-brand',
+ 'html:root body #sideNav#sideNav .sb-brand > h1',
+ 'html:root body #sideNav#sideNav .es-split-brand > h1',
+ 'html:root body #mainContent#mainContent:has(#loginEmail) h1:has(> .brand-accent)',
+ 'html:root body #mainContent#mainContent:has(#newPass1) h1:has(> .brand-accent)'
+ ].join(',');
+ var css='@media not all and (forced-colors:active){'+selectors+'{'+
+ 'width:180px!important;max-width:100%!important;height:48px!important;min-height:48px!important;'+
+ 'background-image:url('+JSON.stringify(imageURL)+')!important;'+
+ 'background-size:contain!important;background-position:left center!important;background-repeat:no-repeat!important;'+
+ 'background-color:transparent!important;border-radius:0!important;} }';
+ var image=new Image();
+ image.onload=function(){
+  if(document.getElementById(id))return;
+  var style=document.createElement('style');style.id=id;style.textContent=css;document.head.appendChild(style);
+  if(typeof window.CMS_VIEW_TEMPLATE!=='string')return;
+  try{
+   var original=new TextDecoder('utf-8',{fatal:true}).decode(Uint8Array.from(atob(window.CMS_VIEW_TEMPLATE),function(c){return c.charCodeAt(0);}));
+   if(original.indexOf('id="'+id+'"')!==-1)return;
+   var end=original.toLowerCase().lastIndexOf('</head>');
+   if(end<0)throw new Error('Viewer head not found');
+   var updated=original.slice(0,end)+'<style id="'+id+'">'+css+'</style>'+original.slice(end);
+   var bytes=new TextEncoder().encode(updated),binary='';
+   for(var i=0;i<bytes.length;i+=16384)binary+=String.fromCharCode.apply(null,bytes.subarray(i,i+16384));
+   window.CMS_VIEW_TEMPLATE=btoa(binary);
+  }catch(error){console.warn('Compact branding not applied to read-only viewer:',error.message);}
+ };
+ image.onerror=function(){console.warn('Compact logo image was not found. Existing branding retained. Upload the WebP beside index.html.');};
+ image.src=imageURL;
+})();
+</script>
+<!-- END: CMS TRANSPARENT BRAND V2 -->
+<style id="cms-simple-draft-controls-v1-css">
+/* Presentation only. Existing save, recovery and permission handlers stay intact. */
+#mainContent.cms-simple-draft-v1 #wcCompactToggle,
+#mainContent.cms-simple-draft-v1 #fwBody [onclick="fwSave(false)"] {
+ display:none !important;
+}
+#mainContent.cms-simple-draft-v1:not(.cms-draft-more-open) #suDraftToolbar,
+#mainContent.cms-simple-draft-v1:not(.cms-draft-more-open) #fwBody [data-fa-download],
+#mainContent.cms-simple-draft-v1:not(.cms-draft-more-open) #wcPanel .wcActions {
+ display:none !important;
+}
+#mainContent.cms-simple-draft-v1.cms-draft-more-open > #wcPanel.wc-compact-hidden {
+ display:block !important;
+}
+#mainContent.cms-simple-draft-v1 #fwBody .fa-save-status {
+ padding:12px 14px !important;
+ margin:12px 0 !important;
+}
+#mainContent.cms-simple-draft-v1 #fwBody .fa-save-status > p:not([data-fa-message]) {
+ display:none !important;
+}
+#mainContent.cms-simple-draft-v1 #fwBody .fa-save-status > strong {
+ font-size:14px !important;
+}
+#mainContent.cms-simple-draft-v1 #fwBody #cmsDraftMoreV1 {
+ margin:10px 0;
+}
+#mainContent.cms-simple-draft-v1 #fwBody #cmsDraftMoreHelpV1 {
+ font-size:13px;
+ margin:0 0 10px;
+ color:#475569;
+}
+#mainContent.cms-simple-draft-v1 #fwBody #cmsDraftMoreHelpV1[hidden] {
+ display:none !important;
+}
+</style>
+<script id="cms-simple-draft-controls-v1">
+(function(){
+ 'use strict';
+ if(window.cmsSimpleDraftControlsV1)return;
+ window.cmsSimpleDraftControlsV1=true;
+ var context=null,expanded=false,queued=false;
+ function update(){
+  queued=false;
+  var main=document.getElementById('mainContent');
+  if(!main)return;
+  var body=document.getElementById('fwBody');
+  var active=!!body&&typeof FW!=='undefined'&&FW.revision?.state==='Draft'&&
+   !!body.querySelector('.fa-save-status [data-fa-retry]')&&
+   !!body.querySelector('#fwSubmit');
+  main.classList.toggle('cms-simple-draft-v1',active);
+  if(!active){
+   main.classList.remove('cms-draft-more-open');
+   context=null;expanded=false;
+   document.getElementById('cmsDraftMoreV1')?.remove();
+   document.getElementById('cmsDraftMoreHelpV1')?.remove();
+   return;
+  }
+  var key=String(APP.user?.email||'')+'|'+APP.currentRole+'|'+FW.revision.id;
+  if(key!==context){context=key;expanded=false;}
+  main.classList.toggle('cms-draft-more-open',expanded);
+  var retry=body.querySelector('[data-fa-retry]');
+  if(retry.textContent!=='Save draft')retry.textContent='Save draft';
+  var title=body.querySelector('.fa-save-status > strong');
+  if(title&&title.textContent!=='Draft saving')title.textContent='Draft saving';
+  var button=document.getElementById('cmsDraftMoreV1');
+  if(!button){
+   button=document.createElement('button');
+   button.id='cmsDraftMoreV1';button.type='button';
+   button.className='btn btn-outline';
+   button.setAttribute('aria-controls','suDraftToolbar wcPanel cmsDraftMoreHelpV1');
+   button.onclick=function(){expanded=!expanded;update();};
+   body.appendChild(button);
+  }
+  var label=expanded?'Fewer options':'More options';
+  if(button.textContent!==label)button.textContent=label;
+  button.setAttribute('aria-expanded',String(expanded));
+  var help=document.getElementById('cmsDraftMoreHelpV1');
+  if(!help){
+   help=document.createElement('p');help.id='cmsDraftMoreHelpV1';
+   help.textContent='Backup downloads, local recovery and saved-version tools are shown below and beside Save draft. Use them only when you need recovery.';
+   body.appendChild(help);
+  }
+  help.hidden=!expanded;
+  // Leave wcPanel and wcChoice in place. Their existing controller reveals
+  // unresolved offers, failed checks and conflicts even when More options is closed.
+  // Do not acknowledge offers, restore copies, write data or alter disabled states.
+ }
+ function schedule(){
+  if(queued)return;
+  queued=true;queueMicrotask(update);
+ }
+ function start(){
+  var main=document.getElementById('mainContent');
+  if(!main)return;
+  new MutationObserver(schedule).observe(main,{childList:true,subtree:true});
+  update();
+ }
+ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start,{once:true});
+ else start();
+})();
+</script>
+<style id="cms-save-draft-blocker-v1-css">
+#mainContent > #wcPanel.cms-save-blocker-visible-v1 {
+ display:block !important;
+}
+#wcPanel .cms-save-blocker-focus-v1,
+#wcPanel.cms-save-blocker-focus-v1 {
+ outline:3px solid #b45309 !important;
+ outline-offset:5px;
+ scroll-margin-top:180px;
+}
+#cmsSaveBlockerNoteV1 {
+ margin:0 0 12px;
+ padding:10px 12px;
+ color:#713f12;
+ background:#fffbeb;
+ border:1px solid #fcd34d;
+ border-radius:6px;
+}
+</style>
+<script id="cms-save-draft-blocker-v1">
+(function(){
+ 'use strict';
+ if(window.cmsSaveDraftBlockerV1)return;
+ window.cmsSaveDraftBlockerV1=true;
+ function blocker(){
+  if(!document.getElementById('fwBody')||typeof FW==='undefined'||
+   FW.revision?.state!=='Draft'||typeof WC==='undefined'||
+   !WC.active||typeof wcSame!=='function'||!wcSame(WC.active))return null;
+  var s=WC.active;
+  return (!s.ready||s.offer||s.conflict)?s:null;
+ }
+ function reveal(s){
+  var panel=document.getElementById('wcPanel');
+  if(!panel&&typeof wcPanel==='function'){
+   wcPanel(s);panel=document.getElementById('wcPanel');
+  }
+  if(!panel)return false;
+  panel.classList.add('cms-save-blocker-visible-v1');
+  var note=document.getElementById('cmsSaveBlockerNoteV1');
+  if(!note){
+   note=document.createElement('p');note.id='cmsSaveBlockerNoteV1';
+   note.setAttribute('role','status');panel.prepend(note);
+  }
+  note.textContent=s.offer?
+   'Saving is paused here. Compare the saved copy with your current form, then choose which one to keep. Download both first if you are unsure.':
+   s.conflict?
+   'Saving is paused because saved versions conflict. Open More options for backup and server-copy tools. Download your current draft before resolving the conflict.':
+   'Saving is waiting for this saved-work check. If it does not finish, open More options for Check server copy. Do not refresh with unsaved work.';
+  var choice=document.getElementById('wcChoice');
+  var target=s.offer&&choice&&choice.textContent.trim()?choice:panel;
+  target.classList.add('cms-save-blocker-focus-v1');
+  target.setAttribute('tabindex','-1');
+  target.focus({preventScroll:true});
+  target.scrollIntoView({behavior:'auto',block:'center'});
+  setTimeout(function(){
+   target.classList.remove('cms-save-blocker-focus-v1');
+   panel.classList.remove('cms-save-blocker-visible-v1');
+  },15000);
+  return true;
+ }
+ document.addEventListener('click',function(event){
+  var button=event.target.closest?.('#fwBody [data-fa-retry]');
+  if(!button||button.disabled)return;
+  var s=blocker();
+  if(!s||!reveal(s))return;
+  // The existing save is held by this same recovery check. Navigate to the
+  // decision instead; never choose a copy or bypass the existing guard.
+  event.preventDefault();
+  event.stopImmediatePropagation();
+ },true);
+})();
+</script>
+<style id="cms-focused-editor-v1-css">
+/* Set Competencies draft presentation only. Keep existing controls and handlers. */
+body.cms-focus-editor-v1 {background:#f4f6f8!important}
+body.cms-focus-editor-v1 #fwScreen {background:transparent!important;border:0!important;box-shadow:none!important;padding:16px!important}
+body.cms-focus-editor-v1 #mainContent #fwScreen>.card-title {font:750 28px/1.3 system-ui!important;color:#152641!important;background:none!important;box-shadow:none!important;border:0!important;padding:0!important;margin:0 0 6px!important}
+body.cms-focus-editor-v1 #fwScreen>p {font:400 15px/1.6 system-ui!important;color:#52627a!important}
+body.cms-focus-editor-v1 #fwBody.cfe-body {display:grid!important;grid-template-columns:265px minmax(0,1fr);gap:16px!important;align-items:start}
+#mainContent #fwBody.cfe-body>* {min-width:0}
+#mainContent #fwBody.cfe-body>.cfe-original-meta,
+#mainContent #fwBody.cfe-body>.fv-instructions,
+#mainContent #fwBody.cfe-body>.sx-guidelines {display:none!important}
+#mainContent #fwBody.cfe-body>.ux-work-status {grid-column:1/-1;font:400 14px/1.5 system-ui!important;margin:0!important;color:#52627a!important}
+#mainContent #fwBody.cfe-body>.cfe-context {grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;gap:16px;color:#52627a;font:500 14px/1.5 system-ui}
+#mainContent #fwBody.cfe-body .cfe-context h2 {font:750 28px/1.3 system-ui!important;color:#152641!important;margin:0 0 6px!important}
+#mainContent #fwBody.cfe-body .cfe-context p {font:400 15px/1.6 system-ui!important;margin:0 0 8px!important;color:#52627a}
+#mainContent #fwBody.cfe-body>.cfe-notice {grid-column:1/-1;background:#fffbeb!important;color:#713f12!important;border:1px solid #e6c888;border-radius:6px;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;gap:16px;font:500 14px/1.5 system-ui}
+#mainContent #fwBody.cfe-body>.cfe-nav {grid-column:1;grid-row:var(--cfe-row,4);background:#fff;border:1px solid #d3dce7;border-radius:6px;overflow:hidden}
+#mainContent #fwBody.cfe-body .cfe-nav-title {padding:20px;font:700 16px/1.4 system-ui;color:#152641}
+#mainContent #fwBody.cfe-body .cfe-nav button {display:flex!important;gap:14px;width:100%!important;align-items:center;text-align:left;background:#fff!important;border:0!important;border-top:1px solid #e6ebf1!important;border-radius:0!important;box-shadow:none!important;padding:16px 18px!important;color:#152641!important;font:500 14px/1.4 system-ui!important;transform:none!important}
+#mainContent #fwBody.cfe-body .cfe-nav button[aria-current="step"] {background:#e9f0fd!important;color:#1645ad!important;box-shadow:inset 3px 0 #315ccc!important}
+#mainContent #fwBody.cfe-body .cfe-nav-note {padding:18px;color:#63738b;font:400 14px/1.5 system-ui}
+#mainContent #fwBody.cfe-body>.competency-block.cfe-step {grid-column:2;grid-row:var(--cfe-row,4);padding:24px!important;margin:0!important;border:1px solid #d3dce7!important;border-radius:6px!important;background:#fff!important;box-shadow:none!important;min-width:0}
+#mainContent #fwBody.cfe-body>.competency-block.cfe-step>.competency-header {background:none!important;border:0!important;box-shadow:none!important;padding:0!important;margin:0 0 12px!important;color:#152641!important;display:flex!important;flex-wrap:wrap;gap:8px}
+#mainContent #fwBody.cfe-body>.competency-block.cfe-step>.competency-header strong {color:#152641!important;font:700 20px/1.4 system-ui!important}
+#mainContent #fwBody.cfe-body>.competency-block.cfe-step>.competency-header span {color:#63738b!important;font:400 13px/1.5 system-ui!important;background:none!important}
+#mainContent #fwBody.cfe-body .cfe-step>.fv-critical-reminder {background:none!important;border:0!important;padding:0!important;color:#52627a!important;font:400 14px/1.6 system-ui!important;margin:0 0 8px!important}
+#mainContent #fwBody.cfe-body .cfe-step>.fv-critical-reminder * {font-weight:500!important;color:inherit!important}
+#mainContent #fwBody.cfe-body .cfe-step>p {color:#52627a!important;font:400 14px/1.6 system-ui!important}
+#mainContent #fwBody.cfe-body .cfe-step>.exp-item {display:grid!important;grid-template-columns:minmax(0,1fr) 175px;gap:12px 22px;border:0!important;border-top:1px solid #e6ebf1!important;border-left:0!important;border-radius:0!important;background:#fff!important;padding:22px 0!important;margin:12px 0 0!important;box-shadow:none!important}
+#mainContent #fwBody.cfe-body .cfe-exp-label {grid-column:1/-1;font:650 15px/1.4 system-ui!important;color:#152641;margin:0}
+#mainContent #fwBody.cfe-body .exp-item>textarea {grid-column:1;grid-row:2/span 2;width:100%!important;min-height:112px!important;height:auto!important;padding:12px 14px!important;background:#fff!important;color:#152641!important;border:1px solid #b9c6d8!important;border-radius:5px!important;font:400 15px/1.6 system-ui!important;resize:vertical;box-shadow:none!important}
+#mainContent #fwBody.cfe-body .exp-item>select[data-fv-tier],
+#mainContent #fwBody.cfe-body .exp-item>select {grid-column:2;grid-row:2;width:100%!important;min-width:0!important;max-width:none!important;height:42px!important;margin:0!important;padding:8px 28px 8px 12px!important;background:#fff!important;color:#152641!important;border:1px solid #b9c6d8!important;border-radius:5px!important;font:500 14px/1.4 system-ui!important;box-shadow:none!important}
+#mainContent #fwBody.cfe-body select option {background:#fff!important;color:#152641!important}
+#mainContent #fwBody.cfe-body .cfe-ai {grid-column:2;grid-row:3;font:400 14px/1.5 system-ui;color:#152641}
+#mainContent #fwBody.cfe-body .cfe-ai>summary {cursor:pointer;color:#2152bd;font-weight:600;padding:4px 0}
+#mainContent #fwBody.cfe-body .cfe-ai[open] {grid-column:1/-1;grid-row:4}
+#mainContent #fwBody.cfe-body .cfe-ai .ux-framework-ai {display:flex!important;flex-wrap:wrap;gap:8px;margin:8px 0!important}
+#mainContent #fwBody.cfe-body .cfe-ai [id^="fwai-"] {font:400 14px/1.6 system-ui!important;margin-top:8px}
+#mainContent #fwBody.cfe-body .cfe-empty-tools {display:none!important}
+#mainContent #fwBody.cfe-body button:not(.cfe-nav-button) {background:#fff!important;color:#2152bd!important;border:1px solid #9aaed0!important;border-radius:5px!important;box-shadow:none!important;transform:none!important;font:600 14px/1.4 system-ui!important;padding:10px 16px!important;min-height:40px}
+#mainContent #fwBody.cfe-body button:disabled {opacity:.5!important;cursor:not-allowed!important}
+#mainContent #fwBody.cfe-body button:focus-visible,
+#mainContent #fwBody.cfe-body summary:focus-visible {outline:3px solid #93b4fa!important;outline-offset:3px}
+#mainContent #fwBody.cfe-body .cfe-review {grid-column:2;grid-row:var(--cfe-row,4);background:#fff;border:1px solid #d3dce7;border-radius:6px;padding:24px}
+#mainContent #fwBody.cfe-body .cfe-review h3 {color:#152641;font:700 20px/1.4 system-ui;margin:0 0 12px}
+#mainContent #fwBody.cfe-body .cfe-review p {font:400 14px/1.6 system-ui;color:#52627a}
+#mainContent #fwBody.cfe-body .cfe-review table {font:400 14px/1.5 system-ui;width:100%;margin:16px 0}
+#mainContent #fwBody.cfe-body .cfe-review th {text-align:left;background:#f4f6f8;padding:10px;font:600 13px/1.5 system-ui}
+#mainContent #fwBody.cfe-body .cfe-review td {padding:10px;border-bottom:1px solid #e6ebf1}
+#mainContent #fwBody.cfe-body>.cfe-footer {grid-column:1/-1;display:flex;flex-wrap:wrap;align-items:center;gap:12px;background:#fff;border:1px solid #d3dce7;border-radius:6px;padding:14px 18px;position:sticky;bottom:10px;z-index:30;box-shadow:0 4px 16px #1526410a}
+#mainContent #fwBody.cfe-body .cfe-footer>.fa-save-status {display:contents!important}
+#mainContent #fwBody.cfe-body .cfe-footer>.fa-save-status>strong,
+#mainContent #fwBody.cfe-body .cfe-footer>.fa-save-status>p:not([data-fa-message]) {display:none!important}
+#mainContent #fwBody.cfe-body .cfe-footer [data-fa-message] {order:0;flex:1 1 240px;font:400 13px/1.5 system-ui!important;margin:0!important;color:#63738b;max-width:100%}
+#mainContent #fwBody.cfe-body .cfe-footer [data-fa-message].fa-error {color:#9a4810!important}
+#mainContent #fwBody.cfe-body .cfe-footer #cmsDraftMoreV1 {order:1;margin:0!important}
+#mainContent #fwBody.cfe-body .cfe-footer [data-fa-retry] {order:2}
+#mainContent #fwBody.cfe-body .cfe-footer .cfe-next {order:4;background:#2456cd!important;color:#fff!important;border-color:#2456cd!important}
+#mainContent #fwBody.cfe-body .cfe-footer .cfe-submit-wrap {order:5;display:flex!important;gap:8px}
+#mainContent #fwBody.cfe-body .cfe-footer #fwSubmit {background:#2456cd!important;color:#fff!important;border-color:#2456cd!important}
+#mainContent #fwBody.cfe-body .cfe-footer [data-fa-download] {order:7}
+#mainContent #fwBody.cfe-body .cfe-footer [data-fv-excel] {order:8}
+#mainContent #fwBody.cfe-body>.cfe-core {grid-column:1/-1;background:#fff;border:1px solid #d3dce7;border-radius:6px;padding:14px 18px}
+#mainContent #fwBody.cfe-body>.cfe-core>summary {cursor:pointer;font:600 14px/1.5 system-ui;color:#2152bd}
+#mainContent #fwBody.cfe-body>.cfe-core .competency-block {background:#fff!important;border:1px solid #d3dce7!important;padding:16px!important;margin-top:12px!important}
+#mainContent #fwBody.cfe-body>#fwProgress,
+#mainContent #fwBody.cfe-body>#cmsDraftMoreHelpV1,
+#mainContent #fwBody.cfe-body>[data-uw-locked] {grid-column:1/-1;font:400 14px/1.6 system-ui!important}
+#mainContent #fwBody.cfe-body [data-cfe-hidden="true"][data-cfe-hidden][data-cfe-hidden] {display:none!important}
+@media(max-width:1000px) {
+ body.cms-focus-editor-v1 #fwBody.cfe-body {grid-template-columns:210px minmax(0,1fr)}
+ #mainContent #fwBody.cfe-body .cfe-step>.exp-item {grid-template-columns:minmax(0,1fr)}
+ #mainContent #fwBody.cfe-body .exp-item>textarea {grid-column:1;grid-row:2}
+ #mainContent #fwBody.cfe-body .exp-item>select,
+ #mainContent #fwBody.cfe-body .exp-item>select[data-fv-tier] {grid-column:1;grid-row:3;max-width:240px!important}
+ #mainContent #fwBody.cfe-body .cfe-ai {grid-column:1;grid-row:4}
+}
+@media(max-width:680px) {
+ body.cms-focus-editor-v1 #fwScreen {padding:8px!important}
+ body.cms-focus-editor-v1 #fwBody.cfe-body {display:flex!important;flex-direction:column}
+ #mainContent #fwBody.cfe-body>* {width:100%;box-sizing:border-box;order:8}
+ #mainContent #fwBody.cfe-body>.cfe-context {order:0}
+ #mainContent #fwBody.cfe-body>.cfe-notice {order:1}
+ #mainContent #fwBody.cfe-body>.ux-work-status {order:2}
+ #mainContent #fwBody.cfe-body>.cfe-nav {order:3}
+ #mainContent #fwBody.cfe-body>.cfe-step,
+ #mainContent #fwBody.cfe-body>.cfe-review {order:4}
+ #mainContent #fwBody.cfe-body>.cfe-footer {order:5}
+ #mainContent #fwBody.cfe-body>.cfe-core {order:7}
+ #mainContent #fwBody.cfe-body .cfe-nav {max-height:220px;overflow:auto}
+ #mainContent #fwBody.cfe-body>.competency-block.cfe-step {padding:16px!important}
+ #mainContent #fwBody.cfe-body>.cfe-footer {position:static}
+ #mainContent #fwBody.cfe-body>.cfe-notice {align-items:flex-start;flex-direction:column}
+ #mainContent #fwBody.cfe-body .cfe-review {overflow:auto}
+}
+</style>
+<script id="cms-focused-editor-v1">
+/* Existing DOM nodes are retained. No writes, implicit saves, or permission changes. */
+(function(){
+ 'use strict';
+ if(window.cmsFocusedEditorV1)return;
+ window.cmsFocusedEditorV1=true;
+ var state=null,pending=false,serial=0;
+ function make(tag,cls,text,parent){
+  var e=document.createElement(tag);if(cls)e.className=cls;
+  if(text!=null)e.textContent=text;if(parent)parent.appendChild(e);return e;
+ }
+ function text(e,value){if(e&&e.textContent!==value)e.textContent=value;}
+ function attr(e,name,value){value=String(value);if(e.getAttribute(name)!==value)e.setAttribute(name,value);}
+ function hide(e,value){if(e)attr(e,'data-cfe-hidden',value?'true':'false');}
+ function move(e,parent){if(e&&e.parentNode!==parent)parent.appendChild(e);}
+ function jump(e){e.scrollIntoView({behavior:'auto',block:'start'});e.focus({preventScroll:true});}
+ function current(s){return state===s&&document.getElementById('fwBody')===s.body&&FW.revision===s.revision;}
+ function decorateEntry(entry,index){
+  var area=entry.querySelector('textarea[id^="fwt-"]');if(!area)return;
+  var label=entry.querySelector('.cfe-exp-label');
+  if(!label){label=make('label','cfe-exp-label');entry.prepend(label);}
+  label.htmlFor=area.id;text(label,'Experience '+(index+1));
+  var row=entry.querySelector('.ux-framework-ai'),note=entry.querySelector('[id^="fwai-"]');
+  if(row){
+   var details=entry.querySelector('.cfe-ai');
+   if(!details){details=make('details','cfe-ai',null,entry);make('summary',null,'AI tools',details);}
+   move(row,details);if(note)move(note,details);
+  }
+  Array.from(entry.children).forEach(function(e){
+   if(e.tagName==='DIV'&&!e.children.length&&!e.textContent.trim())e.classList.add('cfe-empty-tools');
+  });
+ }
+ function setStep(s,index,focus){
+  if(!current(s))return;
+  s.selected=Math.max(0,Math.min(index,s.steps.length));refresh();
+  if(focus)jump(s.selected===s.steps.length?s.review:s.steps[s.selected].section);
+ }
+ function init(body,revision,previous){
+  var steps=Array.from(body.children).filter(e=>e.classList.contains('competency-block')&&e.querySelector('textarea[id^="fwt-"]')).map(function(section){
+   var area=section.querySelector('textarea[id^="fwt-"]');
+   var item=revision.items.find(i=>'fwt-'+i.id===area.id);
+   return {section:section,code:item?.code,name:section.querySelector('.competency-header strong')?.textContent||item?.code||'Competency'};
+  });
+  if(!steps.length||steps.some(s=>!s.code))return null;
+  var s={body:body,revision:revision,steps:steps,selected:0,signature:''};
+  if(previous&&previous.revision.id===revision.id&&previous.identity===identity())s.selected=Math.min(previous.selected,steps.length);
+  s.identity=identity();state=s;
+  body.classList.add('cfe-body');
+  Array.from(body.children).forEach(e=>{
+   if(e.tagName==='H3'||(e.tagName==='P'&&e.querySelector('strong')&&e.textContent.includes('Draft')))e.classList.add('cfe-original-meta');
+  });
+  s.context=make('div','cfe-context',null,body);
+  var identityBlock=make('div',null,null,s.context);
+  if(!document.querySelector('#fwScreen > .card-title')){
+   make('h2',null,'Set competencies',identityBlock);
+   make('p',null,'Define the work experiences required for this role.',identityBlock);
+  }
+  make('span',null,[FW.position.department||'Company-wide Core',FW.position.position||''].filter(Boolean).join(' / '),identityBlock);
+  make('span',null,'Private draft',s.context);
+  s.notice=make('div','cfe-notice',null,body);s.notice.setAttribute('role','status');
+  s.noticeText=make('span',null,'',s.notice);
+  s.resolve=make('button',null,'Review saved copy',s.notice);s.resolve.type='button';
+  s.resolve.onclick=function(){
+   if(!current(s))return;
+   var wc=typeof WC!=='undefined'&&WC.active&&typeof wcSame==='function'&&wcSame(WC.active)?WC.active:null;
+   var panel=document.getElementById('wcPanel');
+   if(panel&&wc&&(!wc.ready||wc.offer||wc.conflict)){
+    panel.classList.add('cms-save-blocker-visible-v1');panel.tabIndex=-1;jump(panel);
+    setTimeout(()=>panel.classList.remove('cms-save-blocker-visible-v1'),15000);
+   }else{
+    var status=body.querySelector('[data-fa-message]');
+    if(status){status.tabIndex=-1;jump(status);}
+   }
+  };
+  s.nav=make('nav','cfe-nav',null,body);s.nav.setAttribute('aria-label','Competency editing steps');
+  make('div','cfe-nav-title','Competencies',s.nav);
+  steps.forEach(function(step,index){
+   step.section.classList.add('cfe-step');step.section.tabIndex=-1;
+   if(!step.section.id)step.section.id='cfe-step-'+(++serial);
+   step.button=make('button','cfe-nav-button',null,s.nav);step.button.type='button';
+   make('span',null,String(index+1),step.button);make('span',null,step.name,step.button);
+   step.button.setAttribute('aria-controls',step.section.id);
+   step.button.onclick=()=>setStep(s,index,true);
+  });
+  s.reviewButton=make('button','cfe-nav-button','Review framework',s.nav);s.reviewButton.type='button';
+  s.reviewButton.onclick=()=>setStep(s,steps.length,true);
+  make('p','cfe-nav-note',FW.position.department?'Core competencies are managed separately.':'Core levels and publication rules remain unchanged.',s.nav);
+  s.review=make('section','cfe-review',null,body);s.review.tabIndex=-1;
+  make('h3',null,'Review framework',s.review);
+  make('p',null,'Check every competency before submitting. Saving a draft does not submit or publish it.',s.review);
+  var table=make('table',null,null,s.review),head=make('tr',null,null,make('thead',null,null,table));
+  ['Competency','Entered','Critical'].forEach(t=>make('th',null,t,head));
+  s.rows=make('tbody',null,null,table);
+  s.reviewNote=make('p',null,'',s.review);
+  s.footer=make('div','cfe-footer',null,body);
+  s.next=make('button','cfe-next','Next competency',s.footer);s.next.type='button';
+  s.next.onclick=()=>setStep(s,s.selected===steps.length?0:s.selected+1,true);
+  var readonly=Array.from(body.children).filter(e=>e.classList.contains('competency-block')&&!e.querySelector('textarea'));
+  if(readonly.length){
+   s.core=make('details','cfe-core',null,body);make('summary',null,'Published Core reference',s.core);
+   readonly.forEach(e=>s.core.appendChild(e));
+  }
+  return s;
+ }
+ function identity(){return String(APP.user?.email||'')+'|'+APP.currentRole;}
+ function refresh(){
+  pending=false;
+  var body=document.getElementById('fwBody');
+  var eligible=body&&typeof FW!=='undefined'&&typeof APP!=='undefined'&&APP.user&&FW.revision?.state==='Draft'&&FW.position&&
+   body.querySelector('#fwSubmit')&&body.querySelector('textarea[id^="fwt-"]')&&body.querySelector('.fa-save-status');
+  document.body.classList.toggle('cms-focus-editor-v1',!!eligible);
+  if(!eligible){if(body)body.classList.remove('cfe-body');state=null;return;}
+  if(!state||state.body!==body||state.revision!==FW.revision||state.identity!==identity()||!body.contains(state.nav)){
+   state=init(body,FW.revision,state);
+  }
+  var s=state;if(!s)return;
+  var main=document.getElementById('mainContent');
+  var panel=body.querySelector('.fa-save-status'),retry=panel?.querySelector('[data-fa-retry]');
+  var more=body.querySelector('#cmsDraftMoreV1'),excel=body.querySelector('[data-fv-excel]');
+  var submit=body.querySelector('#fwSubmit'),submitWrap=submit?.parentElement;
+  move(panel,s.footer);move(more,s.footer);move(excel,s.footer);
+  if(submitWrap&&submitWrap!==s.footer){submitWrap.classList.add('cfe-submit-wrap');move(submitWrap,s.footer);}
+  var review=s.selected===s.steps.length;
+  s.steps.forEach(function(step,index){
+   hide(step.section,review||index!==s.selected);
+   attr(step.button,'aria-current',index===s.selected?'step':'false');
+   Array.from(step.section.querySelectorAll('.exp-item')).forEach(decorateEntry);
+  });
+  attr(s.reviewButton,'aria-current',review?'step':'false');hide(s.review,!review);
+  hide(submitWrap,!review);hide(body.querySelector('#fwProgress'),!review);
+  text(s.next,review?'Back to editing':s.selected===s.steps.length-1?'Review framework':'Next competency');
+  // Never change any existing button's disabled state or form value.
+  hide(excel,!main?.classList.contains('cms-draft-more-open'));
+  var sig=JSON.stringify(FW.revision.items.map(i=>[i.id,i.code,i.text,i.classification]));
+  if(sig!==s.signature){
+   s.signature=sig;s.rows.replaceChildren();
+   s.steps.forEach(function(step){
+    var items=FW.revision.items.filter(i=>i.code===step.code&&String(i.text||'').trim()&&i.classification);
+    var row=make('tr',null,null,s.rows);
+    [step.name,String(items.length),String(items.filter(i=>i.classification==='Must-Have (Critical)').length)].forEach(v=>make('td',null,v,row));
+   });
+  }
+  text(s.reviewNote,submit.disabled?'Submission is unavailable. Check the existing requirements and save/access status below.':'The existing submission checks are ready. Submit only when you have reviewed the framework.');
+  var wc=typeof WC!=='undefined'&&WC.active&&typeof wcSame==='function'&&wcSame(WC.active)?WC.active:null;
+  var blocked=!!wc&&(!wc.ready||wc.offer||wc.conflict);
+  var status=panel?.querySelector('[data-fa-message]');
+  var error=!!status?.classList.contains('fa-error');
+  hide(s.notice,!blocked&&!error&&!FW.revision._fvRevoked);
+  text(s.noticeText,FW.revision._fvRevoked?'Editing access is locked. Request renewed authorization.':
+   wc?.offer?'Saving paused: choose which draft to keep.':
+   wc?.conflict?'Saving paused: saved versions need review.':
+   blocked?'Saving paused: checking saved work.':status?.textContent||'Saving needs attention.');
+  text(s.resolve,wc?.offer?'Review saved copy':'View saving details');
+  var hasNotice=blocked||error||FW.revision._fvRevoked;
+  // Explicit grid rows keep all form nodes in fwBody for existing handlers.
+  s.context.style.gridRow='1';s.notice.style.gridRow='2';
+  var ux=body.querySelector(':scope > .ux-work-status');if(ux)ux.style.gridRow=hasNotice?'3':'2';
+  body.style.setProperty('--cfe-row',String((hasNotice?3:2)+(ux?1:0)));
+ }
+ function schedule(){if(pending)return;pending=true;requestAnimationFrame(refresh);}
+ function start(){
+  var main=document.getElementById('mainContent');if(!main)return;
+  new MutationObserver(schedule).observe(main,{childList:true,subtree:true,characterData:true,attributes:true,attributeFilter:['disabled','aria-expanded']});
+  main.addEventListener('input',schedule);main.addEventListener('change',schedule);
+  refresh();
+ }
+ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start,{once:true});else start();
+})();
+</script>
+<style id="cms-framed-editor-compact-v1-css">
+/* Scoped presentation: original form controls remain the source of truth. */
+body.cms-focus-editor-v1 #mainContent #fwScreen>.card-title,
+#mainContent #fwBody.cfe-body .cfe-context h2,
+#mainContent #fwBody.cfe-body>.competency-block.cfe-step>.competency-header {
+ background:linear-gradient(180deg,#fff,#f8fafc)!important;
+ border:1px solid #d5deea!important;border-left:4px solid #315ccc!important;
+ border-radius:6px!important;box-shadow:0 3px 0 #d8dee8,0 5px 12px #1526410d!important;
+ padding:12px 16px!important;margin-bottom:18px!important;
+}
+body.cms-focus-editor-v1 #mainContent #fwScreen>.card-title,
+#mainContent #fwBody.cfe-body .cfe-context h2 {display:inline-block!important}
+#mainContent #fwBody.cfe-body>.competency-block.cfe-step>.competency-header strong {font-size:20px!important}
+#mainContent #fwBody.cfe-body .cfc-instructions {
+ background:#f0f5ff;border:1px solid #bfd0ef;border-radius:6px;
+ padding:14px 16px;margin:14px 0;color:#152641;font:400 14px/1.65 system-ui;
+}
+#mainContent #fwBody.cfe-body .cfc-instructions h4 {font:700 15px/1.4 system-ui;color:#152641;margin:0 0 6px}
+#mainContent #fwBody.cfe-body .cfc-instructions ol {list-style:decimal;padding-left:21px;margin:0}
+#mainContent #fwBody.cfe-body .cfc-instructions li {margin:3px 0}
+#mainContent #fwBody.cfe-body .cfc-blue {color:#2152bd;font-weight:700}
+#mainContent #fwBody.cfe-body .cfc-red {color:#b42332;font-weight:700}
+#mainContent #fwBody.cfe-body .cfc-legend {display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:12px 0}
+#mainContent #fwBody.cfe-body .cfc-legend>div {padding:9px 11px;border:1px solid;border-radius:5px;font:400 12px/1.5 system-ui}
+#mainContent #fwBody.cfe-body .cfc-legend strong {display:block;font:700 13px/1.5 system-ui}
+#mainContent #fwBody.cfe-body .cfc-legend .cfc-critical {color:#a51f2b;background:#fff4f5;border-color:#e9b3ba}
+#mainContent #fwBody.cfe-body .cfc-legend .cfc-important {color:#855006;background:#fff8e9;border-color:#e5c789}
+#mainContent #fwBody.cfe-body .cfc-legend .cfc-value {color:#24633c;background:#f1faf3;border-color:#b5d6be}
+#mainContent #fwBody.cfe-body .cfc-progress {font:500 14px/1.6 system-ui;color:#52627a;margin:10px 0}
+#mainContent #fwBody.cfe-body .cfc-legacy-instruction {display:none!important}
+#mainContent #fwBody.cfe-body .exp-item.cfc-entry {grid-template-columns:minmax(0,1fr) 180px;align-items:start}
+#mainContent #fwBody.cfe-body .exp-item.cfc-entry>textarea {grid-column:1;grid-row:2;min-height:100px!important}
+#mainContent #fwBody.cfe-body .exp-item.cfc-entry>select[data-cfc-source] {display:none!important}
+#mainContent #fwBody.cfe-body .cfc-options {grid-column:1;grid-row:3;display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+#mainContent #fwBody.cfe-body .cfc-options button.cfc-choice {
+ width:auto!important;min-width:0!important;min-height:30px!important;height:30px!important;
+ padding:4px 10px!important;margin:0!important;font:650 12px/1.3 system-ui!important;
+ border:1px solid!important;border-radius:5px!important;box-shadow:none!important;
+ display:inline-flex!important;align-items:center;justify-content:center;gap:4px!important;
+}
+#mainContent #fwBody.cfe-body .cfc-options button.cfc-critical {color:#a51f2b!important;background:#fff4f5!important;border-color:#df9ba5!important}
+#mainContent #fwBody.cfe-body .cfc-options button.cfc-important {color:#855006!important;background:#fff8e9!important;border-color:#deb768!important}
+#mainContent #fwBody.cfe-body .cfc-options button.cfc-value {color:#24633c!important;background:#f1faf3!important;border-color:#9dc5a8!important}
+#mainContent #fwBody.cfe-body .cfc-options button.cfc-critical[aria-pressed="true"] {background:#b42332!important;border-color:#b42332!important;color:#fff!important}
+#mainContent #fwBody.cfe-body .cfc-options button.cfc-important[aria-pressed="true"] {background:#f2ba43!important;border-color:#c89326!important;color:#503400!important}
+#mainContent #fwBody.cfe-body .cfc-options button.cfc-value[aria-pressed="true"] {background:#287a4a!important;border-color:#287a4a!important;color:#fff!important}
+#mainContent #fwBody.cfe-body .cfc-options button[aria-pressed="true"] {box-shadow:0 2px 0 #15264126!important}
+#mainContent #fwBody.cfe-body .cfc-selected {font:500 12px/1.4 system-ui;color:#52627a;flex-basis:100%;margin-top:1px}
+#mainContent #fwBody.cfe-body .exp-item.cfc-entry>.cfe-ai,
+#mainContent #fwBody.cfe-body .exp-item.cfc-entry>.cfe-ai[open] {
+ grid-column:2;grid-row:2/span 2;background:#fff;border:1px solid #c9c4e5;border-radius:6px;
+ box-shadow:0 2px 0 #e5e2ef;overflow:hidden;min-width:0;
+}
+#mainContent #fwBody.cfe-body .cfc-entry>.cfe-ai>summary {
+ padding:10px 12px;background:#f6f4fb;color:#44317a;font:650 14px/1.4 system-ui;
+}
+#mainContent #fwBody.cfe-body .cfc-entry>.cfe-ai .ux-framework-ai {display:flex!important;flex-direction:column!important;gap:6px!important;padding:10px!important;margin:0!important}
+#mainContent #fwBody.cfe-body .cfc-entry>.cfe-ai button.cfc-ai-action {
+ width:100%!important;min-height:32px!important;padding:6px 10px!important;
+ font:600 12px/1.4 system-ui!important;color:#fff!important;border-radius:4px!important;
+ background:#315ccc!important;border:1px solid #244eb7!important;box-shadow:0 2px 0 #15264116!important;
+}
+#mainContent #fwBody.cfe-body .cfc-entry>.cfe-ai button.cfc-ai-refine {background:#7540b8!important;border-color:#6632a9!important}
+#mainContent #fwBody.cfe-body .cfc-entry>.cfe-ai button.cfc-ai-library {background:#087e8b!important;border-color:#086c77!important}
+#mainContent #fwBody.cfe-body .cfc-ai-description {display:block;font:400 11px/1.45 system-ui;color:#52627a;text-align:center;margin:0 0 5px}
+#mainContent #fwBody.cfe-body .cfc-entry>.cfe-ai [id^="fwai-"] {padding:0 10px 10px;font:400 12px/1.6 system-ui!important;overflow-wrap:anywhere}
+#mainContent #fwBody.cfe-body .cfc-entry>.cfe-ai [id^="fwai-"]:empty {display:none!important}
+@media(max-width:1100px) {
+ #mainContent #fwBody.cfe-body .exp-item.cfc-entry {grid-template-columns:minmax(0,1fr)}
+ #mainContent #fwBody.cfe-body .exp-item.cfc-entry>.cfe-ai,
+ #mainContent #fwBody.cfe-body .exp-item.cfc-entry>.cfe-ai[open] {grid-column:1;grid-row:4;width:100%;max-width:360px}
+ #mainContent #fwBody.cfe-body .cfc-legend {grid-template-columns:minmax(0,1fr)}
+}
+@media(pointer:coarse) {
+ #mainContent #fwBody.cfe-body .cfc-options {gap:10px}
+ #mainContent #fwBody.cfe-body .cfc-options button.cfc-choice {min-height:40px!important;height:40px!important}
+}
+</style>
+<script id="cms-framed-editor-compact-v1">
+(function(){
+ 'use strict';
+ if(window.cmsFramedEditorCompactV1)return;
+ window.cmsFramedEditorCompactV1=true;
+ var queued=false;
+ var types=[
+  {value:'Must-Have (Critical)',label:'Critical',cls:'cfc-critical',description:'Essential for the role'},
+  {value:'Important (Performance Enhancing)',label:'Important',cls:'cfc-important',description:'Improves performance'},
+  {value:'Value-Add (Developmental)',label:'Value-Add',cls:'cfc-value',description:'Supports development'}
+ ];
+ function make(tag,cls,label,parent){
+  var el=document.createElement(tag);if(cls)el.className=cls;
+  if(label!=null)el.textContent=label;if(parent)parent.appendChild(el);return el;
+ }
+ function text(el,value){if(el.textContent!==value)el.textContent=value;}
+ function attr(el,key,value){value=String(value);if(el.getAttribute(key)!==value)el.setAttribute(key,value);}
+ function permitted(select){
+  if(select.disabled||select.readOnly||!select.isConnected||typeof FW==='undefined'||
+   FW.revision?.state!=='Draft'||FW.revision._fvRevoked||!FW.position?.can_edit||
+   window.CMS_VIEW_CONFIG)return false;
+  return !FW.busy||(typeof cmsFrameworkTypingSaveV1==='function'&&cmsFrameworkTypingSaveV1());
+ }
+ function sectionInfo(section){
+  var ta=section.querySelector('textarea[id^="fwt-"]');
+  var item=ta&&FW.revision.items.find(i=>'fwt-'+i.id===ta.id);
+  if(!item)return;
+  var code=item.code,min=['FC001','FC002','FC003','FC004'].includes(code)?3:
+   ['FC005','PC001','LC001'].includes(code)?2:0;
+  var critical=FW.position.department&&['FC001','FC002','FC003','FC004'].includes(code)?2:0;
+  var group=FW.revision.items.filter(i=>i.code===code);
+  var complete=group.filter(i=>String(i.text||'').trim()&&i.classification);
+  var nCritical=complete.filter(i=>i.classification===types[0].value).length;
+  var box=section.querySelector(':scope > .cfc-instructions');
+  if(!box){
+   box=make('div','cfc-instructions');
+   var heading=section.querySelector('.competency-header');
+   if(!heading)return;
+   heading.after(box);
+   make('h4',null,'What to do',box);
+   var list=make('ol',null,null,box);
+   var first=make('li',null,null,list);
+   if(min){
+    first.append('Describe at least ');
+    make('strong','cfc-blue',min+' observable work experiences',first);
+    first.append('.');
+   }else first.textContent='Describe observable experiences for the required Core levels.';
+   var second=make('li',null,'Classify each experience.',list);
+   if(critical){
+    second.append(' At least ');
+    make('strong','cfc-red',critical+' must be Critical',second);
+    second.append('.');
+   }
+   make('li',null,'Use AI tools if needed, then save and review. AI does not approve your work.',list);
+   var legend=make('div','cfc-legend');box.after(legend);
+   types.forEach(t=>{
+    var tile=make('div',t.cls,null,legend);
+    make('strong',null,t.label,tile);make('span',null,t.description,tile);
+   });
+   var progress=make('p','cfc-progress');legend.after(progress);
+   progress.setAttribute('role','status');
+  }
+  // Replace only redundant minimum-count copy with accurate, live guidance.
+  Array.from(section.children).forEach(e=>{
+   if(e.classList.contains('fv-critical-reminder')||
+    (e.tagName==='P'&&/^Required:\s*\d+ complete experiences \| Entered:/.test(e.textContent)))
+    e.classList.add('cfc-legacy-instruction');
+  });
+  var progress=section.querySelector(':scope > .cfc-progress');
+  var words=complete.length+' experiences entered | '+nCritical+' Critical';
+  var missing=[];
+  if(min&&complete.length<min)missing.push((min-complete.length)+' more experience'+(min-complete.length===1?'':'s'));
+  if(critical&&nCritical<critical)missing.push((critical-nCritical)+' more Critical');
+  words+=missing.length?' | '+missing.join(' and ')+' needed':' | Review all requirements before submitting';
+  if(progress)text(progress,words);
+ }
+ function choices(entry){
+  var select=entry.querySelector(':scope > select'),area=entry.querySelector('textarea[id^="fwt-"]');
+  if(!select||!area)return;
+  var values=Array.from(select.options).map(o=>o.value);
+  // Unexpected schemas retain the native control rather than guessing values.
+  if(!types.every(t=>values.includes(t.value)))return;
+  entry.classList.add('cfc-entry');
+  var group=entry.querySelector(':scope > .cfc-options');
+  if(!group){
+   group=make('div','cfc-options',null,entry);
+   group.setAttribute('role','group');group.setAttribute('aria-label','Experience classification');
+   types.forEach(t=>{
+    var button=make('button','cfc-choice '+t.cls,t.label,group);
+    button.type='button';button.dataset.cfcValue=t.value;button.title=t.description;
+    button.setAttribute('aria-label',t.label+': '+t.description);
+    button.onclick=function(){
+     if(!permitted(select))return;
+     var current=FW.revision.items.find(i=>'fwt-'+i.id===area.id);
+     if(!current)return;
+     var before=select.value;
+     if(before===t.value)return;
+     select.value=t.value;
+     // Invoke the original field's change handler, including existing wrappers.
+     select.dispatchEvent(new Event('change',{bubbles:true}));
+     var after=FW.revision?.items.find(i=>'fwt-'+i.id===area.id);
+     if(after&&after.classification!==t.value)select.value=after.classification;
+     update();
+    };
+   });
+   make('span','cfc-selected',null,group);
+  }
+  attr(select,'data-cfc-source','true');
+  var allowed=permitted(select);
+  group.querySelectorAll('button[data-cfc-value]').forEach(b=>{
+   attr(b,'aria-pressed',select.value===b.dataset.cfcValue);
+   if(b.disabled!==!allowed)b.disabled=!allowed;
+  });
+  var selected=types.find(t=>t.value===select.value);
+  text(group.querySelector('.cfc-selected'),selected?'Selected: '+selected.label:'Current classification: '+(select.value||'Not selected'));
+ }
+ function ai(entry){
+  var row=entry.querySelector('.cfe-ai .ux-framework-ai');if(!row)return;
+  Array.from(row.children).filter(e=>e.tagName==='BUTTON').forEach(b=>{
+   var label=b.textContent.trim();
+   var type=/^AI Validate/.test(label)?'validate':/^AI Refine/.test(label)?'refine':/^AI Library/.test(label)?'library':null;
+   if(!type)return;
+   b.classList.add('cfc-ai-action','cfc-ai-'+type);
+   var caption=b.nextElementSibling;
+   if(!caption||!caption.classList.contains('cfc-ai-description')){
+    caption=make('span','cfc-ai-description');
+    caption.textContent={validate:'Check clarity and relevance',refine:'Improve the wording',library:'Browse examples'}[type];
+    b.after(caption);
+   }
+   // No replacement handlers or forced enablement of AI buttons.
+  });
+ }
+ function update(){
+  queued=false;
+  var body=document.querySelector('#fwBody.cfe-body');
+  if(!body||typeof FW==='undefined'||FW.revision?.state!=='Draft')return;
+  body.querySelectorAll('.cfe-step').forEach(section=>{
+   sectionInfo(section);
+   section.querySelectorAll('.exp-item').forEach(entry=>{choices(entry);ai(entry);});
+  });
+ }
+ function schedule(){if(queued)return;queued=true;requestAnimationFrame(update);}
+ function start(){
+  var main=document.getElementById('mainContent');if(!main)return;
+  new MutationObserver(schedule).observe(main,{subtree:true,childList:true,attributes:true,attributeFilter:['disabled','data-fv-tier']});
+  main.addEventListener('change',schedule);main.addEventListener('input',schedule);
+  update();
+ }
+ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start,{once:true});
+ else start();
+})();
+</script>
+<style id="cms-unified-editor-header-v1-css">
+/* Consolidate existing draft headings. No saving or permission changes. */
+body.cms-focus-editor-v1 #mainContent #fwScreen.cfu-screen {
+ padding:0!important;background:transparent!important;border:0!important;box-shadow:none!important;
+}
+body.cms-focus-editor-v1 #mainContent #fwScreen.cfu-screen>.cfu-previous-heading,
+body.cms-focus-editor-v1 #mainContent #fwScreen.cfu-screen #fwBody>.cfe-context {
+ display:none!important;
+}
+body.cms-focus-editor-v1 #mainContent #fwScreen.cfu-screen>.cfu-header {
+ display:block!important;width:100%;box-sizing:border-box;background:#fff!important;
+ border:1px solid #d4dce7!important;border-radius:6px!important;
+ padding:14px 20px 16px!important;margin:0 0 16px!important;
+ box-shadow:0 2px 5px #1526410d!important;color:#152641!important;
+}
+body.cms-focus-editor-v1 #mainContent #fwScreen.cfu-screen .cfu-top {
+ display:flex;align-items:center;justify-content:space-between;gap:16px;min-height:30px;margin-bottom:10px;
+}
+body.cms-focus-editor-v1 #mainContent #fwScreen.cfu-screen .cfu-back-slot {display:flex;align-items:center;gap:12px}
+body.cms-focus-editor-v1 #mainContent #fwScreen.cfu-screen .cfu-back-slot button {
+ background:#fff!important;color:#2456bd!important;border:1px solid #9aafd4!important;
+ box-shadow:none!important;border-radius:4px!important;padding:6px 12px!important;
+ min-height:32px!important;height:auto!important;font:600 13px/1.4 system-ui!important;
+ transform:none!important;letter-spacing:normal!important;text-transform:none!important;
+}
+body.cms-focus-editor-v1 #mainContent #fwScreen.cfu-screen .cfu-state {
+ border:1px solid #d3dce7;border-radius:14px;background:#fafbfd;color:#334664;
+ padding:3px 11px;font:500 12px/1.4 system-ui;white-space:nowrap;
+}
+body.cms-focus-editor-v1 #mainContent #fwScreen.cfu-screen .cfu-header h2.cfu-title {
+ display:block!important;font:750 28px/1.25 system-ui!important;color:#152641!important;
+ background:none!important;border:0!important;border-radius:0!important;box-shadow:none!important;
+ margin:0 0 10px!important;padding:0!important;letter-spacing:-.4px!important;text-transform:none!important;
+}
+body.cms-focus-editor-v1 #mainContent #fwScreen.cfu-screen .cfu-header h2.cfu-title::before,
+body.cms-focus-editor-v1 #mainContent #fwScreen.cfu-screen .cfu-header h2.cfu-title::after {
+ content:none!important;display:none!important;
+}
+body.cms-focus-editor-v1 #mainContent #fwScreen.cfu-screen .cfu-meta {
+ display:flex;flex-wrap:wrap;align-items:center;gap:8px 26px;font:400 14px/1.5 system-ui;color:#334664;margin:0 0 8px;
+}
+body.cms-focus-editor-v1 #mainContent #fwScreen.cfu-screen .cfu-meta strong {font-weight:650;color:#152641;margin-right:6px}
+body.cms-focus-editor-v1 #mainContent #fwScreen.cfu-screen .cfu-subtitle {
+ font:400 14px/1.5 system-ui!important;color:#52627a!important;margin:0!important;padding:0!important;
+ background:none!important;border:0!important;box-shadow:none!important;
+}
+body.cms-focus-editor-v1 #mainContent #fwScreen.cfu-screen #fwBody.cfe-body {margin-top:0!important;gap:14px!important}
+body.cms-focus-editor-v1 #mainContent #fwScreen.cfu-screen #fwBody.cfe-body>.cfe-notice {grid-row:1!important}
+body.cms-focus-editor-v1 #mainContent #fwScreen.cfu-screen #fwBody.cfe-body>.ux-work-status {grid-row:2!important}
+body.cms-focus-editor-v1 #mainContent #fwScreen.cfu-screen #fwBody.cfe-body>.ux-work-status.cfu-optional-note {display:none!important}
+body.cms-focus-editor-v1 #mainContent #fwScreen.cfu-screen #fwBody.cfe-body>.cfe-nav,
+body.cms-focus-editor-v1 #mainContent #fwScreen.cfu-screen #fwBody.cfe-body>.cfe-step,
+body.cms-focus-editor-v1 #mainContent #fwScreen.cfu-screen #fwBody.cfe-body>.cfe-review {grid-row:3!important}
+body.cms-focus-editor-v1 #mainContent #fwScreen.cfu-screen #fwBody.cfe-body>#fwProgress {grid-row:4!important}
+body.cms-focus-editor-v1 #mainContent #fwScreen.cfu-screen #fwBody.cfe-body>.cfe-footer {grid-row:5!important}
+body.cms-focus-editor-v1 #mainContent #fwScreen.cfu-screen #fwBody.cfe-body>.cfe-core {grid-row:6!important}
+body.cms-focus-editor-v1 #mainContent #fwScreen.cfu-screen #fwBody.cfe-body>#cmsDraftMoreHelpV1 {grid-row:7!important}
+body.cms-focus-editor-v1 #mainContent #fwScreen.cfu-screen #fwBody.cfe-body>[data-uw-locked] {grid-row:8!important}
+body.cms-focus-editor-v1 #mainContent #fwScreen.cfu-screen #fwBody.cfe-body>.competency-block.cfe-step {
+ padding:18px!important;
+}
+body.cms-focus-editor-v1 #mainContent #fwScreen.cfu-screen #fwBody.cfe-body>.cfe-step>.competency-header {
+ padding:9px 13px!important;margin:0 0 14px!important;gap:5px 16px!important;
+}
+body.cms-focus-editor-v1 #mainContent #fwScreen.cfu-screen #fwBody.cfe-body>.cfe-step>.competency-header strong {
+ font:700 19px/1.4 system-ui!important;color:#152641!important;
+}
+body.cms-focus-editor-v1 #mainContent #fwScreen.cfu-screen #fwBody.cfe-body>.cfe-step>.competency-header strong::before,
+body.cms-focus-editor-v1 #mainContent #fwScreen.cfu-screen #fwBody.cfe-body>.cfe-step>.competency-header strong::after {
+ content:none!important;display:none!important;
+}
+body.cms-focus-editor-v1 #mainContent #fwScreen.cfu-screen #fwBody .cfc-instructions.cfu-short-instructions {
+ display:flex!important;align-items:center;justify-content:space-between;gap:10px 20px;
+ padding:11px 14px!important;margin:12px 0!important;
+}
+body.cms-focus-editor-v1 #mainContent #fwScreen.cfu-screen #fwBody .cfu-short-instructions>h4,
+body.cms-focus-editor-v1 #mainContent #fwScreen.cfu-screen #fwBody .cfu-short-instructions>ol {
+ display:none!important;
+}
+body.cms-focus-editor-v1 #mainContent #fwScreen.cfu-screen #fwBody .cfu-short-copy {font:400 14px/1.6 system-ui;color:#152641}
+body.cms-focus-editor-v1 #mainContent #fwScreen.cfu-screen #fwBody .cfu-short-copy p {margin:0!important;font:inherit!important;color:inherit!important}
+body.cms-focus-editor-v1 #mainContent #fwScreen.cfu-screen #fwBody .cfu-ai-note {font:400 12px/1.5 system-ui;color:#52627a;white-space:nowrap}
+body.cms-focus-editor-v1 #mainContent #fwScreen.cfu-screen #fwBody .cfc-legend {gap:8px;margin:10px 0}
+body.cms-focus-editor-v1 #mainContent #fwScreen.cfu-screen #fwBody .cfc-legend>div {padding:6px 9px}
+body.cms-focus-editor-v1 #mainContent #fwScreen.cfu-screen #fwBody .cfc-legend strong {display:inline!important;margin-right:6px}
+body.cms-focus-editor-v1 #mainContent #fwScreen.cfu-screen #fwBody .cfc-selected {flex-basis:auto!important;margin:0 0 0 4px}
+body.cms-focus-editor-v1 #mainContent #fwScreen.cfu-screen #fwBody .cfe-footer {padding:12px 16px!important}
+@media(max-width:680px) {
+ body.cms-focus-editor-v1 #mainContent #fwScreen.cfu-screen>.cfu-header {padding:12px 14px!important}
+ body.cms-focus-editor-v1 #mainContent #fwScreen.cfu-screen .cfu-header h2.cfu-title {font-size:24px!important}
+ body.cms-focus-editor-v1 #mainContent #fwScreen.cfu-screen #fwBody .cfc-instructions.cfu-short-instructions {align-items:flex-start;flex-direction:column}
+ body.cms-focus-editor-v1 #mainContent #fwScreen.cfu-screen .cfu-meta {gap:5px 16px}
+}
+</style>
+<script id="cms-unified-editor-header-v1">
+(function(){
+ 'use strict';
+ if(window.cmsUnifiedEditorHeaderV1)return;
+ window.cmsUnifiedEditorHeaderV1=true;
+ var state=null,queued=false;
+ function make(tag,cls,value,parent){
+  var e=document.createElement(tag);if(cls)e.className=cls;
+  if(value!=null)e.textContent=value;if(parent)parent.appendChild(e);return e;
+ }
+ function text(e,value){if(e.textContent!==value)e.textContent=value;}
+ function cleanup(){
+  if(!state)return;
+  var s=state;state=null;
+  if(s.back&&s.oldParent?.isConnected){
+   if(s.next?.parentNode===s.oldParent)s.oldParent.insertBefore(s.back,s.next);
+   else s.oldParent.appendChild(s.back);
+   if(s.oldLabel!=null)s.back.textContent=s.oldLabel;
+  }
+  s.marked.forEach(e=>e.classList.remove('cfu-previous-heading'));
+  s.screen.classList.remove('cfu-screen');
+  s.header.remove();
+ }
+ function create(screen,body){
+  var s={screen,body,marked:[],back:null,oldParent:null,next:null};
+  var header=make('section','cfu-header');s.header=header;
+  header.setAttribute('aria-label','Framework editing context');
+  var top=make('div','cfu-top',null,header),slot=make('div','cfu-back-slot',null,top);
+  make('span','cfu-state','Private draft',top);
+  make('h2','cfu-title','Set competencies',header);
+  var meta=make('div','cfu-meta',null,header);
+  var dep=make('span',null,null,meta);make('strong',null,'Department:',dep);s.department=make('span',null,'',dep);
+  var pos=make('span',null,null,meta);make('strong',null,'Position:',pos);s.position=make('span',null,'',pos);
+  make('p','cfu-subtitle','Define observable work experiences for this role.',header);
+  // Hide only the known duplicate heading wrappers, never arbitrary banners.
+  Array.from(screen.children).forEach(e=>{
+   if(e===body||e===header)return;
+   var back=Array.from(e.querySelectorAll('button[onclick]')).find(b=>/fwOpen\(['"]draft['"]\)/.test(b.getAttribute('onclick')||''));
+   var known=e.classList.contains('card-title')||
+    (e.tagName==='P'&&/Save a private draft|Define the work experiences|required for this role|minimums are complete/i.test(e.textContent))||
+    (!!back&&!!e.querySelector('h2'));
+   if(known){e.classList.add('cfu-previous-heading');s.marked.push(e);}
+   if(back&&!s.back){
+    s.back=back;s.oldParent=back.parentNode;s.next=back.nextSibling;s.oldLabel=back.textContent;
+    back.textContent='All positions';slot.appendChild(back);
+   }
+  });
+  screen.insertBefore(header,body);screen.classList.add('cfu-screen');
+  return s;
+ }
+ function instructions(body){
+  body.querySelectorAll('.cfe-step').forEach(section=>{
+   var box=section.querySelector(':scope > .cfc-instructions');
+   if(!box||box.querySelector('.cfu-short-copy'))return;
+   var area=section.querySelector('textarea[id^="fwt-"]');
+   var item=area&&FW.revision.items.find(i=>'fwt-'+i.id===area.id);
+   if(!item)return;
+   var min=['FC001','FC002','FC003','FC004'].includes(item.code)?3:
+    ['FC005','PC001','LC001'].includes(item.code)?2:0;
+   var critical=FW.position.department&&['FC001','FC002','FC003','FC004'].includes(item.code)?2:0;
+   var copy=make('div','cfu-short-copy',null,box);
+   var line=make('p',null,null,copy);
+   if(min){
+    line.append('Describe at least ');
+    make('strong','cfc-blue',min+' experiences',line);
+    if(critical){line.append(', including ');make('strong','cfc-red',critical+' Critical',line);}
+    line.append('.');
+   }else line.textContent='Describe observable experiences for the required Core levels.';
+   make('p',null,'Write the experience, choose its type, then save.',copy);
+   var note=make('span','cfu-ai-note','AI tools are optional.',box);
+   note.title='AI provides advice, not approval. Existing submission checks still apply.';
+   box.classList.add('cfu-short-instructions');
+  });
+ }
+ function update(){
+  queued=false;
+  var screen=document.getElementById('fwScreen'),body=document.querySelector('#fwBody.cfe-body');
+  var eligible=screen&&body&&screen.contains(body)&&typeof FW!=='undefined'&&FW.revision?.state==='Draft'&&FW.position;
+  if(!eligible){cleanup();return;}
+  if(state&&(state.screen!==screen||state.body!==body||!state.header.isConnected))cleanup();
+  if(!state)state=create(screen,body);
+  text(state.department,String(FW.position.department||'Company-wide Core'));
+  text(state.position,String(FW.position.position||'Core framework'));
+  var ux=body.querySelector(':scope > .ux-work-status');
+  if(ux){
+   var optional=/^AI Validate, Refine and Library are optional tools\./.test(ux.textContent.trim())||
+    ux.textContent.trim()==='AI tools are optional. Nothing is submitted automatically.';
+   ux.classList.toggle('cfu-optional-note',optional);
+  }
+  instructions(body);
+ }
+ function schedule(){if(queued)return;queued=true;requestAnimationFrame(update);}
+ function start(){
+  var main=document.getElementById('mainContent');if(!main)return;
+  new MutationObserver(schedule).observe(main,{childList:true,subtree:true,characterData:true});
+  update();
+ }
+ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start,{once:true});else start();
+})();
+</script>
+<style id="cms-expandable-writing-box-v1-css">
+#mainContent #fwBody.cfe-body .exp-item.cfc-entry.cwb-entry>.cfe-exp-label {
+ grid-column:1!important;grid-row:1!important;padding-right:185px!important;align-self:center;
+}
+#mainContent #fwBody.cfe-body .exp-item.cfc-entry.cwb-entry>button.cwb-expand {
+ grid-column:1!important;grid-row:1!important;justify-self:end;align-self:center;
+ width:auto!important;min-height:30px!important;padding:5px 10px!important;
+ background:#fff!important;color:#2456bd!important;border:1px solid #8fa9d6!important;
+ border-radius:4px!important;box-shadow:none!important;font:600 12px/1.4 system-ui!important;
+}
+#mainContent #fwBody.cfe-body .exp-item.cfc-entry.cwb-entry>textarea {
+ grid-column:1!important;grid-row:2!important;box-sizing:border-box!important;
+ width:100%!important;min-height:180px!important;max-height:none!important;
+ border:2px solid #8ea6cc!important;border-radius:6px!important;
+ background:#fff!important;color:#152641!important;padding:14px 16px!important;
+ font:400 15px/1.65 system-ui!important;
+ box-shadow:inset 0 1px 3px #1526410a!important;
+ resize:none!important;overflow:auto!important;
+}
+#mainContent #fwBody.cfe-body .cwb-resize {
+ grid-column:1;grid-row:2;align-self:end;justify-self:end;z-index:1;
+ width:24px;height:24px;cursor:ns-resize;touch-action:none;border-radius:0 0 5px 0;
+ background:repeating-linear-gradient(135deg,transparent 0 3px,#7890b4 3px 4px,transparent 4px 7px);
+ background-size:13px 13px;background-repeat:no-repeat;background-position:right 4px bottom 4px;
+}
+#mainContent #fwBody.cfe-body .cwb-resize:focus-visible {outline:2px solid #315ccc}
+#mainContent #fwBody.cfe-body .exp-item.cfc-entry.cwb-entry>textarea:focus {
+ border-color:#315ccc!important;outline:2px solid #dbe7ff!important;outline-offset:1px!important;
+ box-shadow:0 0 0 3px #315ccc12!important;
+}
+#mainContent #fwBody.cfe-body .exp-item.cfc-entry.cwb-entry>textarea::placeholder {
+ color:#66758e!important;opacity:1!important;
+}
+#mainContent #fwBody.cfe-body .cwb-help {
+ grid-column:1;grid-row:3;font:400 12px/1.6 system-ui;color:#52627a;
+}
+#mainContent #fwBody.cfe-body .cwb-help p {margin:0 0 3px!important;font:inherit!important;color:inherit!important}
+#mainContent #fwBody.cfe-body .exp-item.cfc-entry.cwb-entry>.cfc-options {grid-row:4!important}
+#mainContent #fwBody.cfe-body .exp-item.cfc-entry.cwb-entry>.cfe-ai,
+#mainContent #fwBody.cfe-body .exp-item.cfc-entry.cwb-entry>.cfe-ai[open] {grid-column:2;grid-row:2/span 3}
+@media(max-width:1100px) {
+ #mainContent #fwBody.cfe-body .exp-item.cfc-entry.cwb-entry>.cfe-ai,
+ #mainContent #fwBody.cfe-body .exp-item.cfc-entry.cwb-entry>.cfe-ai[open] {grid-column:1;grid-row:5}
+}
+@media(max-width:680px) {
+ #mainContent #fwBody.cfe-body .exp-item.cfc-entry.cwb-entry>.cfe-exp-label {padding-right:0!important}
+ #mainContent #fwBody.cfe-body .exp-item.cfc-entry.cwb-entry>button.cwb-expand {grid-row:2!important;justify-self:start}
+ #mainContent #fwBody.cfe-body .exp-item.cfc-entry.cwb-entry>textarea {grid-row:3!important}
+ #mainContent #fwBody.cfe-body .cwb-resize {grid-row:3}
+ #mainContent #fwBody.cfe-body .cwb-help {grid-row:4}
+ #mainContent #fwBody.cfe-body .exp-item.cfc-entry.cwb-entry>.cfc-options {grid-row:5!important}
+ #mainContent #fwBody.cfe-body .exp-item.cfc-entry.cwb-entry>.cfe-ai,
+ #mainContent #fwBody.cfe-body .exp-item.cfc-entry.cwb-entry>.cfe-ai[open] {grid-row:6}
+}
+</style>
+<script id="cms-expandable-writing-box-v1">
+(function(){
+ 'use strict';
+ if(window.cmsExpandableWritingBoxV1)return;
+ window.cmsExpandableWritingBoxV1=true;
+ var queued=false,serial=0;
+ var placeholder='Start with Has...';
+ function update(){
+  queued=false;
+  var body=document.querySelector('#fwBody.cfe-body');
+  if(!body||typeof FW==='undefined'||FW.revision?.state!=='Draft')return;
+  body.querySelectorAll('.cfe-step .exp-item.cfc-entry').forEach(function(entry){
+   var area=entry.querySelector(':scope > textarea[id^="fwt-"]');
+   if(!area||entry.querySelector(':scope > .cwb-expand'))return;
+   entry.classList.add('cwb-entry');
+   // Placeholder only: never assign .value, textContent or defaultValue.
+   area.placeholder=placeholder;
+   area.style.setProperty('height','180px','important');
+   var button=document.createElement('button');
+   button.type='button';button.className='cwb-expand';
+   button.textContent='Expand writing area';
+   button.setAttribute('aria-controls',area.id);
+   button.setAttribute('aria-expanded','false');
+   var expanded=false,previousHeight='180px';
+   button.onclick=function(){
+    if(!area.isConnected)return;
+    if(!expanded){
+     previousHeight=area.style.getPropertyValue('height')||'180px';
+     area.style.setProperty('height',Math.max(360,area.getBoundingClientRect().height+180)+'px','important');
+    }else area.style.setProperty('height',previousHeight,'important');
+    expanded=!expanded;
+    button.textContent=expanded?'Reduce writing area':'Expand writing area';
+    button.setAttribute('aria-expanded',String(expanded));
+    // Resizing is presentation only. Never dispatch input/change or unlock fields.
+   };
+   entry.appendChild(button);
+   var grip=document.createElement('span');grip.className='cwb-resize';
+   grip.tabIndex=0;grip.setAttribute('role','button');
+   grip.setAttribute('aria-label','Resize writing area. Drag, or use Up and Down arrow keys.');
+   grip.setAttribute('aria-controls',area.id);
+   var drag=null;
+   grip.onpointerdown=function(e){
+    if(e.button!==0)return;
+    drag={y:e.clientY,height:area.getBoundingClientRect().height};
+    grip.setPointerCapture(e.pointerId);e.preventDefault();
+   };
+   grip.onpointermove=function(e){
+    if(!drag)return;
+    area.style.setProperty('height',Math.max(180,drag.height+e.clientY-drag.y)+'px','important');
+   };
+   grip.onpointerup=grip.onpointercancel=function(){drag=null;};
+   grip.onlostpointercapture=function(){drag=null;};
+   grip.onkeydown=function(e){
+    if(e.key!=='ArrowUp'&&e.key!=='ArrowDown')return;
+    e.preventDefault();
+    area.style.setProperty('height',Math.max(180,area.getBoundingClientRect().height+(e.key==='ArrowDown'?40:-40))+'px','important');
+   };
+   entry.appendChild(grip);
+   var help=document.createElement('div');help.className='cwb-help';
+   help.id='cwb-help-'+(++serial);
+   var resize=document.createElement('p');
+   resize.textContent='Drag the bottom-right corner to resize, or select Expand writing area.';
+   var example=document.createElement('p');
+   example.textContent='Start with Has... Example only: write an experience relevant to this role.';
+   help.append(resize,example);entry.appendChild(help);
+   var described=(area.getAttribute('aria-describedby')||'').split(/\s+/).filter(Boolean);
+   described.push(help.id);area.setAttribute('aria-describedby',described.join(' '));
+  });
+ }
+ function schedule(){if(queued)return;queued=true;requestAnimationFrame(update);}
+ function start(){
+  var main=document.getElementById('mainContent');if(!main)return;
+  new MutationObserver(schedule).observe(main,{childList:true,subtree:true});
+  update();
+ }
+ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start,{once:true});else start();
+})();
+</script>
+<style id="cms-expandable-writing-box-v1-css">
+#mainContent #fwBody.cfe-body .exp-item.cfc-entry.cwb-entry>.cfe-exp-label {
+ grid-column:1!important;grid-row:1!important;padding-right:0!important;align-self:center;
+}
+
+#mainContent #fwBody.cfe-body .exp-item.cfc-entry.cwb-entry>textarea {
+ grid-column:1!important;grid-row:2!important;box-sizing:border-box!important;
+ width:100%!important;min-height:180px!important;max-height:none!important;
+ border:2px solid #8ea6cc!important;border-radius:6px!important;
+ background:#fff!important;color:#152641!important;padding:14px 16px!important;
+ font:400 15px/1.65 system-ui!important;
+ box-shadow:inset 0 1px 3px #1526410a!important;
+ resize:none!important;overflow:auto!important;
+}
+#mainContent #fwBody.cfe-body .cwb-resize {
+ grid-column:1;grid-row:2;align-self:end;justify-self:end;z-index:1;
+ width:24px;height:24px;cursor:ns-resize;touch-action:none;border-radius:0 0 5px 0;
+ background:repeating-linear-gradient(135deg,transparent 0 3px,#7890b4 3px 4px,transparent 4px 7px);
+ background-size:13px 13px;background-repeat:no-repeat;background-position:right 4px bottom 4px;
+}
+#mainContent #fwBody.cfe-body .cwb-resize:focus-visible {outline:2px solid #315ccc}
+#mainContent #fwBody.cfe-body .exp-item.cfc-entry.cwb-entry>textarea:focus {
+ border-color:#315ccc!important;outline:2px solid #dbe7ff!important;outline-offset:1px!important;
+ box-shadow:0 0 0 3px #315ccc12!important;
+}
+#mainContent #fwBody.cfe-body .exp-item.cfc-entry.cwb-entry>textarea::placeholder {
+ color:#66758e!important;opacity:1!important;
+}
+#mainContent #fwBody.cfe-body .cwb-help {
+ grid-column:1;grid-row:3;font:400 12px/1.6 system-ui;color:#52627a;
+}
+#mainContent #fwBody.cfe-body .cwb-help p {margin:0 0 3px!important;font:inherit!important;color:inherit!important}
+#mainContent #fwBody.cfe-body .exp-item.cfc-entry.cwb-entry>.cfc-options {grid-row:4!important}
+#mainContent #fwBody.cfe-body .exp-item.cfc-entry.cwb-entry>.cfe-ai,
+#mainContent #fwBody.cfe-body .exp-item.cfc-entry.cwb-entry>.cfe-ai[open] {grid-column:2;grid-row:2/span 3}
+@media(max-width:1100px) {
+ #mainContent #fwBody.cfe-body .exp-item.cfc-entry.cwb-entry>.cfe-ai,
+ #mainContent #fwBody.cfe-body .exp-item.cfc-entry.cwb-entry>.cfe-ai[open] {grid-column:1;grid-row:5}
+}
+@media(max-width:680px) {
+ #mainContent #fwBody.cfe-body .exp-item.cfc-entry.cwb-entry>.cfe-exp-label {padding-right:0!important}
+ #mainContent #fwBody.cfe-body .exp-item.cfc-entry.cwb-entry>textarea {grid-row:2!important}
+ #mainContent #fwBody.cfe-body .cwb-resize {grid-row:2}
+ #mainContent #fwBody.cfe-body .cwb-help {grid-row:3}
+ #mainContent #fwBody.cfe-body .exp-item.cfc-entry.cwb-entry>.cfc-options {grid-row:4!important}
+ #mainContent #fwBody.cfe-body .exp-item.cfc-entry.cwb-entry>.cfe-ai,
+ #mainContent #fwBody.cfe-body .exp-item.cfc-entry.cwb-entry>.cfe-ai[open] {grid-row:5}
+}
+</style>
+<script id="cms-expandable-writing-box-v1">
+(function(){
+ 'use strict';
+ if(window.cmsExpandableWritingBoxV1)return;
+ window.cmsExpandableWritingBoxV1=true;
+ var queued=false,serial=0;
+ var placeholder='Has..................................';
+ function update(){
+  queued=false;
+  var body=document.querySelector('#fwBody.cfe-body');
+  if(!body||typeof FW==='undefined'||FW.revision?.state!=='Draft')return;
+  body.querySelectorAll('.cfe-step .exp-item.cfc-entry').forEach(function(entry){
+   var area=entry.querySelector(':scope > textarea[id^="fwt-"]');
+   if(!area||entry.querySelector(':scope > .cwb-resize'))return;
+   entry.classList.add('cwb-entry');
+   // Placeholder only: never assign .value, textContent or defaultValue.
+   area.placeholder=placeholder;
+   area.style.setProperty('height','180px','important');
+   var grip=document.createElement('span');grip.className='cwb-resize';
+   grip.tabIndex=0;grip.setAttribute('role','button');
+   grip.setAttribute('aria-label','Resize writing area. Drag, or use Up and Down arrow keys.');
+   grip.setAttribute('aria-controls',area.id);
+   var drag=null;
+   grip.onpointerdown=function(e){
+    if(e.button!==0)return;
+    drag={y:e.clientY,height:area.getBoundingClientRect().height};
+    grip.setPointerCapture(e.pointerId);e.preventDefault();
+   };
+   grip.onpointermove=function(e){
+    if(!drag)return;
+    area.style.setProperty('height',Math.max(180,drag.height+e.clientY-drag.y)+'px','important');
+   };
+   grip.onpointerup=grip.onpointercancel=function(){drag=null;};
+   grip.onlostpointercapture=function(){drag=null;};
+   grip.onkeydown=function(e){
+    if(e.key!=='ArrowUp'&&e.key!=='ArrowDown')return;
+    e.preventDefault();
+    area.style.setProperty('height',Math.max(180,area.getBoundingClientRect().height+(e.key==='ArrowDown'?40:-40))+'px','important');
+   };
+   entry.appendChild(grip);
+   var help=document.createElement('div');help.className='cwb-help';
+   help.id='cwb-help-'+(++serial);
+   var resize=document.createElement('p');
+   resize.textContent='Drag the bottom-right corner to resize.';
+   help.append(resize);entry.appendChild(help);
+   var described=(area.getAttribute('aria-describedby')||'').split(/\s+/).filter(Boolean);
+   described.push(help.id);area.setAttribute('aria-describedby',described.join(' '));
+  });
+ }
+ function schedule(){if(queued)return;queued=true;requestAnimationFrame(update);}
+ function start(){
+  var main=document.getElementById('mainContent');if(!main)return;
+  new MutationObserver(schedule).observe(main,{childList:true,subtree:true});
+  update();
+ }
+ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start,{once:true});else start();
+})();
+</script>
 </body>
 </html>
 
