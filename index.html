@@ -35475,6 +35475,73 @@ html:root body:has(#mainContent #cmsLogin3DRoot#cmsLogin3DRoot) {
     background-color:Canvas!important;
   }
 }
+/* Copyright footer: login screen only. */
+html:root body #mainContent #cmsLogin3DRoot#cmsLogin3DRoot .cl3-scene {
+  min-height:calc(100vh - 56px)!important;
+  min-height:calc(100svh - 56px)!important;
+}
+html:root body #mainContent #cmsLogin3DRoot#cmsLogin3DRoot::after {
+  content:"Copyright \00A9  2026 Kenafric Group. All rights reserved.";
+  display:block;
+  position:relative;
+  z-index:4;
+  width:100%;
+  min-height:56px;
+  box-sizing:border-box;
+  padding:16px 20px;
+  color:#44546b;
+  background:rgba(248,250,253,.94);
+  font-family:"Segoe UI",Arial,sans-serif;
+  font-size:14px;
+  font-weight:400;
+  line-height:24px;
+  text-align:center;
+  white-space:normal;
+}
+/* Copyright directly below the login card, not across the page. */
+html:root body #mainContent #cmsLogin3DRoot#cmsLogin3DRoot::after {
+  content:none!important;
+  display:none!important;
+}
+html:root body #mainContent #cmsLogin3DRoot#cmsLogin3DRoot .cl3-scene {
+  min-height:100vh!important;
+  min-height:100svh!important;
+}
+html:root body #mainContent #cmsLogin3DRoot#cmsLogin3DRoot .cl3-card {
+  overflow:visible!important;
+  margin-bottom:64px!important;
+}
+html:root body #mainContent #cmsLogin3DRoot#cmsLogin3DRoot .cl3-card::before {
+  border-top-left-radius:inherit;
+  border-top-right-radius:inherit;
+}
+html:root body #mainContent #cmsLogin3DRoot#cmsLogin3DRoot .cl3-help {
+  border-bottom-left-radius:inherit;
+  border-bottom-right-radius:inherit;
+}
+html:root body #mainContent #cmsLogin3DRoot#cmsLogin3DRoot .cl3-card::after {
+  content:"Copyright \00A9  2026 Kenafric Group. All rights reserved.";
+  display:block;
+  position:absolute;
+  top:calc(100% + 22px);
+  left:0;
+  width:100%;
+  box-sizing:border-box;
+  padding:0 4px;
+  color:#354b6a;
+  background:transparent;
+  font:400 13px/1.5 "Segoe UI",Arial,sans-serif;
+  text-align:center;
+  white-space:normal;
+  pointer-events:none;
+}
+/* Small inward move from the right edge; card stays on the right. */
+@media (min-width:1051px) {
+  html:root body #mainContent #cmsLogin3DRoot#cmsLogin3DRoot .cl3-card {
+    position:relative;
+    right:16px!important;
+  }
+}
 </style>
 </body>
 </html>
