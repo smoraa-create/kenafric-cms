@@ -35441,6 +35441,40 @@ html:root body #mainContent #cmsLogin3DRoot#cmsLogin3DRoot .cl3-subtitle {
     color:CanvasText!important;text-shadow:none!important;
   }
 }
+/* Login card width and position only. Phone layout unchanged. */
+@media (min-width:781px) {
+  html:root body #mainContent #cmsLogin3DRoot#cmsLogin3DRoot .cl3-card {
+    width:100%!important;
+    max-width:420px!important;
+    justify-self:end!important;
+  }
+}
+@media (min-width:1051px) {
+  html:root body #mainContent #cmsLogin3DRoot#cmsLogin3DRoot .cl3-card {
+    position:relative;
+    right:-16px;
+  }
+}
+/* Glass background only: append inside the existing login style block. */
+html:root body:has(#mainContent #cmsLogin3DRoot#cmsLogin3DRoot) {
+  background-color:#eaf0f7!important;
+  background-image:url("CMS-Glass-Background.webp")!important;
+  background-size:cover!important;
+  background-position:center center!important;
+  background-repeat:no-repeat!important;
+  background-attachment:scroll!important;
+}
+@media (max-width:780px) {
+  html:root body:has(#mainContent #cmsLogin3DRoot#cmsLogin3DRoot) {
+    background-position:30% top!important;
+  }
+}
+@media (forced-colors:active) {
+  html:root body:has(#mainContent #cmsLogin3DRoot#cmsLogin3DRoot) {
+    background-image:none!important;
+    background-color:Canvas!important;
+  }
+}
 </style>
 </body>
 </html>
