@@ -11423,7 +11423,10 @@ function fwRenderLibrary(){
   g.items.forEach(i=>{h+='<div class="exp-item"><p>'+escapeHtml(i.text)+' '+getClassificationBadge(i.classification)+'</p>'+(i.level?'<span class="badge badge-info">'+escapeHtml(i.level)+'</span>':'')+'</div>';});
   h+='</section>';
  });
- if(p.can_edit)h+='<button class="btn btn-outline" onclick="fwStart()">Edit in a separate revision</button>';
+ h+='<div class="fw-library-actions">';
+if(p.can_edit)h+='<button class="btn btn-outline" onclick="fwStart()">Edit in a separate revision</button>';
+if(fwIsReviewer()&&p.live_version)h+='<button class="btn btn-danger" onclick="fwDeletePublished()">Delete published framework</button>';
+h+='</div>';
  document.getElementById('fwBody').innerHTML=h;
 }
 function fwRenderRevision(){
@@ -11457,6 +11460,7 @@ function fwRenderRevision(){
    }else h+='<p>'+escapeHtml(i.text)+' '+getClassificationBadge(i.classification)+'</p>';
    if(i.level)h+='<span class="badge badge-info">'+escapeHtml(i.level)+'</span>';
    h+='<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px"><button type="button" class="btn btn-outline" onclick="fwAudit(\''+i.id+'\')">AI Validate / Ideas</button>';
+if(draft && !(i.text||'').trim())h+='<button type="button" class="btn btn-outline" onclick="fwRemove(\''+i.id+'\')">Delete</button>';
    if(review){
     h+='<button type="button" class="btn btn-outline" onclick="fwReviewEdit(\''+i.id+'\')">Edit</button>';
     h+='<button type="button" class="btn btn-success" '+(r.review[i.id]?'disabled':'')+' onclick="fwApprove(\''+i.id+'\')">'+(r.review[i.id]?'Approved for this revision':'Approve experience')+'</button>';
@@ -11566,6 +11570,25 @@ async function fwApprove(id){
  await fwMutate('approve_item',{item_id:id});
 }
 async function fwReturn(){if(confirm('Return the entire submitted revision to its owner? All revision approvals reset; live content remains unchanged.'))await fwMutate('return',{});}
+async function fwDeletePublished(){
+ if(FW.busy||!FW.position||!FW.position.live_version)return;
+ if(!fwIsReviewer()){showToast('HR Admin or HOHR framework permission is required.');return;}
+ var label=fwLabel(FW.position);
+ var reason=prompt('Reason for deleting the published framework for '+label+':');
+ if(!reason||reason.trim().length<5){showToast('Enter a deletion reason of at least five characters.');return;}
+ var typed=prompt('Type the exact position name to delete the published framework: '+FW.position.position);
+ if(typed===null)return;
+ if(typed.trim().toUpperCase()!==String(FW.position.position).trim().toUpperCase()){showToast('The position name did not match. Nothing was deleted.');return;}
+ if(!confirm('Delete the published framework for '+label+'? Draft work remains. Employees may lose assessment access until a new framework is published.'))return;
+ FW.busy=true;
+ try{
+  var r=await _supabase.rpc('cms_delete_published_framework',{p_position_id:FW.position.id,p_confirm_position:typed.trim(),p_reason:reason.trim()});
+  if(r.error)throw Error(r.error.message);
+  showToast('Published framework deleted. The position remains, but it no longer has a live framework.');
+  await fwCatalogue();
+  await fwOpen('library');
+ }catch(e){showToast(e.message);}finally{FW.busy=false;fwButtons();}
+}
 async function fwPublish(){if(fwMinimums(FW.revision).length||FW.revision.items.some(i=>!FW.revision.review[i.id]))return;if(confirm('Publish this complete approved revision, replacing the live framework in all libraries?'))await fwMutate('publish',{});}
 loadHRComp=()=>fwOpen('library');
 loadHOHRComp=()=>fwOpen('library');
@@ -35607,7 +35630,7 @@ html:root:root:root:root:root:root body #mainContent #cmsLogin3DRoot#cmsLogin3DR
   overflow-y: auto;
   resize: vertical;
 }
-
+.fw-library-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
 </style>
 <script id="cms-brand-always-red-viewer-v1">
 (function(){
