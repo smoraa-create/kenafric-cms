@@ -3949,6 +3949,24 @@ async function kaiFast(prompt) { return callAI(prompt, false); }
 
 // FIX: Restored the missing variable declaration
 const APP_LINK = 'https://cms.kenafricgroup.com'; 
+ /* Global timeout helper. Keep this before all feature modules. */
+    window.r4Timeout = window.r4Timeout || function(promise, ms, label) {
+      var timer;
+      return Promise.race([
+        promise,
+        new Promise(function(_, reject) {
+          timer = setTimeout(function() {
+            reject(Error((label || 'Request') + ' timed out. Please retry.'));
+          }, ms);
+        })
+      ]).then(function(value) {
+        clearTimeout(timer);
+        return value;
+      }, function(error) {
+        clearTimeout(timer);
+        throw error;
+      });
+    };
 
 if (window.emailjs && EMAILJS_PUBLIC_KEY.indexOf('PASTE') !== 0) { 
     emailjs.init({ publicKey: EMAILJS_PUBLIC_KEY }); 
@@ -11349,18 +11367,20 @@ function fwLabel(p){return p.department ? p.department+' / '+p.position : 'Compa
 function fwPosition(dep,pos){return (FW.catalogue && FW.catalogue.positions || []).find(function(p){return sameText(p.department,dep)&&sameText(p.position,pos);});}
 function fwCore(){return fwPosition('','');}
 function fwMinimums(r) {
- var out=[],items=r.items || [],p=FW.position;
- if(p && !p.department) {
-  var baseline=p.items || [];
-  baseline.forEach(function(i){if(!items.some(function(x){return x.code===i.code && x.level===i.level && (x.text || '').trim();}))out.push(i.code+' / '+i.level+' needs an experience');});
- } else {
-  [['FC001',3],['FC002',3],['FC003',3],['FC004',3],['FC005',2],['PC001',2],['LC001',2]].forEach(function(pair){
-   var n=items.filter(function(i){return i.code===pair[0] && (i.text || '').trim() && i.classification;}).length;
-   if(n<pair[1])out.push(compNameOf(pair[0])+': '+n+'/'+pair[1]);
-  });
- }
- if(items.some(function(i){return !(i.text || '').trim() || !i.classification;}))out.push('Complete or remove every empty optional experience');
- return Array.from(new Set(out));
+  var out=[],items=r.items || [],p=FW.position;
+  var countComplete=function(i){return !!String(i.text||'').trim() && !!String(i.classification||'').trim();};
+  var countClass=function(code,classification){return items.filter(function(i){return i.code===code && countComplete(i) && String(i.classification).trim()===classification;}).length;};
+  if(p && !p.department) {
+    var baseline=p.items || [];
+    baseline.forEach(function(i){if(!items.some(function(x){return x.code===i.code && x.level===i.level && String(x.text||'').trim();}))out.push(i.code+' / '+i.level+' needs an experience');});
+  } else {
+    [['FC001',2,'Must-Have (Critical)'],['FC002',2,'Must-Have (Critical)'],['FC003',2,'Must-Have (Critical)'],['FC004',2,'Must-Have (Critical)'],['FC005',2,'Must-Have (Critical)'],['PC001',2,'Must-Have (Critical)'],['LC001',2,'Must-Have (Critical)']].forEach(function(pair){
+      var n=countClass(pair[0],pair[2]);
+      if(n<pair[1])out.push(compNameOf(pair[0])+': '+n+'/'+pair[1]);
+    });
+  }
+  if(items.some(function(i){return !String(i.text||'').trim() || !String(i.classification||'').trim();}))out.push('Complete or remove every empty optional experience');
+  return Array.from(new Set(out));
 }
 async function fwOpen(mode) {
  if(FW.busy){showToast('Please wait for the current framework operation.');return;}
@@ -17512,7 +17532,7 @@ async function r4BuildPdf(tables,title,generated,ranks){
 /* Complete reporting access v4. Server verified roles; incomplete work stays stage-only for C-Suite. */
 var R4={section:'summary',openToken:0,exportToken:0,urls:[],lastDownload:null};
 RPT.scope='group';
-async function r4Timeout(promise,ms,label){var timer;try{return await Promise.race([promise,new Promise((_,reject)=>{timer=setTimeout(()=>reject(Error(label+' timed out. Please retry.')),ms);})]);}finally{clearTimeout(timer);}}
+window.r4Timeout = window.r4Timeout || async function(promise,ms,label){var timer;try{return await Promise.race([promise,new Promise((_,reject)=>{timer=setTimeout(()=>reject(Error((label||'Request')+' timed out. Please retry.')),ms);})]);}finally{clearTimeout(timer);}};
 rptRPC=async function(action,data={}){
  if(!APP.user)throw Error('Sign in first.');
  var q=await r4Timeout(_supabase.rpc('cms_csuite_reporting',{p_action:action,p_data:{...data,view_role:APP.currentRole}}),45000,'Report request');
