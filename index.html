@@ -11459,8 +11459,8 @@ function fwRenderRevision(){
     h+='<select onchange="fwInput(\''+i.id+'\',\'classification\',this.value)">'+options.map(o=>'<option'+(o===i.classification?' selected':'')+'>'+escapeHtml(o)+'</option>').join('')+'</select>';
    }else h+='<p>'+escapeHtml(i.text)+' '+getClassificationBadge(i.classification)+'</p>';
    if(i.level)h+='<span class="badge badge-info">'+escapeHtml(i.level)+'</span>';
-   h+='<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px"><button type="button" class="btn btn-outline" onclick="fwAudit(\''+i.id+'\')">AI Validate / Ideas</button>';
-if(draft && !(i.text||'').trim())h+='<button type="button" class="btn btn-outline" onclick="fwRemove(\''+i.id+'\')">Delete</button>';
+  h+='<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px"><button type="button" class="btn btn-outline" onclick="fwAudit(\''+i.id+'\')">AI Validate / Ideas</button>';
+if(draft)h+='<button type="button" class="btn btn-outline" onclick="fwRemove(\''+i.id+'\')">Delete</button>';
    if(review){
     h+='<button type="button" class="btn btn-outline" onclick="fwReviewEdit(\''+i.id+'\')">Edit</button>';
     h+='<button type="button" class="btn btn-success" '+(r.review[i.id]?'disabled':'')+' onclick="fwApprove(\''+i.id+'\')">'+(r.review[i.id]?'Approved for this revision':'Approve experience')+'</button>';
@@ -11508,7 +11508,7 @@ function fwAdd(code){
  if(code.indexOf('CC')===0){level=prompt('Core level: Foundational, Intermediate, Advanced, Master or Executive');if(!level)return;}
  FW.revision.items.push({id:crypto.randomUUID(),code,text:'',classification:'Important (Performance Enhancing)',level,ai_note:null});FW.dirty=true;fwRenderRevision();
 }
-function fwRemove(id){if(FW.busy)return;if(!confirm('Remove this item from the private draft? The live version is unchanged.'))return;FW.revision.items=FW.revision.items.filter(i=>i.id!==id);FW.dirty=true;fwRenderRevision();}
+function fwRemove(id){if(FW.busy)return;if(!confirm('Remove this item from the private draft? The live version is unchanged.'))return;var before=FW.revision.items.length;FW.revision.items=FW.revision.items.filter(function(i){return i.id!==id;});if(FW.revision.items.length===before)return;FW.dirty=true;fwRenderRevision();}
 var fwOldPeers=qualityPeers;
 qualityPeers=function(row){
  if(!FW.revision || !row._revision)return fwOldPeers(row);
