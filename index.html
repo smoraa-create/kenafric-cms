@@ -6583,7 +6583,7 @@ html += '<td>' + (s.pend ? '<strong style="color:var(--purple)">' + s.pend + '</
 html += '<td>' + (s.ret ? '<strong style="color:var(--orange)">' + s.ret + '</strong>' : '0') + '</td>';
 html += '<td>' + (s.app + s.dis) + '</td>';
 html += '<td>' + overall + '</td>';
-html += '<td><button class="btn btn-sm btn-primary" onclick="loadHRRevEmp(\'' + e.employee_id + '\')">Open Review</button></td></tr>';
+html += '<td style="white-space:nowrap"><button class="btn btn-sm btn-primary" onclick="loadHRRevEmp(' + rcArg(e.employee_id) + ')">Open Review</button> <button class="btn btn-sm btn-danger" onclick="deleteAllAssessments(' + rcArg(e.employee_id) + ',' + rcArg(e.employee_name) + ')">Delete</button></td></tr>';
 });
 html += '</tbody></table></div></div>';
 box.innerHTML = html;
@@ -11480,7 +11480,7 @@ function fwRenderRevision(){
    }else h+='<p>'+escapeHtml(i.text)+' '+getClassificationBadge(i.classification)+'</p>';
    if(i.level)h+='<span class="badge badge-info">'+escapeHtml(i.level)+'</span>';
   h+='<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px"><button type="button" class="btn btn-outline" onclick="fwAudit(\''+i.id+'\')">AI Validate / Ideas</button>';
-if(draft)h+='<button type="button" class="btn btn-outline" onclick="fwRemove(\''+i.id+'\')">Delete</button>';
+if(draft)h+='<button type="button" class="btn btn-outline" onclick="fwRemoveLive(\''+i.id+'\')">Delete</button>';
    if(review){
     h+='<button type="button" class="btn btn-outline" onclick="fwReviewEdit(\''+i.id+'\')">Edit</button>';
     h+='<button type="button" class="btn btn-success" '+(r.review[i.id]?'disabled':'')+' onclick="fwApprove(\''+i.id+'\')">'+(r.review[i.id]?'Approved for this revision':'Approve experience')+'</button>';
@@ -11528,14 +11528,25 @@ function fwAdd(code){
  if(code.indexOf('CC')===0){level=prompt('Core level: Foundational, Intermediate, Advanced, Master or Executive');if(!level)return;}
  FW.revision.items.push({id:crypto.randomUUID(),code,text:'',classification:'Important (Performance Enhancing)',level,ai_note:null});FW.dirty=true;fwRenderRevision();
 }
-function fwRemove(id){if(FW.busy)return;if(!confirm('Remove this item from the private draft? The live version is unchanged.'))return;var before=FW.revision.items.length;FW.revision.items=FW.revision.items.filter(function(i){return i.id!==id;});if(FW.revision.items.length===before)return;FW.dirty=true;fwRenderRevision();}
-var fwOldPeers=qualityPeers;
-qualityPeers=function(row){
- if(!FW.revision || !row._revision)return fwOldPeers(row);
- var items=FW.revision.items.filter(i=>i.id!==row.id);
- if(FW.position.department&&fwCore())items=items.concat(fwCore().items || []);
- return items.map(i=>({ref:i.id,code:i.code,title:compNameOf(i.code),text:i.text,level:i.level}));
-};
+function fwRemove(id){
+ if(FW.busy)return;
+ if(!confirm('Remove this item from the private draft? The live version will update after publish.'))return;
+ var before=FW.revision.items.length;
+ FW.revision.items=FW.revision.items.filter(function(i){return i.id!==id;});
+ if(FW.revision.items.length===before)return;
+ FW.dirty=true;
+ fwRenderRevision();
+}
+function fwRemoveLive(id){
+ fwRemove(id);
+ if(!FW.revision||!FW.revision.live_version)return;
+ setTimeout(function(){
+  if(typeof fwSave==='function')fwSave(false);
+ },50);
+ setTimeout(function(){
+  if(typeof fwPublish==='function')fwPublish();
+ },150);
+}
 async function fwAudit(id){
  var r=FW.revision,i=r&&r.items.find(i=>i.id===id);if(!i||!i.text.trim())return null;
  var sig=JSON.stringify([i.text,i.classification,i.code,i.level]),out=document.getElementById('fwai-'+id);
