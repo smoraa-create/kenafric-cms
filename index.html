@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html>
 <head>
@@ -7308,6 +7309,7 @@ html += '<div class="plan-card"><div class="plan-comp">' + escapeHtml(p.employee
 html += '<div class="plan-task"><strong>Task:</strong> ' + escapeHtml(p.task || '') + ' | <strong>Action:</strong> ' + escapeHtml(p.action || '') + '</div>';
 html += '<div class="plan-task"><strong>Measure:</strong> ' + escapeHtml(p.measure || '') + ' | <strong>Responsible:</strong> ' + escapeHtml(p.responsible_party || '') + ' | <strong>Period:</strong> ' + escapeHtml(p.start_date || '') + ' to ' + escapeHtml(p.end_date || '') + '</div>';
 html += '<span class="badge badge-success">Approved</span>';
+html += '<div style="margin-top:6px"><button type="button" class="btn btn-sm btn-danger" onclick="deletePlan(' + rcArg(p.id) + ')">Delete Plan</button></div>';
 if (p.progress_notes) html += '<div style="font-size:11px;background:var(--gray-50);padding:6px;border-radius:4px;margin-top:6px;white-space:pre-wrap">' + escapeHtml(p.progress_notes) + '</div>';
 html += '</div>';
 });
@@ -11594,10 +11596,18 @@ async function fwReviewEdit(id){
  await fwMutate('edit_item',{item:{id,text:t.trim(),classification:c.trim()}});
 }
 async function fwApprove(id){
- if(FW.busy)return;FW.busy=true;fwButtons();
- var result=await fwAudit(id);FW.busy=false;
- if(!result){showToast('AI check failed. Retry before approval.');fwButtons();return;}
- if(result.flags.length&&!confirm('AI flags are shown on this experience. Approve it unchanged for this revision?')){fwButtons();return;}
+ if(FW.busy)return;
+ FW.busy=true;
+ fwButtons();
+ var result=await fwAudit(id);
+ FW.busy=false;
+
+ // AI is advisory only. A failed AI check must never block HR approval.
+ if(result && result.flags && result.flags.length && !confirm('AI flags are shown on this experience. Approve it unchanged for this revision?')){
+  fwButtons();
+  return;
+ }
+
  await fwMutate('approve_item',{item_id:id});
 }
 async function fwReturn(){if(confirm('Return the entire submitted revision to its owner? All revision approvals reset; live content remains unchanged.'))await fwMutate('return',{});}
@@ -29545,6 +29555,10 @@ body.role-hr #mainContent #dpCardBrowser .dpb-card{
 body.role-hr #mainContent #dpCardBrowser .dpb-tone-1{--dc:#247c72;--dt:#eef8f4}
 body.role-hr #mainContent #dpCardBrowser .dpb-tone-2{--dc:#76549a;--dt:#f6f0fb}
 body.role-hr #mainContent #dpCardBrowser .dpb-tone-3{--dc:#ac7829;--dt:#fff8eb}
+body.role-hr #mainContent #dpCardBrowser .dpb-card.dpb-company-kil{--dc:#279b7a;--dt:#edf9f4;background:linear-gradient(130deg,#fff,#edf9f4)!important}
+body.role-hr #mainContent #dpCardBrowser .dpb-card.dpb-company-kbbl{--dc:#2f7edb;--dt:#eef5ff;background:linear-gradient(130deg,#fff,#eef5ff)!important}
+body.role-hr #mainContent #dpCardBrowser .dpb-card.dpb-company-kml-sd{--dc:#d08a18;--dt:#fff8e8;background:linear-gradient(130deg,#fff,#fff8e8)!important}
+body.role-hr #mainContent #dpCardBrowser .dpb-card.dpb-company-kml-fd{--dc:#8a5cc4;--dt:#f7f0ff;background:linear-gradient(130deg,#fff,#f7f0ff)!important}
 body.role-hr #dpCardBrowser .dpb-card:hover{box-shadow:0 5px 14px #263f6715!important}
 body.role-hr #dpCardBrowser .dpb-card-icon{display:grid;place-items:center;flex:0 0 42px;width:42px;height:42px;border-radius:10px;background:var(--dt,#edf3ff);color:var(--dc,#385fa2)}
 body.role-hr #dpCardBrowser svg{width:25px;height:25px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;pointer-events:none}
@@ -29558,20 +29572,50 @@ body.role-hr #dpCardBrowser .dpb-pager button{font-size:13px!important}
 body.role-hr #dpCardBrowser .dpb-person{display:flex;gap:13px;align-items:center;flex-wrap:wrap;background:#fff;border:1px solid #d3e0f0;border-radius:10px;padding:15px 18px}
 body.role-hr #dpCardBrowser .dpb-person button{margin-left:auto}
 body.role-hr #dpCardBrowser .dpb-footnote,body.role-hr #dpCardBrowser .dpb-empty{font-size:12px;color:#67809b;margin:14px 0}
-body.role-hr #dpCardBrowser button:focus-visible{outline:3px solid #7b98cc!important;outline-offset:3px}
-body.role-hr #dpCardBrowser button:disabled{opacity:.5;cursor:not-allowed}
-@media(max-width:1050px){body.role-hr #dpCardBrowser .dpb-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
-@media(max-width:650px){body.role-hr #dpCardBrowser .dpb-grid{grid-template-columns:1fr}body.role-hr #dpCardBrowser .dpb-header{padding:15px}body.role-hr #dpCardBrowser .dpb-person button{margin-left:0}}
-}
+body.role-hr #dpCardBrowser .dpb-summary{position:relative;overflow:hidden;margin:18px 0 22px;padding:28px 30px;background:linear-gradient(135deg,#ffffff 0%,#fbfcff 100%);border:1px solid #dfe7f3;border-left:5px solid #21347f;border-radius:24px;box-shadow:0 18px 45px rgba(24,45,91,.10)}
+body.role-hr #dpCardBrowser .dpb-summary h3{font-size:30px!important;line-height:1.15;color:#1d347d;font-weight:800;margin:0!important;letter-spacing:-.7px}
+body.role-hr #dpCardBrowser .dpb-summary p{margin:6px 0 0;color:#687998;font-size:15px}
+body.role-hr #dpCardBrowser .dpb-kg-heading{display:flex;align-items:center;gap:14px;margin-bottom:24px;padding-left:18px;position:relative;z-index:1}
+body.role-hr #dpCardBrowser .dpb-kg-heading::after{content:'';position:absolute;left:0;top:2px;width:3px;height:58px;border-radius:3px;background:#d99a16}
+body.role-hr #dpCardBrowser .dpb-kg-company-icon{display:grid;place-items:center;width:64px;height:64px;border-radius:50%;background:#e8f0ff;color:#22417c;flex:0 0 64px}
+body.role-hr #dpCardBrowser .dpb-kg-company-icon svg{width:31px;height:31px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+body.role-hr #dpCardBrowser .dpb-kg-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:18px;position:relative;z-index:1}
+body.role-hr #dpCardBrowser .dpb-kg-tile{position:relative;display:flex;align-items:center;gap:16px;min-height:142px;padding:20px 22px;border-radius:18px;overflow:hidden;border:1px solid rgba(37,61,104,.08)}
+body.role-hr #dpCardBrowser .dpb-kg-tile::after{content:'';position:absolute;inset:auto 0 0 0;height:8px;background:currentColor}
+body.role-hr #dpCardBrowser .dpb-kg-icon{display:grid;place-items:center;width:66px;height:66px;border-radius:50%;background:currentColor;color:#fff;flex:0 0 66px;box-shadow:inset 0 1px 0 rgba(255,255,255,.18)}
+body.role-hr #dpCardBrowser .dpb-kg-icon svg{width:29px;height:29px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+body.role-hr #dpCardBrowser .dpb-kg-metric{display:flex;flex-direction:column;min-width:0;padding-left:14px;border-left:1px solid rgba(34,56,92,.16)}
+body.role-hr #dpCardBrowser .dpb-kg-metric strong{font-size:34px;line-height:1;color:#1b347b;font-weight:900;letter-spacing:-.8px}
+body.role-hr #dpCardBrowser .dpb-kg-metric span{margin-top:8px;font-size:12px;font-weight:800;letter-spacing:.11em;color:#405270;text-transform:uppercase}
+body.role-hr #dpCardBrowser .dpb-kg-blue{background:linear-gradient(135deg,#eef4ff 0%,#ffffff 100%);color:#315fdd}
+body.role-hr #dpCardBrowser .dpb-kg-purple{background:linear-gradient(135deg,#f4efff 0%,#ffffff 100%);color:#7a4edb}
+body.role-hr #dpCardBrowser .dpb-kg-green{background:linear-gradient(135deg,#eefbf5 0%,#ffffff 100%);color:#16966d}
+body.role-hr #dpCardBrowser .dpb-kg-teal{background:linear-gradient(135deg,#e9f9fb 0%,#ffffff 100%);color:#169eb0}
+body.role-hr #dpCardBrowser .dpb-kg-ribbon{position:absolute;width:230px;height:230px;background:#26346e;border-radius:50%;z-index:0}
+body.role-hr #dpCardBrowser .dpb-kg-ribbon::before{content:'';position:absolute;inset:-7px;border:7px solid #d99a16;border-radius:50%;box-sizing:border-box}
+body.role-hr #dpCardBrowser .dpb-kg-ribbon-top{right:-145px;top:-160px}
+body.role-hr #dpCardBrowser .dpb-kg-ribbon-bottom{left:-155px;bottom:-170px}
+@media(max-width:1050px){body.role-hr #dpCardBrowser .dpb-kg-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:650px){body.role-hr #dpCardBrowser .dpb-summary{padding:22px 18px}body.role-hr #dpCardBrowser .dpb-kg-heading{gap:12px;padding-left:14px}body.role-hr #dpCardBrowser .dpb-kg-heading::after{height:48px}body.role-hr #dpCardBrowser .dpb-kg-company-icon{width:54px;height:54px;flex-basis:54px}body.role-hr #dpCardBrowser .dpb-summary h3{font-size:24px!important}body.role-hr #dpCardBrowser .dpb-kg-grid{grid-template-columns:1fr}body.role-hr #dpCardBrowser .dpb-kg-tile{min-height:118px}}
 
 body.role-hr #dpCardBrowser .dpb-employee-picker{background:#fff;border:1px solid #d3e0f0;border-radius:10px;padding:16px 18px;margin:14px 0}body.role-hr #dpCardBrowser .dpb-employee-picker label{display:block;font-size:13px;font-weight:700;margin-bottom:7px}body.role-hr #dpCardBrowser .dpb-employee-picker select{display:block;width:100%;max-width:650px;font-size:14px;padding:9px 12px;border:1px solid #c4d3e7;border-radius:8px;background:white;min-height:40px}body.role-hr #dpCardBrowser .dpb-employee-picker p{font-size:12px;color:#647b96;margin-top:8px}
+body.role-hr #mainContent #dpCardBrowser .dpb-card.dpb-company-card{align-items:stretch;flex-direction:column;min-height:280px;padding:18px!important;overflow:hidden}
+body.role-hr #mainContent #dpCardBrowser .dpb-card-top{display:flex;align-items:center;gap:12px}
+body.role-hr #mainContent #dpCardBrowser .dpb-card-top .dpb-card-icon{flex:0 0 46px;width:46px;height:46px;border-radius:14px}
+body.role-hr #mainContent #dpCardBrowser .dpb-card-top .dpb-card-title{font-size:18px!important;font-weight:800;color:#243e65;letter-spacing:-.2px}
+body.role-hr #mainContent #dpCardBrowser .dpb-card.dpb-company-card .dpb-arrow{margin-left:auto;color:var(--dc);font-size:25px}
+body.role-hr #mainContent #dpCardBrowser .dpb-card-metrics{width:100%;margin-top:18px;border-top:1px solid rgba(36,62,101,.10)}
+body.role-hr #mainContent #dpCardBrowser .dpb-card-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:11px 0;border-bottom:1px solid rgba(36,62,101,.09);font-size:13px;color:#5d7087}
+body.role-hr #mainContent #dpCardBrowser .dpb-card-row strong{font-size:15px;color:#263858;font-weight:800}
+body.role-hr #mainContent #dpCardBrowser .dpb-card-row:last-child{border-bottom:0;padding-bottom:0}
+body.role-hr #mainContent #dpCardBrowser .dpb-card-open{margin-top:auto;padding-top:14px;font-size:13px;color:#627997;display:flex;align-items:center;justify-content:space-between}
 </style>
 <script id="cms-dp-card-browser">
 /* HR Development Plans navigation only. One selected employee, original plan
    renderer and action handlers. No plan writes, edits or approvals on browsing. */
 (function(){
  if(window.cmsDPCardBrowser)return;window.cmsDPCardBrowser=true;
- var B={epoch:0,company:null,department:null,employee:null,people:[],companies:[],departments:[],query:'',page:0,busy:false,loaded:false};
+ var B={epoch:0,company:null,department:null,employee:null,people:[],companies:[],departments:[],query:'',page:0,busy:false,loaded:false,summary:null,summaryError:''};
  function key(v){return String(v||'').trim().toUpperCase();}
  function label(v){return String(v||'').trim()||'Not recorded';}
  function permitted(){return APP.currentRole==='hr'&&!window.CMS_VIEW_CONFIG;}
@@ -29598,11 +29642,108 @@ body.role-hr #dpCardBrowser .dpb-employee-picker{background:#fff;border:1px soli
   return [...map].map(([id,name])=>({id,name})).sort((a,b)=>a.name.localeCompare(b.name));
  }
  function people(){return B.people.filter(p=>key(p.company)===B.company&&(B.department===null||key(p.department)===B.department));}
+function dpbCompanyClass(value){
+ var s=key(value);
+ if(s.includes('KIL')||s.includes('KENAFRIC INDUSTRIES'))return ' dpb-company-kil';
+ if(s.includes('KBBL')||s.includes('BEVERAGES'))return ' dpb-company-kbbl';
+ if(s.includes('KML SD')||s.includes('SOFT DRINK'))return ' dpb-company-kml-sd';
+ if(s.includes('KML FD')||s.includes('FOOD DIVISION'))return ' dpb-company-kml-fd';
+ return '';
+}
  function card(kind,value,title,subtitle,meta,index){
-  return '<button type="button" class="dpb-card dpb-tone-'+index%4+'" data-dpb="'+kind+'" data-value="'+esc(value)+'">'+
-   '<span class="dpb-card-icon">'+icon(kind)+'</span><span class="dpb-card-copy"><strong>'+esc(title)+'</strong>'+
-   '<span>'+esc(subtitle)+'</span><small>'+esc(meta)+'</small></span><span class="dpb-arrow" aria-hidden="true">&#8250;</span></button>';
+ var companyClass=kind==='company'?dpbCompanyClass(title):'';
+ if(kind==='company'){
+  var summary=(B.summary&&B.summary.companies&&B.summary.companies[key(title)])||null;
+  var departments=new Set((B.departments||[]).filter(d=>key(d.company)===key(title)).map(d=>key(d.name))).size;
+  var employeeCount=String(subtitle||'').replace(/\s*employees?$/,'');
+  return '<button type="button" class="dpb-card dpb-tone-'+index%4+companyClass+' dpb-company-card" data-dpb="'+kind+'" data-value="'+esc(value)+'">'+
+   '<span class="dpb-card-top"><span class="dpb-card-icon">'+icon(kind)+'</span><span class="dpb-card-title">'+esc(title)+'</span><span class="dpb-arrow" aria-hidden="true">&#8250;</span></span>'+
+   '<span class="dpb-card-metrics">'+
+    '<span class="dpb-card-row"><span>Employees</span><strong>'+esc(employeeCount)+'</strong></span>'+
+    '<span class="dpb-card-row"><span>Plans</span><strong>'+esc(summary?summary.plans:'0')+'</strong></span>'+
+    '<span class="dpb-card-row"><span>Review</span><strong>'+esc(summary?summary.review:'0')+'</strong></span>'+
+    '<span class="dpb-card-row"><span>Verified</span><strong>'+esc(summary?summary.verified+'%':'0%')+'</strong></span>'+
+   '</span>'+
+   '<span class="dpb-card-open"><span>Open departments</span><strong>'+esc(departments)+'</strong></span>'+
+  '</button>';
  }
+ return '<button type="button" class="dpb-card dpb-tone-'+index%4+'" data-dpb="'+kind+'" data-value="'+esc(value)+'">'+
+  '<span class="dpb-card-icon">'+icon(kind)+'</span><span class="dpb-card-copy"><strong>'+esc(title)+'</strong>'+ 
+  '<span>'+esc(subtitle)+'</span><small>'+esc(meta)+'</small></span><span class="dpb-arrow" aria-hidden="true">&#8250;</span></button>';
+}
+ function dpbDirectoryEmployeeCount(){
+ var ids=new Set();
+ B.people.forEach(function(p){ids.add(p.employee_id||p.employee_name||'');});
+ ids.delete('');
+ return ids.size;
+}
+function dpbSummaryMarkup(){
+ var s=B.summary;
+ var employees=s? s.employees : dpbDirectoryEmployeeCount();
+ var plans=s? s.plans : '...';
+ var review=s? s.review : '...';
+ var verified=s? s.verified+'%' : '...';
+ var note=B.summaryError?'Plan summary unavailable: '+B.summaryError:'Combined live summary across all companies.';
+ function tile(cls,iconPath,value,labelText){
+  return '<div class="dpb-kg-tile '+cls+'">'+
+   '<span class="dpb-kg-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="'+iconPath+'"/></svg></span>'+
+   '<span class="dpb-kg-metric"><strong>'+esc(value)+'</strong><span>'+esc(labelText)+'</span></span>'+
+  '</div>';
+ }
+ return '<section class="dpb-summary dpb-kg-summary" aria-label="All companies summary">'+
+  '<span class="dpb-kg-ribbon dpb-kg-ribbon-top" aria-hidden="true"></span><span class="dpb-kg-ribbon dpb-kg-ribbon-bottom" aria-hidden="true"></span>'+
+  '<header class="dpb-kg-heading"><span class="dpb-kg-company-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20V6a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v14M4 20h16M8 8h2M8 12h2M8 16h2M14 8h2M14 12h2M14 16h2"/></svg></span>'+
+  '<div><h3>All Companies Summary</h3><p>'+esc(note)+'</p></div></header>'+
+  '<div class="dpb-kg-grid">'+
+   tile('dpb-kg-blue','M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75',employees,'EMPLOYEES')+
+   tile('dpb-kg-purple','M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8zM14 2v6h6M9 13h6M9 17h6M9 9h2',plans,'PLANS')+
+   tile('dpb-kg-green','M11 19a8 8 0 1 0 0-16 8 8 0 0 0 0 16zM21 21l-4.35-4.35',review,'REVIEW')+
+   tile('dpb-kg-teal','M12 22s8-3 8-10V5l-8-3-8 3v7c0 7 8 10 8 10zM9 12l2 2 4-4',verified,'VERIFIED')+
+  '</div></section>';
+}
+async function dpbLoadSummary(ticket){
+ try{
+  var items=[],page=0;
+  for(;;){
+   var q=await _supabase.rpc('cms_development_v1',{p_action:'list',p_data:{scope:'hr',page:page}});
+   if(q.error)throw Error(q.error.message);
+   var payload=q.data||{};
+   if(Array.isArray(payload.items))items.push(...payload.items);
+   if(!payload.has_more)break;
+   page++;if(page>100)break;
+  }
+  var employees=new Set();
+  B.people.forEach(function(p){employees.add(p.employee_id||p.employee_name||'');});
+  employees.delete('');
+  var review=items.filter(function(it){
+   var a=it.action||{};
+   var state=String(a.status||a.hr_approved||'').toLowerCase();
+   return state.includes('await')||state.includes('pending');
+  }).length;
+  var progress=items.filter(function(it){return typeof it.progress==='number';});
+  var byCompany={};
+items.forEach(function(it){
+ var a=it.action||{};
+ var company=key(a.company||a.department||a.position||a.role);
+ if(!company)return;
+ if(!byCompany[company])byCompany[company]={plans:0,review:0,progress:0,progressCount:0,verified:0};
+ byCompany[company].plans++;
+ var state=String(a.status||a.hr_approved||'').toLowerCase();
+ if(state.includes('await')||state.includes('pending'))byCompany[company].review++;
+ if(typeof it.progress==='number'){byCompany[company].progress+=it.progress;byCompany[company].progressCount++;}
+});
+Object.keys(byCompany).forEach(function(k){
+ byCompany[k].verified=byCompany[k].progressCount?Math.round(byCompany[k].progress/byCompany[k].progressCount):0;
+});
+  var verified=progress.length?Math.round(progress.reduce(function(sum,it){return sum+it.progress;},0)/progress.length):0;
+  B.summary={employees:employees.size,plans:items.length,review:review,verified:verified,companies:byCompany};
+  B.summaryError='';
+ }catch(e){
+  B.summary=null;
+  B.summaryError=e.message||String(e);
+ }
+ if(active(ticket))draw();
+}
  function draw(){
   var root=document.getElementById('dpCardBrowser');if(!root||!permitted())return;
   var employee=B.people.find(p=>p.employee_id===B.employee),co=B.companies.find(c=>key(c.name)===B.company);
@@ -29617,6 +29758,7 @@ body.role-hr #dpCardBrowser .dpb-employee-picker{background:#fff;border:1px soli
   if(B.department!==null)h+='<span aria-hidden="true">/</span>'+button('department',label(dname),B.department);
   if(employee)h+='<span aria-hidden="true">/</span><strong>'+esc(employee.employee_name||employee.employee_id)+'</strong>';
   h+='</nav>';
+  if(level==='company'&&B.company===null)h+=dpbSummaryMarkup();
   if(level==='employee'){
    var scoped=people().slice().sort((a,b)=>String(a.employee_name||a.employee_id).localeCompare(String(b.employee_name||b.employee_id)));
    h+='<section class="dpb-employee-picker"><label for="dpbEmployeeSelect">Employee in this department</label><select id="dpbEmployeeSelect" '+(!scoped.length?'disabled':'')+'><option value="">Choose an employee</option>'+
@@ -29683,7 +29825,9 @@ body.role-hr #dpCardBrowser .dpb-employee-picker{background:#fff;border:1px soli
    B.companies=names(results[1].map(c=>c.name).concat(B.departments.map(d=>d.company),B.people.map(p=>p.company))).map(c=>({name:c.name==='Not recorded'&&c.id===''?'':c.name}));
    var select=document.getElementById('hrDPEmp');select.replaceChildren(new Option('Choose employee',''));
    B.people.forEach(p=>select.add(new Option(p.employee_name||p.employee_id,p.employee_id)));
-   B.loaded=true;draw();if(wanted)await selectEmployee(wanted);
+   B.loaded=true;draw();
+dpbLoadSummary(ticket);
+if(wanted)await selectEmployee(wanted);
   }catch(err){if(active(ticket)){document.getElementById('dpCardBrowser').innerHTML='<h2>Development Plans</h2><p>'+esc(err.message)+'</p><p>Directory could not be loaded completely. Existing records are unchanged.</p>'+button('refresh','Retry directory');}}
  };
  document.addEventListener('click',async function(event){
@@ -30354,6 +30498,102 @@ body.role-hr #downloadDevelopmentPlanBar button:focus-visible{outline:3px solid 
   pptx:'application/vnd.openxmlformats-officedocument.presentationml.presentation',
   mp4:'video/mp4',mp3:'audio/mpeg'
  };
+ function make(tag, cls, text, parent) {
+  return el(tag, text, cls, parent);
+}
+ const KG_COMPANIES=[
+ {id:'KIL',name:'Kenafric Industries Ltd',match:/\bKIL\b|Kenafric Industries/i,accent:'#4f46e5',icon:'K'},
+ {id:'KBBL',name:'Kenafric Beverages & Bottling Ltd',match:/\bKBBL\b|Beverages/i,accent:'#1f6e9c',icon:'B'},
+ {id:'KML SD',name:'Kenafric Manufacturing Ltd - Soft Drinks',match:/KML\s*SD|Soft Drinks/i,accent:'#8a5200',icon:'S'},
+ {id:'KML FD',name:'Kenafric Manufacturing Ltd - Food Division',match:/KML\s*FD|Food Division/i,accent:'#006b4d',icon:'F'}
+];
+let kgCompany='All companies',kgDepartment='All departments';
+
+function kgPersonCompany(item){
+ const text=[item.action.company,item.action.department,item.action.position,item.action.role].filter(Boolean).join(' ');
+ const found=KG_COMPANIES.find(c=>c.match.test(text));
+ return found?found.id:'Other';
+}
+function kgDepartmentName(item){
+ return String(item.action.department||'Other').trim()||'Other';
+}
+function kgCounts(items){
+ const out={};
+ items.forEach(item=>{
+  const id=kgPersonCompany(item);
+  if(!out[id])out[id]={employees:new Set(),plans:0,review:0,verified:0,progress:0,progressCount:0};
+  const c=out[id];
+  if(item.action.employee_id||item.action.employee_name)c.employees.add(item.action.employee_id||item.action.employee_name);
+  c.plans++;
+  const status=String(item.action.status||item.action.hr_approved||'').toLowerCase();
+  if(status.includes('await')||status.includes('pending'))c.review++;
+  if(typeof item.progress==='number'){c.progress+=item.progress;c.progressCount++;}
+ });
+ Object.values(out).forEach(c=>{c.verified=c.progressCount?Math.round(c.progress/c.progressCount):0;});
+ return out;
+}
+function kgApplyRoute(items){
+ return items.filter(item=>{
+  const companyOk=kgCompany==='All companies'||kgPersonCompany(item)===kgCompany;
+  const depOk=kgDepartment==='All departments'||kgDepartmentName(item)===kgDepartment;
+  return companyOk&&depOk;
+ });
+}
+function kgEnsureSelection(s){
+ if(!s.items.length){s.item=null;s.mid=null;return;}
+ if(s.item&&s.items.some(x=>x.action.id===s.item.action.id))return;
+ s.item=s.items[0];s.mid=null;
+}
+function kgRenderOverview(s,allItems){
+ const old=s.body.querySelector('.kg-overview');
+ if(old)old.remove();
+ const root=make('section','kg-overview');
+ const counts=kgCounts(allItems);
+ const cards=make('div','kg-companies',root);
+ const total={id:'All companies',name:'All companies',icon:'G',accent:'#24304b',employees:new Set(),plans:0,review:0,progress:0,progressCount:0};
+ allItems.forEach(item=>{if(item.action.employee_id||item.action.employee_name)total.employees.add(item.action.employee_id||item.action.employee_name);total.plans++;});
+ const allButton=kgCompanyCard(total,'All companies','Group view',allItems.length,allItems.length,total.employees.size,counts);
+ cards.append(allButton);
+ KG_COMPANIES.forEach(c=>{
+  const cCount=counts[c.id]||{employees:new Set(),plans:0,review:0,verified:0};
+  cards.append(kgCompanyCard(c,c.name,c.id,cCount.plans,cCount.review,cCount.employees.size,counts));
+ });
+ const deps=['All departments'].concat(Array.from(new Set(allItems.filter(item=>kgCompany==='All companies'||kgPersonCompany(item)===kgCompany).map(kgDepartmentName))).sort());
+ const depRow=make('div','kg-departments',root);
+ deps.forEach(dep=>{
+  const b=make('button',dep==='All departments'?dep:dep.replace(/\s+/g,' '),'kg-department'+(kgDepartment===dep?' active':''),depRow);
+  b.type='button';
+  b.onclick=()=>{kgDepartment=dep;render(s);};
+ });
+ const route=make('div','kg-route',root);
+ make('span',null,'Company: '+kgCompany,route);
+ make('span',null,'Department: '+kgDepartment,route);
+ make('span',null,allItems.length+' development action(s)',route);
+ const tools=s.body.querySelector('.dv-toolbar');
+ if(tools)tools.after(root);else s.body.prepend(root);
+}
+function kgCompanyCard(company,name,label,plans,review,employees,counts){
+ const active=kgCompany===label||kgCompany===company.id;
+ const card=make('button',null,'kg-company'+(active?' active':''));
+ card.type='button';
+ card.onclick=()=>{kgCompany=label;kgDepartment='All departments';};
+ const top=make('div','kg-company-top',card);
+ const mark=make('div','kg-mark',top);mark.style.background=company.accent||'#4f46e5';mark.textContent=company.icon;
+ const badge=make('span',null,'dv-pill',top);badge.textContent=label;
+ make('h3',null,null,card).textContent=name;
+ const stats=make('div','kg-stats',card);
+ kgStat(stats,'Employees',employees);
+ kgStat(stats,'Plans',plans);
+ kgStat(stats,'Review',review);
+ const verified=company.id==='All companies'?0:(counts[company.id]&&counts[company.id].verified||0);
+ kgStat(stats,'Verified',verified+'%');
+ return card;
+}
+function kgStat(parent,label,value){
+ const box=make('div','kg-stat',parent);
+ make('b',null,String(value),box);
+ make('span',null,label,box);
+}
  const css = `
  #cmsDevelopmentV1{--dv-navy:#18234c;--dv-blue:#364dcc;--dv-teal:#177c6d;color:var(--dv-navy);font:14px/1.55 Arial,sans-serif;margin:0 0 20px;background:#f4f6fb;padding:20px;border-radius:14px}
  #cmsDevelopmentV1 *{box-sizing:border-box}
@@ -30401,6 +30641,26 @@ body.role-hr #downloadDevelopmentPlanBar button:focus-visible{outline:3px solid 
  .cms-development-legacy-v1>summary{cursor:pointer;font-size:16px;font-weight:600;color:#18234c}
  @media(max-width:900px){#cmsDevelopmentV1{padding:12px}#cmsDevelopmentV1 .dv-grid{grid-template-columns:1fr}#cmsDevelopmentV1 h2{font-size:22px}}
  `;
+ const companyOverviewCss = `
+#cmsDevelopmentV1 .kg-companies{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin:14px 0 18px}
+#cmsDevelopmentV1 .kg-company{appearance:none;text-align:left;border:1px solid #dce4f3;border-radius:16px;background:#fff;padding:15px;cursor:pointer;box-shadow:0 8px 24px rgba(36,48,75,.06);font:inherit;color:#24304b;transition:transform .15s,box-shadow .15s,border-color .15s}
+#cmsDevelopmentV1 .kg-company:hover{transform:translateY(-1px);box-shadow:0 14px 32px rgba(36,48,75,.10)}
+#cmsDevelopmentV1 .kg-company.active{border-color:#6366f1;box-shadow:0 12px 30px rgba(99,102,241,.13)}
+#cmsDevelopmentV1 .kg-company-top{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
+#cmsDevelopmentV1 .kg-mark{display:grid;place-items:center;width:40px;height:40px;border-radius:12px;color:#fff;font-size:15px;font-weight:800;background:#4f46e5}
+#cmsDevelopmentV1 .kg-company h3{margin:10px 0 0;font-size:15px;line-height:1.25;font-weight:800;letter-spacing:-.01em}
+#cmsDevelopmentV1 .kg-stats{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:13px}
+#cmsDevelopmentV1 .kg-stat{background:#f8fafc;border-radius:10px;padding:8px}
+#cmsDevelopmentV1 .kg-stat b{display:block;font-size:14px;line-height:1.2;color:#24304b}
+#cmsDevelopmentV1 .kg-stat span{display:block;margin-top:2px;font-size:10px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#64748b}
+#cmsDevelopmentV1 .kg-departments{display:flex;gap:8px;overflow:auto;padding:2px 0 12px}
+#cmsDevelopmentV1 .kg-department{appearance:none;flex:0 0 auto;border:0;border-radius:999px;background:#eef2f7;color:#556276;padding:8px 13px;font-size:12px;font-weight:800;cursor:pointer;font-family:inherit}
+#cmsDevelopmentV1 .kg-department.active{background:#24304b;color:#fff}
+#cmsDevelopmentV1 .kg-route{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0 0}
+#cmsDevelopmentV1 .kg-route span{border:1px solid #dce4f3;background:#f8fafc;border-radius:999px;padding:5px 10px;font-size:11px;font-weight:800;color:#556276}
+@media(max-width:1100px){#cmsDevelopmentV1 .kg-companies{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:650px){#cmsDevelopmentV1 .kg-companies{grid-template-columns:1fr}#cmsDevelopmentV1 .kg-company{padding:13px}}
+`;
  const style = document.createElement('style'); style.id='cms-development-interface-style-v1';style.textContent=css;document.head.append(style);
  function el(tag, text, cls, parent) {
   const n=document.createElement(tag); if(text!=null)n.textContent=String(text);if(cls)n.className=cls;if(parent)parent.append(n);return n;
@@ -30463,16 +30723,80 @@ body.role-hr #downloadDevelopmentPlanBar button:focus-visible{outline:3px solid 
   if(!current(s))throw Error('The page changed. Reopen this action.');
   return rpc(action,{action_id:s.item.action.id,version:s.item.version,...data});
  }
+ async function deleteVisibleDevelopmentPlan(s) {
+  if (!current(s) || !s.item || !s.item.action || !s.item.action.id) return;
+  if (s.scope !== 'hr' && s.scope !== 'team') {
+    notice(s, 'Only HR Admin, Head of HR, or the employee\'s manager can delete plans.', true);
+    return;
+  }
+
+  if (!window.confirm('Delete this entire development plan? Its monthly reports will also be removed.')) return;
+
+  return work(s, async function() {
+    const found = await _supabase
+      .from('dev_plans')
+      .select('id,plan_id,employee_id,employee_name')
+      .eq('id', s.item.action.id)
+      .single();
+
+    if (found.error || !found.data) throw Error('Development plan could not be found. Reload the page and try again.');
+    const plan = found.data;
+
+    // Manager scope is limited to direct reports.
+    if (s.scope === 'team') {
+      const employee = await _supabase
+        .from('employees')
+        .select('employee_id,manager_email')
+        .eq('employee_id', plan.employee_id)
+        .single();
+
+      if (employee.error || !employee.data ||
+          String(employee.data.manager_email || '').trim().toLowerCase() !==
+          String(APP.user.email || '').trim().toLowerCase()) {
+        throw Error('You can delete plans only for your direct reports.');
+      }
+    }
+
+    if (plan.plan_id) {
+      const reports = await _supabase
+        .from('dp_reports')
+        .delete()
+        .eq('plan_id', plan.plan_id);
+      if (reports.error) throw Error(reports.error.message);
+
+      const plans = await _supabase
+        .from('dev_plans')
+        .delete()
+        .eq('plan_id', plan.plan_id);
+      if (plans.error) throw Error(plans.error.message);
+    } else {
+      const plans = await _supabase
+        .from('dev_plans')
+        .delete()
+        .eq('id', plan.id);
+      if (plans.error) throw Error(plans.error.message);
+    }
+
+    s.items = s.items.filter(function(x) { return x.action.id !== s.item.action.id; });
+    s.item = s.items[0] || null;
+    s.mid = null;
+    render(s);
+    notice(s, 'Development plan deleted.');
+  });
+}
  function editable(s) {
   return s.scope==='self'&&s.item.is_employee&&s.item.phase==='Active'&&
    String(s.item.action.hr_approved||'').trim().toLowerCase()==='approved'&&
    String(s.item.action.status||'').trim().toLowerCase()==='active'&&!s.item.source_changed;
  }
  function reviewable(s) {return s.scope==='team'&&s.item.is_manager&&!s.item.source_changed;}
+ function make(tag, cls, text, parent) {
+  return el(tag, text, cls, parent);
+}
  async function list(s,page=0) {
   const r=await rpc('list',{scope:s.scope,page});if(!current(s))return;
   if(!Array.isArray(r.items))throw Error('Unexpected development list response.');
-  s.items=r.items;s.page=r.page;s.more=r.has_more;s.item=r.items[0]||null;s.mid=null;s.dirty=false;render(s);
+  s.items=kgApplyRoute(r.items);s.allItems=r.items;s.page=r.page;s.more=r.has_more;s.item=s.items[0]||null;s.mid=null;s.dirty=false;render(s);
   notice(s,r.items.length?'Choose an action and its deliverable.':'No actions are available in this scope.');
  }
  function render(s) {
@@ -30496,6 +30820,8 @@ body.role-hr #downloadDevelopmentPlanBar button:focus-visible{outline:3px solid 
    b.dataset.search=[p.employee_name,p.comp_name,p.task,p.action].join(' ').toLowerCase();
   });
   search.addEventListener('input',()=>{for(const b of choices.children)b.hidden=!b.dataset.search.includes(search.value.toLowerCase());});
+  kgEnsureSelection(s);
+  kgRenderOverview(s,s.allItems||s.items);
   if(!s.item){el('p','No development actions to show.','dv-muted',s.body);return;}
   const it=s.item,p=it.action;
   const grid=el('div',null,'dv-grid',s.body),left=el('section',null,'dv-panel',grid),right=el('aside',null,'dv-panel',grid);
@@ -30506,6 +30832,15 @@ body.role-hr #downloadDevelopmentPlanBar button:focus-visible{outline:3px solid 
   el('p',p.task||'No task supplied.',null,full);el('p','Measure: '+(p.measure||'Not supplied'),null,full);
   el('p','Responsible: '+(p.responsible_party||'Not supplied')+' | Due: '+(p.end_date||'Not supplied'),'dv-meta',left);
   el('span','Plan: '+(p.status||'Pending')+' | HR: '+(p.hr_approved||'Pending'),'dv-pill',left);
+  if (s.scope === 'hr' || s.scope === 'team') {
+  const deleteRow = el('div', null, 'dv-row', left);
+  const deleteButton = button(deleteRow, 'Delete development plan', function() {
+    return deleteVisibleDevelopmentPlan(s);
+});
+  deleteButton.style.background = '#dc2626';
+  deleteButton.style.borderColor = '#dc2626';
+  deleteButton.style.color = '#fff';
+}
   if(p.progress_notes){const old=el('details',null,null,left);el('summary','Earlier action updates',null,old);el('p',p.progress_notes,'dv-history',old);}
   if(it.source_changed)el('p','The underlying action changed. Ask HR to resolve it before submitting or reviewing.','dv-notice dv-warn',left);
   const pct=it.progress;
@@ -30703,7 +31038,7 @@ body.role-hr #downloadDevelopmentPlanBar button:focus-visible{outline:3px solid 
  const employee=loadEmployeeDevPlans,manager=loadManagerDevPlans,hr=loadHRDevPlans,hohr=loadHOHRDevPlans;
  loadEmployeeDevPlans=function(...a){return mount.call(this,'self',employee,a);};
  loadManagerDevPlans=function(...a){return mount.call(this,'team',manager,a);};
- loadHRDevPlans=function(...a){return mount.call(this,'hr',hr,a);};
+ loadHRDevPlans=function(...a){return hr.apply(this,a);};
  loadHOHRDevPlans=function(...a){return mount.call(this,'hr',hohr,a);};
  // Add record/version context to the existing local and server draft mechanisms.
  if(typeof suContext==='function'){
@@ -30948,12 +31283,14 @@ function cmsModernDevelopmentLayoutV1() {
  const style = document.createElement('style');
  style.id = 'cms-development-modern-layout-style-v1';
  style.textContent = css;
+ style.textContent += companyOverviewCss;
  document.head.append(style);
  function make(tag, cls, text) {
   const n=document.createElement(tag);n.className=cls;
   if(text!=null)n.textContent=text;
   return n;
  }
+ 
  function reflow() {
   const root=document.getElementById(rootId);
   if(!root)return;
@@ -31030,7 +31367,6 @@ function cmsModernDevelopmentLayoutV1() {
  observer.observe(main,{childList:true,subtree:true});
  reflow();
 }
-
  cmsModernDevelopmentLayoutV1();
  // Patch only the in-memory viewer template AFTER the existing viewer add-on.
  // The parent bridge, isolation, authentication and server reads are unchanged.
