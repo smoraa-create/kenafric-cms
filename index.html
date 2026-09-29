@@ -14129,7 +14129,7 @@ loadPage=function(id){
  return routes[id]?routes[id]():mpOldPage(id);
 };
 var mpOldLabel=getPageLabel;getPageLabel=function(id){return {'mgr-completed':'Assessments Complete','mgr-pending':'Pending Assessments','mgr-score-details':'Team Manager Score','mgr-gap-details':'Team Gaps','mgr-returned-details':'Returned Evidence','mgr-notifications':'Notifications','mgr-setup-alerts':'Setup Deadlines','mgr-framework-alerts':'Framework Status','emp-prosp-invites':'Invitations','hr-prosp-invites':'Invitations','hohr-prosp-invites':'Invitations'}[id]||mpOldLabel(id);};
-var mpOldNav=setupNav;setupNav=function(role){mpOldNav(role);if(['hr','hohr','employee'].includes(role)){var page=role==='hr'?'hr-prosp-invites':role==='hohr'?'hohr-prosp-invites':'emp-prosp-invites',host=document.getElementById(role==='employee'?'mainNav':'sideNav');if(host){var b=rcButton('Invitations',()=>navigateTo(page),host);b.dataset.page=page;b.className=role==='employee'?'nav-btn':'sb-item';if(role!=='employee')b.style.cssText='width:100%;background:transparent;border:0;text-align:left';}}};
+var mpOldNav=setupNav;setupNav=function(role){mpOldNav(role);if(['hr','hohr'].includes(role)){var page=role==='hr'?'hr-prosp-invites':'hohr-prosp-invites',host=document.getElementById('sideNav');if(host){var b=rcButton('Invitations',()=>navigateTo(page),host);b.dataset.page=page;b.className='sb-item';b.style.cssText='width:100%;background:transparent;border:0;text-align:left';}}};
 // Add only genuine open invitations to the existing employee notification panel.
 var mpOldAlerts=edReloadAlerts;edReloadAlerts=async function(){await mpOldAlerts();var host=document.getElementById('edAlertList');if(!host||APP.currentRole!=='employee')return;try{var rows=await piRPC('mine');if(!host.isConnected)return;var open=rows.filter(r=>r.state==='Open');if(open.length){var empty=host.querySelector('.ed-empty');if(empty)empty.remove();var c=document.createElement('div');c.className='ed-alert';c.innerHTML='<div><h3>Prospective assessment invitation</h3><p>'+open.length+' open invitation(s) from HR</p>'+mdButton('Open invitations','emp-prosp-invites')+'</div>';host.prepend(c);}}catch(e){if(host.isConnected){var p=document.createElement('p');p.textContent='Could not check Invitations: '+e.message;host.appendChild(p);}}};
 
@@ -22037,16 +22037,16 @@ emailReport=function(id){return document.getElementById('arRoot')?arEmail(id):ar
  loadAssessEmp=invitations;
  buildAssessForm=invitations;
  buildProspectiveSelfForm=invitations;
- prospectiveSelfCard=function(){
-  return '<section class="card"><h3>Prospective assessment</h3><p>'+
-   escapeHtml(policy)+'</p><button type="button" class="btn btn-primary" data-prospective-invites>Open Invitations</button></section>';
+  prospectiveSelfCard=function(){
+  return '<section class="card"><h3>Prospective assessment</h3><button type="button" class="btn btn-primary" data-prospective-invites>Open Invitations</button></section>';
  };
  document.addEventListener('click',function(e){
   if(e.target.closest('[data-prospective-invites]'))invitations();
  });
- function explain(){
-  var root=document.getElementById('ihRoot');if(!root||document.getElementById('adRoot'))return;
+function explain(){
   var note=document.getElementById('prospectiveInvitationPolicy');
+  if(['employee','manager'].includes(APP.currentRole)){if(note)note.remove();return;}
+  var root=document.getElementById('ihRoot');if(!root||document.getElementById('adRoot'))return;
   if(!note){note=document.createElement('p');note.id='prospectiveInvitationPolicy';note.className='ih-note';root.append(note);}
   if(note.textContent!==policy)note.textContent=policy;
  }
@@ -35706,6 +35706,88 @@ body.cms-focus-editor-v1 #mainContent #fwScreen.cfu-screen #fwBody .cfe-footer {
   for(var i=0;i<bytes.length;i+=16384)binary+=String.fromCharCode.apply(null,bytes.subarray(i,i+16384));
   window.CMS_VIEW_TEMPLATE=btoa(binary);
  }catch(error){console.warn('Red CMS branding was not applied to the read-only viewer:',error.message);}
+})();
+</script>
+<script id="cms-invitation-deadline-extension-v1">
+(function(){
+  'use strict';
+  if(window.__cmsInvitationDeadlineExtensionV1)return;
+  window.__cmsInvitationDeadlineExtensionV1=true;
+
+  function x(v){return typeof ihE==='function'?ihE(v):String(v==null?'':v);}
+  function hrView(){return ['hr','hohr'].includes(APP.currentRole);}
+  function rowFor(id){return (IH.rows||[]).find(function(r){return String(r.id)===String(id);});}
+  function dateLabel(v){
+    if(!v)return 'Not set';
+    var d=new Date(v+'T00:00:00');
+    return isNaN(d)?String(v):d.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});
+  }
+  function dateOk(value,current){
+    return /^\d{4}-\d{2}-\d{2}$/.test(value)&&value>String(current||'');
+  }
+  function addButtons(){
+    if(!hrView()||IH.view!=='sent')return;
+    var host=document.getElementById('ihRegister');
+    if(!host)return;
+    host.querySelectorAll('tbody tr').forEach(function(tr){
+      var view=tr.querySelector('[data-ih="details"]');
+      if(!view)return;
+      var id=view.dataset.value,row=rowFor(id);
+      if(!row||row.state!=='Pending'||tr.querySelector('[data-cms-extend-deadline]'))return;
+      var cell=tr.querySelector('td:last-child');
+      if(!cell)return;
+      var b=document.createElement('button');
+      b.type='button';b.className='ad-btn';b.dataset.cmsExtendDeadline=id;
+      b.textContent='Extend deadline';
+      cell.appendChild(b);
+    });
+  }
+  function closeEditor(){document.getElementById('cmsExtendDeadlineEditor')?.remove();}
+  function openEditor(id){
+    var row=rowFor(id);
+    if(!row||!hrView()||IH.view!=='sent')return;
+    closeEditor();
+    var host=document.getElementById('ihRegister');if(!host)return;
+    var box=document.createElement('section');box.id='cmsExtendDeadlineEditor';box.className='ih-confirm';
+    box.innerHTML='<h3>Extend submission deadline</h3>'+
+      '<p><b>Invitee:</b> '+x(row.recipient_email)+'</p>'+
+      '<p><b>Work:</b> '+x(typeof ihWork==='function'?ihWork(row):row.kind)+'</p>'+
+      '<p><b>Current deadline:</b> '+x(row.due_date)+' | end of day, Nairobi</p>'+ 
+      '<label>New deadline<input id="cmsExtendDeadlineDate" type="date" min="'+x(new Date().toISOString().slice(0,10))+'" value=""></label>'+
+      '<label>Reason (optional)<textarea id="cmsExtendDeadlineReason" rows="3" maxlength="2000" placeholder="Why is more time being granted?"></textarea></label>'+
+      '<p class="ih-note">The invitee keeps the same invitation and saved work. A renewed email will be queued automatically.</p>'+
+      '<button type="button" class="ad-btn ad-primary" data-cms-extend-action="save" data-id="'+x(id)+'">Confirm extension</button>'+ 
+      '<button type="button" class="ad-btn" data-cms-extend-action="cancel">Cancel</button>';
+    host.after(box);box.scrollIntoView({block:'nearest'});
+    document.getElementById('cmsExtendDeadlineDate')?.focus();
+  }
+  async function saveExtension(button){
+    var id=button.dataset.id,row=rowFor(id),date=document.getElementById('cmsExtendDeadlineDate')?.value||'',reason=document.getElementById('cmsExtendDeadlineReason')?.value.trim()||'';
+    if(!row)throw Error('Invitation not found. Refresh Sent invitations.');
+    if(row.state!=='Pending')throw Error('Only a pending invitation can be extended.');
+    if(!dateOk(date,row.due_date))throw Error('Choose a new date later than '+row.due_date+'.');
+    if(!confirm('Extend '+row.recipient_email+' from '+row.due_date+' to '+date+'? A renewed email will be queued.'))return;
+    button.disabled=true;
+    try{
+      var q=await _supabase.rpc('cms_invitation_extend_deadline',{p_invitation_id:id,p_due_date:date,p_reason:reason});
+      if(q.error)throw Error(q.error.message);
+      closeEditor();
+      await ihOpen('sent');
+      if(typeof ihNotice==='function')ihNotice('Deadline extended to '+date+' for '+row.recipient_email+'.');
+    }finally{if(button.isConnected)button.disabled=false;}
+  }
+  var oldRegister=ihRegister;
+  ihRegister=function(){var result=oldRegister.apply(this,arguments);addButtons();return result;};
+  document.addEventListener('click',function(e){
+    var open=e.target.closest('[data-cms-extend-deadline]');
+    if(open){openEditor(open.dataset.cmsExtendDeadline);return;}
+    var action=e.target.closest('[data-cms-extend-action]');
+    if(!action)return;
+    if(action.dataset.cmsExtendAction==='cancel'){closeEditor();return;}
+    if(action.dataset.cmsExtendAction==='save')saveExtension(action).catch(function(err){if(typeof ihNotice==='function')ihNotice(err.message);});
+  });
+  var oldOpen=ihOpen;
+  ihOpen=async function(){var result=await oldOpen.apply(this,arguments);addButtons();return result;};
 })();
 </script>
 </body>
