@@ -11,7 +11,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 <link rel="preconnect" href="https://nnmsfksnjaiageigscdf.supabase.co" crossorigin>
-<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <style>
 * { margin:0; padding:0; box-sizing:border-box; }
 :root {
@@ -994,7 +994,8 @@ html body #mainContent .dept-summary-card small{
 .pr-acc-copy small{grid-column:1/-1;color:#64748b;font-size:11px;margin-top:3px}
 .pr-count{display:inline-flex!important;width:max-content!important;min-width:0!important;max-width:max-content!important;justify-self:start!important;align-self:center!important;border-radius:6px;padding:3px 8px;color:#fff;font-size:10px;font-weight:900;line-height:1.2;}
 .absolute .pr-count{background:#dc2626}.relative .pr-count{background:#7c3aed}.non .pr-count{background:#059669}.tracker .pr-count{background:#2563eb}
-.pr-chevron{font-size:22px;color:#334155;transition:transform .2s;line-height:1}
+.pr-chevron{width:10px!important;height:10px!important;flex:0 0 10px!important;border-right:2px solid #334155;border-bottom:2px solid #334155;transform:rotate(45deg);transition:transform .2s;margin:0 4px 5px auto!important;}
+.pr-accordion[open] .pr-chevron{transform:rotate(225deg);margin-bottom:0!important;}
 .pr-accordion[open] .pr-chevron{transform:rotate(180deg)}
 .pr-detail{border-top:1px solid #edf1f6;padding:0 12px 12px;background:#fbfdff}
 .pr-detail table{width:100%;border-collapse:collapse;font-size:12px}
@@ -1010,6 +1011,91 @@ html body #mainContent .dept-summary-card small{
 .pr-empty{text-align:center!important;color:#64748b!important;padding:22px!important}
 @media(max-width:1000px){.pr-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.pr-toolbar{grid-template-columns:1fr 1fr}.pr-add-panel{grid-template-columns:1fr 1fr}}
 @media(max-width:600px){.pr-page{padding:14px 10px}.pr-kpis{grid-template-columns:1fr}.pr-toolbar,.pr-add-panel{grid-template-columns:1fr}.pr-accordion>summary{padding:12px}.pr-acc-copy small{font-size:10px}.pr-detail{overflow-x:auto}.pr-detail table{min-width:700px}}
+/* Kenafric CMS typography: Inter */
+html body,
+html body button,
+html body input,
+html body select,
+html body textarea,
+html body table,
+html body th,
+html body td,
+html body label{
+  font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif!important;
+}
+html body h1,
+html body h2,
+html body h3,
+html body h4,
+html body strong,
+html body .card-title,
+html body .pr-title-row h1,
+html body .pr-kpi strong,
+html body .pr-acc-copy strong{
+  font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif!important;
+  letter-spacing:-.015em;
+}
+html body .pr-title-row h1{
+  font-size:24px!important;
+  font-weight:800!important;
+  line-height:1.2!important;
+}
+html body .pr-title-row p,
+html body .pr-kpi em,
+html body .pr-acc-copy small{
+  font-weight:400!important;
+  letter-spacing:0!important;
+}
+html body .pr-kpi small,
+html body .pr-toolbar label{
+  font-weight:700!important;
+  letter-spacing:.04em!important;
+}
+html body .pr-acc-copy strong{
+  font-size:15px!important;
+  font-weight:700!important;
+}
+/* Line Managers Registry: scalable list layout */
+.lm-page{padding:20px 22px 30px;background:#f8fafc;border-radius:12px;min-height:calc(100vh - 120px)}
+.lm-title-row{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;margin-bottom:18px}
+.lm-title-row h1{margin:0;color:#102a52;font-size:24px;font-weight:800;line-height:1.2}
+.lm-title-row p{margin:5px 0 0;color:#64748b;font-size:12px}
+.lm-kpis{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin-bottom:16px}
+.lm-kpi{display:flex;align-items:center;gap:13px;min-height:92px;padding:15px 17px;background:#fff;border:1px solid #dbe4f0;border-top:3px solid #4338ca;border-radius:12px;box-shadow:0 3px 10px rgba(15,23,42,.06)}
+.lm-kpi.green{border-top-color:#059669}.lm-kpi.blue{border-top-color:#2563eb}
+.lm-kpi-icon{width:42px;height:42px;min-width:42px;border-radius:11px;display:inline-flex;align-items:center;justify-content:center;background:#ede9fe;color:#4338ca;font-size:18px;font-weight:800}
+.lm-kpi.green .lm-kpi-icon{background:#d1fae5;color:#047857}.lm-kpi.blue .lm-kpi-icon{background:#dbeafe;color:#1d4ed8}
+.lm-kpi small{display:block;color:#52678c;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.35px}
+.lm-kpi strong{display:block;color:#102a52;font-size:27px;line-height:1.1;margin:3px 0;font-weight:900}
+.lm-kpi em{display:block;color:#64748b;font-size:10px;font-style:normal}
+.lm-toolbar{display:grid;grid-template-columns:1.25fr 1fr 1fr auto;gap:12px;align-items:end;padding:14px;background:#fff;border:1px solid #dbe4f0;border-radius:12px;margin-bottom:16px}
+.lm-toolbar label,.lm-add-panel label{display:block;margin-bottom:5px;color:#334155;font-size:10px;font-weight:800}
+.lm-toolbar input,.lm-toolbar select,.lm-add-panel input{height:38px;background:#fff}
+.lm-add-button{height:38px;white-space:nowrap}
+.lm-table-card{padding:0!important;overflow:hidden}
+.lm-table-head{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:16px 18px;border-bottom:1px solid #e5eaf2}
+.lm-table-head h2{margin:0;color:#102a52;font-size:15px;font-weight:800}
+.lm-table-head span{color:#64748b;font-size:11px}
+.lm-table{width:100%;border-collapse:collapse;font-size:12px}
+.lm-table th{padding:11px 14px;background:#eef3f9;color:#52678c;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.35px;text-align:left;white-space:nowrap}
+.lm-table td{padding:11px 14px;border-bottom:1px solid #edf1f6;color:#18335e;vertical-align:middle}
+.lm-table tbody tr:hover td{background:#f8fbff}
+.lm-manager{display:flex;align-items:center;gap:9px;min-width:180px}
+.lm-avatar{width:30px;height:30px;min-width:30px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;overflow:hidden;background:#4338ca;color:#fff;font-size:10px;font-weight:800}
+.lm-avatar img{width:100%;height:100%;object-fit:cover;display:block}
+.lm-manager strong{color:#102a52;font-weight:800}
+.lm-email{font-size:11px;color:#52678c}
+.lm-badge{display:inline-block;padding:4px 7px;border-radius:5px;font-size:9px;font-weight:900;white-space:nowrap}
+.lm-badge.registered{background:#dcfce7;color:#15803d}.lm-badge.staff{background:#fff7ed;color:#c2410c}
+.lm-delete{width:30px;height:30px;border:0;border-radius:7px;background:#dc2626;color:#fff;display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
+.lm-delete:hover{background:#b91c1c}.lm-delete svg{width:15px;height:15px;display:block;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.lm-pagination{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:13px 18px;color:#64748b;font-size:11px}
+.lm-page-buttons{display:flex;gap:5px;align-items:center}.lm-page-buttons button{min-width:30px;height:30px;border:1px solid #dbe4f0;border-radius:7px;background:#fff;color:#334155;cursor:pointer;font-size:11px}.lm-page-buttons button.active{background:#4338ca;color:#fff;border-color:#4338ca}.lm-page-buttons button:disabled{opacity:.45;cursor:not-allowed}
+.lm-add-panel{display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:end;padding:15px;background:#eef2ff;border:1px solid #c7d2fe;border-radius:12px;margin-top:12px}
+.lm-add-panel .lm-add-save{grid-column:1/-1;justify-self:start}
+.lm-empty{text-align:center!important;color:#64748b!important;padding:28px!important}
+@media(max-width:1000px){.lm-toolbar{grid-template-columns:1fr 1fr}.lm-toolbar .lm-add-button{width:100%}.lm-kpis{grid-template-columns:1fr 1fr}}
+@media(max-width:700px){.lm-page{padding:14px 10px}.lm-kpis{grid-template-columns:1fr}.lm-toolbar,.lm-add-panel{grid-template-columns:1fr}.lm-table-card{overflow-x:auto}.lm-table{min-width:850px}.lm-pagination{align-items:flex-start;flex-direction:column}}
 </style>
 <style>
 /* The approved visual design, scoped to employee mode and the profile. */
@@ -7400,77 +7486,68 @@ loadHRDepartments();
 /* ===== Line Managers Registry ===== */
 async function loadHRManagers() {
 var __cmsRouteEpoch = typeof CN === 'undefined' ? null : CN.epoch;
-
 ((typeof CN === 'undefined' || __cmsRouteEpoch === CN.epoch) ? setContent('<div class="loading"><div class="spinner"></div>Loading...</div>') : undefined);
 var dq = await Promise.all([
-_supabase.from('line_managers').select('*').order('manager_name'),
-_supabase.from('employees').select('*')
+  _supabase.from('line_managers').select('*').order('manager_name'),
+  _supabase.from('employees').select('*')
 ]);
 var regs = dq[0].data || [];
 var emps = dq[1].data || [];
 await loadPhotoMap(true);
-var companies = {}; var departments = {};
-emps.forEach(function(e){ if (e.company) companies[e.company] = true; if (e.department) departments[e.department] = true; });
-regs.forEach(function(m){ if (m.company) companies[m.company] = true; if (m.department) departments[m.department] = true; });
+var companies = {}, departments = {};
+emps.forEach(function(e){if(e.company)companies[e.company]=true;if(e.department)departments[e.department]=true;});
+regs.forEach(function(m){if(m.company)companies[m.company]=true;if(m.department)departments[m.department]=true;});
 var empByEmail = {};
-emps.forEach(function(e){ empByEmail[(e.email || '').toLowerCase()] = e; });
+emps.forEach(function(e){empByEmail[(e.email||'').toLowerCase()] = e;});
 var mgrSet = {};
 emps.forEach(function(e){
-var me = (e.manager_email || '').toLowerCase();
-if (!me || mgrSet[me]) return;
-var mEmp = empByEmail[me];
-mgrSet[me] = {
-name: mEmp ? mEmp.employee_name : (e.manager || me.split('@')[0]),
-email: e.manager_email,
-department: mEmp ? (mEmp.department || '') : (e.department || ''),
-company: mEmp ? (mEmp.company || '') : (e.company || '')
-};
+  var me=(e.manager_email||'').toLowerCase();
+  if(!me||mgrSet[me])return;
+  var mEmp=empByEmail[me];
+  mgrSet[me]={name:mEmp?mEmp.employee_name:(e.manager||me.split('@')[0]),email:e.manager_email,department:mEmp?(mEmp.department||''):(e.department||''),company:mEmp?(mEmp.company||''):(e.company||'')};
 });
 regs.forEach(function(m){
-var k = (m.email || '').toLowerCase();
-var mEmp = empByEmail[k];
-mgrSet[k] = {
-name: m.manager_name || (mEmp ? mEmp.employee_name : k.split('@')[0]),
-email: m.email,
-department: m.department || (mEmp ? (mEmp.department || '') : ''),
-company: m.company || (mEmp ? (mEmp.company || '') : ''),
-registered: true
-};
+  var k=(m.email||'').toLowerCase(),mEmp=empByEmail[k];
+  mgrSet[k]={name:m.manager_name||(mEmp?mEmp.employee_name:k.split('@')[0]),email:m.email,department:m.department||(mEmp?(mEmp.department||''):''),company:m.company||(mEmp?(mEmp.company||''):''),registered:true};
 });
-var teamCount = {};
-emps.forEach(function(e){ if (e.manager_email) teamCount[(e.manager_email || '').toLowerCase()] = (teamCount[(e.manager_email || '').toLowerCase()] || 0) + 1; });
-var html = '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px;margin-bottom:14px">';
-html += '<div class="card" style="margin-bottom:0"><div class="card-title"> Companies (' + Object.keys(companies).length + ')</div>' + (Object.keys(companies).sort().map(function(c){ return '<span class="badge badge-info" style="margin:2px">' + escapeHtml(c) + '</span>'; }).join('') || '<p style="color:var(--gray-500);font-size:12px">None yet.</p>') + '</div>';
-html += '<div class="card" style="margin-bottom:0"><div class="card-title"> Departments (' + Object.keys(departments).length + ')</div>' + (Object.keys(departments).sort().map(function(d){ return '<span class="badge badge-purple" style="margin:2px">' + escapeHtml(d) + '</span>'; }).join('') || '<p style="color:var(--gray-500);font-size:12px">None yet.</p>') + '</div>';
-html += '</div>';
-var addCard = '<div class="card"><div class="card-title"> Add Line Manager</div>';
-addCard += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">';
-addCard += '<div class="form-group" style="margin-bottom:0"><label>Full Name</label><input id="lmName" placeholder="e.g. Julius Angoli"></div>';
-addCard += '<div class="form-group" style="margin-bottom:0"><label>Email</label><input id="lmEmail" placeholder="e.g. julius@kenafricind.com"></div>';
-addCard += '</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px">';
-addCard += '<div class="form-group" style="margin-bottom:0"><label>Department</label><input id="lmDept" list="lmDeptList" placeholder="e.g. HUMAN RESOURCE"><datalist id="lmDeptList">' + Object.keys(departments).sort().map(function(d){ return '<option value="' + escapeHtml(d) + '">'; }).join('') + '</datalist></div>';
-addCard += '<div class="form-group" style="margin-bottom:0"><label>Company</label><input id="lmCompany" list="lmCompanyList" placeholder="e.g. Kenafric Industries"><datalist id="lmCompanyList">' + Object.keys(companies).sort().map(function(c){ return '<option value="' + escapeHtml(c) + '">'; }).join('') + '</datalist></div>';
-addCard += '</div><button class="btn btn-primary" style="margin-top:10px" onclick="addLineManager()"> Add Line Manager</button></div>';html += '<div class="card"><div class="card-title"> Line Managers (' + Object.keys(mgrSet).length + ')</div>';
-html += '<div class="table-wrap"><table class="staff-table"><thead><tr><th>Name</th><th>Email</th><th>Department</th><th>Company</th><th>Team Size</th><th>Status</th><th></th></tr></thead><tbody>';
-Object.keys(mgrSet).sort().forEach(function(k) {
-var m = mgrSet[k];
-html += '<tr><td><strong>' + escapeHtml(m.name || '') + '</strong></td>';
-html += '<td style="font-size:11px">' + escapeHtml(m.email || '') + '</td>';
-html += '<td>' + escapeHtml(m.department || '-') + '</td>';
-html += '<td>' + escapeHtml(m.company || '-') + '</td>';
-html += '<td>' + (teamCount[k] || 0) + ' staff</td>';
-html += '<td>' + (m.registered ? '<span class="badge badge-success">Registered</span>' : '<span class="badge badge-warning">From staff records</span>') + '</td>';
-html += '<td>' + (m.registered ? '<button class="btn btn-sm btn-danger" onclick="deleteLineManager(\'' + escapeHtml(m.email) + '\',\'' + escapeHtml(m.name || '') + '\')">x</button>' : '') + '</td></tr>';
-});
-html += '</tbody></table></div></div>';
-html += addCard;
-((typeof CN === 'undefined' || __cmsRouteEpoch === CN.epoch) ? setContent(html) : undefined);
+var teamCount={};
+emps.forEach(function(e){if(e.manager_email){var k=(e.manager_email||'').toLowerCase();teamCount[k]=(teamCount[k]||0)+1;}});
+var managerList=Object.keys(mgrSet).map(function(k){var m=mgrSet[k];m._key=k;m.teamSize=teamCount[k]||0;return m;}).sort(function(a,b){return (a.name||'').localeCompare(b.name||'');});
+var lmState={query:'',department:'',company:'',page:1,pageSize:10};
+window.cmsLMToggleAdd=function(){var p=document.getElementById('lmAddPanel');if(p)p.style.display=p.style.display==='none'?'grid':'none';};
+function trashIcon(){return '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 7h14M9 7V5h6v2M7 7l1 12h8l1-12M10 10v6M14 10v6"/></svg>';}
+function initialsSafe(name){return typeof initials==='function'?initials(name):String(name||'?').split(/\s+/).slice(0,2).map(function(x){return x.charAt(0);}).join('').toUpperCase();}
+function renderLM(){
+  var active=document.activeElement?document.activeElement.id:'',cursor=document.activeElement&&typeof document.activeElement.selectionStart==='number'?document.activeElement.selectionStart:null;
+  var q=(lmState.query||'').toUpperCase().trim();
+  var filtered=managerList.filter(function(m){var name=(m.name||'').toUpperCase(),email=(m.email||'').toUpperCase(),dep=(m.department||'').toUpperCase(),comp=(m.company||'').toUpperCase();return (!q||name.indexOf(q)>=0||email.indexOf(q)>=0)&&(!lmState.department||m.department===lmState.department)&&(!lmState.company||m.company===lmState.company);});
+  var pages=Math.max(1,Math.ceil(filtered.length/lmState.pageSize));if(lmState.page>pages)lmState.page=pages;
+  var start=(lmState.page-1)*lmState.pageSize,rows=filtered.slice(start,start+lmState.pageSize);
+  var registered=managerList.filter(function(m){return m.registered;}).length,staffCovered=emps.filter(function(e){return !!e.manager_email;}).length;
+  var photoMap=APP._photoOf||{};
+   var rowsHtml=rows.map(function(m){var photo=photoMap[(m.email||'').toLowerCase()]||'';var avatar=photo?'<img src="'+photo+'" alt="">':escapeHtml(initialsSafe(m.name));return '<tr><td><div class="lm-manager"><span class="lm-avatar">'+avatar+'</span><span class="lm-name">'+escapeHtml(m.name||'')+'</span></div></td><td class="lm-email">'+escapeHtml(m.email||'')+'</td><td>'+escapeHtml(m.department||'-')+'</td><td>'+escapeHtml(m.company||'-')+'</td><td>'+m.teamSize+' staff</td><td>'+(m.registered?'<span class="lm-badge registered">REGISTERED</span>':'<span class="lm-badge staff">FROM STAFF RECORDS</span>')+'</td><td>'+(m.registered?'<button class="lm-delete" title="Delete manager" aria-label="Delete manager" onclick="deleteLineManager('+rcArg(m.email)+','+rcArg(m.name||'')+')">'+trashIcon()+'</button>':'')+'</td></tr>';}).join('')||'<tr><td colspan="7" class="lm-empty">No line managers match these filters.</td></tr>';
+  var nums='';for(var pg=1;pg<=pages&&pg<=5;pg++)nums+='<button class="'+(pg===lmState.page?'active':'')+'" onclick="cmsLMPage('+pg+')">'+pg+'</button>';if(pages>6)nums+='<span>...</span><button onclick="cmsLMPage('+pages+')">'+pages+'</button>';
+  var depOptions=Object.keys(departments).sort().map(function(d){return '<option value="'+escapeHtml(d)+'"'+(lmState.department===d?' selected':'')+'>'+escapeHtml(d)+'</option>';}).join('');
+  var compOptions=Object.keys(companies).sort().map(function(c){return '<option value="'+escapeHtml(c)+'"'+(lmState.company===c?' selected':'')+'>'+escapeHtml(c)+'</option>';}).join('');
+  var h='<section class="lm-page"><div class="lm-title-row"><div><h1>Line Managers Registry</h1><p>Manage and oversee line managers across departments and companies.</p></div></div>';
+  h+='<div class="lm-kpis"><div class="lm-kpi"><span class="lm-kpi-icon">M</span><div><small>Managers Identified</small><strong>'+managerList.length+'</strong><em>Registered or linked to staff records</em></div></div><div class="lm-kpi green"><span class="lm-kpi-icon">&#10003;</span><div><small>Managers Registered</small><strong>'+registered+'</strong><em>Added to the manager registry</em></div></div><div class="lm-kpi blue"><span class="lm-kpi-icon">T</span><div><small>Staff Covered</small><strong>'+staffCovered+'</strong><em>Staff linked to a manager</em></div></div></div>';
+  h+='<div class="lm-toolbar"><div><label>Search manager</label><input id="lmSearch" value="'+escapeHtml(lmState.query)+'" oninput="cmsLMQuery(this.value)" placeholder="Search by name or email..."></div><div><label>Department</label><select id="lmDepartment" onchange="cmsLMDepartment(this.value)"><option value="">All Departments</option>'+depOptions+'</select></div><div><label>Company</label><select id="lmCompany" onchange="cmsLMCompany(this.value)"><option value="">All Companies</option>'+compOptions+'</select></div><button class="btn btn-primary lm-add-button" onclick="cmsLMToggleAdd()">+ Add Line Manager</button></div>';
+  h+='<div id="lmAddPanel" class="lm-add-panel" style="display:none"><div><label>Full Name</label><input id="lmName" placeholder="e.g. Julius Angoli"></div><div><label>Email</label><input id="lmEmail" placeholder="e.g. julius@kenafricind.com"></div><div><label>Department</label><input id="lmDept" list="lmDeptList" placeholder="e.g. HUMAN RESOURCE"><datalist id="lmDeptList">'+Object.keys(departments).sort().map(function(d){return '<option value="'+escapeHtml(d)+'">';}).join('')+'</datalist></div><div><label>Company</label><input id="lmCompanyAdd" list="lmCompanyList" placeholder="e.g. Kenafric Industries"><datalist id="lmCompanyList">'+Object.keys(companies).sort().map(function(c){return '<option value="'+escapeHtml(c)+'">';}).join('')+'</datalist></div><button class="btn btn-primary lm-add-save" onclick="addLineManager()">Save Line Manager</button></div>';
+  h+='<div class="card lm-table-card"><div class="lm-table-head"><h2>Line Managers</h2><span>'+filtered.length+' manager'+(filtered.length===1?'':'s')+' found</span></div><div class="table-wrap"><table class="lm-table"><thead><tr><th>Manager</th><th>Email</th><th>Department</th><th>Company</th><th>Team Size</th><th>Status</th><th>Actions</th></tr></thead><tbody>'+rowsHtml+'</tbody></table></div><div class="lm-pagination"><span>Showing '+(filtered.length?start+1:0)+' to '+Math.min(start+lmState.pageSize,filtered.length)+' of '+filtered.length+' managers</span><div class="lm-page-buttons"><button onclick="cmsLMPage('+Math.max(1,lmState.page-1)+')" '+(lmState.page===1?'disabled':'')+'>&lt;</button>'+nums+'<button onclick="cmsLMPage('+Math.min(pages,lmState.page+1)+')" '+(lmState.page===pages?'disabled':'')+'>&gt;</button></div></div></div></section>';
+  if(typeof CN==='undefined'||__cmsRouteEpoch===CN.epoch)setContent(h);
+  if(active){var el=document.getElementById(active);if(el){el.focus();if(cursor!==null&&typeof el.setSelectionRange==='function')el.setSelectionRange(cursor,cursor);}}
+ }
+ window.cmsLMQuery=function(v){lmState.query=v||'';lmState.page=1;renderLM();};
+ window.cmsLMDepartment=function(v){lmState.department=v||'';lmState.page=1;renderLM();};
+ window.cmsLMCompany=function(v){lmState.company=v||'';lmState.page=1;renderLM();};
+ window.cmsLMPage=function(v){lmState.page=v;renderLM();};
+ renderLM();
 }
 async function addLineManager() {
 var name = (document.getElementById('lmName').value || '').trim();
 var email = (document.getElementById('lmEmail').value || '').trim().toLowerCase();
 var dept = (document.getElementById('lmDept').value || '').trim();
-var comp = (document.getElementById('lmCompany').value || '').trim();
+var comp = (document.getElementById('lmCompanyAdd').value || '').trim();
 if (!name || !email) { showToast('Name and email are required'); return; }
 const { data: dup } = await _supabase.from('line_managers').select('id').ilike('email', email).limit(1);
 if (dup && dup.length) { showToast('This manager is already registered'); return; }
@@ -34947,6 +35024,78 @@ body.role-manager #mainContent #e360Root .mgr-title-frame::before{
  stroke-linecap:round!important;
  stroke-linejoin:round!important;
 }
+</style>t
+<style id="cms-employee-360-scalable-overview-style">
+#e360Root .e360-company-summary{display:grid;grid-template-columns:1.4fr repeat(4,1fr);gap:0;margin:22px 0 18px;background:#fff;border:1px solid #d5def0;border-radius:14px;box-shadow:0 4px 16px rgba(28,49,91,.08);overflow:hidden}
+#e360Root .e360-summary-brand{padding:22px 24px;border-right:1px solid #d5def0}
+#e360Root .e360-summary-brand small{display:block;color:#65789e;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.7px}
+#e360Root .e360-summary-brand strong{display:block;margin-top:8px;color:#142653;font-size:27px;line-height:1.1}
+#e360Root .e360-summary-brand span{display:block;margin-top:7px;color:#65789e;font-size:13px}
+#e360Root .e360-summary-stat{padding:22px 18px;border-right:1px solid #d5def0}
+#e360Root .e360-summary-stat:last-child{border-right:0}
+#e360Root .e360-summary-stat small{display:block;color:#65789e;font-size:12px;font-weight:700}
+#e360Root .e360-summary-stat strong{display:block;margin-top:8px;color:#142653;font-size:27px;line-height:1}
+#e360Root .e360-summary-stat span{display:block;margin-top:7px;color:#65789e;font-size:11px}
+#e360Root .e360-overview-layout{display:grid;grid-template-columns:minmax(0,1fr) 310px;gap:18px;align-items:start}
+#e360Root .e360-directory-card,#e360Root .e360-gap-card{background:#fff;border:1px solid #d5def0;border-radius:14px;box-shadow:0 4px 16px rgba(28,49,91,.08);overflow:hidden}
+#e360Root .e360-directory-head{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:18px 20px;border-bottom:1px solid #d5def0}
+#e360Root .e360-directory-head h2,#e360Root .e360-gap-card h2{margin:0;color:#142653;font-size:18px}
+#e360Root .e360-directory-head p,#e360Root .e360-gap-card>p{margin:5px 0 0;color:#65789e;font-size:12px}
+#e360Root .e360-directory-tools{display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:14px 20px;border-bottom:1px solid #edf1f7}
+#e360Root .e360-directory-tools input,#e360Root .e360-directory-tools select{width:auto;min-width:175px;margin:0;padding:9px 11px}
+#e360Root .e360-directory-tools input{min-width:230px}
+#e360Root .e360-directory-table-wrap{overflow-x:auto}
+#e360Root .e360-directory-table{width:100%;border-collapse:collapse;min-width:800px;font-size:12px}
+#e360Root .e360-directory-table th{padding:11px 14px;background:#f1f5fb;color:#52678c;text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:.35px;white-space:nowrap}
+#e360Root .e360-directory-table td{padding:12px 14px;border-bottom:1px solid #edf1f7;color:#18335e;vertical-align:middle;white-space:nowrap}
+#e360Root .e360-directory-table tr:hover td{background:#f8fbff}
+#e360Root .e360-dept-name{font-weight:800;color:#142653}
+#e360Root .e360-dept-meta{display:block;margin-top:3px;color:#7183a3;font-size:11px}
+#e360Root .e360-progress{display:flex;align-items:center;gap:8px;min-width:145px}
+#e360Root .e360-progress-bar{height:7px;width:82px;background:#e3e8f1;border-radius:8px;overflow:hidden}
+#e360Root .e360-progress-bar > span{display:block!important;height:100%;border-radius:8px;background:#4338ca;width:var(--progress-width,0%)}
+#e360Root .e360-score{display:inline-flex;padding:5px 9px;border-radius:8px;background:#eef2ff;color:#3730a3;font-weight:800}
+#e360Root .e360-gap-pill{display:inline-flex;max-width:160px;overflow:hidden;text-overflow:ellipsis;padding:5px 9px;border-radius:7px;background:#fff0e8;color:#ea580c;font-weight:700}
+#e360Root .e360-view-btn{padding:7px 11px;border:1px solid #c4d2eb;border-radius:7px;background:#fff;color:#2446a0;font-weight:800;cursor:pointer}
+#e360Root .e360-view-btn:hover{background:#eef2ff}
+#e360Root .e360-directory-footer{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:13px 20px;color:#65789e;font-size:11px}
+#e360Root .e360-page-buttons{display:flex;gap:5px}
+#e360Root .e360-page-buttons button{min-width:32px;padding:7px 9px;border:1px solid #d5def0;border-radius:7px;background:#fff;color:#52678c;cursor:pointer}
+#e360Root .e360-page-buttons button.active{background:#4338ca;color:#fff;border-color:#4338ca}
+#e360Root .e360-page-buttons button:disabled{opacity:.45;cursor:not-allowed}
+#e360Root .e360-gap-card{padding:18px}
+#e360Root .e360-gap-row{display:flex;align-items:center;gap:10px;padding:14px 0;border-bottom:1px solid #edf1f7}
+#e360Root .e360-gap-row:last-child{border-bottom:0}
+#e360Root .e360-gap-rank{width:24px;height:24px;display:grid;place-items:center;border-radius:50%;background:#eef2ff;color:#4338ca;font-weight:800;font-size:11px;flex:none}
+#e360Root .e360-gap-row strong{display:block;color:#18335e;font-size:13px}
+#e360Root .e360-gap-row small{display:block;margin-top:3px;color:#7183a3;font-size:11px}
+#e360Root .e360-gap-empty{padding:18px 0;color:#7183a3;font-size:12px}
+@media(max-width:1100px){#e360Root .e360-company-summary{grid-template-columns:repeat(4,1fr)}#e360Root .e360-summary-brand{grid-column:1/-1;border-right:0;border-bottom:1px solid #d5def0}#e360Root .e360-overview-layout{grid-template-columns:1fr}}
+@media(max-width:620px){#e360Root .e360-company-summary{grid-template-columns:repeat(2,1fr)}#e360Root .e360-summary-stat{border-bottom:1px solid #d5def0}#e360Root .e360-directory-head{align-items:flex-start;flex-direction:column}#e360Root .e360-directory-tools input,#e360Root .e360-directory-tools select{width:100%;min-width:0}}
+</style>
+<style id="cms-employee-360-score-colors-v1">
+#e360Root .e360-competency-row{display:grid;grid-template-columns:28px minmax(220px,1fr) minmax(180px,1.3fr) 100px;gap:12px;align-items:center;padding:11px 0;border-bottom:1px solid #edf1f7}
+#e360Root .e360-competency-row:last-child{border-bottom:0}
+#e360Root .e360-competency-rank{width:24px;height:24px;display:grid;place-items:center;border-radius:50%;background:#eef2ff;color:#4338ca;font-size:11px;font-weight:800}
+#e360Root .e360-competency-name{color:#18335e;font-size:12px;font-weight:800}
+#e360Root .e360-score-track{height:9px;background:#e4e9f1;border-radius:10px;overflow:hidden}
+#e360Root .e360-score-fill{height:100%;width:0;border-radius:10px;transition:width .25s ease}
+#e360Root .e360-score-fill.score-strong{background:#059669}
+#e360Root .e360-score-fill.score-progressing{background:#0d9488}
+#e360Root .e360-score-fill.score-developing{background:#2563eb}
+#e360Root .e360-score-fill.score-gap{background:#ea580c}
+#e360Root .e360-score-fill.score-none{background:#cbd5e1}
+#e360Root .e360-score-value{justify-self:end;font-size:12px;font-weight:800}
+#e360Root .e360-score-value.score-strong{color:#047857}
+#e360Root .e360-score-value.score-progressing{color:#0f766e}
+#e360Root .e360-score-value.score-developing{color:#1d4ed8}
+#e360Root .e360-score-value.score-gap{color:#c2410c}
+#e360Root .e360-score-value.score-none{color:#64748b}
+#e360Root .e360-score-legend{display:flex;gap:12px;flex-wrap:wrap;margin-top:14px;color:#64748b;font-size:11px}
+#e360Root .e360-score-legend span{display:inline-flex;align-items:center;gap:5px}
+#e360Root .e360-score-legend i{width:9px;height:9px;border-radius:50%;display:inline-block}
+#e360Root .e360-score-legend .strong{background:#059669}.e360-score-legend .progressing{background:#0d9488}.e360-score-legend .developing{background:#2563eb}.e360-score-legend .gap{background:#ea580c}.e360-score-legend .none{background:#cbd5e1}
+@media(max-width:700px){#e360Root .e360-competency-row{grid-template-columns:24px minmax(150px,1fr) 80px;gap:8px}#e360Root .e360-score-track{grid-column:2/-1}#e360Root .e360-score-value{grid-column:3;grid-row:1}}
 </style>
 <script id="cms-employee-360-script-v1">
 /* Employee 360 v1. Read-only adapters to EXISTING authenticated CMS APIs.
@@ -34995,12 +35144,37 @@ body.role-manager #mainContent #e360Root .mgr-title-frame::before{
   }
   throw Error('Directory limit reached. No partial totals displayed.');
  }
+ function e360ScoreNumber(v){
+  if(v===null||v===undefined||v==='')return null;
+  var n=Number(v);if(!Number.isFinite(n))return null;
+  return n<=1?n*100:n;
+ }
+ function e360ScoreClass(v){
+  var n=e360ScoreNumber(v);
+  if(n===null)return 'score-none';
+  if(n>=90)return 'score-strong';
+  if(n>=80)return 'score-progressing';
+  if(n>=70)return 'score-developing';
+  return 'score-gap';
+ }
+ function e360ScoreLabel(v){
+  var n=e360ScoreNumber(v);
+  return n===null?'Not assessed':Math.round(n)+'%';
+ }
  function employee(e){return {...e,employee_id:str(e.employee_id),name:e.name||e.employee_name||e.employee_id,company:str(e.company).trim(),department:str(e.department).trim(),position:e.position||'',level:e.competency_level||e.level||''};}
  async function directory(s){
   if(s.role==='hr'||s.role==='hohr'){
    const d=await rpc(s,'cms_assessment_register','directory');
    if(!Array.isArray(d.companies)||!Array.isArray(d.departments))throw Error('Assessment directory needs the existing register API.');
-   s.directory=d;s.companies=d.companies.map(x=>str(x.company).trim()).filter(Boolean);
+   const listed=await rpc(s,'cms_assessment_register','list',{company:'',department:'',target:''});
+   if(!listed||!Array.isArray(listed.rows))throw Error('Employee list was not returned by the existing register API.');
+   const seen=new Set();
+   s.people=listed.rows.map(employee).filter(function(e){
+    if(!e.employee_id||seen.has(e.employee_id))return false;
+    seen.add(e.employee_id);return true;
+   });
+   s.directory=d;
+   s.companies=d.companies.map(x=>str(x.company).trim()).filter(Boolean);
    s.departments=d.departments.map(x=>({company:str(x.company).trim(),department:str(x.department).trim()}));
    s.scope=d.hohr_filtered?'HOHR: only employees in the existing submitted-report scope.':'HR Admin: existing assessment-register access.';
   }else{
@@ -35030,6 +35204,7 @@ body.role-manager #mainContent #e360Root .mgr-title-frame::before{
  }
  function home(s){
   requireLive(s);s.selected=null;s.view='companies';shell(s);
+  s.people=Array.isArray(s.people)?s.people:[];
   const search=n('form',null,'e360-search',s.content),label=n('label','Find employee by name or ID',null,search),input=n('input',null,null,label);
   input.type='search';input.placeholder='Search across your authorized scope';input.required=true;
   const submit=n('button','Search',null,search);submit.type='submit';
@@ -35062,10 +35237,95 @@ body.role-manager #mainContent #e360Root .mgr-title-frame::before{
  function departments(s,company){
   requireLive(s);s.company=company;s.view='departments';shell(s);button(s,s.content,'Back Companies',()=>home(s),'e360-outline');
   n('h2',company||'Company not recorded','e360-page-title',s.content);
-  const grid=n('div',null,'e360-grid',s.content);
-  const deps=[...new Set(s.departments.filter(d=>d.company===company).map(d=>d.department))].sort();
-  deps.forEach(department=>{const b=button(s,grid,'',()=>employees(s,company,department),'e360-department');n('strong',department||'Department not recorded',null,b);n('span','Choose employee',null,b);});
-  if(!deps.length)empty(s.content,'No departments returned for this company in your current scope.');
+  const host=n('div',null,null,s.content);
+  const loading=n('p','Loading department overview...','e360-muted',host);
+
+  function num(v){return v===null||v===undefined||v===''||!Number.isFinite(Number(v))?null:Number(v);}
+  function scoreOf(row){
+   const direct=[row.current_final,row.average_score,row.avg_score,row.score];
+   for(const v of direct){const n=num(v);if(n!==null)return n<=1?n*100:n;}
+   return null;
+  }
+  function completedOf(row){
+   const states=[row.current_self?.state,row.current_manager?.state,row.assessment_state,row.status].map(str).join(' ');
+   return num(row.assessment_completed)===1||num(row.completed)===1||/complete|reviewed|submitted/i.test(states);
+  }
+  function gapOf(row){
+   return row.top_gap||row.top_competency_gap||row.primary_gap||row.competency_gap||row.gap||'';
+  }
+  function safeRows(rows){
+   const seen=new Set();
+   return (rows||[]).map(employee).filter(function(e){
+    if(!e.employee_id||seen.has(e.employee_id))return false;
+    seen.add(e.employee_id);return e.company===company;
+   });
+  }
+  function esc(v){return escapeHtml(v==null?'':String(v));}
+
+  (async function(){
+   try{
+    const raw=s.role==='hr'||s.role==='hohr'
+      ?await rpc(s,'cms_assessment_register','list',{company:company,department:'',target:''})
+      :{rows:s.people.filter(e=>e.company===company)};
+    requireLive(s);
+    const rows=safeRows(raw.rows||raw);
+    const byDept={};
+    rows.forEach(function(row){
+     const dept=(row.department||'Department not recorded').trim();
+     if(!byDept[dept])byDept[dept]={name:dept,rows:[],gaps:{}};
+     byDept[dept].rows.push(row);
+     const gap=gapOf(row).trim();if(gap)byDept[dept].gaps[gap]=(byDept[dept].gaps[gap]||0)+1;
+    });
+    Object.keys(byDept).forEach(function(dept){
+     const d=byDept[dept],scores=d.rows.map(scoreOf).filter(v=>v!==null),done=d.rows.filter(completedOf).length;
+     d.headcount=d.rows.length;d.completed=done;d.completion=d.headcount?Math.round(done/d.headcount*100):0;
+     d.average=scores.length?Math.round(scores.reduce((a,b)=>a+b,0)/scores.length):null;
+     d.gap=Object.keys(d.gaps).sort((a,b)=>d.gaps[b]-d.gaps[a])[0]||'';
+    });
+    const deptNames=Object.keys(byDept).sort((a,b)=>a.localeCompare(b));
+    const allScores=rows.map(scoreOf).filter(v=>v!==null),allDone=rows.filter(completedOf).length;
+    const gaps={};rows.forEach(function(r){const g=gapOf(r).trim();if(g)gaps[g]=(gaps[g]||0)+1;});
+    const topGaps=Object.keys(gaps).sort((a,b)=>gaps[b]-gaps[a]).slice(0,5);
+    host.replaceChildren();
+    const summary=n('div',null,'e360-company-summary',host);
+    const brand=n('div',null,'e360-summary-brand',summary);n('small','Company overview',null,brand);n('strong',company||'Company not recorded',null,brand);n('span','Company and department performance',null,brand);
+    function stat(label,value,sub){const box=n('div',null,'e360-summary-stat',summary);n('small',label,null,box);n('strong',value,null,box);n('span',sub||'',null,box);}
+    stat('Total employees',String(rows.length),'Across '+deptNames.length+' departments');
+    stat('Departments',String(deptNames.length),'Active departments');
+    stat('Assessments completed',String(allDone),rows.length?Math.round(allDone/rows.length*100)+'% completion rate':'No assessment data');
+    stat('Average competency score',allScores.length?Math.round(allScores.reduce((a,b)=>a+b,0)/allScores.length)+'%':'Not available','Company average');
+
+    const layout=n('div',null,'e360-overview-layout',host),card=n('section',null,'e360-directory-card',layout),head=n('div',null,'e360-directory-head',card),headCopy=n('div',null,null,head);
+    n('h2','Department directory',null,headCopy);n('p','Performance overview by department',null,headCopy);
+    const tools=n('div',null,'e360-directory-tools',card),search=n('input',null,null,tools);search.type='search';search.placeholder='Search departments...';search.setAttribute('aria-label','Search departments');
+    const filter=n('select',null,null,tools);filter.innerHTML='<option value="">All completion levels</option><option value="low">Below 70%</option><option value="mid">70% to 89%</option><option value="high">90% and above</option>';
+    const exportBtn=n('button','Export',null,tools);exportBtn.className='e360-view-btn';
+    const tableWrap=n('div',null,'e360-directory-table-wrap',card),tableEl=n('table',null,'e360-directory-table',tableWrap);tableEl.innerHTML='<thead><tr><th>Department</th><th>Headcount</th><th>Assessment completion</th><th>Average score</th><th>Top competency gap</th><th>Action</th></tr></thead><tbody></tbody>';
+    const body=tableEl.querySelector('tbody'),footer=n('div',null,'e360-directory-footer',card),footText=n('span',null,null,footer),pages=n('div',null,'e360-page-buttons',footer);let page=0;const pageSize=10;
+    function matches(d){const q=search.value.trim().toLowerCase(),level=filter.value;return (!q||d.name.toLowerCase().includes(q))&&(!level||(level==='low'&&d.completion<70)||(level==='mid'&&d.completion>=70&&d.completion<90)||(level==='high'&&d.completion>=90));}
+    function draw(){
+     const list=deptNames.map(x=>byDept[x]).filter(matches),maxPage=Math.max(0,Math.ceil(list.length/pageSize)-1);page=Math.min(page,maxPage);body.replaceChildren();
+     list.slice(page*pageSize,page*pageSize+pageSize).forEach(function(d){
+      const tr=document.createElement('tr');
+      tr.innerHTML='<td><span class="e360-dept-name">'+esc(d.name)+'</span><span class="e360-dept-meta">'+d.completed+' of '+d.headcount+' completed</span></td><td>'+d.headcount+'</td><td><span class="e360-progress"><span class="e360-progress-bar"><span style="--progress-width:'+d.completion+'%"></span></span><strong>'+d.completion+'%</strong></span></td><td>'+(d.average===null?'<span class="e360-score">Not available</span>':'<span class="e360-score">'+d.average+'%</span>')+'</td><td>'+(d.gap?'<span class="e360-gap-pill">'+esc(d.gap)+'</span>':'<span class="e360-dept-meta">View profile</span>')+'</td><td><button type="button" class="e360-view-btn">View</button></td>';
+      tr.querySelector('button').onclick=()=>employees(s,company,d.name);body.append(tr);
+     });
+     footText.textContent='Showing '+(list.length?page*pageSize+1:0)+' to '+Math.min((page+1)*pageSize,list.length)+' of '+list.length+' departments';pages.replaceChildren();
+     const prev=n('button','Previous',null,pages);prev.disabled=page===0;prev.onclick=()=>{page--;draw();};
+     for(let i=0;i<Math.ceil(list.length/pageSize);i++){const b=n('button',String(i+1),null,pages);b.className=i===page?'active':'';b.onclick=()=>{page=i;draw();};}
+     const next=n('button','Next',null,pages);next.disabled=page>=maxPage;next.onclick=()=>{page++;draw();};
+    }
+    search.oninput=()=>{page=0;draw();};filter.onchange=()=>{page=0;draw();};exportBtn.onclick=()=>{
+     const list=deptNames.map(x=>byDept[x]).filter(matches),csv=['Department,Headcount,Assessment completion,Average score,Top competency gap'];list.forEach(d=>csv.push([d.name,d.headcount,d.completion+'%',d.average===null?'':d.average+'%',d.gap].map(x=>'"'+String(x||'').replaceAll('"','""')+'"').join(',')));
+     r4Download(new Blob([csv.join('\n')],{type:'text/csv'}),(company||'company')+'-department-overview.csv');
+    };
+    draw();
+    const gapCard=n('aside',null,'e360-gap-card',layout);n('h2','Top competency gaps',null,gapCard);n('p','Most common gaps across the company',null,gapCard);
+    if(!topGaps.length)n('div','Competency gap data is not available in the current register response.','e360-gap-empty',gapCard);
+    topGaps.forEach(function(g,i){const row=n('div',null,'e360-gap-row',gapCard);n('span',String(i+1),null,'e360-gap-rank',row);const copy=n('div',null,null,row);n('strong',g,null,copy);n('small',gaps[g]+' employee record'+(gaps[g]===1?'':'s'));
+    });
+   }catch(e){if(live(s)){host.replaceChildren();empty(host,'Could not load the department overview: '+e.message);}}
+  })();
  }
  async function employeeRows(s,company,department){
   if(s.role==='hr'||s.role==='hohr'){
