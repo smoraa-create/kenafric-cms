@@ -277,7 +277,473 @@ body.sb-mode #roleBanner{margin-left:230px;}
 body.role-csuite .cs-stat{border-color:#c9a227;}
 body.role-csuite .cs-stat .num{color:#b48a1d;}
 body.role-csuite .cs-pill.active{background:#12365c;border-color:#c9a227;}
+.kpi-breakdown-table{border-collapse:separate;border-spacing:0 8px;font-size:12px;}
+.kpi-breakdown-table th{background:#eef2f7;color:#24436d;font-size:11px;font-weight:800;letter-spacing:.35px;padding:12px 14px;border:0;text-align:center;white-space:nowrap;}
+.kpi-breakdown-table th:first-child{border-radius:6px 0 0 6px;text-align:left;}
+.kpi-breakdown-table th:last-child{border-radius:0 6px 6px 0;}
+.kpi-breakdown-table td{padding:10px 14px;border:0;text-align:center;background:#fff;vertical-align:middle;}
+.kpi-breakdown-table td:first-child{text-align:left;border-radius:6px 0 0 6px;}
+.kpi-breakdown-table td:last-child{border-radius:0 6px 6px 0;}
+.kpi-breakdown-table tr:hover td{background:#fff;}
+.kpi-breakdown-table .metric-cell{font-weight:700;min-width:92px;border-left:4px solid transparent;}
+.kpi-breakdown-table .metric-position{background:#fff7ed;color:#9a3412;border-left-color:#f59e0b;}
+.kpi-breakdown-table .metric-staff{background:#fdf2f8;color:#9d174d;border-left-color:#ec4899;}
+.kpi-breakdown-table .metric-completed{background:#ecfdf5;color:#047857;border-left-color:#10b981;}
+.kpi-breakdown-table .metric-ready{background:#f5f3ff;color:#6d28d9;border-left-color:#8b5cf6;}
+.kpi-breakdown-table .metric-idp{background:#eff6ff;color:#1d4ed8;border-left-color:#3b82f6;}
+.kpi-breakdown-table .criticality-pill{display:inline-block;border-radius:6px;padding:7px 10px;font-size:10px;font-weight:800;line-height:1.1;white-space:nowrap;}
+.kpi-breakdown-table .pill-absolute{background:#fef2f2;color:#dc2626;}
+.kpi-breakdown-table .pill-critical{background:#fff7ed;color:#ea580c;}
+.kpi-breakdown-table .pill-relative{background:#eef2ff;color:#3730a3;}
+.company-registry-table{border-collapse:separate;border-spacing:0 8px;font-size:12px;}
+.company-registry-table th{background:#eef2f7;color:#24436d;padding:12px 14px;text-align:left;font-size:11px;font-weight:800;letter-spacing:.45px;border:0;white-space:nowrap;}
+.company-registry-table th:first-child{border-radius:6px 0 0 6px;}
+.company-registry-table th:last-child{border-radius:0 6px 6px 0;text-align:center;}
+.company-registry-table td{padding:10px 14px;border:0;background:#fff;vertical-align:middle;}
+.company-registry-table td:first-child{border-radius:8px 0 0 8px;}
+.company-registry-table td:last-child{border-radius:0 8px 8px 0;text-align:center;}
+.company-registry-table tr:hover td{background:#fff;}
+.company-registry-table .company-row td{border-top:1px solid rgba(148,163,184,.12);border-bottom:1px solid rgba(148,163,184,.12);}
+.company-registry-table .company-name{display:flex;align-items:center;gap:10px;font-weight:800;color:#102a52;}
+.company-registry-table .company-icon{width:34px;height:34px;border-radius:10px;display:inline-flex;align-items:center;justify-content:center;flex:none;}
+.company-registry-table .company-icon svg{width:18px;height:18px;}
+.company-registry-table .tone-0 td{background:#f8fbff;}
+.company-registry-table .tone-1 td{background:#f5fcfa;}
+.company-registry-table .tone-2 td{background:#fffaf5;}
+.company-registry-table .tone-3 td{background:#faf8ff;}
+.company-registry-table .tone-0 .company-icon{background:#dbeafe;color:#2563eb;}
+.company-registry-table .tone-1 .company-icon{background:#ccfbf1;color:#0f766e;}
+.company-registry-table .tone-2 .company-icon{background:#ffedd5;color:#ea580c;}
+.company-registry-table .tone-3 .company-icon{background:#ede9fe;color:#7c3aed;}
+.company-registry-table .metric{font-weight:700;color:#17345f;}
+.company-registry-table .registry-action{min-width:38px;height:34px;padding:0 10px;border:0;border-radius:9px;background:#dc2626;color:#fff;font-weight:800;cursor:pointer;box-shadow:0 3px 8px rgba(220,38,38,.22);}
+.company-registry-table .registry-action:hover{background:#b91c1c;}
+.company-registry-table .registry-action{
+  width:40px !important;
+  height:40px !important;
+  padding:0 !important;
+  border:0 !important;
+  border-radius:10px !important;
+  background:#e9232b !important;
+  color:#fff !important;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+}
 
+.company-registry-table .registry-action svg{
+  width:19px !important;
+  height:19px !important;
+  fill:none !important;
+  stroke:#fff !important;
+  stroke-width:2 !important;
+  stroke-linecap:round;
+  stroke-linejoin:round;
+}
+
+.company-registry-table .registry-action:hover{
+  background:#c81e26 !important;
+}
+.company-registry-table .registry-register{padding:7px 11px;border:1px solid #4338ca;border-radius:8px;background:#fff;color:#4338ca;font-weight:800;cursor:pointer;}
+.company-registry-table .registry-register:hover{background:#eef2ff;}
+.company-add-card .card-title{font-size:18px;color:#102a52;}
+.company-add-grid{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:end;}
+.company-add-grid .btn{height:42px;padding:0 20px;font-weight:800;}
+@media(max-width:700px){.company-add-grid{grid-template-columns:1fr;}.company-add-grid .btn{width:100%;justify-content:center;}
+.company-registry-table{width:100%;border-collapse:separate;border-spacing:0;font-size:13px;overflow:hidden;border:1px solid #dbe4f0;border-radius:12px}
+.company-registry-table th{background:#eef4fb;color:#102a52;padding:12px;text-align:left;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.4px}
+.company-registry-table td{padding:13px 12px;border-bottom:1px solid #edf1f6;background:#fff}
+.company-registry-table tr:last-child td{border-bottom:none}
+.company-row.tone-0 td{background:#f8fbff}
+.company-row.tone-1 td{background:#fbf9ff}
+.company-row.tone-2 td{background:#f7fcfb}
+.company-row.tone-3 td{background:#fffaf5}
+.company-name{display:flex;align-items:center;gap:10px;font-weight:800;color:#102a52;min-width:190px}
+.company-icon{width:34px;height:34px;border-radius:10px;display:inline-flex;align-items:center;justify-content:center;background:#e5edff;color:#315bd6;flex:none}
+.company-icon svg{width:19px;height:19px}
+.metric{font-weight:800;color:#243b64}
+.badge{white-space:nowrap}
+.registry-action{
+  width:40px;
+  height:40px;
+  border:0;
+  border-radius:10px;
+  background:#e9232b;
+  color:#fff;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+  box-shadow:0 4px 10px rgba(220,38,38,.25);
+}
+.registry-action svg{
+  width:19px;
+  height:19px;
+  fill:none;
+  stroke:currentColor;
+  stroke-width:2;
+  stroke-linecap:round;
+  stroke-linejoin:round;
+}
+.registry-action:hover{background:#c81e26;}
+.registry-action:hover{background:#b91c1c;}
+.registry-register{border:0;border-radius:8px;background:#315bd6;color:#fff;padding:7px 11px;font-size:11px;font-weight:800;cursor:pointer}
+.company-add-card{background:#f6f9ff;border:1px solid #d6e3f8}
+.company-add-grid{display:grid;grid-template-columns:1fr auto;gap:12px;align-items:end}
+@media(max-width:800px){.company-add-grid{grid-template-columns:1fr}.company-registry-table{min-width:760px}.table-wrap{overflow-x:auto}
+}
+.dept-registry-card{
+  padding:20px 22px;
+  background:#fff;
+  border:1px solid #dbe4f0;
+  border-radius:14px;
+}
+.dept-registry-heading{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  gap:16px;
+  padding-bottom:14px;
+  border-bottom:1px solid #edf1f6;
+}
+.dept-title-line{
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+.dept-title-line .card-title{
+  font-size:20px;
+  color:#102a52;
+  margin:0;
+}
+.dept-heading-icon{
+  width:24px;
+  height:24px;
+  flex:0 0 24px;
+  border-radius:6px;
+  background:#18c3a7;
+  color:#fff;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+}
+.dept-heading-icon svg{
+  width:12px;
+  height:12px;
+  fill:none;
+  stroke:currentColor;
+  stroke-width:1.8;
+  stroke-linecap:round;
+  stroke-linejoin:round;
+}
+.dept-subtitle{
+  margin:4px 0 0 34px;
+  color:#5b7094;
+  font-size:12px;
+}
+.dept-add-toggle{
+  border:0;
+  border-radius:8px;
+  background:#4338ca;
+  color:#fff;
+  padding:10px 15px;
+  font-size:12px;
+  font-weight:800;
+  cursor:pointer;
+}
+.dept-add-panel{
+  display:grid;
+  grid-template-columns:1fr 1fr auto;
+  gap:10px;
+  align-items:end;
+  margin:14px 0;
+  padding:14px;
+  border:1px solid #dbe4f0;
+  border-radius:10px;
+  background:#f8fbff;
+}
+.dept-summary-grid{
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:12px;
+  margin:16px 0;
+}
+.dept-summary-card{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  min-height:82px;
+  padding:12px 14px;
+  border:1px solid #e3eaf3;
+  border-radius:12px;
+  background:#fff;
+}
+.dept-summary-icon{
+  width:24px;
+  height:24px;
+  flex:0 0 24px;
+  border-radius:50%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+.dept-summary-icon svg{
+  width:12px;
+  height:12px;
+  fill:none;
+  stroke:currentColor;
+  stroke-width:1.8;
+  stroke-linecap:round;
+  stroke-linejoin:round;
+}
+.dept-summary-card.green .dept-summary-icon{
+  background:#dff8ef;
+  color:#0cad88;
+}
+.dept-summary-card.purple .dept-summary-icon{
+  background:#eee5ff;
+  color:#7138e8;
+}
+.dept-summary-card.blue .dept-summary-icon{
+  background:#e5efff;
+  color:#2563eb;
+}
+.dept-summary-card.orange .dept-summary-icon{
+  background:#fff0d8;
+  color:#ea8b00;
+}
+.dept-summary-card span:not(.dept-summary-icon){
+  display:block;
+  font-size:10px;
+  font-weight:800;
+  color:#52678c;
+  text-transform:uppercase;
+}
+.dept-summary-card strong{
+  display:block;
+  font-size:24px;
+  line-height:1.1;
+  color:#102a52;
+  margin-top:4px;
+}
+.dept-summary-card small{
+  display:block;
+  color:#6b7e9f;
+  font-size:10px;
+  margin-top:3px;
+}
+.dept-filter-card{
+  display:grid;
+  grid-template-columns:1.2fr 1fr 1fr auto;
+  gap:14px;
+  align-items:end;
+  padding:14px;
+  border:1px solid #e0e8f2;
+  border-radius:12px;
+  background:#fbfdff;
+}
+.dept-filter-card label{
+  font-size:10px;
+  color:#102a52;
+  font-weight:800;
+  margin-bottom:6px;
+}
+.dept-filter-card input,
+.dept-filter-card select{
+  height:38px;
+  background:#fff;
+}
+.dept-search-wrap{
+  position:relative;
+}
+.dept-search-wrap input{
+  padding-right:30px;
+}
+.dept-search-icon{
+  display:none;
+}
+.dept-result-count{
+  min-width:128px;
+  color:#102a52;
+  font-size:11px;
+}
+.dept-result-count strong,
+.dept-result-count span{
+  display:block;
+}
+.dept-result-count span{
+  color:#6b7e9f;
+  margin-top:3px;
+}
+.dept-company-tabs{
+  display:flex;
+  overflow-x:auto;
+  margin-top:12px;
+  border:1px solid #e0e8f2;
+  border-radius:10px;
+}
+.dept-tab{
+  border:0;
+  border-right:1px solid #edf1f6;
+  background:#fff;
+  color:#18335e;
+  padding:11px 15px;
+  font-size:11px;
+  font-weight:700;
+  white-space:nowrap;
+  cursor:pointer;
+}
+.dept-tab b{
+  margin-left:4px;
+  background:#eef2f8;
+  border-radius:10px;
+  padding:2px 6px;
+  font-size:10px;
+  color:#60769d;
+}
+.dept-tab.active{
+  color:#3024d8;
+  box-shadow:inset 0 -3px #4338ca;
+}
+.dept-registry-table{
+  border-collapse:separate;
+  border-spacing:0;
+  width:100%;
+  font-size:12px;
+}
+.dept-registry-table th{
+  background:#eef3f9;
+  color:#1d3965;
+  padding:12px 14px;
+  font-size:10px;
+  font-weight:800;
+  text-transform:uppercase;
+}
+.dept-registry-table td{
+  padding:11px 14px;
+  border-bottom:1px solid #edf1f6;
+  color:#18335e;
+  background:#fff;
+}
+.dept-registry-table tbody tr:nth-child(even) td{
+  background:#f9fbfe;
+}
+.dept-registry-table td:nth-child(2){
+  font-weight:800;
+  color:#102a52;
+}
+.dept-registry-table td:last-child,
+.dept-registry-table th:last-child{
+  text-align:center;
+}
+.dept-delete-button{
+  width:30px;
+  height:30px;
+  border:0;
+  border-radius:8px;
+  background:#ef3035;
+  color:#fff;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+}
+.dept-delete-button svg{
+  width:16px;
+  height:16px;
+  fill:none;
+  stroke:#fff;
+  stroke-width:2;
+  stroke-linecap:round;
+  stroke-linejoin:round;
+}
+.dept-empty{
+  text-align:center;
+  padding:24px !important;
+  color:#64748b !important;
+}
+.dept-pagination{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:12px;
+  padding:14px 2px 4px;
+  color:#52678c;
+  font-size:11px;
+}
+.dept-pagination > div{
+  display:flex;
+  gap:5px;
+  align-items:center;
+}
+.dept-pagination button{
+  min-width:30px;
+  height:30px;
+  padding:0 9px;
+  border:1px solid #e0e8f2;
+  border-radius:7px;
+  background:#fff;
+  color:#1d3965;
+  font-size:11px;
+  cursor:pointer;
+}
+.dept-pagination button.active{
+  background:#4338ca;
+  color:#fff;
+  border-color:#4338ca;
+}
+.dept-pagination button:disabled{
+  opacity:.45;
+  cursor:not-allowed;
+}
+.dept-info-note{
+  display:flex;
+  align-items:center;
+  gap:9px;
+  margin-top:10px;
+  padding:10px 12px;
+  border-radius:9px;
+  background:#f3f4ff;
+  color:#5549c8;
+  font-size:11px;
+}
+.dept-info-note strong{
+  width:18px;
+  height:18px;
+  border:1px solid #776ce0;
+  border-radius:50%;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+}
+@media(max-width:900px){
+  .dept-summary-grid{
+    grid-template-columns:repeat(2,minmax(0,1fr));
+  }
+  .dept-filter-card{
+    grid-template-columns:1fr 1fr;
+  }
+  .dept-result-count{
+    grid-column:1/-1;
+  }
+  .dept-add-panel{
+    grid-template-columns:1fr;
+  }
+}
+@media(max-width:600px){
+  .dept-summary-grid,
+  .dept-filter-card{
+    grid-template-columns:1fr;
+  }
+  .dept-pagination{
+    align-items:flex-start;
+    flex-direction:column;
+  }
+  .dept-subtitle{
+    margin-left:0;
+  }
+}
 </style>
 <style>
 /* The approved visual design, scoped to employee mode and the profile. */
@@ -1526,7 +1992,7 @@ body.sb-mode:has(#sideNav.nv3-sidebar) .content{margin-left:290px!important}
 #sideNav.nv3-sidebar .nv3-scroll::-webkit-scrollbar{width:5px}
 #sideNav.nv3-sidebar .nv3-scroll::-webkit-scrollbar-thumb{background:oklch(42% .04 266);border-radius:4px}
 #sideNav.nv3-sidebar .nv3-section{margin:0;padding:0 0 8px}
-#sideNav.nv3-sidebar .nv3-section h2{font:650 10px/1.5 system-ui!important;letter-spacing:.115em;text-transform:uppercase;color:var(--nv-muted)!important;margin:20px 12px 8px!important;padding:0!important}
+#sideNav.nv3-sidebar .nv3-section h2{font:750 13px/1.5 system-ui!important;letter-spacing:.115em;text-transform:uppercase;color:var(--nv-muted)!important;margin:20px 12px 8px!important;padding:0!important}
 #sideNav.nv3-sidebar .nv3-link{
  display:flex!important;align-items:center!important;justify-content:flex-start!important;gap:12px!important;
  width:100%!important;max-width:100%!important;min-height:44px!important;height:auto!important;
@@ -1542,16 +2008,17 @@ body.sb-mode:has(#sideNav.nv3-sidebar) .content{margin-left:290px!important}
 #sideNav.nv3-sidebar .nv3-link:disabled,#sideNav.nv3-sidebar .nv3-link[aria-disabled=true]{opacity:.48;cursor:not-allowed!important}
 #sideNav.nv3-sidebar .nv3-link[hidden],#sideNav.nv3-sidebar .nv3-link[data-nv-hidden=true]{display:none!important}
 #sideNav.nv3-sidebar .nv3-link:focus-visible,#sideNav.nv3-sidebar .nv3-toggle:focus-visible{outline:2px solid oklch(81% .09 270)!important;outline-offset:2px}
-body.role-manager #sideNav.nv3-sidebar .nv3-icon{
- display:block!important;
- width:32px!important;
- height:32px!important;
- min-width:32px!important;
- flex:0 0 32px!important;
- padding:7px!important;
- border-radius:8px!important;
- stroke:currentColor;
- opacity:1;
+body.role-manager #sideNav.nv3-sidebar .nv3-icon,
+body.role-hr #sideNav.nv3-sidebar .nv3-icon{
+  display:block!important;
+  width:32px!important;
+  height:32px!important;
+  min-width:32px!important;
+  flex:0 0 32px!important;
+  padding:7px!important;
+  border-radius:8px!important;
+  stroke:currentColor;
+  opacity:1;
 }
 
 body.role-manager #sideNav.nv3-sidebar [data-nv-page="mgr-dashboard"] .nv3-icon{background:#2563EB!important;color:#fff!important}
@@ -1566,6 +2033,23 @@ body.role-manager #sideNav.nv3-sidebar [data-nv-page="mgr-gaps"] .nv3-icon{backg
 body.role-manager #sideNav.nv3-sidebar [data-nv-page="mgr-setcomp"] .nv3-icon{background:#0891B2!important;color:#fff!important}
 body.role-manager #sideNav.nv3-sidebar [data-nv-page="mgr-repappr"] .nv3-icon{background:#DB2777!important;color:#fff!important}
 body.role-manager #sideNav.nv3-sidebar [data-nv-page="mgr-comp"] .nv3-icon{background:#6366F1!important;color:#fff!important}
+body.role-hr #sideNav.nv3-sidebar [data-nv-page="hr-dashboard"] .nv3-icon{background:#2563EB!important;color:#fff!important}
+body.role-hr #sideNav.nv3-sidebar [data-nv-page="hr-kpi"] .nv3-icon{background:#5146C8!important;color:#fff!important}
+body.role-hr #sideNav.nv3-sidebar [data-nv-page="hr-staff"] .nv3-icon{background:#2563EB!important;color:#fff!important}
+body.role-hr #sideNav.nv3-sidebar [data-nv-page="hr-managers"] .nv3-icon{background:#0F9F95!important;color:#fff!important}
+body.role-hr #sideNav.nv3-sidebar [data-nv-page="hr-prompool"] .nv3-icon{background:#8B2BCF!important;color:#fff!important}
+body.role-hr #sideNav.nv3-sidebar [data-nv-page="hr-comp"] .nv3-icon{background:#08A5C2!important;color:#fff!important}
+body.role-hr #sideNav.nv3-sidebar [data-nv-page="hr-comp-approvals"] .nv3-icon{background:#6366F1!important;color:#fff!important}
+body.role-hr #sideNav.nv3-sidebar [data-nv-page="hr-review"] .nv3-icon{background:#F59E0B!important;color:#fff!important}
+body.role-hr #sideNav.nv3-sidebar [data-nv-page="hr-repappr"] .nv3-icon{background:#DB2777!important;color:#fff!important}
+body.role-hr #sideNav.nv3-sidebar [data-nv-page="hr-all"] .nv3-icon{background:#3B82F6!important;color:#fff!important}
+body.role-hr #sideNav.nv3-sidebar [data-nv-page="hr-redo"] .nv3-icon{background:#F45D4C!important;color:#fff!important}
+body.role-hr #sideNav.nv3-sidebar [data-nv-page="hr-devplans"] .nv3-icon{background:#16A34A!important;color:#fff!important}
+body.role-hr #sideNav.nv3-sidebar [data-nv-page="hr-reports"] .nv3-icon{background:#0891B2!important;color:#fff!important}
+body.role-hr #sideNav.nv3-sidebar [data-nv-page="hr-gaps"] .nv3-icon{background:#EA580C!important;color:#fff!important}
+body.role-hr #sideNav.nv3-sidebar [data-nv-page="hr-positions"] .nv3-icon{background:#D97706!important;color:#fff!important}
+body.role-hr #sideNav.nv3-sidebar [data-nv-page="hr-departments"] .nv3-icon{background:#14B8A6!important;color:#fff!important}
+body.role-hr #sideNav.nv3-sidebar [data-nv-page="hr-companies"] .nv3-icon{background:#7C3AED!important;color:#fff!important}
 #sideNav.nv3-sidebar .nv3-label{display:block!important;font:inherit!important;color:inherit!important;min-width:0;overflow-wrap:anywhere;text-align:left}
 #sideNav.nv3-sidebar .nv3-toggle{display:none!important}
 #rptRoot.rpt-v3{padding:0 0 20px;max-width:1420px}
@@ -1808,8 +2292,10 @@ body.sb-mode:has(#sideNav.nv3-sidebar) #roleBanner{
 #ihRoot .ih-tick input{width:18px;min-height:18px;height:18px;margin:0}
 #ihRoot .ih-actions{display:flex;gap:10px;flex-wrap:wrap;margin:24px 0}
 #ihRoot #ihStatus{color:var(--ih-muted);min-height:24px}
-.ih-due-banner{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;background:oklch(96% .05 77);border:1px solid oklch(84% .07 77);border-radius:9px;padding:14px 18px;margin:0 0 20px;color:oklch(37% .07 60);font:650 14px/1.5 system-ui}
-.ih-due-banner button{min-height:40px;border:1px solid oklch(73% .07 77);border-radius:6px;background:oklch(99% .005 77);color:oklch(37% .07 60);padding:8px 12px;cursor:pointer;font:650 13px system-ui}
+.ih-due-banner{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;background:#fff7e5;border:1px solid #f0d28b;border-radius:14px;padding:14px 18px 14px 20px;margin:0 0 20px;color:#4b3210;min-height:66px;font:750 15px/1.5 system-ui;box-shadow:0 3px 12px rgba(20,54,100,.06)}
+.ih-due-banner::before{content:"";width:38px;height:38px;flex:0 0 38px;border-radius:50%;background:#ffe5a8}
+.ih-due-banner span{flex:1 1 auto}
+.ih-due-banner button{min-height:42px;border:1px solid #dfbd77;border-radius:10px;background:#fff;color:#4b3210;padding:9px 16px;cursor:pointer;font:750 14px system-ui}
 @container(max-width:850px){#ihRoot table,#ihRoot tbody,#ihRoot tr,#ihRoot td{display:block;width:100%}#ihRoot thead{display:none}#ihRoot tr{padding:14px;border-bottom:1px solid var(--ih-line)}#ihRoot td{display:grid;grid-template-columns:120px minmax(0,1fr);gap:8px;border:0;padding:7px 0!important}#ihRoot td:before{content:attr(data-label);font-weight:650;color:var(--ih-muted)}#ihRoot td small{grid-column:2}}
 @media(max-width:760px){#ihRoot .ih-panel{padding:18px}#ihRoot .ih-grid{grid-template-columns:1fr;gap:16px}#ihRoot .ih-confirm{padding:16px}#ihRoot .ih-list-tools label{width:100%}}
 
@@ -1866,9 +2352,10 @@ body.sb-mode:has(#sideNav.nv3-sidebar) #roleBanner{
 #ihRoot.ir-compact .ir-pagination span{margin-right:auto}
 #ihRoot.ir-compact .ir-pagination button{padding:9px 14px;border:1px solid var(--ih-line);border-radius:6px;background:var(--ih-paper);color:var(--ih-primary);font:600 14px system-ui;cursor:pointer}
 #ihRoot.ir-compact .ir-pagination button:disabled{opacity:.4;cursor:not-allowed}
-#ihRoot.ir-compact .ir-personal-tabs{display:flex;gap:12px;border-bottom:1px solid var(--ih-line);margin-bottom:18px}
-#ihRoot.ir-compact .ir-personal-tabs button{background:none;border:0;padding:12px 6px;min-height:44px;font:650 14px system-ui;color:var(--ih-muted);cursor:pointer}
-#ihRoot.ir-compact .ir-personal-tabs button[aria-pressed=true]{color:var(--ih-primary);border-bottom:2px solid var(--ih-primary)}
+#ihRoot.ir-compact .ir-personal-tabs{display:flex;gap:8px;align-items:end;border-bottom:1px solid #d7e2f0;margin:0;padding:14px 16px 0;background:#fbfdff}
+#ihRoot.ir-compact .ir-personal-tabs button{display:inline-flex;align-items:center;gap:8px;background:transparent;border:1px solid transparent;border-bottom:3px solid transparent;border-radius:12px 12px 0 0;padding:12px 18px;min-height:50px;font:750 14px system-ui;color:#526782;cursor:pointer}
+#ihRoot.ir-compact .ir-personal-tabs button .ih-icon{width:19px;height:19px;flex:0 0 19px}
+#ihRoot.ir-compact .ir-personal-tabs button[aria-pressed=true]{color:#2457d6;border-color:#cbd9f7;border-bottom-color:#2457d6;background:#fff;box-shadow:0 -2px 8px rgba(36,87,214,.06)}
 #ihRoot.ir-compact .ir-due{background:oklch(97% .04 77);border:1px solid oklch(84% .05 77);border-radius:7px;padding:12px 16px;margin-bottom:14px;font-size:14px}
 #ihRoot.ir-compact .ir-invitation{display:grid;grid-template-columns:44px minmax(180px,1.4fr) minmax(180px,1.1fr) minmax(130px,1fr) auto;gap:16px;align-items:center;padding:24px 0;border-bottom:1px solid var(--ih-line)}
 #ihRoot.ir-compact .ir-invitation h3{font-size:16px!important;margin:0 0 6px}
@@ -1876,13 +2363,23 @@ body.sb-mode:has(#sideNav.nv3-sidebar) #roleBanner{
 #ihRoot.ir-compact .ir-invitation small{display:block;font-size:14px;color:var(--ih-muted);margin:7px 0}
 #ihRoot.ir-compact .ir-work-icon{color:var(--ih-primary);background:oklch(95% .028 276);border:1px solid oklch(87% .04 276);border-radius:9px;padding:10px}
 #ihRoot.ir-compact .ir-footnote,#ihRoot.ir-compact .ir-empty{font-size:14px!important;color:var(--ih-muted);padding:18px 0}
-#ihRoot.ir-compact .ir-redo-create,#ihRoot.ir-compact .ir-redo-item{border-bottom:1px solid var(--ih-line);padding:18px 0}
-#ihRoot.ir-compact .ir-redo-create .btn,#ihRoot.ir-compact .ir-redo-item .btn{margin:16px 8px 0 0}
+#ihRoot.ir-compact .ir-redo-create,#ihRoot.ir-compact .ir-redo-item{border-bottom:1px solid #d7e2f0;padding:26px 22px 22px;background:#fff}
+#ihRoot.ir-compact .ir-redo-create h3{margin:0 0 6px;color:#163454;font-size:20px}
+#ihRoot.ir-compact .ir-redo-create>p:first-of-type{margin:0 0 18px;color:#58708e}
+#ihRoot.ir-compact .uw-fields{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:20px;margin:0 0 8px}
+#ihRoot.ir-compact .uw-field label{display:block;color:#294767;font-size:14px;font-weight:750}
+#ihRoot.ir-compact .uw-field select,#ihRoot.ir-compact .uw-field textarea{display:block;width:100%;min-height:48px;margin-top:7px;padding:11px 13px;border:1px solid #c8d5e6;border-radius:10px;background:#fff;color:#163454;font-size:15px}
+#ihRoot.ir-compact .uw-field textarea{min-height:96px;resize:vertical}
+#ihRoot.ir-compact #uwHelp{margin:7px 0 0;color:#6b7f98;font-size:13px}
+#ihRoot.ir-compact .uw-actions{display:flex;justify-content:flex-end;align-items:center;gap:10px;margin-top:12px}
+#ihRoot.ir-compact .uw-actions .btn{margin:0;min-height:44px;border-radius:10px;padding:10px 18px;font-size:14px;font-weight:800}
+#ihRoot.ir-compact .uw-actions [data-uw="preview"]{background:#2457d6;border-color:#2457d6;color:#fff;box-shadow:0 5px 12px rgba(36,87,214,.2)}
+#ihRoot.ir-compact .uw-actions [data-uw="refresh"],#ihRoot.ir-compact .uw-actions [data-uw="edit"]{background:#fff;border-color:#c8d5e6;color:#3d5068}
 #ihRoot.ir-compact .ir-redo-item small{font-size:14px;color:var(--ih-muted)}
 /* A reserved lower gutter keeps the assistant off editable fields on invitation pages only. */
 body:has(#ihRoot) #kaiFab.kn-fab{left:auto!important;top:auto!important;right:12px!important;bottom:12px!important;transform:none!important;padding:5px 10px!important;max-width:110px}
 body:has(#ihRoot) #kaiFab .kn-avatar-image{width:30px!important;height:30px!important}
-@media(max-width:1100px){#ihRoot.ir-compact .ir-layout{grid-template-columns:1fr}#ihRoot.ir-compact .ir-summary{position:static}#ihRoot.ir-compact .ir-filter-row{grid-template-columns:repeat(2,minmax(0,1fr))}#ihRoot.ir-compact .ir-invitation{grid-template-columns:44px minmax(0,1fr) auto}#ihRoot.ir-compact .ir-work-date{grid-column:2}}
+@media(max-width:760px){#ihRoot.ir-compact .uw-fields{grid-template-columns:1fr}#ihRoot.ir-compact .uw-actions{justify-content:stretch;flex-wrap:wrap}#ihRoot.ir-compact .uw-actions .btn{flex:1 1 180px}}
 @media(max-width:650px){#ihRoot.ir-compact .ir-form{padding:0 16px 16px}#ihRoot.ir-compact .ir-step .ih-grid{grid-template-columns:1fr}#ihRoot.ir-compact .ir-filter-row{grid-template-columns:1fr}#ihRoot.ir-compact .ir-invitation{grid-template-columns:1fr}#ihRoot.ir-compact .ir-work-date{grid-column:auto}#ihRoot.ir-compact .ir-work-icon{display:none}#ihRoot.ir-compact .ir-pagination{flex-wrap:wrap}#ihRoot.ir-compact h1{font-size:25px!important}}
 
 </style>
@@ -4002,7 +4499,7 @@ const CMS_TAB_AUTH_STORAGE={
  removeItem:function(k){try{localStorage.removeItem(k);}catch(e){}}
 };
 // Prior tab credentials are not migrated into a new 24-hour window. Existing drafts remain untouched.
-
+var CMS_RECOVERY_MODE=/type=(recovery|invite)/.test(window.location.hash+window.location.search);
 const _supabase = window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY,{auth:{storage:CMS_TAB_AUTH_STORAGE,storageKey:CMS_AUTH_STORAGE_KEY,persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
 const EMAILJS_SERVICE_ID = 'service_n25h19m';
 const EMAILJS_TEMPLATE_ID = 'template_498ij59';
@@ -4418,7 +4915,23 @@ if (role === 'hr' || role === 'manager' || role === 'hohr') {
 document.body.classList.add('sb-mode');
 sb.style.display = 'block';
 var svgI = function(p){ return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="0" y="0" width="0" height="0" fill="none"/>' + p + '</svg>'; };
-var icons = {'hr-dashboard':'','hr-companies':'','hr-departments':'','hr-staff':'','hr-prompool':'','hr-gaps':'','hr-review':'','hr-all':'','hr-reports':'','hr-repappr':'','hr-devplans':'','hr-redo':'','hr-comp':'','hr-positions':'',
+var icons = {'hr-dashboard':svgI('<rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/>'),
+'hr-kpi':svgI('<path d="M4 19V5"/><path d="M4 19h16"/><path d="m7 15 3-4 3 2 4-6"/>'),
+'hr-managers':svgI('<circle cx="9" cy="7" r="4"/><path d="M2 21v-2a7 7 0 0 1 14 0v2"/><path d="M16 4a4 4 0 0 1 0 7"/><path d="M18 15a5 5 0 0 1 4 5v1"/>'),
+'hr-departments':svgI('<rect x="3" y="4" width="7" height="6" rx="1"/><rect x="14" y="4" width="7" height="6" rx="1"/><rect x="8.5" y="15" width="7" height="6" rx="1"/><path d="M6.5 10v2h11V10M12 12v3"/>'),
+'hr-companies':svgI('<path d="M4 21V5a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v16"/><path d="M8 7h2M14 7h2M8 11h2M14 11h2M8 15h2M14 15h2M10 21v-4h4v4"/>'),
+'hr-staff':svgI('<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>'),
+'hr-prompool':svgI('<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/><path d="m16 8 4-4"/>'),
+'hr-review':svgI('<rect x="6" y="3" width="12" height="18" rx="2"/><path d="M9 3v3h6V3M9 11h6M9 15l2 2 4-4"/>'),
+'hr-gaps':svgI('<path d="M4 19V5"/><path d="M4 19h16"/><path d="m7 15 3-5 3 3 4-7"/>'),
+'hr-devplans':svgI('<path d="M6 3h9l4 4v14H6z"/><path d="M15 3v5h5M9 13h6M9 17h6"/>'),
+'hr-all':svgI('<path d="M4 4h16v16H4z"/><path d="M8 8h8M8 12h8M8 16h5"/>'),
+'hr-reports':svgI('<path d="M4 19V5"/><path d="M4 19h16"/><path d="M7 15v-3M12 15V8M17 15v-6"/>'),
+'hr-repappr':svgI('<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M8 13l2 2 4-4"/>'),
+'hr-positions':svgI('<path d="M4 21V5a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v16"/><path d="M8 7h2M14 7h2M8 11h2M14 11h2M8 15h8"/>'),
+'hr-comp':svgI('<path d="M2 4h7a3 3 0 0 1 3 3v14a3 3 0 0 0-3-3H2z"/><path d="M22 4h-7a3 3 0 0 0-3 3v14a3 3 0 0 1 3-3h7z"/>'),
+'hr-redo':svgI('<path d="M20 11a8 8 0 0 0-14-4L3 10"/><path d="M3 5v5h5M4 13a8 8 0 0 0 14 4l3-3"/><path d="M21 19v-5h-5"/>'),
+'hr-comp-approvals':svgI('<path d="M12 3 20 6v5c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6z"/><path d="m8 12 3 3 5-6"/>'),
 'hohr-dash':'','hohr-kpi':'','hohr-positions':'','hohr-staff':'','hohr-pool':'','hohr-assessed':'OK','hohr-gaps':'','hohr-strengths':'','hohr-assess':'','hohr-reports':'','hohr-devplans':'','hohr-comp':'',
 'mgr-dashboard':svgI('<rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/>'),
 'mgr-team':svgI('<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>'),
@@ -4457,7 +4970,7 @@ sections = [
 if (role === 'hr') sections[0].ids.push('hr-comp-approvals');
 if (role === 'hohr') sections[0].ids.push('hohr-comp-approvals');
 icons['hohr-comp-approvals'] = 'OK';
-icons['hr-comp-approvals'] = 'OK';
+icons['hr-comp-approvals'] = svgI('<path d="M12 3 20 6v5c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6z"/><path d="m8 12 3 3 5-6"/>');
 var brandSub = (role === 'hr') ? 'Competency System' : (role === 'hohr') ? 'Head of HR' : 'Manager View';
 var h = '<div class="sb-brand"><h1>Kenafric <span class="brand-accent">CMS</span></h1><p>' + brandSub + '</p></div>';
 sections.forEach(function(s){
@@ -6469,28 +6982,33 @@ depRegs.forEach(function(d){ var c = (d.company || '').trim(); if (!c || !d.name
 var regOf = {};
 regs.forEach(function(r){ regOf[(r.name || '').toString().toUpperCase().trim()] = r; ensure(r.name || ''); });
 var names = Object.keys(stats).sort(function(a,b){ return a.localeCompare(b); });
-var html = '<div class="card"><div class="card-title"> Companies Registry</div>';
-html += '<p style="font-size:12px;color:var(--gray-500);margin-bottom:12px">Every company in the group with live headcount, department and position counts pulled from staff records.</p>';
-html += '<div class="table-wrap"><table class="staff-table"><thead><tr><th>Company</th><th>Staff</th><th>Departments</th><th>Positions</th><th>Assessed</th><th>Status</th><th></th></tr></thead><tbody>';
-if (!names.length) html += '<tr><td colspan="7" style="color:var(--gray-500)">No companies yet - add the first one below.</td></tr>';
-names.forEach(function(c) {
+function companyIcon(){
+return '<span class="company-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 21V5a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v16"/><path d="M8 7h2M14 7h2M8 11h2M14 11h2M8 15h2M14 15h2M10 21v-4h4v4"/></svg></span>';
+}
+var html = '<div class="card"><div class="card-title" style="font-size:18px;color:#102a52">Companies Registry</div>';
+html += '<p style="font-size:12px;color:var(--gray-500);margin-bottom:16px">Every company in the group with live headcount, department and position counts pulled from staff records.</p>';
+html += '<div class="table-wrap"><table class="company-registry-table"><thead><tr><th>Company</th><th>Staff</th><th>Departments</th><th>Positions</th><th>Assessed</th><th>Status</th><th>Actions</th></tr></thead><tbody>';
+if (!names.length) html += '<tr><td colspan="7" style="color:var(--gray-500);padding:20px">No companies yet - add the first one below.</td></tr>';
+names.forEach(function(c, companyIndex) {
 var s = stats[c];
 var reg = regOf[c.toString().toUpperCase().trim()];
 var assessedCount = Object.keys(s.assessed).length;
 var pct = s.staff ? Math.round((assessedCount / s.staff) * 100) : 0;
-html += '<tr><td><strong>' + escapeHtml(c) + '</strong></td>';
-html += '<td>' + s.staff + '</td>';
-html += '<td>' + Object.keys(s.deps).length + '</td>';
-html += '<td>' + Object.keys(s.pos).length + '</td>';
-html += '<td>' + assessedCount + ' (' + pct + '%)</td>';
+var tone = companyIndex % 4;
+html += '<tr class="company-row tone-' + tone + '">';
+html += '<td><div class="company-name">' + companyIcon() + '<span>' + escapeHtml(c) + '</span></div></td>';
+html += '<td class="metric">' + s.staff + '</td>';
+html += '<td class="metric">' + Object.keys(s.deps).length + '</td>';
+html += '<td class="metric">' + Object.keys(s.pos).length + '</td>';
+html += '<td class="metric">' + assessedCount + ' (' + pct + '%)</td>';
 html += '<td>' + (reg ? '<span class="badge badge-success">Registered</span>' : '<span class="badge badge-warning">From staff records</span>') + '</td>';
-html += '<td>' + (reg ? '<button class="btn btn-sm btn-danger" onclick="deleteCompany(' + rcArg(reg.id) + ',\'' + escapeHtml(c) + '\')">x</button>' : '<button class="btn btn-sm btn-outline" onclick="registerCompany(\'' + escapeHtml(c) + '\')">Register</button>') + '</td></tr>';
+html += '<td>' + (reg ? '<button class="registry-action" aria-label="Delete company" title="Delete company" onclick="deleteCompany(' + rcArg(reg.id) + ',\'' + escapeHtml(c) + '\')"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 7h14M9 7V5h6v2M7 7l1 12h8l1-12M10 10v6M14 10v6"/></svg></button>' : '<button class="registry-register" onclick="registerCompany(\'' + escapeHtml(c) + '\')">Register</button>') + '</td>';
+html += '</tr>';
 });
 html += '</tbody></table></div></div>';
-html += '<div class="card"><div class="card-title"> Add Company</div>';
-html += '<div style="display:grid;grid-template-columns:2fr auto;gap:8px;align-items:end">';
-html += '<div class="form-group" style="margin-bottom:0"><label>Company name</label><input id="newCompanyName" placeholder="e.g. Kenafric Brands Limited"></div>';
-html += '<button class="btn btn-primary" onclick="addCompany()"> Add Company</button></div></div>';
+html += '<div class="card company-add-card"><div class="card-title">Add Company</div>';
+html += '<div class="company-add-grid"><div class="form-group" style="margin-bottom:0"><label>Company name</label><input id="newCompanyName" placeholder="e.g. Kenafric Brands Limited"></div>';
+html += '<button class="btn btn-primary" onclick="addCompany()">Add Company</button></div></div>';
 ((typeof CN === 'undefined' || __cmsRouteEpoch === CN.epoch) ? setContent(html) : undefined);
 }
 async function addCompany() {
@@ -6518,10 +7036,8 @@ if (error) { showToast(error.message); return; }
 showToast('Company removed from registry');
 loadHRCompanies();
 }
-/* ===== Departments Registry (company-aware) ===== */
 async function loadHRDepartments() {
 var __cmsRouteEpoch = typeof CN === 'undefined' ? null : CN.epoch;
-
 ((typeof CN === 'undefined' || __cmsRouteEpoch === CN.epoch) ? setContent('<div class="loading"><div class="spinner"></div>Loading...</div>') : undefined);
 var dq = await Promise.all([
 _supabase.from('departments').select('*').order('company').order('name'),
@@ -6545,25 +7061,48 @@ var list = Object.keys(keys).map(function(k){ return keys[k]; }).sort(function(a
 var companies = {};
 (dq[1].data || []).forEach(function(e){ if (e.company) companies[e.company] = true; });
 regs.forEach(function(d){ if (d.company) companies[d.company] = true; });
-var html = '<div class="card"><div class="card-title"> Departments Registry</div>';
-html += '<p style="font-size:12px;color:var(--gray-500);margin-bottom:12px">Register every department <strong>per company</strong> - two companies can share the same department name.</p>';
-html += '<div style="display:grid;grid-template-columns:1fr 1fr auto;gap:8px;align-items:end">';
-html += '<div class="form-group" style="margin-bottom:0"><label>Company</label><input id="newDeptCompany" list="deptCompanyList" placeholder="e.g. Kenafric Industries"><datalist id="deptCompanyList">' + Object.keys(companies).sort().map(function(c){ return '<option value="' + escapeHtml(c) + '">'; }).join('') + '</datalist></div>';
-html += '<div class="form-group" style="margin-bottom:0"><label>Department</label><input id="newDeptName" placeholder="e.g. HUMAN RESOURCE"></div>';
-html += '<button class="btn btn-primary" onclick="addDepartment()"> Add Department</button></div>';
-html += '<div class="table-wrap" style="margin-top:14px"><table><thead><tr><th>Company</th><th>Department</th><th>Staff</th><th>Positions</th><th>Status</th><th></th></tr></thead><tbody>';
-if (!list.length) html += '<tr><td colspan="6" style="color:var(--gray-500)">No departments yet - add the first one above.</td></tr>';
-list.forEach(function(d) {
-var k = (d.company || '').toUpperCase().trim() + '|' + (d.name || '').toUpperCase().trim();
-var reg = regOf[k];
-html += '<tr><td>' + escapeHtml(d.company || '-') + '</td><td><strong>' + escapeHtml(d.name) + '</strong></td>';
-html += '<td>' + (staffOf[k] || 0) + '</td>';
-html += '<td>' + (posOf[k] ? Object.keys(posOf[k]).length : 0) + '</td>';
-html += '<td>' + (reg ? '<span class="badge badge-success">Registered</span>' : '<span class="badge badge-warning">From staff records</span>') + '</td>';
-html += '<td style="white-space:nowrap">' + (reg ? '<button class="btn btn-sm btn-danger" onclick="deleteDepartment(' + rcArg(reg.id) + ',\'' + escapeHtml(d.company + ' - ' + d.name) + '\')">x</button>' : '<button class="btn btn-sm btn-outline" onclick="registerDepartment(\'' + escapeHtml(d.company) + '\',\'' + escapeHtml(d.name) + '\')">Register</button>') + '</td></tr>';
-});
-html += '</tbody></table></div></div>';
-((typeof CN === 'undefined' || __cmsRouteEpoch === CN.epoch) ? setContent(html) : undefined);
+var deptState = { query: '', company: '', status: 'all', page: 1, pageSize: 10 };
+var deptCompanies = Object.keys(companies).sort(function(a,b){ return a.localeCompare(b); });
+var deptCompanyCounts = {};
+list.forEach(function(d){ var co = d.company || 'Other'; deptCompanyCounts[co] = (deptCompanyCounts[co] || 0) + 1; });
+var deptTotalStaff = list.reduce(function(total,d){ var k=(d.company||'').toUpperCase().trim()+'|'+(d.name||'').toUpperCase().trim(); return total+(staffOf[k]||0); },0);
+var deptTotalPositions = list.reduce(function(total,d){ var k=(d.company||'').toUpperCase().trim()+'|'+(d.name||'').toUpperCase().trim(); return total+(posOf[k]?Object.keys(posOf[k]).length:0); },0);
+function deptIcon(kind){
+var paths={
+company:'<path d="M4 21V5a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v16M8 7h2M14 7h2M8 11h2M14 11h2M10 21v-4h4v4"/>',
+people:'<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>',
+position:'<path d="M3 7h18M5 7v14h14V7M8 7V4h8v3M8 12h8M8 16h5"/>',
+department:'<rect x="3" y="3" width="18" height="18" rx="2"/><path d="M8 8h2M14 8h2M8 12h2M14 12h2M8 16h8"/>'};
+return '<svg viewBox="0 0 24 24" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">'+paths[kind]+'</g></svg>';
+}
+window.cmsDeptRegistryToggleAdd=function(){var p=document.getElementById('deptAddPanel');if(p)p.style.display=p.style.display==='none'?'grid':'none';};
+window.cmsDeptRegistryQuery=function(v){deptState.query=v||'';deptState.page=1;window.cmsDeptRegistryRender();};
+window.cmsDeptRegistryCompany=function(v){deptState.company=v||'';deptState.page=1;window.cmsDeptRegistryRender();};
+window.cmsDeptRegistryStatus=function(v){deptState.status=v||'all';deptState.page=1;window.cmsDeptRegistryRender();};
+window.cmsDeptRegistryPage=function(v){deptState.page=v;window.cmsDeptRegistryRender();};
+window.cmsDeptRegistryRender=function(){
+var activeId=document.activeElement?document.activeElement.id:'';
+var cursor=document.activeElement&&typeof document.activeElement.selectionStart==='number'?document.activeElement.selectionStart:null;
+var q=(deptState.query||'').toUpperCase().trim();
+var filtered=list.filter(function(d){var co=(d.company||'').trim(),nm=(d.name||'').trim(),k=co.toUpperCase()+'|'+nm.toUpperCase(),reg=regOf[k];return (!q||co.toUpperCase().indexOf(q)>=0||nm.toUpperCase().indexOf(q)>=0)&&(!deptState.company||co===deptState.company)&&(deptState.status==='all'||(deptState.status==='registered'?!!reg:!reg));});
+var pages=Math.max(1,Math.ceil(filtered.length/deptState.pageSize));if(deptState.page>pages)deptState.page=pages;
+var start=(deptState.page-1)*deptState.pageSize,rows=filtered.slice(start,start+deptState.pageSize);
+var optionCompanies=deptCompanies.map(function(c){return '<option value="'+escapeHtml(c)+'" '+(deptState.company===c?'selected':'')+'>'+escapeHtml(c)+'</option>';}).join('');
+var tabs='<button class="dept-tab '+(!deptState.company?'active':'')+'" data-company="" onclick="cmsDeptRegistryCompany(this.getAttribute(\'data-company\'))">All Companies <b>'+list.length+'</b></button>';
+tabs+=deptCompanies.map(function(c){return '<button class="dept-tab '+(deptState.company===c?'active':'')+'" data-company="'+escapeHtml(c)+'" onclick="cmsDeptRegistryCompany(this.getAttribute(\'data-company\'))">'+escapeHtml(c)+' <b>'+(deptCompanyCounts[c]||0)+'</b></button>';}).join('');
+var rowsHtml=rows.map(function(d){var k=(d.company||'').toUpperCase().trim()+'|'+(d.name||'').toUpperCase().trim(),reg=regOf[k],del=JSON.stringify((d.company||'')+' - '+d.name),co=JSON.stringify(d.company||''),nm=JSON.stringify(d.name||'');return '<tr><td>'+escapeHtml(d.company||'-')+'</td><td><strong>'+escapeHtml(d.name)+'</strong></td><td>'+ (staffOf[k]||0)+'</td><td>'+(posOf[k]?Object.keys(posOf[k]).length:0)+'</td><td>'+(reg?'<span class="badge badge-success">Registered</span>':'<span class="badge badge-warning">From staff records</span>')+'</td><td>'+(reg?'<button class="dept-delete-button" aria-label="Delete department" title="Delete department" onclick="deleteDepartment('+rcArg(reg.id)+','+del+')"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 7h14M9 7V5h6v2M7 7l1 12h8l1-12M10 10v6M14 10v6"/></svg></button>':'<button class="btn btn-sm btn-outline" onclick="registerDepartment('+co+','+nm+')">Register</button>')+'</td></tr>';}).join('');
+if(!rowsHtml)rowsHtml='<tr><td colspan="6" class="dept-empty">No departments match the selected filters.</td></tr>';
+var nums='';for(var pg=1;pg<=pages&&pg<=5;pg++)nums+='<button class="'+(pg===deptState.page?'active':'')+'" onclick="cmsDeptRegistryPage('+pg+')">'+pg+'</button>';if(pages>6)nums+='<span class="dept-ellipsis">...</span><button onclick="cmsDeptRegistryPage('+pages+')">'+pages+'</button>';
+var shownStart=filtered.length?start+1:0,shownEnd=Math.min(start+deptState.pageSize,filtered.length);
+var html='<div class="card dept-registry-card"><div class="dept-registry-heading"><div><div class="dept-title-line"><span class="dept-heading-icon">'+deptIcon('department')+'</span><span class="card-title">Departments Registry</span></div><p class="dept-subtitle">Register every department <strong>per company</strong> - two companies can share the same department name.</p></div><button class="dept-add-toggle" onclick="cmsDeptRegistryToggleAdd()">Add Department</button></div>';
+html+='<div id="deptAddPanel" class="dept-add-panel" style="display:none"><div class="form-group" style="margin:0"><label>Company</label><input id="newDeptCompany" list="deptCompanyList" placeholder="e.g. Kenafric Industries"><datalist id="deptCompanyList">'+deptCompanies.map(function(c){return '<option value="'+escapeHtml(c)+'">';}).join('')+'</datalist></div><div class="form-group" style="margin:0"><label>Department</label><input id="newDeptName" placeholder="e.g. HUMAN RESOURCE"></div><button class="btn btn-primary" onclick="addDepartment()">Add Department</button></div>';
+html+='<div class="dept-summary-grid"><div class="dept-summary-card green"><span class="dept-summary-icon">'+deptIcon('department')+'</span><div><span>Total Departments</span><strong>'+list.length+'</strong><small>Registered and staff records</small></div></div><div class="dept-summary-card purple"><span class="dept-summary-icon">'+deptIcon('company')+'</span><div><span>Total Companies</span><strong>'+deptCompanies.length+'</strong><small>Active companies</small></div></div><div class="dept-summary-card blue"><span class="dept-summary-icon">'+deptIcon('people')+'</span><div><span>Total Staff</span><strong>'+deptTotalStaff+'</strong><small>Across departments</small></div></div><div class="dept-summary-card orange"><span class="dept-summary-icon">'+deptIcon('position')+'</span><div><span>Total Positions</span><strong>'+deptTotalPositions+'</strong><small>Across departments</small></div></div></div>';
+html+='<div class="dept-filter-card"><div><label>Search Departments</label><div class="dept-search-wrap"><input id="deptSearch" value="'+escapeHtml(deptState.query)+'" placeholder="Search by department name..." oninput="cmsDeptRegistryQuery(this.value)"><span class="dept-search-icon">âŒ•</span></div></div><div><label>Company</label><select onchange="cmsDeptRegistryCompany(this.value)"><option value="">All Companies</option>'+optionCompanies+'</select></div><div><label>Department Status</label><select onchange="cmsDeptRegistryStatus(this.value)"><option value="all">All Statuses</option><option value="registered" '+(deptState.status==='registered'?'selected':'')+'>Registered</option><option value="staff" '+(deptState.status==='staff'?'selected':'')+'>From staff records</option></select></div><div class="dept-result-count"><strong>'+filtered.length+' departments found</strong><span>Showing '+shownStart+'-'+shownEnd+'</span></div></div>';
+html+='<div class="dept-company-tabs">'+tabs+'</div><div class="table-wrap dept-table-wrap"><table class="dept-registry-table"><thead><tr><th>Company</th><th>Department</th><th>Staff</th><th>Positions</th><th>Status</th><th>Actions</th></tr></thead><tbody>'+rowsHtml+'</tbody></table></div>';
+html+='<div class="dept-pagination"><span>Showing '+shownStart+' to '+shownEnd+' of '+filtered.length+' departments</span><div><button onclick="cmsDeptRegistryPage('+Math.max(1,deptState.page-1)+')" '+(deptState.page===1?'disabled':'')+'>Previous</button>'+nums+'<button onclick="cmsDeptRegistryPage('+Math.min(pages,deptState.page+1)+')" '+(deptState.page===pages?'disabled':'')+'>Next</button></div></div><div class="dept-info-note"><strong>i</strong><span>Departments are grouped by company for clarity and can be searched instantly by name.</span></div></div>';
+if(typeof CN==='undefined'||__cmsRouteEpoch===CN.epoch)setContent(html);if(activeId==='deptSearch'){var el=document.getElementById('deptSearch');if(el){el.focus();if(cursor!==null)el.setSelectionRange(cursor,cursor);}}
+};
+window.cmsDeptRegistryRender();
 }
 async function addDepartment() {
 var comp = (document.getElementById('newDeptCompany').value || '').trim();
@@ -6695,12 +7234,14 @@ var critEmps = (allEmps || []).filter(function(e){ return tierOf(e); });
 function fmtRows(rows){ return latestOnly(rows).map(function(r){ return { 'Employee ID': r.employee_id, 'Competency Code': r.comp_code, 'Type': r.type, 'Ticked': r.ticked, 'Evidence': r.evidence, 'HR_Status': r.hr_status, 'Rating': r.proficiency_rating , 'Scoring Rule': r.scoring_rule || 'legacy-zero', 'Classification': r.scoring_rule === 'floor-one-v1' ? r.classification : undefined, 'Weight Profile': r.weight_profile, 'Weight Policy': r.weight_policy}; }); }
 function empStats(e) {
 var mRows = (allResults || []).filter(function(r){ return r.employee_id === e.employee_id && r.type === 'Manager'; });
-var anyPending = mRows.some(function(r){ return r.ticked && (r.hr_status === '' || r.hr_status === 'Pending' || r.hr_status === 'Returned'); });
-var allDone = mRows.some(function(r){ return r.hr_status === 'Approved'; }) && !anyPending;
-var score = 0, assessHtml = '';
-if (!mRows.length) assessHtml = '<span class="badge badge-danger">Not Assessed</span>';
-else if (allDone) { score = calculateOverallScore(e.employee_id, 'Manager', fmtRows(mRows)); assessHtml = '<strong style="color:var(--green)">' + score + '%</strong> <span class="badge badge-success">Assessed</span>'; }
-else assessHtml = '<span class="badge badge-purple">Awaiting HR Approval</span>';
+var sRows = (allResults || []).filter(function(r){ return r.employee_id === e.employee_id && r.type === 'Self'; });
+function managerCompleted(rows){
+var pending = rows.some(function(r){ return r.ticked && (r.hr_status === '' || r.hr_status === 'Pending' || r.hr_status === 'Returned'); });
+return rows.length > 0 && rows.some(function(r){ return r.hr_status === 'Approved'; }) && !pending;
+}
+var managerDone = managerCompleted(mRows);
+var employeeDone = sRows.length > 0;
+var combinedDone = managerDone && employeeDone;
 var pRows = (allResults || []).filter(function(r){ return r.employee_id === e.employee_id && r.type === 'Prospective'; });
 var pscore = 0, promHtml = '<span style="color:var(--gray-400)">-</span>';
 if (pRows.length) {
@@ -6708,66 +7249,73 @@ pscore = calculateOverallScore(e.employee_id, 'Prospective', fmtRows(pRows));
 promHtml = pscore >= 80 ? '<span class="badge badge-success">Promotion Ready (' + pscore + '%)</span>' : '<span class="badge badge-info">' + pscore + '% - ' + getProspectiveReadiness(pscore).label + '</span>';
 }
 var plans = (allPlans || []).filter(function(p){ return p.employee_id === e.employee_id; });
-return { assessed: allDone, ready: pscore >= 80, idp: plans.length > 0, idpCount: plans.length, assessHtml: assessHtml, promHtml: promHtml };
+var assessHtml = combinedDone
+  ? '<span class="badge badge-success">Completed</span>'
+  : (!managerDone && !employeeDone ? '<span class="badge badge-danger">Not Assessed</span>' : '<span class="badge badge-warning">In Progress</span>');
+return { managerDone: managerDone, employeeDone: employeeDone, combined: combinedDone, ready: pscore >= 80, idp: plans.length > 0, idpCount: plans.length, assessHtml: assessHtml, promHtml: promHtml };
 }
 var tierStats = {};
-TIERS.forEach(function(t){ tierStats[t] = { positions: {}, staff: 0, assessed: 0, ready: 0, idp: 0 }; });
+TIERS.forEach(function(t){ tierStats[t] = { positions: {}, staff: 0, manager: 0, employee: 0, ready: 0, idp: 0 }; });
 critList.forEach(function(c){ var t = tierStats[c.criticality || 'Critical Role']; if (t) t.positions[(c.position_name || '').toUpperCase().trim()] = true; });
 var rowsHtml = '';
 critEmps.slice().sort(function(a,b){ var d = TIERS.indexOf(tierOf(a)) - TIERS.indexOf(tierOf(b)); return d !== 0 ? d : a.employee_name.localeCompare(b.employee_name); }).forEach(function(e){
 var st = empStats(e); var t = tierOf(e);
-tierStats[t].staff++; if (st.assessed) tierStats[t].assessed++; if (st.ready) tierStats[t].ready++; if (st.idp) tierStats[t].idp++;
+tierStats[t].staff++; if (st.managerDone) tierStats[t].manager++; if (st.employeeDone) tierStats[t].employee++; if (st.ready) tierStats[t].ready++; if (st.idp) tierStats[t].idp++;
 rowsHtml += '<tr><td><strong>' + escapeHtml(e.employee_name) + '</strong></td><td style="font-size:11px">' + escapeHtml(e.position) + '</td><td><span class="badge ' + critBadge(t) + '">' + escapeHtml(t) + '</span></td><td>' + st.assessHtml + '</td><td>' + (st.idp ? '<span class="badge badge-info">' + st.idpCount + ' IDP(s)</span>' : '<span style="color:var(--gray-400)">-</span>') + '</td><td>' + st.promHtml + '</td></tr>';
 });
-var total = critEmps.length, assessed = 0, promoted = 0, onIdp = 0;
-TIERS.forEach(function(t){ assessed += tierStats[t].assessed; promoted += tierStats[t].ready; onIdp += tierStats[t].idp; });
-var pctAssessed = total ? Math.round((assessed / total) * 100) : 0;
+var total = critEmps.length, managerAssessed = 0, employeeAssessed = 0, promoted = 0, onIdp = 0;
+TIERS.forEach(function(t){ managerAssessed += tierStats[t].manager; employeeAssessed += tierStats[t].employee; promoted += tierStats[t].ready; onIdp += tierStats[t].idp; });
+var pctManager = total ? Math.round((managerAssessed / total) * 100) : 0;
+var pctEmployee = total ? Math.round((employeeAssessed / total) * 100) : 0;
 var pctPromoted = total ? Math.round((promoted / total) * 100) : 0;
 var pctIdp = total ? Math.round((onIdp / total) * 100) : 0;
+function criticalRoleIcon(kind){
+ var paths={
+  critical:'<path d="M12 3 20 6v5c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6z"/><path d="M12 8v4M12 16h.01"/>',
+  staff:'<circle cx="9" cy="7" r="4"/><path d="M2 21v-2a7 7 0 0 1 14 0v2"/><path d="M16 4a4 4 0 0 1 0 7M18 15a5 5 0 0 1 4 5v1"/>',
+  assessed:'<rect x="6" y="3" width="12" height="18" rx="2"/><path d="M9 3v3h6V3M9 14l2 2 4-4"/>',
+  ready:'<path d="M4 19V5M4 19h16M7 15l4-5 3 3 4-6"/>',
+  idp:'<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/>',
+  breakdown:'<path d="M4 19V5M4 19h16M8 16v-4M12 16V8M16 16v-6"/>',
+  manage:'<path d="M4 7h16v13H4z"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M8 12h8"/>',
+  tracker:'<path d="M4 19V5M4 19h16M7 15h2M11 12h2M15 8h2"/>'
+ };
+ var tone={
+  critical:['#fee2e2','#dc2626'],staff:['#eef2ff','#4338ca'],assessed:['#ecfdf5','#059669'],
+  ready:['#f5f3ff','#7c3aed'],idp:['#fff7ed','#ea580c'],breakdown:['#eef2ff','#4338ca'],
+  manage:['#eff6ff','#2563eb'],tracker:['#ecfdf5','#059669']
+ }[kind]||['#eef2ff','#4338ca'];
+ return '<span style="display:inline-flex;align-items:center;justify-content:center;width:38px;height:38px;border-radius:10px;background:'+tone[0]+';color:'+tone[1]+';flex:0 0 38px">'+
+  '<svg viewBox="0 0 24 24" width="23" height="23" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">'+
+  (paths[kind]||paths.staff)+'</svg></span>';
+}
 var html = '<div class="card"><div class="card-title"> HR KPI Dashboard - Critical Roles Only</div><p style="font-size:12px;color:var(--gray-500)">Counts ONLY staff in positions YOU mark as critical, split by criticality level. Employees scoring 80%+ on a Prospective Role Assessment join the Progression-Ready Pool. Actual appointment remains subject to vacancy availability and management approval. Self-assessments and general roles are excluded.</p></div>';
 html += '<div class="stats-grid">';
-html += '<div class="stat-card" style="background:var(--red-light)"><div class="num" style="color:var(--red)">' + critList.length + '</div><div class="lbl">Critical Roles Identified</div></div>';
-html += '<div class="stat-card" style="background:var(--primary-light)"><div class="num" style="color:var(--primary)">' + total + '</div><div class="lbl">Staff in Critical Roles</div></div>';
-html += '<div class="stat-card" style="background:var(--green-light)"><div class="num" style="color:var(--green)">' + assessed + ' (' + pctAssessed + '%)</div><div class="lbl">Assessed by Manager</div></div>';
-html += '<div class="stat-card" style="background:var(--purple-light)"><div class="num" style="color:var(--purple)">' + promoted + ' (' + pctPromoted + '%)</div><div class="lbl">Promotion Ready (subject to vacancy)</div></div>';
-html += '<div class="stat-card" style="background:var(--orange-light)"><div class="num" style="color:var(--orange)">' + onIdp + ' (' + pctIdp + '%)</div><div class="lbl">On IDP</div></div>';
+html += '<div class="stat-card" style="background:var(--red-light)"><div style="display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:8px">'+criticalRoleIcon('critical')+'<div class="num" style="color:var(--red)">'+critList.length+'</div></div><div class="lbl">Critical Roles Identified</div></div>';
+html += '<div class="stat-card" style="background:var(--primary-light)"><div style="display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:8px">'+criticalRoleIcon('staff')+'<div class="num" style="color:var(--primary)">'+total+'</div></div><div class="lbl">Staff in Critical Roles</div></div>';
+html += '<div class="stat-card" style="background:var(--green-light)"><div style="display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:8px">'+criticalRoleIcon('assessed')+'<div class="num" style="color:var(--green)">'+managerAssessed+' / '+employeeAssessed+'</div></div><div class="lbl">Manager / Employee Assessed</div></div>';
+html += '<div class="stat-card" style="background:var(--purple-light)"><div style="display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:8px">'+criticalRoleIcon('ready')+'<div class="num" style="color:var(--purple)">'+promoted+' ('+pctPromoted+'%)</div></div><div class="lbl">Promotion Ready (subject to vacancy)</div></div>';
+html += '<div class="stat-card" style="background:var(--orange-light)"><div style="display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:8px">'+criticalRoleIcon('idp')+'<div class="num" style="color:var(--orange)">'+onIdp+' ('+pctIdp+'%)</div></div><div class="lbl">On IDP</div></div>';
 html += '</div>';
-html += '<div class="card"><div class="card-title"> Criticality Breakdown - Absolutely vs Critical vs Relatively Critical</div><div class="table-wrap"><table><thead><tr><th>Criticality Level</th><th>Positions</th><th>Staff</th><th>Assessed by Manager</th><th>Promotion Ready</th><th>On IDP</th></tr></thead><tbody>';
+html += '<div class="card"><div class="card-title" style="display:flex;align-items:center;gap:10px">'+criticalRoleIcon('breakdown')+'<span>Criticality Breakdown - Manager & Employee Assessment Coverage</span></div><div class="table-wrap"><table class="kpi-breakdown-table"><thead><tr><th>Criticality Level</th><th>Positions</th><th>Staff</th><th>Manager Assessed</th><th>Employee Assessed</th><th>Promotion Ready</th><th>On IDP</th></tr></thead><tbody>';
 TIERS.forEach(function(t){
 var s = tierStats[t];
 var pc = Object.keys(s.positions).length;
 var p = function(n){ return s.staff ? Math.round((n / s.staff) * 100) + '%' : '0%'; };
-html += '<tr><td><span class="badge ' + critBadge(t) + '">' + escapeHtml(t) + '</span></td><td>' + pc + '</td><td>' + s.staff + '</td><td>' + s.assessed + ' (' + p(s.assessed) + ')</td><td>' + s.ready + ' (' + p(s.ready) + ')</td><td>' + s.idp + ' (' + p(s.idp) + ')</td></tr>';
+var pillBg = t.indexOf('Absolutely') === 0 ? '#fef2f2' : (t.indexOf('Relatively') === 0 ? '#eef2ff' : '#fff7ed');
+var pillColor = t.indexOf('Absolutely') === 0 ? '#dc2626' : (t.indexOf('Relatively') === 0 ? '#3730a3' : '#ea580c');
+html += '<tr>'
+  + '<td><span style="display:inline-block;background:' + pillBg + ';color:' + pillColor + ';border-radius:6px;padding:7px 10px;font-size:10px;font-weight:800;line-height:1.1;white-space:nowrap">' + escapeHtml(t) + '</span></td>'
+  + '<td style="background:#fff7ed;color:#9a3412;font-weight:700;text-align:center;border-left:4px solid #f59e0b">' + pc + '</td>'
+  + '<td style="background:#fdf2f8;color:#9d174d;font-weight:700;text-align:center;border-left:4px solid #ec4899">' + s.staff + '</td>'
+  + '<td style="background:#ecfdf5;color:#047857;font-weight:700;text-align:center;border-left:4px solid #10b981">' + s.manager + ' (' + p(s.manager) + ')</td>'
+  + '<td style="background:#eff6ff;color:#1d4ed8;font-weight:700;text-align:center;border-left:4px solid #3b82f6">' + s.employee + ' (' + p(s.employee) + ')</td>'
+  + '<td style="background:#f5f3ff;color:#6d28d9;font-weight:700;text-align:center;border-left:4px solid #8b5cf6">' + s.ready + ' (' + p(s.ready) + ')</td>'
+  + '<td style="background:#eff6ff;color:#1d4ed8;font-weight:700;text-align:center;border-left:4px solid #3b82f6">' + s.idp + ' (' + p(s.idp) + ')</td>'
+  + '</tr>';
 });
 html += '</tbody></table></div></div>';
-html += '<div class="card"><div class="card-title">Manage Critical Positions</div><div style="display:flex;gap:8px;flex-wrap:wrap"><input id="newCritPos" placeholder="e.g. Production Manager" style="flex:1;min-width:180px"><select id="newCritLevel" style="width:auto"><option>Absolutely Critical Role</option><option selected>Critical Role</option><option>Relatively Critical Role</option><option>Non-Critical Role</option></select><button class="btn btn-primary" onclick="addCriticalPosition()">Add</button></div><div style="margin-top:10px">';
-critList.forEach(function(c){ var lv = c.criticality || 'Critical Role'; html += '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;border:1px solid var(--gray-200);border-radius:6px;padding:6px 10px;margin:0 0 6px;font-size:12px"><span><strong>' + escapeHtml(c.position_name) + '</strong> <span class="badge ' + critBadge(lv) + '">' + escapeHtml(lv) + '</span></span><span style="display:flex;gap:6px;align-items:center"><select onchange="setCriticality(' + rcArg(c.id) + ',this.value)" style="width:auto;padding:3px 6px;font-size:11px"><option' + (lv === 'Absolutely Critical Role' ? ' selected' : '') + '>Absolutely Critical Role</option><option' + (lv === 'Critical Role' ? ' selected' : '') + '>Critical Role</option><option' + (lv === 'Relatively Critical Role' ? ' selected' : '') + '>Relatively Critical Role</option><option' + (lv === 'Non-Critical Role' ? ' selected' : '') + '>Non-Critical Role</option></select><button class="btn btn-sm btn-danger" onclick="deleteCriticalPosition(' + rcArg(c.id) + ')">x</button></span></div>'; });
-if (!critList.length) html += '<p style="color:var(--gray-500);font-size:12px">No critical positions yet - add ONLY the roles that count for your KPI.</p>';
-html += '</div></div>';
-html += '<div class="card"><div class="card-title">Critical Roles Tracker (grouped by criticality)</div><div class="table-wrap"><table><thead><tr><th>Employee</th><th>Position</th><th>Criticality</th><th>Manager Assessment</th><th>IDP</th><th>Promotion Readiness</th></tr></thead><tbody>' + (rowsHtml || '<tr><td colspan="6" style="color:var(--gray-500)">No staff in critical positions yet.</td></tr>') + '</tbody></table></div></div>';
 ((typeof CN === 'undefined' || __cmsRouteEpoch === CN.epoch) ? setContent(html) : undefined);
-}
-async function deleteCriticalPosition(id) {
-if (!confirm('Remove this position from the critical list?')) return;
-const { error } = await _supabase.from('critical_positions').delete().eq('id', id);
-if (error) { showToast(error.message); return; }
-showToast('Critical position removed');
-loadHRKPI();
-}
-async function addCriticalPosition() {
-var v = (document.getElementById('newCritPos').value || '').trim();
-var lv = document.getElementById('newCritLevel') ? document.getElementById('newCritLevel').value : 'Critical Role';
-if (!v) { showToast('Type a position name'); return; }
-const { error } = await _supabase.from('critical_positions').insert({ position_name: v, criticality: lv });
-if (error) { showToast(error.message); return; }
-showToast('Critical position added');
-loadHRKPI();
-}
-async function setCriticality(id, lv) {
-const { error } = await _supabase.from('critical_positions').update({ criticality: lv }).eq('id', id);
-if (error) { showToast(error.message); return; }
-showToast('Classification updated');
-loadHRKPI();
 }
 function critBadge(lv) { lv = (lv || '').toString(); if (lv.indexOf('Absolutely') === 0) return 'badge-danger'; if (lv.indexOf('Relatively') === 0) return 'badge-info'; if (lv.indexOf('Non') === 0) return 'badge-gray';
 return 'badge-warning'; 
@@ -8551,7 +9099,8 @@ var err = document.getElementById('setPassError');
 if (p1.length < 6) { err.textContent = 'Password must be at least 6 characters'; err.style.display = 'block'; return; }
 if (p1 !== p2) { err.textContent = 'Passwords do not match'; err.style.display = 'block'; return; }
 const { error } = await _supabase.auth.updateUser({ password: p1 });
-if (error) { err.textContent = error.message; err.style.display = 'block'; return; }
+if (error) { err.textContent = /session/i.test(error.message) ? 'This reset link has expired or was already used. Go back and click Forgot password again.' : error.message; err.style.display = 'block'; return; }
+CMS_RECOVERY_MODE = false;
 await _supabase.auth.signOut();
 history.replaceState(null, '', window.location.pathname);
 showLoginScreen();
@@ -8793,8 +9342,10 @@ var __cmsRouteEpoch = typeof CN === 'undefined' ? null : CN.epoch;
 const { data: regs } = await _supabase.from('critical_positions').select('*').order('id');
 var deps = {};
 (regs || []).forEach(function(r){ if (r.department) deps[r.department] = true; });
-const { data: emps } = await _supabase.from('employees').select('department');
+const { data: emps } = await _supabase.from('employees').select('*');
 (emps || []).forEach(function(e){ if (e.department) deps[e.department] = true; });
+const { data: allResults } = await _supabase.from('assessments').select('*');
+const { data: allPlans } = await _supabase.from('dev_plans').select('*');
 var html = '<div class="card"><div class="card-title"> Positions & Criticality Registry</div>';
 html += '<p style="font-size:12px;color:var(--gray-500);margin-bottom:12px">Register every position with its department and criticality level. The Add Employee form and all dashboards read from this list.</p>';
 html += '<div style="display:grid;grid-template-columns:1.2fr 1.2fr 1.2fr auto;gap:8px;align-items:end">';
@@ -8811,6 +9362,35 @@ html += '<div style="display:flex;justify-content:space-between;align-items:cent
 });
 html += '</div>';
 });
+var trackerTiers = ['Absolutely Critical Role', 'Critical Role', 'Relatively Critical Role'];
+var trackerLevelOf = {};
+(regs || []).forEach(function(r){ trackerLevelOf[(r.position_name || '').toUpperCase().trim()] = r.criticality || 'Critical Role'; });
+function trackerTierOf(e){
+var lv = trackerLevelOf[(e.position || '').toUpperCase().trim()] || '';
+return trackerTiers.indexOf(lv) >= 0 ? lv : '';
+}
+function trackerFmt(rows){
+return latestOnly(rows).map(function(r){
+return { 'Employee ID': r.employee_id, 'Competency Code': r.comp_code, 'Type': r.type, 'Ticked': r.ticked, 'Evidence': r.evidence, 'HR_Status': r.hr_status, 'Rating': r.proficiency_rating, 'Scoring Rule': r.scoring_rule || 'legacy-zero', 'Classification': r.scoring_rule === 'floor-one-v1' ? r.classification : undefined, 'Weight Profile': r.weight_profile, 'Weight Policy': r.weight_policy };
+});
+}
+var trackerEmployees = (emps || []).filter(function(e){ return trackerTierOf(e); });
+var trackerRowsHtml = '';
+trackerEmployees.slice().sort(function(a,b){
+var d = trackerTiers.indexOf(trackerTierOf(a)) - trackerTiers.indexOf(trackerTierOf(b));
+return d !== 0 ? d : (a.employee_name || '').localeCompare(b.employee_name || '');
+}).forEach(function(e){
+var mRows = (allResults || []).filter(function(r){ return r.employee_id === e.employee_id && r.type === 'Manager'; });
+var sRows = (allResults || []).filter(function(r){ return r.employee_id === e.employee_id && r.type === 'Self'; });
+var combinedDone = typeof assessmentReleased === 'function' ? assessmentReleased(mRows.concat(sRows)) : (mRows.length > 0 && sRows.length > 0);
+var pRows = (allResults || []).filter(function(r){ return r.employee_id === e.employee_id && r.type === 'Prospective'; });
+var pscore = pRows.length ? calculateOverallScore(e.employee_id, 'Prospective', trackerFmt(pRows)) : 0;
+var level = trackerTierOf(e);
+var status = combinedDone ? '<span class="badge badge-success">Completed</span>' : ((mRows.length || sRows.length) ? '<span class="badge badge-warning">In Progress</span>' : '<span class="badge badge-danger">Not Assessed</span>');
+var plansForEmployee = (allPlans || []).filter(function(p){ return p.employee_id === e.employee_id; });
+trackerRowsHtml += '<tr><td><strong>' + escapeHtml(e.employee_name || '') + '</strong></td><td style="font-size:11px">' + escapeHtml(e.position || '') + '</td><td><span class="badge ' + critBadge(level) + '">' + escapeHtml(level) + '</span></td><td>' + status + '</td><td>' + (plansForEmployee.length ? '<span class="badge badge-info">' + plansForEmployee.length + ' IDP(s)</span>' : '<span style="color:var(--gray-400)">-</span>') + '</td><td>' + (pRows.length ? (pscore >= 80 ? '<span class="badge badge-success">Promotion Ready (' + pscore + '%)</span>' : '<span class="badge badge-info">' + pscore + '%</span>') : '<span style="color:var(--gray-400)">-</span>') + '</td></tr>';
+});
+html += '<div class="card"><div class="card-title">Critical Roles Tracker (grouped by criticality)</div><div class="table-wrap"><table><thead><tr><th>Employee</th><th>Position</th><th>Criticality</th><th>Completed Assessments</th><th>IDP</th><th>Promotion Readiness</th></tr></thead><tbody>' + (trackerRowsHtml || '<tr><td colspan="6" style="color:var(--gray-500)">No staff in critical positions yet.</td></tr>') + '</tbody></table></div></div>';
 if (!(regs || []).length) html += '<div class="card"><p style="color:var(--gray-500);font-size:12px">No positions registered yet - add the first one above.</p></div>';
 ((typeof CN === 'undefined' || __cmsRouteEpoch === CN.epoch) ? setContent(html) : undefined);
 }
@@ -14621,7 +15201,7 @@ async function hhDetail(kind){
  if(['staff','assessed','outstanding'].includes(kind)){
  if(kind!=='staff'&&!d.assessments)throw new Error(d.errors.assessments);
  var rows=kind==='staff'?m.people:kind==='assessed'?m.assessed:m.notAssessed;
- h+='<p>Assessed means the manager has submitted a current-role assessment. Assessment-detail access still follows the submitted-report rule.</p><div class="table-wrap"><table><thead><tr><th>Employee</th><th>Company / Department</th><th>Position</th><th>Manager assessment</th><th>Details</th></tr></thead><tbody>';
+ h+='<p>Assessed means the manager has submitted a current-role assessment. Assessment-detail access still follows the submitted-report rule.</p><div class="table-wrap"><table><thead><tr><th>Employee</th><th>Company / Department</th><th>Position</th><th>Completed Assessments</th><th>Details</th></tr></thead><tbody>';
  h+=rows.map(e=>'<tr><td>'+escapeHtml(e.employee_name)+'</td><td>'+escapeHtml(e.company||'')+' / '+escapeHtml(e.department||'')+'</td><td>'+escapeHtml(e.position||'')+'</td><td>'+(d.assessments?(m.done.has(e.employee_id)?'Submitted':'Not submitted'):'Unavailable')+'</td><td>'+(e.report_submitted?hhCall('View assessments','hhOpenAssessment',[e.employee_id]):'HR report not yet submitted')+'</td></tr>').join('');h+='</tbody></table></div><p>'+rows.length+' employees in this scope.</p>';
  }else if(kind==='plans'){
  if(!d.plans)throw new Error(d.errors.plans);
@@ -14884,6 +15464,7 @@ async function suStartApp(){
   if(!CMS_TAB_STORAGE_OK){showLoginScreen();suLoginNotice('Allow browser storage to sign in.');return;}
   var w=suWindow();
   // Expired credentials are removed before restoring a protected page.
+  if(CMS_RECOVERY_MODE){showSetPasswordScreen();return;}
   if(!w||!suWindowValid(w,w.email))suAuthClear();
   var response=await _supabase.auth.getSession();if(response.error)throw response.error;
   if(response.data&&response.data.session&&suWindowValid(suWindow(),response.data.session.user.email)){
@@ -18804,7 +19385,10 @@ async function ihOpen(view){
 }
 function ihHeader(){
  var admin=['hr','hohr'].includes(APP.currentRole);
- return '<header class="ih-header"><div><span class="ih-kicker">'+(admin?'HR WORKSPACE':'MY ASSIGNED WORK')+'</span><h1>'+(admin?'Invitations &amp; Follow-up':'My Invitations')+'</h1><p>Assign the right work. Set a deadline. Track submission.</p></div>'+ihButton('reload','Refresh')+'</header>'+
+ var manager=APP.currentRole==='manager'&&IH.view==='mine';
+ var title=admin?'Invitations &amp; Follow-up':manager?'Manager Invitations':'My Invitations';
+ var subtitle=admin?'Assign the right work. Set a deadline. Track submission.':manager?'Your assigned manager assessments and competency-setting work.':'Your assigned work, deadlines and submission history.';
+ return '<header class="ih-header"><div><span class="ih-kicker">'+(admin?'HR WORKSPACE':'MY ASSIGNED WORK')+'</span><h1>'+title+'</h1><p>'+subtitle+'</p></div>'+ihButton('reload','Refresh')+'</header>'+
  (admin?'<nav class="ih-tabs">'+[['employee','Invite employee'],['manager','Invite manager'],['sent','Sent invites']].map(([k,l])=>ihButton('view',l,k,IH.view===k)).join('')+'</nav>':'');
 }
 function ihField(id,label,options,value,disabled){return '<label>'+label+'<select id="'+id+'" '+(disabled?'disabled':'')+'>'+ihOptions(options,value,'Choose '+label.toLowerCase())+'</select></label>';}
@@ -19145,7 +19729,7 @@ function irRegisterLayout(){
  var mine=IH.view==='mine',companies=crNames(IH.rows.map(r=>r.company));
  var deps=[...new Set(IH.rows.filter(r=>!IR.company||r.company===IR.company).map(r=>r.department).filter(Boolean))].sort();
  if(mine){
-  panel.innerHTML='<nav class="ir-personal-tabs">'+[['todo','To complete'],['history','Submission history'],['redos','Redo requests']].map(([v,l])=>'<button type="button" data-ir="mine-tab" data-value="'+v+'" aria-pressed="'+(IR.mineTab===v)+'">'+l+'</button>').join('')+'</nav><div id="ihRegister"></div>';
+  panel.innerHTML='<nav class="ir-personal-tabs">'+[['todo','To complete','team'],['history','Submission history','eye'],['redos','Redo requests','mail']].map(([v,l,i])=>'<button type="button" data-ir="mine-tab" data-value="'+v+'" aria-pressed="'+(IR.mineTab===v)+'">'+irIcon(i)+'<span>'+l+'</span></button>').join('')+'</nav><div id="ihRegister"></div>';
  }else{
   panel.innerHTML='<header class="ir-register-title"><h2>Sent invitations</h2><span>'+IH.rows.length+' invitations</span></header><div class="ir-filter-row">'+
   irSelect('irCompany','Company',companies,IR.company)+irSelect('irDepartment','Department',deps,IR.department)+
@@ -28867,7 +29451,10 @@ body:has(dialog[open]) :is(#kaiFab,#pchatFab){visibility:hidden!important}
  }
  function e(v){return escapeHtml(v==null?'':String(v));}
  function label(r){return r.kind==='framework'?'Set competencies':({self_current:'Self assessment: current',self_target:'Self assessment: prospective',manager_current:'Manager assessment: current',manager_target:'Manager assessment: prospective'})[r.kind]||r.kind;}
- function button(a,l,disabled){return '<button type="button" class="btn btn-primary" data-uw="'+a+'" '+(disabled?'disabled':'')+'>'+e(l)+'</button>';}
+ function button(a,l,disabled){
+ var cls=(a==='refresh'||a==='edit')?'btn':'btn btn-primary';
+ return '<button type="button" class="'+cls+'" data-uw="'+a+'" '+(disabled?'disabled':'')+'>'+e(l)+'</button>';
+}
  function onPage(){return IH.view==='mine'&&IR.mineTab==='redos'&&['employee','manager'].includes(APP.currentRole)&&!!document.getElementById('uwRoot');}
  function makeRows(history,mine,deleted){
   var rows=[],seen=new Set();
@@ -28911,14 +29498,15 @@ body:has(dialog[open]) :is(#kaiFab,#pchatFab){visibility:hidden!important}
  function html(){
   var r=selected(),request=r&&['redo','renew','restore'].includes(r.action);
   return '<section id="uwRoot" class="ir-redo-create"><h3>Request access to assigned work</h3><p>Submitted assessments, competency invitations, expired work and deleted invitations are listed together.</p>'+
-   '<label>Employee / role / assigned work<select id="uwSelect"><option value="">'+(U.loading?'Loading assigned work...':'Choose employee and work item')+'</option>'+
-   U.rows.map(x=>'<option value="'+e(x.key)+'" '+(x.key===U.selected?'selected':'')+'>'+e([label(x),x.employee_name,x.target_department,x.position,x.state].filter(Boolean).join(' | '))+'</option>').join('')+'</select></label>'+
-   '<p id="uwHelp">'+e(help(r))+'</p>'+
-   '<label>Reason<textarea id="uwReason" minlength="10" maxlength="2000" placeholder="Explain why you need to continue or redo this work">'+e(U.reason)+'</textarea></label>'+
-   button('preview',r?.action==='open'?'Open assigned work':'Preview request',U.loading||U.busy||!r||(!request&&r.action!=='open'))+' '+button('refresh','Refresh work list',U.loading||U.busy)+
-   (U.error?'<p role="alert">Some sources could not be loaded: '+e(U.error)+'. Refresh before assuming work is missing.</p>':'')+
-   (!U.loading&&!U.rows.length?'<p>No authorized history or invitations were returned. Records with missing framework links may need HR investigation; this selector does not invent a role mapping.</p>':'')+
-   '<div id="uwConfirm">'+(U.preview?'<p><b>'+e(label(r))+' / '+e(r.position)+'</b></p><p>'+e(help(r))+'</p><p>Reason: '+e(U.reason)+'</p>'+button('send','Send request for approval',U.busy)+' '+button('edit','Keep editing',U.busy):'')+'</div></section>';
+ '<div class="uw-fields">'+
+ '<div class="uw-field"><label>Employee / role / assigned work<select id="uwSelect"><option value="">'+(U.loading?'Loading assigned work...':'Choose employee and work item')+'</option>'+
+ U.rows.map(x=>'<option value="'+e(x.key)+'" '+(x.key===U.selected?'selected':'')+'>'+e([label(x),x.employee_name,x.target_department,x.position,x.state].filter(Boolean).join(' | '))+'</option>').join('')+'</select></label><p id="uwHelp">'+e(help(r))+'</p></div>'+
+ '<div class="uw-field"><label>Reason<textarea id="uwReason" minlength="10" maxlength="2000" placeholder="Explain why you need to continue or redo this work">'+e(U.reason)+'</textarea></label></div>'+
+ '</div>'+
+ '<div class="uw-actions">'+button('preview',r?.action==='open'?'Open assigned work':'Preview request',U.loading||U.busy||!r||(!request&&r.action!=='open'))+' '+button('refresh','Refresh work list',U.loading||U.busy)+'</div>'+
+ (U.error?'<p role="alert">Some sources could not be loaded: '+e(U.error)+'. Refresh before assuming work is missing.</p>':'')+
+ (!U.loading&&!U.rows.length?'<p>No authorized history or invitations were returned. Records with missing framework links may need HR investigation; this selector does not invent a role mapping.</p>':'')+
+ '<div id="uwConfirm">'+(U.preview?'<p><b>'+e(label(r))+' / '+e(r.position)+'</b></p><p>'+e(help(r))+'</p><p>Reason: '+e(U.reason)+'</p>'+button('send','Send request for approval',U.busy)+' '+button('edit','Keep editing',U.busy):'')+'</div></section>';
  }
  function paint(){var root=document.getElementById('uwRoot');if(root)root.outerHTML=html();}
  irRedoContent=function(){
