@@ -350,7 +350,7 @@ body.role-csuite .cs-pill.active{background:#12365c;border-color:#c9a227;}
 .company-add-card .card-title{font-size:18px;color:#102a52;}
 .company-add-grid{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:end;}
 .company-add-grid .btn{height:42px;padding:0 20px;font-weight:800;}
-@media(max-width:700px){.company-add-grid{grid-template-columns:1fr;}.company-add-grid .btn{width:100%;justify-content:center;}
+@media(max-width:700px){.company-add-grid{grid-template-columns:1fr;}.company-add-grid .btn{width:100%;justify-content:center;}}
 .company-registry-table{width:100%;border-collapse:separate;border-spacing:0;font-size:13px;overflow:hidden;border:1px solid #dbe4f0;border-radius:12px}
 .company-registry-table th{background:#eef4fb;color:#102a52;padding:12px;text-align:left;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.4px}
 .company-registry-table td{padding:13px 12px;border-bottom:1px solid #edf1f6;background:#fff}
@@ -744,6 +744,272 @@ body.role-csuite .cs-pill.active{background:#12365c;border-color:#c9a227;}
     margin-left:0;
   }
 }
+html body #mainContent .dept-heading-icon{
+  width:24px!important;
+  height:24px!important;
+  min-width:24px!important;
+  max-width:24px!important;
+  min-height:24px!important;
+  max-height:24px!important;
+  display:inline-flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  overflow:hidden!important;
+  font-size:0!important;
+}
+html body #mainContent .dept-heading-icon svg,
+html body #mainContent .dept-summary-icon svg{
+  width:12px!important;
+  height:12px!important;
+  min-width:12px!important;
+  max-width:12px!important;
+  min-height:12px!important;
+  max-height:12px!important;
+  display:block!important;
+  flex:none!important;
+}
+html body #mainContent .dept-summary-icon{
+  width:24px!important;
+  height:24px!important;
+  min-width:24px!important;
+  max-width:24px!important;
+  min-height:24px!important;
+  max-height:24px!important;
+  display:inline-flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  overflow:hidden!important;
+}
+/* Departments Registry icon sizing and controls */
+html body #mainContent .dept-heading-icon,
+html body #mainContent .dept-summary-icon{
+  display:inline-flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  overflow:hidden!important;
+  box-sizing:border-box!important;
+}
+html body #mainContent .dept-heading-icon{
+  width:24px!important;
+  height:24px!important;
+  min-width:24px!important;
+  max-width:24px!important;
+  min-height:24px!important;
+  max-height:24px!important;
+  border-radius:6px!important;
+  flex:0 0 24px!important;
+}
+html body #mainContent .dept-summary-icon{
+  width:24px!important;
+  height:24px!important;
+  min-width:24px!important;
+  max-width:24px!important;
+  min-height:24px!important;
+  max-height:24px!important;
+  border-radius:50%!important;
+  flex:0 0 24px!important;
+}
+html body #mainContent .dept-heading-icon svg,
+html body #mainContent .dept-summary-icon svg{
+  display:block!important;
+  width:12px!important;
+  height:12px!important;
+  min-width:12px!important;
+  max-width:12px!important;
+  min-height:12px!important;
+  max-height:12px!important;
+  flex:none!important;
+}
+html body #mainContent .dept-search-icon{
+  position:absolute!important;
+  right:12px!important;
+  top:50%!important;
+  width:16px!important;
+  height:16px!important;
+  transform:translateY(-50%)!important;
+  display:inline-flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  color:#64748b!important;
+  pointer-events:none!important;
+}
+html body #mainContent .dept-search-icon svg{
+  width:15px!important;
+  height:15px!important;
+  display:block!important;
+}
+html body #mainContent .dept-add-toggle{
+  display:inline-flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  gap:6px!important;
+  white-space:nowrap!important;
+}
+html body #mainContent .dept-add-toggle svg{
+  width:14px!important;
+  height:14px!important;
+  display:block!important;
+}
+html body #mainContent .dept-delete-button svg{
+  width:14px!important;
+  height:14px!important;
+  display:block!important;
+}
+html body #mainContent .dept-info-note strong{
+  width:18px!important;
+  height:18px!important;
+  min-width:18px!important;
+  display:inline-flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+}
+html body #mainContent .dept-info-note strong svg{
+  width:12px!important;
+  height:12px!important;
+  display:block!important;
+}
+/* Departments Registry: high-visibility summary cards */
+html body #mainContent .dept-summary-grid{
+  gap:14px!important;
+  margin:18px 0!important;
+}
+html body #mainContent .dept-summary-card{
+  min-height:102px!important;
+  padding:16px 18px!important;
+  display:flex!important;
+  align-items:center!important;
+  gap:13px!important;
+  border-width:1px!important;
+  border-style:solid!important;
+  border-radius:12px!important;
+  box-shadow:0 3px 10px rgba(15,23,42,.08)!important;
+}
+html body #mainContent .dept-summary-card.green{
+  background:#ecfdf5!important;
+  border-color:#86efac!important;
+}
+html body #mainContent .dept-summary-card.purple{
+  background:#f5f3ff!important;
+  border-color:#c4b5fd!important;
+}
+html body #mainContent .dept-summary-card.blue{
+  background:#eff6ff!important;
+  border-color:#93c5fd!important;
+}
+html body #mainContent .dept-summary-card.orange{
+  background:#fff7ed!important;
+  border-color:#fdba74!important;
+}
+html body #mainContent .dept-summary-card .dept-summary-icon{
+  width:40px!important;
+  height:40px!important;
+  min-width:40px!important;
+  max-width:40px!important;
+  min-height:40px!important;
+  max-height:40px!important;
+  border-radius:50%!important;
+  flex:0 0 40px!important;
+  display:inline-flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+}
+html body #mainContent .dept-summary-card.green .dept-summary-icon{
+  background:#10b981!important;
+  color:#fff!important;
+}
+html body #mainContent .dept-summary-card.purple .dept-summary-icon{
+  background:#7c3aed!important;
+  color:#fff!important;
+}
+html body #mainContent .dept-summary-card.blue .dept-summary-icon{
+  background:#2563eb!important;
+  color:#fff!important;
+}
+html body #mainContent .dept-summary-card.orange .dept-summary-icon{
+  background:#f97316!important;
+  color:#fff!important;
+}
+html body #mainContent .dept-summary-card .dept-summary-icon svg{
+  width:18px!important;
+  height:18px!important;
+  min-width:18px!important;
+  max-width:18px!important;
+  min-height:18px!important;
+  max-height:18px!important;
+  display:block!important;
+  stroke:currentColor!important;
+}
+html body #mainContent .dept-summary-card span:not(.dept-summary-icon){
+  display:block!important;
+  color:#334155!important;
+  font-size:11px!important;
+  font-weight:800!important;
+  letter-spacing:.35px!important;
+  text-transform:uppercase!important;
+}
+html body #mainContent .dept-summary-card strong{
+  display:block!important;
+  margin-top:3px!important;
+  color:#0f2d59!important;
+  font-size:28px!important;
+  line-height:1.05!important;
+  font-weight:900!important;
+}
+html body #mainContent .dept-summary-card small{
+  display:block!important;
+  margin-top:5px!important;
+  color:#52678c!important;
+  font-size:11px!important;
+  font-weight:600!important;
+}
+/* Positions & Criticality Registry: accordion page */
+.pr-page{background:#f8fafc;padding:20px 22px 30px;border-radius:12px;min-height:calc(100vh - 120px)}
+.pr-title-row h1{font-size:22px;color:#102a52;margin:0 0 4px;font-weight:900}
+.pr-title-row p{font-size:12px;color:#64748b;margin:0 0 18px}
+.pr-kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-bottom:16px}
+.pr-kpi{display:flex;align-items:center;gap:13px;background:#fff;border:1px solid #dbe4f0;border-radius:12px;padding:15px 16px;box-shadow:0 3px 10px rgba(15,23,42,.06)}
+.pr-kpi>span{width:44px;height:44px;min-width:44px;border-radius:12px;display:inline-flex;align-items:center;justify-content:center;color:#fff}
+.pr-kpi>span svg{width:22px;height:22px;display:block}
+.pr-kpi.blue{border-top:3px solid #2563eb}.pr-kpi.blue>span{background:#2563eb}
+.pr-kpi.red{border-top:3px solid #dc2626}.pr-kpi.red>span{background:#dc2626}
+.pr-kpi.purple{border-top:3px solid #7c3aed}.pr-kpi.purple>span{background:#7c3aed}
+.pr-kpi.orange{border-top:3px solid #f97316}.pr-kpi.orange>span{background:#f97316}
+.pr-kpi small{display:block;color:#52678c;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.35px}
+.pr-kpi strong{display:block;color:#102a52;font-size:26px;line-height:1.1;margin:3px 0;font-weight:900}
+.pr-kpi em{display:block;color:#64748b;font-size:10px;font-style:normal}
+.pr-toolbar{display:grid;grid-template-columns:1.05fr 1.05fr 1.05fr auto;gap:12px;align-items:end;background:#fff;border:1px solid #dbe4f0;border-radius:12px;padding:14px;margin-bottom:16px}
+.pr-toolbar label,.pr-add-panel label{display:block;color:#334155;font-size:10px;font-weight:800;margin-bottom:5px}
+.pr-toolbar input,.pr-toolbar select,.pr-add-panel input,.pr-add-panel select{height:38px;background:#fff}
+.pr-add{height:38px;white-space:nowrap}
+.pr-add-panel{display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:12px;align-items:end;background:#eef2ff;border:1px solid #c7d2fe;border-radius:10px;padding:13px;margin:-6px 0 16px}
+.pr-accordion{background:#fff;border:1px solid #dbe4f0;border-left:5px solid #2563eb;border-radius:11px;margin:0 0 12px;box-shadow:0 3px 10px rgba(15,23,42,.06);overflow:hidden}
+.pr-accordion.absolute{border-left-color:#dc2626}.pr-accordion.relative{border-left-color:#7c3aed}.pr-accordion.non{border-left-color:#059669}.pr-accordion.tracker{border-left-color:#2563eb}
+.pr-accordion>summary{list-style:none;display:flex;align-items:center;gap:13px;min-height:76px;padding:14px 18px;cursor:pointer;user-select:none}
+.pr-accordion>summary::-webkit-details-marker{display:none}
+.pr-acc-icon{width:42px;height:42px;min-width:42px;border-radius:11px;display:inline-flex;align-items:center;justify-content:center;color:#fff}
+.pr-acc-icon svg{width:21px;height:21px;display:block}
+.absolute .pr-acc-icon{background:#dc2626}.relative .pr-acc-icon{background:#7c3aed}.non .pr-acc-icon{background:#059669}.tracker .pr-acc-icon{background:#2563eb}
+.pr-acc-copy{display:grid;grid-template-columns:max-content max-content;align-items:center;justify-content:start;column-gap:9px;flex:1;min-width:0}
+.pr-acc-copy strong{font-size:14px;color:#102a52;font-weight:900}
+.pr-acc-copy small{grid-column:1/-1;color:#64748b;font-size:11px;margin-top:3px}
+.pr-count{display:inline-flex!important;width:max-content!important;min-width:0!important;max-width:max-content!important;justify-self:start!important;align-self:center!important;border-radius:6px;padding:3px 8px;color:#fff;font-size:10px;font-weight:900;line-height:1.2;}
+.absolute .pr-count{background:#dc2626}.relative .pr-count{background:#7c3aed}.non .pr-count{background:#059669}.tracker .pr-count{background:#2563eb}
+.pr-chevron{font-size:22px;color:#334155;transition:transform .2s;line-height:1}
+.pr-accordion[open] .pr-chevron{transform:rotate(180deg)}
+.pr-detail{border-top:1px solid #edf1f6;padding:0 12px 12px;background:#fbfdff}
+.pr-detail table{width:100%;border-collapse:collapse;font-size:12px}
+.pr-detail th{background:#eef3f9;color:#52678c;padding:10px 12px;font-size:10px;text-transform:uppercase;letter-spacing:.35px;text-align:left}
+.pr-detail td{padding:10px 12px;border-bottom:1px solid #edf1f6;color:#18335e;vertical-align:middle}
+.pr-detail td strong{color:#102a52;font-weight:800}
+.pr-detail select{width:auto;min-width:170px;height:30px;padding:4px 8px;font-size:11px;background:#fff}
+.pr-delete{width:30px;height:30px;border:0;border-radius:7px;background:#dc2626;color:#fff;display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
+.pr-delete:hover{background:#b91c1c}.pr-delete svg{width:15px;height:15px;display:block}
+.pr-pill,.pr-status{display:inline-block;border-radius:5px;padding:4px 7px;font-size:9px;font-weight:900;white-space:nowrap}
+.pr-pill.absolute,.pr-status.not{background:#fee2e2;color:#b91c1c}.pr-pill.relative{background:#ede9fe;color:#6d28d9}.pr-pill.non{background:#dcfce7;color:#15803d}
+.pr-status.done{background:#dcfce7;color:#15803d}.pr-status.progress{background:#dbeafe;color:#1d4ed8}
+.pr-empty{text-align:center!important;color:#64748b!important;padding:22px!important}
+@media(max-width:1000px){.pr-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.pr-toolbar{grid-template-columns:1fr 1fr}.pr-add-panel{grid-template-columns:1fr 1fr}}
+@media(max-width:600px){.pr-page{padding:14px 10px}.pr-kpis{grid-template-columns:1fr}.pr-toolbar,.pr-add-panel{grid-template-columns:1fr}.pr-accordion>summary{padding:12px}.pr-acc-copy small{font-size:10px}.pr-detail{overflow-x:auto}.pr-detail table{min-width:700px}}
 </style>
 <style>
 /* The approved visual design, scoped to employee mode and the profile. */
@@ -7072,8 +7338,11 @@ var paths={
 company:'<path d="M4 21V5a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v16M8 7h2M14 7h2M8 11h2M14 11h2M10 21v-4h4v4"/>',
 people:'<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>',
 position:'<path d="M3 7h18M5 7v14h14V7M8 7V4h8v3M8 12h8M8 16h5"/>',
-department:'<rect x="3" y="3" width="18" height="18" rx="2"/><path d="M8 8h2M14 8h2M8 12h2M14 12h2M8 16h8"/>'};
-return '<svg viewBox="0 0 24 24" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">'+paths[kind]+'</g></svg>';
+department:'<rect x="3" y="3" width="18" height="18" rx="2"/><path d="M8 8h2M14 8h2M8 12h2M14 12h2M8 16h8"/>',
+search:'<circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/>',
+plus:'<path d="M12 5v14M5 12h14"/>',
+info:'<circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/>'};
+return '<svg viewBox="0 0 24 24" width="12" height="12" aria-hidden="true" focusable="false"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">'+(paths[kind]||paths.department)+'</g></svg>';
 }
 window.cmsDeptRegistryToggleAdd=function(){var p=document.getElementById('deptAddPanel');if(p)p.style.display=p.style.display==='none'?'grid':'none';};
 window.cmsDeptRegistryQuery=function(v){deptState.query=v||'';deptState.page=1;window.cmsDeptRegistryRender();};
@@ -7094,12 +7363,12 @@ var rowsHtml=rows.map(function(d){var k=(d.company||'').toUpperCase().trim()+'|'
 if(!rowsHtml)rowsHtml='<tr><td colspan="6" class="dept-empty">No departments match the selected filters.</td></tr>';
 var nums='';for(var pg=1;pg<=pages&&pg<=5;pg++)nums+='<button class="'+(pg===deptState.page?'active':'')+'" onclick="cmsDeptRegistryPage('+pg+')">'+pg+'</button>';if(pages>6)nums+='<span class="dept-ellipsis">...</span><button onclick="cmsDeptRegistryPage('+pages+')">'+pages+'</button>';
 var shownStart=filtered.length?start+1:0,shownEnd=Math.min(start+deptState.pageSize,filtered.length);
-var html='<div class="card dept-registry-card"><div class="dept-registry-heading"><div><div class="dept-title-line"><span class="dept-heading-icon">'+deptIcon('department')+'</span><span class="card-title">Departments Registry</span></div><p class="dept-subtitle">Register every department <strong>per company</strong> - two companies can share the same department name.</p></div><button class="dept-add-toggle" onclick="cmsDeptRegistryToggleAdd()">Add Department</button></div>';
+var html='<div class="card dept-registry-card"><div class="dept-registry-heading"><div><div class="dept-title-line"><span class="dept-heading-icon">'+deptIcon('department')+'</span><span class="card-title">Departments Registry</span></div><p class="dept-subtitle">Register every department <strong>per company</strong> - two companies can share the same department name.</p></div><button class="dept-add-toggle" onclick="cmsDeptRegistryToggleAdd()">'+deptIcon('plus')+'<span>Add Department</span></button></div>';
 html+='<div id="deptAddPanel" class="dept-add-panel" style="display:none"><div class="form-group" style="margin:0"><label>Company</label><input id="newDeptCompany" list="deptCompanyList" placeholder="e.g. Kenafric Industries"><datalist id="deptCompanyList">'+deptCompanies.map(function(c){return '<option value="'+escapeHtml(c)+'">';}).join('')+'</datalist></div><div class="form-group" style="margin:0"><label>Department</label><input id="newDeptName" placeholder="e.g. HUMAN RESOURCE"></div><button class="btn btn-primary" onclick="addDepartment()">Add Department</button></div>';
 html+='<div class="dept-summary-grid"><div class="dept-summary-card green"><span class="dept-summary-icon">'+deptIcon('department')+'</span><div><span>Total Departments</span><strong>'+list.length+'</strong><small>Registered and staff records</small></div></div><div class="dept-summary-card purple"><span class="dept-summary-icon">'+deptIcon('company')+'</span><div><span>Total Companies</span><strong>'+deptCompanies.length+'</strong><small>Active companies</small></div></div><div class="dept-summary-card blue"><span class="dept-summary-icon">'+deptIcon('people')+'</span><div><span>Total Staff</span><strong>'+deptTotalStaff+'</strong><small>Across departments</small></div></div><div class="dept-summary-card orange"><span class="dept-summary-icon">'+deptIcon('position')+'</span><div><span>Total Positions</span><strong>'+deptTotalPositions+'</strong><small>Across departments</small></div></div></div>';
-html+='<div class="dept-filter-card"><div><label>Search Departments</label><div class="dept-search-wrap"><input id="deptSearch" value="'+escapeHtml(deptState.query)+'" placeholder="Search by department name..." oninput="cmsDeptRegistryQuery(this.value)"><span class="dept-search-icon">âŒ•</span></div></div><div><label>Company</label><select onchange="cmsDeptRegistryCompany(this.value)"><option value="">All Companies</option>'+optionCompanies+'</select></div><div><label>Department Status</label><select onchange="cmsDeptRegistryStatus(this.value)"><option value="all">All Statuses</option><option value="registered" '+(deptState.status==='registered'?'selected':'')+'>Registered</option><option value="staff" '+(deptState.status==='staff'?'selected':'')+'>From staff records</option></select></div><div class="dept-result-count"><strong>'+filtered.length+' departments found</strong><span>Showing '+shownStart+'-'+shownEnd+'</span></div></div>';
+html+='<div class="dept-filter-card"><div><label>Search Departments</label><div class="dept-search-wrap"><input id="deptSearch" value="'+escapeHtml(deptState.query)+'" placeholder="Search by department name..." oninput="cmsDeptRegistryQuery(this.value)"><span class="dept-search-icon">'+deptIcon('search')+'</span></div></div><div><label>Company</label><select onchange="cmsDeptRegistryCompany(this.value)"><option value="">All Companies</option>'+optionCompanies+'</select></div><div><label>Department Status</label><select onchange="cmsDeptRegistryStatus(this.value)"><option value="all">All Statuses</option><option value="registered" '+(deptState.status==='registered'?'selected':'')+'>Registered</option><option value="staff" '+(deptState.status==='staff'?'selected':'')+'>From staff records</option></select></div><div class="dept-result-count"><strong>'+filtered.length+' departments found</strong><span>Showing '+shownStart+'-'+shownEnd+'</span></div></div>';
 html+='<div class="dept-company-tabs">'+tabs+'</div><div class="table-wrap dept-table-wrap"><table class="dept-registry-table"><thead><tr><th>Company</th><th>Department</th><th>Staff</th><th>Positions</th><th>Status</th><th>Actions</th></tr></thead><tbody>'+rowsHtml+'</tbody></table></div>';
-html+='<div class="dept-pagination"><span>Showing '+shownStart+' to '+shownEnd+' of '+filtered.length+' departments</span><div><button onclick="cmsDeptRegistryPage('+Math.max(1,deptState.page-1)+')" '+(deptState.page===1?'disabled':'')+'>Previous</button>'+nums+'<button onclick="cmsDeptRegistryPage('+Math.min(pages,deptState.page+1)+')" '+(deptState.page===pages?'disabled':'')+'>Next</button></div></div><div class="dept-info-note"><strong>i</strong><span>Departments are grouped by company for clarity and can be searched instantly by name.</span></div></div>';
+html+='<div class="dept-pagination"><span>Showing '+shownStart+' to '+shownEnd+' of '+filtered.length+' departments</span><div><button onclick="cmsDeptRegistryPage('+Math.max(1,deptState.page-1)+')" '+(deptState.page===1?'disabled':'')+'>Previous</button>'+nums+'<button onclick="cmsDeptRegistryPage('+Math.min(pages,deptState.page+1)+')" '+(deptState.page===pages?'disabled':'')+'>Next</button></div></div><div class="dept-info-note"><strong>'+deptIcon('info')+'</strong><span>Departments are grouped by company for clarity and can be searched instantly by name.</span></div></div>';
 if(typeof CN==='undefined'||__cmsRouteEpoch===CN.epoch)setContent(html);if(activeId==='deptSearch'){var el=document.getElementById('deptSearch');if(el){el.focus();if(cursor!==null)el.setSelectionRange(cursor,cursor);}}
 };
 window.cmsDeptRegistryRender();
@@ -9337,62 +9606,72 @@ function critBadge(lv){ lv=(lv||'').toString(); if(lv.indexOf('Absolutely')===0)
 return 'badge-warning'; }
 async function loadHRPositions() {
 var __cmsRouteEpoch = typeof CN === 'undefined' ? null : CN.epoch;
-
 ((typeof CN === 'undefined' || __cmsRouteEpoch === CN.epoch) ? setContent('<div class="loading"><div class="spinner"></div>Loading...</div>') : undefined);
-const { data: regs } = await _supabase.from('critical_positions').select('*').order('id');
+const results = await Promise.all([
+  _supabase.from('critical_positions').select('*').order('id'),
+  _supabase.from('employees').select('*'),
+  _supabase.from('assessments').select('*'),
+  _supabase.from('dev_plans').select('*')
+]);
+var regs = results[0].data || [], emps = results[1].data || [], allResults = results[2].data || [], allPlans = results[3].data || [];
 var deps = {};
-(regs || []).forEach(function(r){ if (r.department) deps[r.department] = true; });
-const { data: emps } = await _supabase.from('employees').select('*');
-(emps || []).forEach(function(e){ if (e.department) deps[e.department] = true; });
-const { data: allResults } = await _supabase.from('assessments').select('*');
-const { data: allPlans } = await _supabase.from('dev_plans').select('*');
-var html = '<div class="card"><div class="card-title"> Positions & Criticality Registry</div>';
-html += '<p style="font-size:12px;color:var(--gray-500);margin-bottom:12px">Register every position with its department and criticality level. The Add Employee form and all dashboards read from this list.</p>';
-html += '<div style="display:grid;grid-template-columns:1.2fr 1.2fr 1.2fr auto;gap:8px;align-items:end">';
-html += '<div class="form-group" style="margin-bottom:0"><label>Department</label><input id="regDept" list="regDeptList" placeholder="e.g. HUMAN RESOURCE"><datalist id="regDeptList">' + Object.keys(deps).sort().map(function(d){ return '<option value="' + escapeHtml(d) + '">'; }).join('') + '</datalist></div>';
-html += '<div class="form-group" style="margin-bottom:0"><label>Position</label><input id="regPos" placeholder="e.g. Human Resource Officer"></div>';
-html += '<div class="form-group" style="margin-bottom:0"><label>Criticality</label><select id="regCrit"><option>Absolutely Critical Role</option><option selected>Critical Role</option><option>Relatively Critical Role</option><option>Non-Critical Role</option></select></div>';
-html += '<button class="btn btn-primary" onclick="addPositionRegistry()">Add Position</button></div></div>';
-['Absolutely Critical Role','Critical Role','Relatively Critical Role','Non-Critical Role'].forEach(function(lv){
-var rows = (regs || []).filter(function(r){ return (r.criticality || 'Critical Role') === lv; });
-if (!rows.length) return;
-html += '<div class="card"><div class="card-title"><span class="badge ' + critBadge(lv) + '">' + escapeHtml(lv) + '</span> (' + rows.length + ')</div>';
-rows.forEach(function(r){
-html += '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;border:1px solid var(--gray-200);border-radius:6px;padding:8px 10px;margin:0 0 6px;font-size:12px"><span><strong>' + escapeHtml(r.position_name) + '</strong> <span style="color:var(--gray-500)">- ' + escapeHtml(r.department || '') + '</span></span><span style="display:flex;gap:6px"><select onchange="setRegistryCriticality(' + rcArg(r.id) + ',this.value)" style="width:auto;padding:3px 6px;font-size:11px"><option' + ((r.criticality||'Critical Role')==='Absolutely Critical Role'?' selected':'') + '>Absolutely Critical Role</option><option' + ((r.criticality||'Critical Role')==='Critical Role'?' selected':'') + '>Critical Role</option><option' + ((r.criticality||'Critical Role')==='Relatively Critical Role'?' selected':'') + '>Relatively Critical Role</option><option' + ((r.criticality||'Critical Role')==='Non-Critical Role'?' selected':'') + '>Non-Critical Role</option></select><button class="btn btn-sm btn-danger" onclick="deletePositionRegistry(' + rcArg(r.id) + ')">x</button></span></div>';
-});
-html += '</div>';
-});
-var trackerTiers = ['Absolutely Critical Role', 'Critical Role', 'Relatively Critical Role'];
-var trackerLevelOf = {};
-(regs || []).forEach(function(r){ trackerLevelOf[(r.position_name || '').toUpperCase().trim()] = r.criticality || 'Critical Role'; });
-function trackerTierOf(e){
-var lv = trackerLevelOf[(e.position || '').toUpperCase().trim()] || '';
-return trackerTiers.indexOf(lv) >= 0 ? lv : '';
+regs.forEach(function(r){if(r.department)deps[r.department]=true;});
+emps.forEach(function(e){if(e.department)deps[e.department]=true;});
+var levelOf = {};
+regs.forEach(function(r){levelOf[(r.position_name||'').toUpperCase().trim()] = r.criticality || 'Critical Role';});
+var absolute = regs.filter(function(r){return (r.criticality||'Critical Role') === 'Absolutely Critical Role';});
+var relative = regs.filter(function(r){return ['Relatively Critical Role','Critical Role'].indexOf(r.criticality||'Critical Role') >= 0;});
+var nonCritical = regs.filter(function(r){return (r.criticality||'Critical Role') === 'Non-Critical Role';});
+var criticalRegs = absolute.concat(relative);
+var criticalPositions = {};
+criticalRegs.forEach(function(r){criticalPositions[(r.position_name||'').toUpperCase().trim()] = true;});
+function posIcon(kind){
+var p={
+shield:'<path d="M12 3l7 3v5c0 4.5-3 7.5-7 10-4-2.5-7-5.5-7-10V6l7-3z"/><path d="M9 12l2 2 4-4"/>',
+people:'<circle cx="9" cy="8" r="3"/><path d="M3 20c.5-3.2 2.5-5 6-5s5.5 1.8 6 5M16 5.5a3 3 0 0 1 0 5.8M18 15c2.2.4 3.4 2 3.7 4"/>',
+check:'<circle cx="12" cy="12" r="9"/><path d="M8 12l2.5 2.5L16 9"/>',
+list:'<path d="M8 6h11M8 12h11M8 18h11"/><path d="M4 6h.01M4 12h.01M4 18h.01"/>',
+trash:'<path d="M5 7h14M9 7V5h6v2M7 7l1 12h8l1-12M10 10v6M14 10v6"/>' ,
+briefcase:'<rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M3 12h18"/>',
+question:'<circle cx="12" cy="12" r="9"/><path d="M9.8 9a2.3 2.3 0 1 1 3.6 1.9c-.9.6-1.4 1-1.4 2.1M12 16h.01"/>'};
+return '<svg viewBox="0 0 24 24" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">'+(p[kind]||p.briefcase)+'</g></svg>';
 }
-function trackerFmt(rows){
-return latestOnly(rows).map(function(r){
-return { 'Employee ID': r.employee_id, 'Competency Code': r.comp_code, 'Type': r.type, 'Ticked': r.ticked, 'Evidence': r.evidence, 'HR_Status': r.hr_status, 'Rating': r.proficiency_rating, 'Scoring Rule': r.scoring_rule || 'legacy-zero', 'Classification': r.scoring_rule === 'floor-one-v1' ? r.classification : undefined, 'Weight Profile': r.weight_profile, 'Weight Policy': r.weight_policy };
-});
+function latest(rows){return typeof latestOnly==='function' ? latestOnly(rows) : rows;}
+function isComplete(e){
+var m=allResults.filter(function(r){return r.employee_id===e.employee_id&&r.type==='Manager';});
+var s=allResults.filter(function(r){return r.employee_id===e.employee_id&&r.type==='Self';});
+return typeof assessmentReleased==='function' ? assessmentReleased(m.concat(s)) : (m.length>0&&s.length>0);
 }
-var trackerEmployees = (emps || []).filter(function(e){ return trackerTierOf(e); });
-var trackerRowsHtml = '';
-trackerEmployees.slice().sort(function(a,b){
-var d = trackerTiers.indexOf(trackerTierOf(a)) - trackerTiers.indexOf(trackerTierOf(b));
-return d !== 0 ? d : (a.employee_name || '').localeCompare(b.employee_name || '');
-}).forEach(function(e){
-var mRows = (allResults || []).filter(function(r){ return r.employee_id === e.employee_id && r.type === 'Manager'; });
-var sRows = (allResults || []).filter(function(r){ return r.employee_id === e.employee_id && r.type === 'Self'; });
-var combinedDone = typeof assessmentReleased === 'function' ? assessmentReleased(mRows.concat(sRows)) : (mRows.length > 0 && sRows.length > 0);
-var pRows = (allResults || []).filter(function(r){ return r.employee_id === e.employee_id && r.type === 'Prospective'; });
-var pscore = pRows.length ? calculateOverallScore(e.employee_id, 'Prospective', trackerFmt(pRows)) : 0;
-var level = trackerTierOf(e);
-var status = combinedDone ? '<span class="badge badge-success">Completed</span>' : ((mRows.length || sRows.length) ? '<span class="badge badge-warning">In Progress</span>' : '<span class="badge badge-danger">Not Assessed</span>');
-var plansForEmployee = (allPlans || []).filter(function(p){ return p.employee_id === e.employee_id; });
-trackerRowsHtml += '<tr><td><strong>' + escapeHtml(e.employee_name || '') + '</strong></td><td style="font-size:11px">' + escapeHtml(e.position || '') + '</td><td><span class="badge ' + critBadge(level) + '">' + escapeHtml(level) + '</span></td><td>' + status + '</td><td>' + (plansForEmployee.length ? '<span class="badge badge-info">' + plansForEmployee.length + ' IDP(s)</span>' : '<span style="color:var(--gray-400)">-</span>') + '</td><td>' + (pRows.length ? (pscore >= 80 ? '<span class="badge badge-success">Promotion Ready (' + pscore + '%)</span>' : '<span class="badge badge-info">' + pscore + '%</span>') : '<span style="color:var(--gray-400)">-</span>') + '</td></tr>';
-});
-html += '<div class="card"><div class="card-title">Critical Roles Tracker (grouped by criticality)</div><div class="table-wrap"><table><thead><tr><th>Employee</th><th>Position</th><th>Criticality</th><th>Completed Assessments</th><th>IDP</th><th>Promotion Readiness</th></tr></thead><tbody>' + (trackerRowsHtml || '<tr><td colspan="6" style="color:var(--gray-500)">No staff in critical positions yet.</td></tr>') + '</tbody></table></div></div>';
-if (!(regs || []).length) html += '<div class="card"><p style="color:var(--gray-500);font-size:12px">No positions registered yet - add the first one above.</p></div>';
-((typeof CN === 'undefined' || __cmsRouteEpoch === CN.epoch) ? setContent(html) : undefined);
+function trackerLevel(e){return levelOf[(e.position||'').toUpperCase().trim()]||'';}
+var trackerEmployees=emps.filter(function(e){return criticalPositions[(e.position||'').toUpperCase().trim()];});
+var notAssessed=trackerEmployees.filter(function(e){return !isComplete(e);}).length;
+var ui={department:'',query:'',criticality:''};
+window.cmsPosRegistryToggleAdd=function(){var p=document.getElementById('prAddPanel');if(p)p.style.display=p.style.display==='none'?'grid':'none';};
+function filteredRows(rows){return rows.filter(function(r){var dep=(r.department||'').toUpperCase(),pos=(r.position_name||'').toUpperCase(),lv=r.criticality||'Critical Role';return (!ui.department||r.department===ui.department)&&(!ui.query||dep.indexOf(ui.query)>=0||pos.indexOf(ui.query)>=0)&&(!ui.criticality||lv===ui.criticality);});}
+function registryRows(rows){
+return filteredRows(rows).map(function(r){var lv=r.criticality||'Critical Role';return '<tr><td><strong>'+escapeHtml(r.position_name||'')+'</strong></td><td>'+escapeHtml(r.department||'')+'</td><td><select onchange="setRegistryCriticality('+rcArg(r.id)+',this.value)"><option'+(lv==='Absolutely Critical Role'?' selected':'')+'>Absolutely Critical Role</option><option'+(lv==='Critical Role'?' selected':'')+'>Critical Role</option><option'+(lv==='Relatively Critical Role'?' selected':'')+'>Relatively Critical Role</option><option'+(lv==='Non-Critical Role'?' selected':'')+'>Non-Critical Role</option></select></td><td><button class="pr-delete" title="Delete position" aria-label="Delete position" onclick="deletePositionRegistry('+rcArg(r.id)+')">'+posIcon('trash')+'</button></td></tr>';}).join('')||'<tr><td colspan="4" class="pr-empty">No positions match these filters.</td></tr>';
+}
+function accordion(cls,icon,title,count,summary,rows){return '<details class="pr-accordion '+cls+'"><summary><span class="pr-acc-icon">'+posIcon(icon)+'</span><span class="pr-acc-copy"><strong>'+title+'</strong><span class="pr-count">'+count+'</span><small>'+summary+'</small></span><span class="pr-chevron" aria-hidden="true"></span></summary>'+rows+'</details>';}
+function trackerRows(){
+var list=trackerEmployees.filter(function(e){var pos=(e.position||'').toUpperCase(),dep=(e.department||'').toUpperCase(),lv=trackerLevel(e);return (!ui.department||e.department===ui.department)&&(!ui.query||pos.indexOf(ui.query)>=0||dep.indexOf(ui.query)>=0||String(e.employee_name||'').toUpperCase().indexOf(ui.query)>=0)&&(!ui.criticality||lv===ui.criticality);});
+return list.map(function(e){var level=trackerLevel(e),m=allResults.filter(function(r){return r.employee_id===e.employee_id&&r.type==='Manager';}),s=allResults.filter(function(r){return r.employee_id===e.employee_id&&r.type==='Self';}),done=isComplete(e),pRows=allResults.filter(function(r){return r.employee_id===e.employee_id&&r.type==='Prospective';}),score=pRows.length?calculateOverallScore(e.employee_id,'Prospective',pRows):0,plans=allPlans.filter(function(p){return p.employee_id===e.employee_id;});return '<tr><td><strong>'+escapeHtml(e.employee_name||'')+'</strong></td><td>'+escapeHtml(e.position||'')+'</td><td>'+escapeHtml(e.department||'')+'</td><td><span class="pr-pill '+(level.indexOf('Absolutely')===0?'absolute':level.indexOf('Relatively')===0||level==='Critical Role'?'relative':'non')+'">'+escapeHtml(level)+'</span></td><td>'+(done?'<span class="pr-status done">Completed</span>':(m.length||s.length?'<span class="pr-status progress">In Progress</span>':'<span class="pr-status not">Not Assessed</span>'))+'</td><td>'+(plans.length?'<span class="pr-status progress">'+plans.length+' IDP(s)</span>':'-')+'</td><td>'+(pRows.length?(score>=80?'<span class="pr-status done">Ready</span>':score+'%'):'-')+'</td></tr>';}).join('')||'<tr><td colspan="7" class="pr-empty">No staff match these filters.</td></tr>';
+}
+window.cmsPosRegistryRender=function(){
+var active=document.activeElement?document.activeElement.id:'';var cursor=document.activeElement&&typeof document.activeElement.selectionStart==='number'?document.activeElement.selectionStart:null;
+ui.department=(document.getElementById('prDepartment')||{}).value||'';ui.query=((document.getElementById('prSearch')||{}).value||'').toUpperCase().trim();ui.criticality=(document.getElementById('prCriticality')||{}).value||'';
+var abs=filteredRows(absolute),rel=filteredRows(relative),non=filteredRows(nonCritical),critStaff=trackerEmployees.length;
+var h='<section class="pr-page"><div class="pr-title-row"><div><h1>Positions &amp; Criticality Registry</h1><p>Register every position and classify its criticality level. This supports succession planning, risk management, and talent strategy.</p></div></div>';
+h+='<div class="pr-kpis"><div class="pr-kpi blue"><span>'+posIcon('briefcase')+'</span><div><small>Total Positions</small><strong>'+regs.length+'</strong><em>All positions in the registry</em></div></div><div class="pr-kpi red"><span>'+posIcon('shield')+'</span><div><small>Critical Roles</small><strong>'+criticalRegs.length+'</strong><em>Absolutely &amp; relatively critical</em></div></div><div class="pr-kpi purple"><span>'+posIcon('people')+'</span><div><small>Critical Staff</small><strong>'+critStaff+'</strong><em>Staff in critical roles</em></div></div><div class="pr-kpi orange"><span>'+posIcon('question')+'</span><div><small>Not Assessed</small><strong>'+notAssessed+'</strong><em>Critical staff pending review</em></div></div></div>';
+h+='<div class="pr-toolbar"><div><label>Department</label><select id="prDepartment" onchange="cmsPosRegistryRender()"><option value="">All Departments</option>'+Object.keys(deps).sort().map(function(d){return '<option'+(ui.department===d?' selected':'')+'>'+escapeHtml(d)+'</option>';}).join('')+'</select></div><div><label>Search Position</label><input id="prSearch" value="'+escapeHtml(ui.query)+'" oninput="cmsPosRegistryRender()" placeholder="Search by position name..."></div><div><label>Criticality</label><select id="prCriticality" onchange="cmsPosRegistryRender()"><option value="">All Criticality Levels</option><option'+(ui.criticality==='Absolutely Critical Role'?' selected':'')+'>Absolutely Critical Role</option><option'+(ui.criticality==='Critical Role'?' selected':'')+'>Critical Role</option><option'+(ui.criticality==='Relatively Critical Role'?' selected':'')+'>Relatively Critical Role</option><option'+(ui.criticality==='Non-Critical Role'?' selected':'')+'>Non-Critical Role</option></select></div><button class="btn btn-primary pr-add" onclick="cmsPosRegistryToggleAdd()">+ Add Position</button></div>';
+h+='<div id="prAddPanel" class="pr-add-panel" style="display:none"><div><label>Department</label><input id="regDept" list="regDeptList" placeholder="e.g. HUMAN RESOURCE"><datalist id="regDeptList">'+Object.keys(deps).sort().map(function(d){return '<option value="'+escapeHtml(d)+'">';}).join('')+'</datalist></div><div><label>Position</label><input id="regPos" placeholder="e.g. Human Resource Officer"></div><div><label>Criticality</label><select id="regCrit"><option>Absolutely Critical Role</option><option selected>Critical Role</option><option>Relatively Critical Role</option><option>Non-Critical Role</option></select></div><button class="btn btn-primary" onclick="addPositionRegistry()">Save Position</button></div>';
+h+=accordion('absolute','shield','Absolutely Critical Roles',abs.length,'Roles vital to business continuity and high impact if vacant','<div class="pr-detail"><table><thead><tr><th>Position</th><th>Department</th><th>Criticality</th><th>Actions</th></tr></thead><tbody>'+registryRows(absolute)+'</tbody></table></div>');
+h+=accordion('relative','people','Relatively Critical Roles',rel.length,'Important operational roles with moderate to high impact if vacant','<div class="pr-detail"><table><thead><tr><th>Position</th><th>Department</th><th>Criticality</th><th>Actions</th></tr></thead><tbody>'+registryRows(relative)+'</tbody></table></div>');
+h+=accordion('non','check','Non-Critical Roles',non.length,'Roles with lower business continuity impact if vacant','<div class="pr-detail"><table><thead><tr><th>Position</th><th>Department</th><th>Criticality</th><th>Actions</th></tr></thead><tbody>'+registryRows(nonCritical)+'</tbody></table></div>');
+h+='<details class="pr-accordion tracker"><summary><span class="pr-acc-icon">'+posIcon('list')+'</span><span class="pr-acc-copy"><strong>Critical Roles Tracker</strong><span class="pr-count">'+trackerEmployees.length+'</span><small>Summary of staff assessments, IDP status, and readiness tracking.</small></span><span class="pr-chevron" aria-hidden="true"></span></summary><div class="pr-detail"><table><thead><tr><th>Employee</th><th>Position</th><th>Department</th><th>Criticality</th><th>Assessment</th><th>IDP</th><th>Readiness</th></tr></thead><tbody>'+trackerRows()+'</tbody></table></div></details></section>';
+if(typeof CN==='undefined'||__cmsRouteEpoch===CN.epoch)setContent(h);
+if(active){var a=document.getElementById(active);if(a){a.focus();if(cursor!==null&&typeof a.setSelectionRange==='function')a.setSelectionRange(cursor,cursor);}}
+};
+window.cmsPosRegistryRender();
 }
 async function addPositionRegistry() {
 var dep = (document.getElementById('regDept').value || '').trim();
