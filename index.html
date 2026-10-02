@@ -15042,6 +15042,12 @@ function cnDetail(kind,value){if(!CN.key||CN.restoring)return;var s=cnRead(CN.ke
 function cnDelay(ms){return new Promise(r=>setTimeout(r,ms));}
 async function cnWait(id,epoch){for(var i=0;i<35;i++){if(epoch!==CN.epoch)return null;var e=document.getElementById(id);if(e)return e;await cnDelay(80);}return null;}
 function cnApplyScroll(state){window.scrollTo({left:0,top:state&&state.y||0,behavior:'instant'});var nav=document.getElementById('mainNav'),side=document.getElementById('sideNav');if(nav)nav.scrollLeft=state&&state.navX||0;if(side)side.scrollTop=state&&state.sideY||0;}
+var rptIdentity = window.rptIdentity = function(){
+  return String((window.APP && window.APP.user && window.APP.user.email) || '')
+    .trim()
+    .toLowerCase() + '|' +
+    String((window.APP && window.APP.currentRole) || '');
+};
 async function cnRestore(state,epoch){
  if(!state){window.scrollTo({top:0,behavior:'instant'});return;}
  CN.restoring=true;
@@ -30021,6 +30027,67 @@ body:has(dialog[open]) :is(#kaiFab,#pchatFab){visibility:hidden!important}
    V.session=r.session;V.nonce=crypto.randomUUID();
    var config={target:r.target,role,nonce:V.nonce};
    var template=new TextDecoder().decode(Uint8Array.from(atob(window.CMS_VIEW_TEMPLATE),c=>c.charCodeAt(0)));
+   var viewerPrelude=String.raw`<script>
+window.rptIdentity=window.rptIdentity||function(){
+  return String((window.APP&&window.APP.user&&window.APP.user.email)||'').trim().toLowerCase()+'|'+String((window.APP&&window.APP.currentRole)||'');
+};
+window.r4Timeout=window.r4Timeout||function(promise,ms,label){
+  var timer;
+  return Promise.race([
+    promise,
+    new Promise(function(_,reject){
+      timer=setTimeout(function(){reject(Error((label||'Request')+' timed out. Please retry.'));},ms);
+    })
+  ]).finally(function(){clearTimeout(timer);});
+};
+${'</'+'script>'}`;
+var headEnd=template.indexOf('</head>');
+template=headEnd<0?viewerPrelude+template:template.slice(0,headEnd)+viewerPrelude+template.slice(headEnd);
+   var viewerPrelude=String.raw`<script>
+var rptIdentity=window.rptIdentity=window.rptIdentity||function(){
+  return String((window.APP&&window.APP.user&&window.APP.user.email)||'').trim().toLowerCase()+'|'+String((window.APP&&window.APP.currentRole)||'');
+};
+${'</'+'script>'}`;
+var headEnd=template.indexOf('</head>');
+template=headEnd<0?viewerPrelude+template:template.slice(0,headEnd)+viewerPrelude+template.slice(headEnd);
+   const viewerPatch = String.raw`<script>
+(function(){
+ if(window.__cmsViewAsEmployeeV2)return;
+ window.__cmsViewAsEmployeeV2=true;
+ var oldProfile=window.loadEmployeeProfile;
+ if(typeof oldProfile!=='function')return;
+ window.loadEmployeeProfile=async function(){
+  await oldProfile();
+  if(!window.CMS_VIEW_CONFIG||window.CMS_VIEW_CONFIG.role!=='employee')return;
+  try{
+   var email=String((APP.user&&APP.user.email)||'').trim().toLowerCase();
+   var eq=await _supabase.from('employees').select('*').ilike('email',email).limit(1);
+   if(eq.error||!eq.data||!eq.data.length)return;
+   var emp=eq.data[0];
+   var q=await _supabase.from('assessments').select('*').eq('employee_id',emp.employee_id).in('type',['Self','Manager','Prospective Self','Prospective']);
+   if(q.error)return;
+   var rows=q.data||[];
+   var ps=latestOnly(rows.filter(function(r){return r.type==='Prospective Self';}));
+   var pm=latestOnly(rows.filter(function(r){return r.type==='Prospective';}));
+   var selfScore=ps.length?calculateOverallScore(emp.employee_id,'Prospective Self',epFormatted(ps)):null;
+   var managerScore=pm.length?calculateOverallScore(emp.employee_id,'Prospective',epFormatted(pm)):null;
+   var finalScore=selfScore!==null&&managerScore!==null?Math.round(managerScore*.7+selfScore*.3):null;
+   var target=(pm[0]&&pm[0].prospective_role)||(ps[0]&&ps[0].prospective_role)||'';
+   var host=document.getElementById('edScores');
+   if(!host||host.querySelector('.ed-prospective-v2'))return;
+   var box=document.createElement('section');
+   box.className='ed-card ed-prospective-v2';
+   box.innerHTML='<div class="ed-heading"><div><h2>Prospective Role Details</h2><p>'+(target?'Target role: '+escapeHtml(target):'No target role recorded')+'</p></div><span class="ed-status">Read-only support view</span></div><div class="ep-rings">'+epRing(selfScore,'#7c3aed','Self Assessment (Prospective)',ps.length?'Submitted':'Not submitted')+epRing(managerScore,'#9333ea','Manager Assessment (Prospective)',pm.length?'Submitted':'Not submitted')+epRing(finalScore,'#c026d3','Final Score (Prospective Role)',finalScore===null?'Both assessments required':'70% Manager + 30% Self')+'</div><p class="ed-footnote">This section is visible because the Super User is using View as User. Sheila Njau normal employee view still follows invitation and eligibility rules.</p></section>';
+   host.parentElement.appendChild(box);
+   var history=document.getElementById('emp-history');
+   if(history){
+    history.innerHTML='<h2>'+edIcon('clock')+' Assessment History</h2>'+['Self','Manager','Prospective Self','Prospective'].map(function(type){var subset=rows.filter(function(r){return r.type===type;});return subset.length?roundTable(subset,type):'<p>'+escapeHtml(type)+': Not submitted</p>';}).join('');
+   }
+  }catch(e){console.warn('View as user prospective details unavailable:',e.message);}
+ };
+})();
+${'</'+'script>'}`;
+var bodyEnd=template.lastIndexOf('</body>');template=bodyEnd<0?template+viewerPatch:template.slice(0,bodyEnd)+viewerPatch+template.slice(bodyEnd);
    var marker='/*CMS_VIEW_CONFIGURATION*/null';
    if(!template.includes(marker))throw Error('Viewer template is missing.');
    template=template.replace(marker,JSON.stringify(config).replace(/</g,'\\u003c'));
