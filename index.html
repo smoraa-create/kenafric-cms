@@ -1096,6 +1096,130 @@ html body .pr-acc-copy strong{
 .lm-empty{text-align:center!important;color:#64748b!important;padding:28px!important}
 @media(max-width:1000px){.lm-toolbar{grid-template-columns:1fr 1fr}.lm-toolbar .lm-add-button{width:100%}.lm-kpis{grid-template-columns:1fr 1fr}}
 @media(max-width:700px){.lm-page{padding:14px 10px}.lm-kpis{grid-template-columns:1fr}.lm-toolbar,.lm-add-panel{grid-template-columns:1fr}.lm-table-card{overflow-x:auto}.lm-table{min-width:850px}.lm-pagination{align-items:flex-start;flex-direction:column}}
+/* Manager Pending Assessments: separate Current and Prospective tabs */
+.md-assessment-tabs{display:flex;gap:8px;margin:0 0 12px;padding-bottom:0;border-bottom:1px solid #dbe4f0}
+.md-assessment-tab{border:1px solid #cbd5e1;border-bottom:3px solid #2563eb;border-radius:8px 8px 0 0;background:#fff;color:#2563eb;padding:10px 16px;font-size:12px;font-weight:800;cursor:pointer}
+.md-assessment-tab span{display:inline-flex;align-items:center;justify-content:center;min-width:22px;height:20px;margin-left:5px;padding:0 6px;border-radius:10px;background:#dbeafe;color:#1d4ed8;font-size:10px}
+.md-assessment-tab.active{background:#2563eb;color:#fff}
+.md-assessment-tab.active span{background:rgba(255,255,255,.22);color:#fff}
+.md-tab-summary{display:flex;align-items:baseline;gap:8px;margin-bottom:12px;color:#64748b;font-size:12px}
+.md-tab-summary strong{color:#102a52;font-size:22px}
+.md-assessment-context{display:inline-block;margin:8px 0;padding:5px 9px;border-radius:6px;background:#eef2ff;color:#3730a3;font-size:11px;font-weight:800}
+.md-status-submitted{display:inline-block;padding:5px 8px;border-radius:6px;background:#dcfce7;color:#15803d;font-size:11px;font-weight:800}
+.md-empty{padding:18px;color:#64748b;font-size:12px}
+@media(max-width:700px){.md-assessment-tabs{overflow-x:auto}.md-assessment-tab{white-space:nowrap}}
+/* Assessment Details: separate Current and Prospective tabs */
+.md-detail-tabs{display:flex;gap:8px;margin:0 0 10px;border-bottom:1px solid #dbe4f0}
+.md-detail-tab{border:1px solid #2563eb;border-bottom:3px solid #2563eb;border-radius:8px 8px 0 0;background:#2563eb;color:#fff;padding:10px 18px;font-size:12px;font-weight:800;cursor:pointer}
+.md-detail-tab.prospective{border-color:#c4b5fd;border-bottom-color:#7c3aed;background:#fff;color:#6d28d9}
+.md-detail-tab.prospective.active{background:#7c3aed;color:#fff}
+.md-detail-tab:not(.prospective).active{background:#2563eb;color:#fff}
+.md-detail-status{margin:0 0 12px;padding:9px 12px;border-radius:7px;background:#eef6ff;color:#24548a;font-size:12px;font-weight:600}
+.md-detail-columns{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.md-detail-muted{font-size:11px;color:var(--gray-400);padding:8px 0}
+@media(max-width:700px){.md-detail-columns{grid-template-columns:1fr}.md-detail-tab{flex:1;padding:10px 8px}}
+/* Assessment Details: compact competency accordion presentation */
+.md-detail-actions{display:flex;justify-content:flex-end;padding:12px 16px!important}
+.md-detail-employee{display:flex;align-items:center;gap:20px;flex-wrap:wrap;padding:16px 18px;background:#fff;border:1px solid #dbe4f0;border-radius:12px;margin:12px 0;color:#52678c}
+.md-detail-employee strong{font-size:20px;color:#102a52;margin-right:auto}.md-detail-employee span{font-size:12px;padding-left:18px;border-left:1px solid #dbe4f0}
+.md-role-note{margin:12px 0;padding:10px 12px;border-radius:8px;background:#eef6ff;color:#24548a;font-size:12px;font-weight:600}
+.md-detail-summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:0;background:#fff;border:1px solid #dbe4f0;border-radius:12px;margin:12px 0;overflow:hidden}
+.md-detail-summary>div{padding:14px 16px;border-right:1px solid #e5eaf2}.md-detail-summary>div:last-child{border-right:0}
+.md-detail-summary small{display:block;color:#52678c;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.3px}.md-detail-summary strong{display:block;color:#102a52;font-size:23px;line-height:1.15;margin:4px 0}.md-detail-summary em{display:block;color:#64748b;font-size:11px;font-style:normal}.md-summary-status{font-size:14px!important}.md-summary-status.approved{color:#15803d!important}.md-summary-status.pending{color:#c2410c!important}
+.md-competency-head{display:grid;grid-template-columns:minmax(0,1fr) 110px 110px 125px;gap:12px;padding:8px 14px;color:#52678c;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.3px}
+.md-competency{background:#fff;border:1px solid #dbe4f0;border-radius:10px;margin:0 0 8px;overflow:hidden}.md-competency>summary{display:grid;grid-template-columns:minmax(0,1fr) 110px 110px 125px 16px;gap:12px;align-items:center;padding:14px;cursor:pointer;list-style:none}.md-competency>summary::-webkit-details-marker{display:none}.md-competency>summary strong{color:#1451c9;font-size:13px}.md-competency>summary>span{color:#18335e;font-size:12px}.md-competency>summary i{width:9px;height:9px;border-right:2px solid #334155;border-bottom:2px solid #334155;transform:rotate(45deg);margin-bottom:5px}.md-competency[open]>summary i{transform:rotate(225deg);margin-bottom:0}
+.md-row-status{display:inline-block!important;width:max-content!important;padding:4px 7px;border-radius:5px;font-size:9px!important;font-weight:900!important}.md-review-approved,.md-row-status.md-review-approved{background:#dcfce7;color:#15803d!important}.md-review-pending,.md-row-status.md-review-pending{background:#fff7ed;color:#c2410c!important}.md-review-neutral,.md-row-status.md-review-neutral{background:#eef2ff;color:#3730a3!important}
+.md-competency-body{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:0 12px 12px;background:#fbfdff;border-top:1px solid #edf1f6}.md-review-panel{border:1px solid #dbe4f0;border-radius:9px;overflow:hidden;background:#fff;margin-top:12px}.md-review-panel.employee{border-top:3px solid #2563eb}.md-review-panel.manager{border-top:3px solid #7c3aed}.md-review-panel-head{display:flex;justify-content:space-between;align-items:center;padding:11px 12px;background:#f8fbff;color:#1451c9;font-size:12px}.md-review-panel.manager .md-review-panel-head{background:#faf8ff;color:#6d28d9}.md-review-score{padding:4px 7px;border-radius:5px;background:#dbeafe;color:#1d4ed8;font-size:10px}.md-review-panel.manager .md-review-score{background:#ede9fe;color:#6d28d9}.md-review-panel-body{padding:10px 12px}.md-hidden-details{margin:12px 0;background:#fff;border:1px solid #dbe4f0;border-radius:9px;padding:12px}.md-hidden-details>summary{cursor:pointer;color:#24548a;font-size:12px;font-weight:800}.md-hidden-details .cms-calc-card{margin-top:12px}
+@media(max-width:800px){.md-detail-summary{grid-template-columns:1fr 1fr}.md-detail-summary>div:nth-child(2){border-right:0}.md-detail-summary>div:nth-child(-n+2){border-bottom:1px solid #e5eaf2}.md-competency-head{display:none}.md-competency>summary{grid-template-columns:minmax(0,1fr) auto 16px}.md-competency>summary>span:nth-of-type(1),.md-competency>summary>span:nth-of-type(2){display:none}.md-competency-body{grid-template-columns:1fr}.md-detail-employee span{border-left:0;padding-left:0}}
+//* Colorful assessment summary cards */
+.md-detail-summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:0;background:#fff;border:1px solid #dbe4f0;border-radius:12px;margin:12px 0;overflow:hidden;box-shadow:0 4px 14px rgba(15,23,42,.06)}
+.md-detail-summary>div{padding:15px 16px;border-right:1px solid #e5eaf2;border-top:4px solid transparent;min-height:112px}
+.md-detail-summary>div:nth-child(1){background:#eff6ff;border-top-color:#2563eb}
+.md-detail-summary>div:nth-child(2){background:#f5f3ff;border-top-color:#7c3aed}
+.md-detail-summary>div:nth-child(3){background:#ecfeff;border-top-color:#0891b2}
+.md-detail-summary>div:nth-child(4){background:#f0fdf4;border-top-color:#16a34a}
+.md-detail-summary>div:last-child{border-right:0}
+.md-detail-summary small{display:block;color:#52678c;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.35px}
+.md-detail-summary strong{display:block;color:#102a52;font-size:25px;line-height:1.15;margin:7px 0 4px;font-weight:900}
+.md-detail-summary em{display:block;color:#52678c;font-size:11px;font-style:normal}
+.md-detail-summary .final-score{color:#087f8f!important}
+.md-detail-summary .md-summary-status.approved{color:#15803d!important;font-size:18px!important}
+.md-detail-summary .md-summary-status.pending{color:#c2410c!important;font-size:18px!important}
+@media(max-width:800px){.md-detail-summary{grid-template-columns:1fr 1fr}.md-detail-summary>div:nth-child(2){border-right:0}.md-detail-summary>div:nth-child(-n+2){border-bottom:1px solid #e5eaf2}}
+@media(max-width:520px){.md-detail-summary{grid-template-columns:1fr}.md-detail-summary>div{border-right:0;border-bottom:1px solid #e5eaf2}.md-detail-summary>div:last-child{border-bottom:0}}
+/* My Team: compact Current and Prospective score cards */
+.md-team-list{padding:12px!important;background:transparent!important;box-shadow:none!important;border:0!important}
+.md-team-section{background:#fff;border:1px solid #dbe4f0;border-radius:12px;margin-bottom:12px;overflow:hidden;box-shadow:0 3px 10px rgba(15,23,42,.05)}
+.md-team-section.current{border-top:3px solid #2563eb}.md-team-section.prospective{border-top:3px solid #7c3aed}
+.md-team-section-head{display:flex;align-items:center;gap:10px;padding:12px 14px;border-bottom:1px solid #edf1f6}
+.md-team-section-head h3{margin:0;color:#102a52;font-size:14px;font-weight:900}.md-team-section-head p{margin:2px 0 0;color:#64748b;font-size:10px}
+.md-team-section-icon{width:30px;height:30px;border-radius:8px;display:inline-flex;align-items:center;justify-content:center;color:#fff;flex:0 0 30px}
+.current .md-team-section-icon{background:#2563eb}.prospective .md-team-section-icon{background:#7c3aed}
+.md-team-section-icon svg{width:17px;height:17px;display:block}
+.md-score-grid{display:grid;grid-template-columns:minmax(150px,1.4fr) repeat(3,minmax(104px,.75fr)) minmax(115px,.8fr) minmax(145px,1fr) auto;gap:8px;align-items:center;padding:10px 12px}
+.md-score-label{color:#52678c;font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.3px;padding:0 4px 2px}
+.md-score-person{display:flex;align-items:center;gap:8px;min-width:0}.md-score-person strong{display:block;color:#102a52;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.md-score-person span{display:block;color:#64748b;font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.md-score-avatar{width:30px;height:30px;min-width:30px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;background:#e2f5f4;color:#0f8f8c}.md-score-avatar svg{width:17px;height:17px}
+.md-score-box{padding:8px 9px;border-radius:8px;text-align:center;border:1px solid #dbe4f0;background:#fff;min-height:52px}.md-score-box small{display:block;font-size:8px;font-weight:900;text-transform:uppercase;letter-spacing:.2px}.md-score-box strong{display:block;font-size:18px;line-height:1.1;margin-top:4px}
+.md-score-box.self{background:#eff6ff;border-color:#bfdbfe;color:#2563eb}.md-score-box.manager{background:#f5f3ff;border-color:#ddd6fe;color:#6d28d9}.md-score-box.final{background:#ecfeff;border-color:#a5f3fc;color:#087f8f}
+.md-score-box em{display:block;font-size:8px;color:#52678c;font-style:normal;margin-top:3px;white-space:nowrap}
+.md-score-status{padding:7px 8px;border-radius:8px;background:#ecfdf5;color:#15803d;font-size:10px;font-weight:800;text-align:center}.md-score-status.pending{background:#fff7ed;color:#c2410c}.md-score-explain{color:#52678c;font-size:10px;line-height:1.3}.md-score-open{white-space:nowrap}
+.md-score-head{display:grid;grid-template-columns:minmax(150px,1.4fr) repeat(3,minmax(104px,.75fr)) minmax(115px,.8fr) minmax(145px,1fr) auto;gap:8px;padding:8px 12px 0}
+@media(max-width:1100px){.md-score-grid,.md-score-head{grid-template-columns:minmax(150px,1.2fr) repeat(3,minmax(95px,.75fr)) minmax(105px,.8fr) minmax(120px,1fr)}.md-score-open{grid-column:2/-1;justify-self:start}.md-score-head{display:none}}
+@media(max-width:700px){.md-team-list{padding:0!important}.md-score-grid{grid-template-columns:1fr 1fr;gap:8px}.md-score-person{grid-column:1/-1}.md-score-explain{grid-column:1/-1}.md-score-open{grid-column:1/-1;width:100%}.md-score-open .btn{width:100%;justify-content:center}.md-score-status{min-height:52px;display:flex;align-items:center;justify-content:center}}
+/* My Team: separate role tabs and compact score layout */
+.md-team-tabs{display:flex;gap:8px;margin:0 0 10px;border-bottom:1px solid #dbe4f0;padding-bottom:0}
+.md-team-tab{border:1px solid #2563eb;border-bottom:3px solid #2563eb;border-radius:8px 8px 0 0;background:#2563eb;color:#fff;padding:9px 16px;font-size:12px;font-weight:800;cursor:pointer}
+.md-team-tab.prospective{border-color:#c4b5fd;border-bottom-color:#7c3aed;background:#fff;color:#6d28d9}
+.md-team-tab.prospective.active{background:#7c3aed;color:#fff}.md-team-tab.current.active{background:#2563eb;color:#fff}
+.md-team-tab span{display:inline-flex;align-items:center;justify-content:center;min-width:20px;height:18px;padding:0 5px;margin-left:5px;border-radius:10px;background:rgba(255,255,255,.25);font-size:10px}
+.md-team-tab.prospective:not(.active) span{background:#ede9fe;color:#6d28d9}
+.md-team-panel{display:block}.md-team-panel.hidden{display:none!important}
+.md-team-list{padding:8px!important;background:transparent!important;border:0!important;box-shadow:none!important}
+.md-team-section{background:#fff;border:1px solid #dbe4f0;border-radius:10px;margin:0;overflow:hidden;box-shadow:0 2px 8px rgba(15,23,42,.05)}
+.md-team-section.current{border-top:3px solid #2563eb}.md-team-section.prospective{border-top:3px solid #7c3aed}
+.md-team-section-head{padding:10px 12px!important;min-height:0!important}.md-team-section-head h3{font-size:13px!important}.md-team-section-head p{font-size:10px!important}.md-team-section-icon{width:28px!important;height:28px!important;min-width:28px!important;flex-basis:28px!important}.md-team-section-icon svg{width:15px!important;height:15px!important}
+.md-score-head,.md-score-grid{grid-template-columns:minmax(145px,1.35fr) repeat(3,minmax(82px,.7fr)) minmax(100px,.8fr) minmax(125px,1fr) auto!important;gap:6px!important}
+.md-score-head{padding:6px 10px 0!important;font-size:8px!important}.md-score-grid{padding:8px 10px!important}
+.md-score-person{gap:6px!important}.md-score-avatar{width:26px!important;height:26px!important;min-width:26px!important}.md-score-avatar svg{width:14px!important;height:14px!important}.md-score-person strong{font-size:11px!important}.md-score-person span{font-size:9px!important}
+.md-score-box{min-height:44px!important;padding:6px 5px!important;border-radius:7px!important}.md-score-box small{font-size:7px!important}.md-score-box strong{font-size:15px!important;margin-top:3px!important}.md-score-box em{font-size:7px!important;margin-top:2px!important}
+.md-score-status{padding:6px 7px!important;border-radius:7px!important;font-size:9px!important}.md-score-explain{font-size:9px!important}.md-score-open .btn{min-width:88px!important;padding:6px 9px!important;font-size:10px!important}
+@media(max-width:1100px){.md-score-head{display:none!important}.md-score-grid{grid-template-columns:minmax(145px,1.2fr) repeat(3,minmax(82px,.7fr)) minmax(100px,.8fr) minmax(120px,1fr) auto!important}}
+@media(max-width:700px){.md-team-tab{flex:1;padding:8px 6px}.md-score-grid{grid-template-columns:1fr 1fr!important;gap:6px!important}.md-score-person,.md-score-explain,.md-score-open{grid-column:1/-1}.md-score-open .btn{width:100%!important;justify-content:center}}
+/* My Team: tabbed team-average summaries */
+.md-team-tabs{display:flex;gap:8px;margin:0 0 10px;border-bottom:1px solid #dbe4f0}
+.md-team-tab{border:1px solid #2563eb;border-bottom:3px solid #2563eb;border-radius:8px 8px 0 0;background:#2563eb;color:#fff;padding:8px 15px;font-size:11px;font-weight:800;cursor:pointer}
+.md-team-tab.prospective{border-color:#c4b5fd;border-bottom-color:#7c3aed;background:#fff;color:#6d28d9}
+.md-team-tab.prospective.active{background:#7c3aed;color:#fff}.md-team-tab.current.active{background:#2563eb;color:#fff}
+.md-team-tab span{display:inline-flex;align-items:center;justify-content:center;min-width:19px;height:18px;padding:0 5px;margin-left:5px;border-radius:10px;background:rgba(255,255,255,.25);font-size:9px}
+.md-team-tab.prospective:not(.active) span{background:#ede9fe;color:#6d28d9}
+.md-team-panel.hidden{display:none!important}
+.md-team-average{border:1px solid #bfdbfe;border-top:3px solid #2563eb;border-radius:10px;background:#eff6ff;padding:10px 12px;margin:0 0 10px}
+.md-team-average.prospective{border-color:#ddd6fe;border-top-color:#7c3aed;background:#faf5ff}
+.md-team-average-head{display:flex;align-items:center;gap:8px;margin-bottom:8px}.md-team-average-head strong{font-size:12px;color:#1451c9}.md-team-average.prospective .md-team-average-head strong{color:#6d28d9}.md-team-average-head span{font-size:10px;color:#64748b}
+.md-team-average-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.md-team-average-box{background:#fff;border:1px solid #bfdbfe;border-radius:7px;padding:7px 9px}.md-team-average.prospective .md-team-average-box{border-color:#ddd6fe}
+.md-team-average-box small{display:block;color:#52678c;font-size:8px;font-weight:800;text-transform:uppercase;letter-spacing:.25px}.md-team-average-box strong{display:block;color:#2563eb;font-size:19px;line-height:1.1;margin-top:3px}.md-team-average-box.manager strong{color:#7c3aed}.md-team-average-box.final{border-color:#a5f3fc;background:#ecfeff}.md-team-average-box.final strong{color:#087f8f}
+.md-team-average-note{margin:7px 0 0;color:#52678c;font-size:9px}
+.md-team-list{padding:8px!important;background:transparent!important;border:0!important;box-shadow:none!important}
+.md-team-section{background:#fff;border:1px solid #dbe4f0;border-radius:10px;margin:0;overflow:hidden;box-shadow:0 2px 8px rgba(15,23,42,.05)}
+.md-team-section.current{border-top:3px solid #2563eb}.md-team-section.prospective{border-top:3px solid #7c3aed}
+.md-team-section-head{display:flex;align-items:center;gap:8px;padding:9px 12px!important;border-bottom:1px solid #edf1f6}.md-team-section-head h3{margin:0;font-size:13px!important;color:#102a52}.md-team-section-head p{margin:2px 0 0;font-size:9px!important;color:#64748b}.md-team-section-icon{width:27px!important;height:27px!important;min-width:27px!important;flex:0 0 27px!important}.md-team-section-icon svg{width:14px!important;height:14px!important}
+.md-score-head,.md-score-grid{grid-template-columns:minmax(140px,1.35fr) repeat(3,minmax(78px,.7fr)) minmax(95px,.8fr) minmax(115px,1fr) auto!important;gap:6px!important}
+.md-score-head{padding:6px 10px 0!important;font-size:8px!important}.md-score-grid{padding:8px 10px!important}
+.md-score-person{gap:6px!important}.md-score-avatar{width:26px!important;height:26px!important;min-width:26px!important}.md-score-avatar svg{width:14px!important;height:14px!important}.md-score-person strong{font-size:10px!important}.md-score-person span{font-size:9px!important}.md-score-box{min-height:42px!important;padding:6px 5px!important;border-radius:7px!important}.md-score-box small{font-size:7px!important}.md-score-box strong{font-size:15px!important;margin-top:3px!important}.md-score-box em{display:none!important}.md-score-status{padding:6px 7px!important;border-radius:7px!important;font-size:9px!important}.md-score-explain{font-size:9px!important}.md-score-open .btn{min-width:84px!important;padding:6px 8px!important;font-size:10px!important}
+@media(max-width:1100px){.md-score-head{display:none!important}.md-score-grid{grid-template-columns:minmax(140px,1.1fr) repeat(3,minmax(78px,.7fr)) minmax(95px,.8fr) minmax(115px,1fr) auto!important}}
+@media(max-width:700px){.md-team-tab{flex:1;padding:8px 6px}.md-team-average-grid{grid-template-columns:1fr}.md-score-grid{grid-template-columns:1fr 1fr!important;gap:6px!important}.md-score-person,.md-score-explain,.md-score-open{grid-column:1/-1}.md-score-open .btn{width:100%!important;justify-content:center}}
+/* Team Gaps: filters, KPIs and ranked competency gaps */
+.tg-page{padding:20px 22px 30px;background:#f8fafc;border-radius:12px;min-height:calc(100vh - 120px)}
+.tg-title h1{margin:0;color:#102a52;font-size:24px;font-weight:900}.tg-title p{margin:4px 0 16px;color:#64748b;font-size:12px}
+.tg-filter-card{display:grid;grid-template-columns:1.2fr 1fr 1fr 1fr auto;gap:10px;align-items:end;padding:13px;background:#fff;border:1px solid #dbe4f0;border-radius:11px;margin-bottom:12px}.tg-filter-card label{display:block;color:#334155;font-size:10px;font-weight:800;margin-bottom:5px}.tg-filter-card select{height:36px;background:#fff}.tg-filter-card button{height:36px;white-space:nowrap}
+.tg-kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:12px}.tg-kpis>div{padding:12px 14px;background:#fff;border:1px solid #dbe4f0;border-top:3px solid #2563eb;border-radius:10px}.tg-kpis>div.critical{border-top-color:#dc2626}.tg-kpis>div.affected{border-top-color:#7c3aed}.tg-kpis>div.average{border-top-color:#f59e0b}.tg-kpis small{display:block;color:#52678c;font-size:9px;font-weight:800;text-transform:uppercase}.tg-kpis strong{display:block;color:#102a52;font-size:24px;line-height:1.1;margin:3px 0}.tg-kpis em{display:block;color:#64748b;font-size:10px;font-style:normal}
+.tg-table-card{background:#fff;border:1px solid #dbe4f0;border-radius:11px;overflow:hidden}.tg-table-head{display:flex;justify-content:space-between;align-items:center;padding:13px 15px;border-bottom:1px solid #edf1f6}.tg-table-head h2{margin:0;color:#102a52;font-size:14px}.tg-table-head span{color:#64748b;font-size:11px}.tg-table{width:100%;border-collapse:collapse;font-size:11px}.tg-table th{padding:9px 10px;background:#eef3f9;color:#52678c;font-size:9px;text-transform:uppercase;letter-spacing:.3px;text-align:left}.tg-table td{padding:9px 10px;border-bottom:1px solid #edf1f6;color:#18335e;vertical-align:middle}.tg-table tr:hover td{background:#f8fbff}.tg-table td strong{color:#102a52}.tg-severity{display:inline-block;padding:3px 6px;border-radius:5px;font-size:8px;font-weight:900;text-transform:uppercase}.tg-severity.critical{background:#fee2e2;color:#b91c1c}.tg-severity.moderate{background:#fff7ed;color:#c2410c}.tg-severity.development{background:#dbeafe;color:#1d4ed8}.tg-severity.strength{background:#dcfce7;color:#15803d}.tg-gap{font-weight:900;color:#dc2626}.tg-bar{display:inline-block;width:70px;height:6px;margin-right:5px;border-radius:4px;background:#e2e8f0;vertical-align:middle;overflow:hidden}.tg-bar i{display:block;height:100%;border-radius:4px;background:#2563eb}.tg-bar i.critical{background:#dc2626}.tg-bar i.moderate{background:#f59e0b}.tg-bar i.development{background:#2563eb}.tg-bar i.strength{background:#16a34a}.tg-table .btn{margin-right:4px}.tg-note{margin-top:10px;padding:9px 11px;border-radius:8px;background:#eef6ff;color:#24548a;font-size:10px}.tg-empty{text-align:center;color:#64748b;padding:24px!important}
+@media(max-width:1000px){.tg-filter-card{grid-template-columns:1fr 1fr}.tg-kpis{grid-template-columns:1fr 1fr}}
+@media(max-width:650px){.tg-page{padding:14px 10px}.tg-filter-card,.tg-kpis{grid-template-columns:1fr}.tg-table{min-width:980px}.tg-table-card{overflow-x:auto}}
+/* Team Gaps: Individual and All Team tabs */
+.tg-tabs{display:flex;gap:8px;margin:0 0 12px;border-bottom:1px solid #dbe4f0}.tg-tab{border:1px solid #2563eb;border-bottom:3px solid #2563eb;border-radius:8px 8px 0 0;background:#2563eb;color:#fff;padding:9px 17px;font-size:12px;font-weight:800;cursor:pointer}.tg-tab:not(.active){border-color:#c4b5fd;border-bottom-color:#7c3aed;background:#fff;color:#6d28d9}.tg-tab.active{background:#2563eb;color:#fff}.tg-page{padding:20px 22px 30px;background:#f8fafc;border-radius:12px;min-height:calc(100vh - 120px)}.tg-title h1{margin:0;color:#102a52;font-size:24px;font-weight:900}.tg-title p{margin:4px 0 16px;color:#64748b;font-size:12px}.tg-filter-card{display:grid;grid-template-columns:1.2fr 1fr 1fr 1fr auto auto;gap:10px;align-items:end;padding:13px;background:#fff;border:1px solid #dbe4f0;border-radius:11px;margin-bottom:12px}.tg-filter-card label{display:block;color:#334155;font-size:10px;font-weight:800;margin-bottom:5px}.tg-filter-card select{height:36px;background:#fff}.tg-filter-card button{height:36px;white-space:nowrap}.tg-kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:12px}.tg-kpis>div{padding:12px 14px;background:#fff;border:1px solid #dbe4f0;border-top:3px solid #2563eb;border-radius:10px}.tg-kpis>div.critical{border-top-color:#dc2626}.tg-kpis>div.affected{border-top-color:#7c3aed}.tg-kpis>div.average{border-top-color:#f59e0b}.tg-kpis small{display:block;color:#52678c;font-size:9px;font-weight:800;text-transform:uppercase}.tg-kpis strong{display:block;color:#102a52;font-size:24px;line-height:1.1;margin:3px 0}.tg-kpis em{display:block;color:#64748b;font-size:10px;font-style:normal}.tg-table-card{background:#fff;border:1px solid #dbe4f0;border-radius:11px;overflow:hidden}.tg-table-head{display:flex;justify-content:space-between;align-items:center;padding:13px 15px;border-bottom:1px solid #edf1f6}.tg-table-head h2{margin:0;color:#102a52;font-size:14px}.tg-table{width:100%;border-collapse:collapse;font-size:11px}.tg-table th{padding:9px 10px;background:#eef3f9;color:#52678c;font-size:9px;text-transform:uppercase;letter-spacing:.3px;text-align:left}.tg-table td{padding:9px 10px;border-bottom:1px solid #edf1f6;color:#18335e;vertical-align:middle}.tg-table td strong{color:#102a52}.tg-severity{display:inline-block;padding:3px 6px;border-radius:5px;font-size:8px;font-weight:900;text-transform:uppercase}.tg-severity.critical{background:#fee2e2;color:#b91c1c}.tg-severity.moderate{background:#fff7ed;color:#c2410c}.tg-severity.development{background:#dbeafe;color:#1d4ed8}.tg-severity.strength{background:#dcfce7;color:#15803d}.tg-gap{font-weight:900;color:#dc2626}.tg-bar{display:inline-block;width:70px;height:6px;margin-right:5px;border-radius:4px;background:#e2e8f0;vertical-align:middle;overflow:hidden}.tg-bar i{display:block;height:100%;border-radius:4px;background:#2563eb}.tg-bar i.critical{background:#dc2626}.tg-bar i.moderate{background:#f59e0b}.tg-bar i.development{background:#2563eb}.tg-bar i.strength{background:#16a34a}.tg-table .btn{margin-right:4px}.tg-empty{text-align:center;color:#64748b;padding:24px!important}@media(max-width:1000px){.tg-filter-card{grid-template-columns:1fr 1fr}.tg-kpis{grid-template-columns:1fr 1fr}}@media(max-width:650px){.tg-page{padding:14px 10px}.tg-filter-card,.tg-kpis{grid-template-columns:1fr}.tg-table{min-width:980px}.tg-table-card{overflow-x:auto}}
 </style>
 <style>
 /* The approved visual design, scoped to employee mode and the profile. */
@@ -4753,6 +4877,67 @@ html:root body #mainContent:has(#loginEmail) .cms-forgot-link:hover {
  html:root:root:root:root:root body #mainContent:has(#loginEmail) .cms-exact-field label{font-size:17px!important;}
 }
 </style>
+<style id="cms-framework-status-colors-only-v1">
+/* Framework status colors: Published = green, Draft = blue, Pending review = amber. */
+#cmsLibraryBrowserV1 .clo2-status-row:nth-child(1) .clo2-dot,
+#cmsLibraryBrowserV1 .clo-status-row:nth-child(1) .clo-dot{
+  background:#059669!important;
+}
+#cmsLibraryBrowserV1 .clo2-status-row:nth-child(2) .clo2-dot,
+#cmsLibraryBrowserV1 .clo-status-row:nth-child(2) .clo-dot{
+  background:#2563eb!important;
+}
+#cmsLibraryBrowserV1 .clo2-status-row:nth-child(3) .clo2-dot,
+#cmsLibraryBrowserV1 .clo-status-row:nth-child(3) .clo-dot{
+  background:#f59e0b!important;
+}
+</style>
+<style id="cms-recent-framework-metadata-spacing-v1">
+#cmsLibraryBrowserV1 .clo2-activity-meta{display:flex;flex-direction:column;gap:4px;color:#65789e;font-size:10px;line-height:1.45}
+#cmsLibraryBrowserV1 .clo2-activity-meta strong{display:block;color:#18335e;font-size:11px;line-height:1.3}
+#cmsLibraryBrowserV1 .clo2-activity-meta span{display:block;color:#65789e;font-size:10px;line-height:1.3}
+</style>
+<style id="cms-library-company-selector-spacing-v1">
+#cmsLibraryBrowserV1 .clo2-company-selector-top{margin-top:0}
+#cmsLibraryBrowserV1 .clo2-overview{display:flex;flex-direction:column}
+#cmsLibraryBrowserV1 .clo2-overview>.clo2-title-row{order:1}
+#cmsLibraryBrowserV1 .clo2-overview>.clo2-metrics{order:3}
+#cmsLibraryBrowserV1 .clo2-overview>.clo2-main{order:4}
+#cmsLibraryBrowserV1 .clo2-overview>.clo2-activity{order:5}
+#cmsLibraryBrowserV1>.clb-cards{order:2}
+#cmsLibraryBrowserV1>.clb-cards + .clb-panel,
+#cmsLibraryBrowserV1>.clb-panel{order:6}
+</style>
+<style id="cms-library-company-selector-under-header-v1">
+#cmsLibraryBrowserV1 .clo2-company-selector-under-header{
+  display:block!important;
+  margin:0 0 20px!important;
+  padding:16px 18px!important;
+  border:1px solid #d5def0!important;
+  border-radius:12px!important;
+  background:#fff!important;
+  box-shadow:0 4px 14px #1c315b12!important;
+}
+#cmsLibraryBrowserV1 .clo2-company-selector-under-header .clb-heading{
+  margin:0 0 12px!important;
+  color:#142653!important;
+}
+#cmsLibraryBrowserV1 .clo2-company-selector-under-header .clb-cards{
+  margin:0!important;
+}
+<style id="manager-dashboard-v2">
+/* Manager Dashboard V2: action-first layout */
+.md-v2{color:#13234f}
+.md-v2-hero{display:flex;justify-content:space-between;gap:20px;align-items:center;padding:24px 28px;margin-bottom:16px;border-radius:14px;background:linear-gradient(115deg,#10235c,#082d62 58%,#0f7890);color:#fff;box-shadow:0 8px 24px rgba(12,35,87,.18)}
+.md-v2-hero h2{margin:0 0 5px;font-size:27px;letter-spacing:-.4px;color:#fff}.md-v2-hero p{margin:0;color:#dbeafe;font-size:13px}.md-v2-hero-side{display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end}.md-v2-chip{min-width:160px;padding:10px 13px;border:1px solid rgba(255,255,255,.22);border-radius:10px;background:rgba(255,255,255,.1);font-size:11px;color:#dbeafe}.md-v2-chip strong{display:block;color:#fff;font-size:13px;margin-top:2px}
+.md-v2-alert{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:11px 14px;margin-bottom:16px;border:1px solid #fecaca;border-radius:10px;background:#fff5f5;color:#991b1b}.md-v2-alert strong{color:#7f1d1d}.md-v2-alert .btn{border-color:#dc2626;color:#b91c1c;background:#fff}
+.md-v2-kpis{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px;margin-bottom:16px}.md-v2-kpi{display:flex;flex-direction:column;align-items:flex-start;min-height:118px;padding:14px;border:1px solid #dbe4f0;border-radius:11px;background:#fff;box-shadow:0 2px 8px rgba(15,23,42,.05);text-align:left;cursor:pointer}.md-v2-kpi:hover{border-color:#2563eb;transform:translateY(-1px)}.md-v2-kpi .kpi-icon{width:32px;height:32px;display:grid;place-items:center;border-radius:10px;background:#eff6ff;color:#2563eb;margin-bottom:8px}.md-v2-kpi .kpi-icon svg{width:18px;height:18px}.md-v2-kpi strong{font-size:23px;line-height:1;color:#0f172a}.md-v2-kpi span{margin-top:6px;font-size:11px;font-weight:800;color:#1e3a8a}.md-v2-kpi small{margin-top:4px;font-size:10px;color:#64748b}.md-v2-kpi.amber .kpi-icon{background:#fff7ed;color:#ea580c}.md-v2-kpi.green .kpi-icon{background:#ecfdf5;color:#059669}.md-v2-kpi.purple .kpi-icon{background:#f5f3ff;color:#7c3aed}.md-v2-kpi.teal .kpi-icon{background:#ecfeff;color:#0f766e}.md-v2-kpi.rose .kpi-icon{background:#fff1f2;color:#e11d48}
+.md-v2-card{padding:16px;border:1px solid #dbe4f0;border-radius:12px;background:#fff;box-shadow:0 2px 8px rgba(15,23,42,.04);margin-bottom:16px}.md-v2-card-head{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:12px}.md-v2-card-head h3{margin:0;color:#12245a;font-size:15px}.md-v2-card-head p{margin:2px 0 0;color:#64748b;font-size:11px}.md-v2-card-head .btn{white-space:nowrap}
+.md-v2-actions{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}.md-v2-action{min-height:156px;padding:14px;border:1px solid #e2e8f0;border-radius:10px;background:#fff}.md-v2-action.high{border-color:#fecaca;background:#fffafa}.md-v2-action.medium{border-color:#fed7aa;background:#fffaf5}.md-v2-action.low{border-color:#bfdbfe;background:#f8fbff}.md-v2-action-top{display:flex;justify-content:space-between;gap:8px;align-items:flex-start}.md-v2-action h4{margin:0;color:#172554;font-size:13px}.md-v2-action p{min-height:31px;margin:6px 0 8px;color:#64748b;font-size:11px}.md-v2-action dl{display:grid;grid-template-columns:1fr auto;gap:3px 8px;margin:0 0 10px;font-size:11px}.md-v2-action dt{color:#64748b}.md-v2-action dd{margin:0;font-weight:800;color:#172554}.md-v2-action .btn{width:100%;justify-content:center;background:#1d4ed8;color:#fff;border:0}
+.md-v2-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.25fr);gap:16px}.md-v2-readiness-row{display:grid;grid-template-columns:126px 1fr 48px;gap:9px;align-items:center;margin:12px 0;font-size:11px}.md-v2-readiness-label strong{display:block;color:#1e293b}.md-v2-readiness-label span{display:block;color:#64748b;font-size:10px}.md-v2-track{height:8px;overflow:hidden;border-radius:8px;background:#e2e8f0}.md-v2-track i{display:block;height:100%;border-radius:8px}.md-v2-track .ready{background:#059669}.md-v2-track .soon{background:#2563eb}.md-v2-track .later{background:#f59e0b}.md-v2-track .notready{background:#dc2626}.md-v2-readiness-total{display:flex;justify-content:space-between;padding-top:10px;border-top:1px solid #e2e8f0;color:#64748b;font-size:11px}.md-v2-gap-table{width:100%;border-collapse:collapse;font-size:11px}.md-v2-gap-table th{padding:7px 6px;background:#f8fafc;color:#64748b;font-size:10px}.md-v2-gap-table td{padding:8px 6px;border-bottom:1px solid #eef2f7;color:#1e293b}.md-v2-gap-table .gap-name{font-weight:800;color:#1d4ed8}.md-v2-badge{display:inline-block;padding:3px 7px;border-radius:5px;font-size:9px;font-weight:800;text-transform:uppercase}.md-v2-badge.high{background:#fee2e2;color:#b91c1c}.md-v2-badge.medium{background:#ffedd5;color:#c2410c}.md-v2-badge.low{background:#dbeafe;color:#1d4ed8}.md-v2-empty{padding:20px;text-align:center;color:#64748b;font-size:12px;background:#f8fafc;border-radius:8px}.md-v2-activity{list-style:none;margin:0;padding:0}.md-v2-activity li{display:flex;gap:10px;align-items:flex-start;padding:10px 0;border-bottom:1px solid #eef2f7;font-size:11px}.md-v2-activity li:last-child{border-bottom:0}.md-v2-activity .activity-dot{width:22px;height:22px;display:grid;place-items:center;border-radius:50%;background:#eef2ff;color:#4338ca;flex:none}.md-v2-activity .activity-dot svg{width:13px;height:13px}.md-v2-activity strong{display:block;color:#172554}.md-v2-activity span{display:block;color:#64748b;margin-top:2px}.md-v2-quick{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}.md-v2-quick .btn{min-height:54px;justify-content:center;text-align:center;background:#fff;border-color:#cbd5e1;color:#1d4ed8}.md-v2-foot{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:10px 12px;border:1px solid #dbeafe;border-radius:9px;background:#eff6ff;color:#1e40af;font-size:11px}.md-v2-foot strong{color:#1e3a8a}
+@media(max-width:1100px){.md-v2-kpis{grid-template-columns:repeat(3,minmax(0,1fr))}.md-v2-actions{grid-template-columns:repeat(2,minmax(0,1fr))}.md-v2-grid{grid-template-columns:1fr}}
+@media(max-width:650px){.md-v2-hero{padding:18px;display:block}.md-v2-hero-side{justify-content:flex-start;margin-top:14px}.md-v2-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.md-v2-actions,.md-v2-quick{grid-template-columns:1fr}.md-v2-readiness-row{grid-template-columns:105px 1fr 38px}.md-v2-card{padding:13px}.md-v2-alert{align-items:flex-start;flex-direction:column}}
+</style>
 </head>
 <body>
 <style>
@@ -5251,7 +5436,7 @@ var pages = [];
 if (role === 'employee') {
 pages = [{id:'emp-profile',label:'My Profile'},{id:'emp-selfassess',label:'Self Assessment'},{id:'emp-mgrview',label:'Manager Assessment'},{id:'emp-gaps',label:'My Gaps'},{id:'emp-strengths',label:'My Strengths'},{id:'emp-devplans',label:'Development Plans'}];
 } else if (role === 'manager') {
-pages = [{id:'mgr-dashboard',label:'Dashboard'},{id:'mgr-team',label:'My Team'},{id:'mgr-prompool',label:'Progression-Ready Pool'},{id:'mgr-assess',label:'Assessment'},{id:'mgr-details',label:'Assessment Details'},{id:'mgr-requests',label:'Requests'},{id:'mgr-gaps',label:'Team Gaps'},{id:'mgr-devplans',label:'Development Plans'},{id:'mgr-setcomp',label:'Set Competencies'},{id:'mgr-repappr',label:'Report Approvals'},{id:'mgr-comp',label:'Competency Library (View)'}];
+pages = [{id:'mgr-dashboard',label:'Dashboard'},{id:'mgr-team',label:'My Team'},{id:'mgr-prompool',label:'Progression-Ready Pool'},{id:'mgr-assess',label:'Assessment'},{id:'mgr-details',label:'All Assessment Details & Reviews'},{id:'mgr-requests',label:'Requests'},{id:'mgr-gaps',label:'Team Gaps'},{id:'mgr-devplans',label:'Development Plans'},{id:'mgr-setcomp',label:'Set Competencies'},{id:'mgr-repappr',label:'Report Approvals'},{id:'mgr-comp',label:'Competency Library (View)'}];
 } else if (role === 'hohr') {
 pages = [{id:'hohr-dash',label:'Dashboard'},{id:'hohr-kpi',label:'Critical Roles'},{id:'hohr-positions',label:'Positions & Criticality'},{id:'hohr-assessed',label:'Assessed'},{id:'hohr-pool',label:'Talent Pool'},{id:'hohr-reports',label:'All Reports'},{id:'hohr-assess',label:'All Assessments'},{id:'hohr-devplans',label:'Approved Dev Plans'},{id:'hohr-staff',label:'All Staff'},{id:'hohr-gaps',label:'All Gaps'},{id:'hohr-strengths',label:'All Strengths'},{id:'hohr-comp',label:'Competency Library'}];
 }
@@ -5361,12 +5546,18 @@ return loading;
 function getPageLabel(id) {
 if (id === 'hohr-comp-approvals') return 'Competency Approvals & Validation';
 if (id === 'hr-comp-approvals') return 'Competency Approvals & Validation';
-var map = {'emp-profile':'My Profile','emp-selfassess':'Self Assessment','emp-mgrview':'Manager Assessment','emp-gaps':'My Gaps','emp-strengths':'My Strengths','emp-devplans':'Development Plans','mgr-dashboard':'Dashboard','mgr-team':'My Team','mgr-prompool':'Progression-Ready Pool','mgr-assess':'Assessment','mgr-details':'Assessment Details','mgr-gaps':'Team Gaps','mgr-devplans':'Development Plans','mgr-requests':'Requests','mgr-repappr':'Report Approvals','mgr-setcomp':'Set Competencies','mgr-comp':'Competency Library (View)','hohr-reports':'Report Approvals','hohr-comp':'Competency Library','cs-reports':'Executive Recommendations','hr-dashboard':'Dashboard','hr-kpi':'KPI Dashboard','hr-departments':'Departments','hr-companies':'Companies','hr-prompool':'Progression-Ready Pool','hr-staff':'All Employees','hr-managers':'Line Managers','hr-review':'Assessment Review','hr-gaps':'Employee Gaps','hr-devplans':'Development Plans','hr-all':'All Assessments','hr-reports':'Reports','hr-repappr':'Report Approvals','hr-comp':'Competency Library','hr-redo':'Redo Requests','hr-positions':'Positions & Criticality'}
+var map = {'emp-profile':'My Profile','emp-selfassess':'Self Assessment','emp-mgrview':'Manager Assessment','emp-gaps':'My Gaps','emp-strengths':'My Strengths','emp-devplans':'Development Plans','mgr-dashboard':'Dashboard','mgr-team':'My Team','mgr-prompool':'Progression-Ready Pool','mgr-assess':'Assessment','mgr-details':'All Assessment Details & Reviews','mgr-gaps':'Team Gaps','mgr-devplans':'Development Plans','mgr-requests':'Requests','mgr-repappr':'Report Approvals','mgr-setcomp':'Set Competencies','mgr-comp':'Competency Library (View)','hohr-reports':'Report Approvals','hohr-comp':'Competency Library','cs-reports':'Executive Recommendations','hr-dashboard':'Dashboard','hr-kpi':'KPI Dashboard','hr-departments':'Departments','hr-companies':'Companies','hr-prompool':'Progression-Ready Pool','hr-staff':'All Employees','hr-managers':'Line Managers','hr-review':'Assessment Review','hr-gaps':'Employee Gaps','hr-devplans':'Development Plans','hr-all':'All Assessments','hr-reports':'Reports','hr-repappr':'Report Approvals','hr-comp':'Competency Library','hr-redo':'Redo Requests','hr-positions':'Positions & Criticality'}
 return map[id] || '';
 }
 // Current-role decisions require both submissions; zero is a valid score.
 function currentRoleDecision(selfScore, managerScore, hasSelf, hasManager) {
 if (!hasSelf || !hasManager || selfScore == null || managerScore == null) return null;
+var s = Number(selfScore), m = Number(managerScore);
+if (!Number.isFinite(s) || !Number.isFinite(m)) return null;
+return Math.round((m * 0.70) + (s * 0.30));
+}
+function finalScore7030(selfScore, managerScore) {
+if (selfScore === null || managerScore === null || selfScore === undefined || managerScore === undefined) return null;
 var s = Number(selfScore), m = Number(managerScore);
 if (!Number.isFinite(s) || !Number.isFinite(m)) return null;
 return Math.round((m * 0.70) + (s * 0.30));
@@ -6126,116 +6317,6 @@ if (st.indexOf('Finalized') === 0) return '<span class="badge badge-success"> FI
 if (st.indexOf('Approved') === 0) return '<span class="badge badge-success"> ' + escapeHtml(st.replace('Approved: ', '')) + '</span>';
 return '<span class="badge badge-info">' + escapeHtml(st) + '</span>';
 }
-async function loadManagerDashboard() {
-var __cmsRouteEpoch = typeof CN === 'undefined' ? null : CN.epoch;
-
-((typeof CN === 'undefined' || __cmsRouteEpoch === CN.epoch) ? setContent('<div class="loading"><div class="spinner"></div>Loading...</div>') : undefined);
-const { data: allEmps } = await _supabase.from('employees').select('*');
-const { data: allResults } = await _supabase.from('assessments').select('*');
-const { data: profs0 } = await _supabase.from('user_profiles').select('email, photo');
-const { data: chain0 } = await _supabase.from('report_chain').select('*').order('id', { ascending: false });
-var photoOf0 = {}; (profs0 || []).forEach(function(p){ if (p.photo) photoOf0[(p.email || '').toLowerCase()] = p.photo; });
-var decisionOf0 = {}; (chain0 || []).forEach(function(r){ if (!decisionOf0[r.employee_id]) decisionOf0[r.employee_id] = r; });
-var manager = null;
-for (var i = 0; i < allEmps.length; i++) { if (allEmps[i].email === APP.user.email) { manager = allEmps[i]; break; } }
-if (!manager) { ((typeof CN === 'undefined' || __cmsRouteEpoch === CN.epoch) ? setContent('<div class="card"><p>Manager not found</p></div>') : undefined); return; }
-var team = [];
-(allEmps || []).forEach(function(emp) {
-if (emp.manager_email === APP.user.email && emp.email !== APP.user.email) {
-var empId = emp.employee_id;
-var rows = (allResults || []).filter(function(r){ return r.employee_id === empId; });
-var latest = latestOnly(rows);
-var fr = latest.map(function(r){ return { 'Employee ID': r.employee_id, 'Competency Code': r.comp_code, 'Type': r.type, 'Ticked': r.ticked, 'Evidence': r.evidence, 'HR_Status': r.hr_status, 'Rating': r.proficiency_rating , 'Scoring Rule': r.scoring_rule || 'legacy-zero', 'Classification': r.scoring_rule === 'floor-one-v1' ? r.classification : undefined, 'Weight Profile': r.weight_profile, 'Weight Policy': r.weight_policy}; });
-var hasSelf = latest.some(function(r){ return r.type === 'Self'; });
-var hasMgr = latest.some(function(r){ return r.type === 'Manager'; });
-var pRows = latest.filter(function(r){ return r.type === 'Prospective'; });
-var psRows = latest.filter(function(r){ return r.type === 'Prospective Self'; });
-var pfr = pRows.map(function(r){ return { 'Employee ID': r.employee_id, 'Competency Code': r.comp_code, 'Type': r.type, 'Ticked': r.ticked, 'Evidence': r.evidence, 'HR_Status': r.hr_status, 'Rating': r.proficiency_rating , 'Scoring Rule': r.scoring_rule || 'legacy-zero', 'Classification': r.scoring_rule === 'floor-one-v1' ? r.classification : undefined, 'Weight Profile': r.weight_profile, 'Weight Policy': r.weight_policy}; });
-var psfr = psRows.map(function(r){ return { 'Employee ID': r.employee_id, 'Competency Code': r.comp_code, 'Type': r.type, 'Ticked': r.ticked, 'Evidence': r.evidence, 'HR_Status': r.hr_status, 'Rating': r.proficiency_rating , 'Scoring Rule': r.scoring_rule || 'legacy-zero', 'Classification': r.scoring_rule === 'floor-one-v1' ? r.classification : undefined, 'Weight Profile': r.weight_profile, 'Weight Policy': r.weight_policy}; });
-var hasP = pRows.length > 0, hasPS = psRows.length > 0;
-var pScore = hasP ? calculateOverallScore(empId, 'Prospective', pfr) : 0;
-var psScore = hasPS ? calculateOverallScore(empId, 'Prospective Self', psfr) : 0;
-team.push({
-id: empId, name: emp.employee_name, position: emp.position, company: emp.company,
-photo: photoOf0[(emp.email || '').toLowerCase()] || '', decision: decisionOf0[empId] || null,
-hasSelf: hasSelf, selfScore: hasSelf ? calculateOverallScore(empId, 'Self', fr) : 0, released: assessmentReleased(rows),
-hasMgr: hasMgr, mgrScore: hasMgr ? calculateOverallScore(empId, 'Manager', fr) : 0,
-readiness: hasMgr ? getCurrentRoleReadiness(hasMgr ? calculateOverallScore(empId, 'Manager', fr) : 0).label : '',
-rows: rows
-});
-}
-});
-var assessed = team.filter(function(t){ return t.hasMgr; });
-var pending = team.filter(function(t){ return !t.hasMgr; });
-var teamAvg = assessed.length ? Math.round(assessed.reduce(function(a,t){ return a + t.mgrScore; }, 0) / assessed.length) : 0;
-function initials(n){ var p = (n || '').split(' '); return p.length >= 2 ? p[0].charAt(0) + p[1].charAt(0) : (n || '?').charAt(0); }
-var html = '<div class="card"><div class="card-title" style="font-size:16px">Manager Dashboard</div><p style="font-size:12px;color:var(--gray-500)">Team performance overview and pending actions.</p></div>';
-html += '<div class="stats-grid">';
-html += '<div class="stat-card" style="background:var(--primary-light)"><div class="num" style="color:var(--primary)">' + team.length + '</div><div class="lbl">Direct Reports</div></div>';
-html += '<div class="stat-card" style="background:var(--green-light)"><div class="num" style="color:var(--green)">' + assessed.length + '</div><div class="lbl">Assessments Complete</div></div>';
-html += '<div class="stat-card" style="background:var(--orange-light)"><div class="num" style="color:var(--orange)">' + pending.length + '</div><div class="lbl">Pending Assessments</div></div>';
-html += '<div class="stat-card" style="background:var(--purple-light)"><div class="num" style="color:var(--purple)">' + teamAvg + '%</div><div class="lbl">Team Manager Score</div></div>';
-var poolCount = team.filter(function(t){ return t.hasP && t.pScore >= 80; }).length;
-html += '<div class="stat-card" style="background:var(--orange-light)"><div class="num" style="color:var(--orange)">' + poolCount + '</div><div class="lbl">In Progression-Ready Pool</div></div>';
-html += '</div>';
-html += fsCopy('<div class="card"><div class="card-title">Direct Reports</div><p style="font-size:11px;color:var(--gray-500);margin-bottom:8px"><strong>Current</strong> = the employee\'s present role (Self = their own rating, Manager = yours). <strong>Prospective</strong> = readiness for the next role (Self = their own rating, Manager = yours). Locked = unlocks once HR Admin completes the review.</p><div class="table-wrap"><table class="staff-table" style="white-space:nowrap"><thead><tr><th>Employee</th><th>Self - Cur</th><th>Mgr - Cur</th><th>Current Role Final Score</th><th>Self - Prosp</th><th>Mgr - Prosp</th><th>Prospective Role Final Score</th><th>Ready For</th><th>Readiness</th><th>Management Decision</th><th>Status</th></tr></thead><tbody>',"current");
-team.forEach(function(t) {
-var status = t.hasMgr ? '<span class="badge badge-success">Complete</span>' : (t.hasSelf ? '<span class="badge badge-warning">Self Done</span>' : '<span class="badge badge-danger">Not Started</span>');
-var lat = latestOnly(t.rows);
-var psRows = lat.filter(function(r){ return r.type === 'Prospective Self'; });
-var pmRows = lat.filter(function(r){ return r.type === 'Prospective'; });
-var fmtPs = psRows.map(function(r){ return { 'Employee ID': r.employee_id, 'Competency Code': r.comp_code, 'Type': r.type, 'Ticked': r.ticked, 'Evidence': r.evidence, 'HR_Status': r.hr_status, 'Rating': r.proficiency_rating , 'Scoring Rule': r.scoring_rule || 'legacy-zero', 'Classification': r.scoring_rule === 'floor-one-v1' ? r.classification : undefined, 'Weight Profile': r.weight_profile, 'Weight Policy': r.weight_policy}; });
-var fmtPm = pmRows.map(function(r){ return { 'Employee ID': r.employee_id, 'Competency Code': r.comp_code, 'Type': r.type, 'Ticked': r.ticked, 'Evidence': r.evidence, 'HR_Status': r.hr_status, 'Rating': r.proficiency_rating , 'Scoring Rule': r.scoring_rule || 'legacy-zero', 'Classification': r.scoring_rule === 'floor-one-v1' ? r.classification : undefined, 'Weight Profile': r.weight_profile, 'Weight Policy': r.weight_policy}; });
-var psScore = psRows.length ? calculateOverallScore(t.id, 'Prospective Self', fmtPs) : null;
-var pmScore = pmRows.length ? calculateOverallScore(t.id, 'Prospective', fmtPm) : null;
-var pAvg = (psScore !== null && pmScore !== null) ? cmsProspectiveDecision(psScore,pmScore,lat) : null;
-var pRole = pmRows.length ? (pmRows[0].prospective_role || '') : (psRows.length ? (psRows[0].prospective_role || '') : '');
-html += '<tr><td><div style="display:flex;align-items:center;gap:8px"><div style="width:28px;height:28px;border-radius:50%;background:var(--primary-light);color:var(--primary);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:10px;flex:none;overflow:hidden">' + (t.photo ? '<img src="' + t.photo + '" alt="" style="width:100%;height:100%;object-fit:cover;display:block">' : escapeHtml(initials(t.name))) + '</div><strong style="text-transform:uppercase;letter-spacing:0.2px;white-space:nowrap">' + escapeHtml(t.name) + '</strong><span style="font-size:10px;color:var(--gray-500);white-space:nowrap">' + escapeHtml(t.position) + ', ' + escapeHtml(t.company || '') + '</span></div></td>';
-html += '<td>' + (t.released ? (t.hasSelf ? '<strong>' + t.selfScore + '%</strong>' : '-') : (t.hasSelf ? 'Locked' : '-')) + '</td>';
-html += '<td>' + (t.hasMgr ? '<strong>' + t.mgrScore + '%</strong>' : '-') + '</td>';
-html += '<td>' + ((t.released && t.hasSelf && t.hasMgr) ? '<strong>' + currentRoleDecision(t.selfScore, t.mgrScore, t.hasSelf, t.hasMgr) + '%</strong>' : escapeHtml(currentRoleWaiting(t.hasSelf, t.hasMgr))) + '</td>';
-html += '<td>' + (psScore !== null ? '<strong style="color:#0ea5e9">' + psScore + '%</strong>' : '-') + '</td>';
-html += '<td>' + (pmScore !== null ? '<strong style="color:var(--purple)">' + pmScore + '%</strong>' : '-') + '</td>';
-html += '<td>' + (pAvg !== null ? '<strong style="color:var(--orange)">' + pAvg + '%</strong>' : '-') + '</td>';
-html += '<td>' + (pRole ? '<span class="badge badge-purple">' + escapeHtml(pRole) + '</span>' : '-') + '</td>';
-html += '<td>' + (t.hasMgr ? escapeHtml(t.readiness) : '-') + '</td>';
-html += '<td>' + decisionBadgeMgr(t) + '</td>';
-html += '<td>' + status + '</td></tr>';
-});
-if (!team.length) html += '<tr><td colspan="10" style="color:var(--gray-500)">No direct reports found.</td></tr>';
-html += '</tbody></table></div></div>';
-html += '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px">';
-html += '<div class="card" style="margin-bottom:0"><div class="card-title">Quick Actions</div><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-primary" onclick="navigateTo(\'mgr-assess\')">New Assessment</button><button class="btn btn-outline" onclick="navigateTo(\'mgr-team\')">My Team</button></div></div>';
-html += '<div class="card" style="margin-bottom:0"><div class="card-title">Pending Assessments</div>';
-if (!pending.length) html += '<p style="font-size:12px;color:var(--green)">All assessments complete </p>';
-pending.forEach(function(t) {
-html += '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--gray-100);font-size:12px"><span><strong style="text-transform:uppercase">' + escapeHtml(t.name) + '</strong> - Current Role</span><span style="color:var(--gray-500)">' + (t.hasSelf ? 'Self done' : 'Not started') + '</span></div>';
-});
-html += '</div>';
-html += '<div class="card" style="margin-bottom:0"><div class="card-title">Top Gaps (Team)</div>';
-var gapAgg = {};
-assessed.forEach(function(t) {
-var fr2 = latestOnly(t.rows).filter(function(r){ return r.type === 'Manager'; }).map(function(r){ return { 'Employee ID': r.employee_id, 'Competency Code': r.comp_code, 'Type': r.type, 'Ticked': r.ticked, 'Evidence': r.evidence, 'HR_Status': r.hr_status, 'Rating': r.proficiency_rating , 'Scoring Rule': r.scoring_rule || 'legacy-zero', 'Classification': r.scoring_rule === 'floor-one-v1' ? r.classification : undefined, 'Weight Profile': r.weight_profile, 'Weight Policy': r.weight_policy}; });
-for (var c = 0; c < APP.competencies.length; c++) {
-var comp = APP.competencies[c];
-var cs = calculateCompetencyScore(t.id, comp.code, 'Manager', fr2);
-if (cs.total > 0) {
-var pct = Math.round((cs.score / 5) * 100);
-if (pct < 70) {
-if (!gapAgg[comp.competency]) gapAgg[comp.competency] = { total: 0, count: 0 };
-gapAgg[comp.competency].total += pct;
-gapAgg[comp.competency].count++;
-}
-}
-}
-});
-var gapList = Object.keys(gapAgg).map(function(k){ return { name: k, pct: Math.round(gapAgg[k].total / gapAgg[k].count) }; });
-gapList.sort(function(a,b){ return a.pct - b.pct; });
-if (!gapList.length) html += '<p style="font-size:12px;color:var(--green)">No team gaps </p>';
-else gapList.slice(0, 5).forEach(function(g){ html += makeGapBar(escapeHtml(g.name), g.pct, 'var(--red)'); });
-html += '</div></div>';
-((typeof CN === 'undefined' || __cmsRouteEpoch === CN.epoch) ? setContent(html) : undefined);
-}
 async function loadManagerTeam() {
 var __cmsRouteEpoch = typeof CN === 'undefined' ? null : CN.epoch;
 
@@ -6677,7 +6758,7 @@ if (emp.manager_email === APP.user.email && emp.email !== APP.user.email) {
 team.push(emp);
 }
 }
-var html = '<div class="card"><div class="card-title">Assessment Details</div><div class="form-group"><label>Employee</label><select id="detEmp" onchange="loadDetEmp()"><option value="">-- Select --</option>';
+var html = '<div class="card"><div class="card-title">All Assessment Details &amp; Reviews</div><div class="form-group"><label>Employee</label><select id="detEmp" onchange="loadDetEmp()"><option value="">-- Select --</option>';
 team.forEach(function(t) { html += '<option value="' + t.employee_id + '">' + escapeHtml(t.employee_name) + '</option>'; });
 html += '</select></div></div><div id="detContent"></div>';
 ((typeof CN === 'undefined' || __cmsRouteEpoch === CN.epoch) ? setContent(html) : undefined);
@@ -6694,24 +6775,45 @@ const { data: allResults } = await _supabase.from('assessments').select('*').eq(
 var latest = latestOnly(allResults || []);
 var selfRows = latest.filter(function(r){ return r.type === 'Self'; });
 var mgrRows = latest.filter(function(r){ return r.type === 'Manager'; });
-var proRows = latest.filter(function(r){ return r.type === 'Prospective'; });
-var html = '';
-for (var i = 0; i < APP.competencies.length; i++) {
-var comp = APP.competencies[i];
-var se = selfRows.filter(function(r){ return r.comp_code === comp.code; });
-var me = mgrRows.filter(function(r){ return r.comp_code === comp.code; });
-var pr = proRows.filter(function(r){ return r.comp_code === comp.code; });
-if (!se.length && !me.length && !pr.length) continue;
-html += '<div class="competency-block"><div class="competency-name" style="margin-bottom:8px">' + escapeHtml(comp.competency) + '</div>';
-html += '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">';
-html += '<div><div class="card-subtitle">EMPLOYEE (SELF)</div>' + (assessmentReleased(allResults) ? detailCol(se, 'self-evidence') : '<p style="font-size:11px;color:var(--gray-400)"> Visible once you complete the manager assessment and HR Admin approves both assessments</p>') + '</div>';
-html += '<div><div class="card-subtitle">MANAGER - CURRENT ROLE</div>' + detailCol(me, 'mgr-evidence') + '</div>';
-html += '<div><div class="card-subtitle">MANAGER - PROSPECTIVE ROLE</div>' + detailCol(pr, 'mgr-evidence') + '</div>';
-html += '</div></div>';
+var prospSelfRows = latest.filter(function(r){ return r.type === 'Prospective Self'; });
+var prospMgrRows = latest.filter(function(r){ return r.type === 'Prospective'; });
+var currentRows = selfRows.concat(mgrRows);
+var prospectiveRows = prospSelfRows.concat(prospMgrRows);
+var currentReleased = assessmentReleased(allResults || []);
+var prospectiveReleased = prospectiveAssessmentReleased(allResults || []);
+var scoreRows = latest.map(function(r){return {'Employee ID':r.employee_id,'Competency Code':r.comp_code,'Type':r.type,'Ticked':r.ticked,'Evidence':r.evidence,'HR_Status':r.hr_status,'Rating':r.proficiency_rating,'Classification':r.classification,'Weight Profile':r.weight_profile,'Weight Policy':r.weight_policy,'Scoring Rule':r.scoring_rule};});
+var currentSelfScore = selfRows.length ? calculateOverallScore(id,'Self',scoreRows) : null;
+var currentManagerScore = mgrRows.length ? calculateOverallScore(id,'Manager',scoreRows) : null;
+var prospectiveSelfScore = prospSelfRows.length ? calculateOverallScore(id,'Prospective Self',scoreRows) : null;
+var prospectiveManagerScore = prospMgrRows.length ? calculateOverallScore(id,'Prospective',scoreRows) : null;
+var currentFinalScore = finalScore7030(currentSelfScore,currentManagerScore);
+var prospectiveFinalScore = finalScore7030(prospectiveSelfScore,prospectiveManagerScore);
+var currentHtml = '', prospectiveHtml = '';
+function calcRows(rows){return rows.map(function(r){return {'Employee ID':r.employee_id,'Competency Code':r.comp_code,'Type':r.type,'Ticked':r.ticked,'Evidence':r.evidence,'HR_Status':r.hr_status,'Rating':r.proficiency_rating,'Classification':r.classification,'Weight Profile':r.weight_profile,'Weight Policy':r.weight_policy,'Scoring Rule':r.scoring_rule};});}
+function scoreFor(rows,type){return rows.length?calculateOverallScore(id,type,calcRows(rows))+'%':'--';}
+function reviewState(rows){if(!rows.length)return {label:'Not submitted',cls:'md-review-neutral'};var pending=rows.some(function(r){return r.ticked&&(r.hr_status===''||r.hr_status==='Pending'||r.hr_status==='Returned');});var approved=rows.some(function(r){return r.hr_status==='Approved';});return pending?{label:'Pending review',cls:'md-review-pending'}:approved?{label:'Approved',cls:'md-review-approved'}:{label:'Submitted',cls:'md-review-neutral'};}
+function roleRows(mode){return mode==='prospective'?{employee:prospSelfRows,manager:prospMgrRows,employeeType:'Prospective Self',managerType:'Prospective',released:prospectiveReleased}:{employee:selfRows,manager:mgrRows,employeeType:'Self',managerType:'Manager',released:currentReleased};}
+function rolePanel(title,rows,cls,score){return '<div class="md-review-panel '+cls+'"><div class="md-review-panel-head"><strong>'+title+'</strong><span class="md-review-score">'+score+' / 100</span></div><div class="md-review-panel-body">'+detailCol(rows,'mgr-evidence')+'</div></div>';}
+function roleContent(mode){
+var r=roleRows(mode),isProspective=mode==='prospective',all=r.employee.concat(r.manager),employeeState=reviewState(r.employee),managerState=reviewState(r.manager),h='';
+var target=(r.manager[0]&&r.manager[0].prospective_role)||(r.employee[0]&&r.employee[0].prospective_role)||'';
+h+='<div class="md-detail-summary"><div><small>Employee Self Score</small><strong>'+scoreFor(r.employee,r.employeeType)+'</strong><em>'+employeeState.label+'</em></div><div><small>Manager Score</small><strong>'+scoreFor(r.manager,r.managerType)+'</strong><em>'+managerState.label+'</em></div><div><small>Final Score</small><strong class="final-score">'+((isProspective?prospectiveFinalScore:currentFinalScore)===null?'--':(isProspective?prospectiveFinalScore:currentFinalScore)+'%')+'</strong></div><div><small>HR Review Status</small><strong class="md-summary-status '+(r.released?'approved':'pending')+'">'+(r.released?'Approved':'Pending')+'</strong><em>'+(r.released?'All reviewed':'Awaiting review')+'</em></div></div>';
+h+='<div class="md-competency-head"><span>Competency</span><span>Employee Score</span><span>Manager Score</span><span>Status</span></div>';
+APP.competencies.forEach(function(comp,index){
+ var er=r.employee.filter(function(x){return x.comp_code===comp.code;}),mr=r.manager.filter(function(x){return x.comp_code===comp.code;});if(!er.length&&!mr.length)return;
+ var es=er.length?calculateCompetencyScore(id,comp.code,r.employeeType,calcRows(er)).score.toFixed(2):'--',ms=mr.length?calculateCompetencyScore(id,comp.code,r.managerType,calcRows(mr)).score.toFixed(2):'--',state=reviewState(er.concat(mr));
+ h+='<details class="md-competency"'+(index===0?' open':'')+'><summary><strong>'+escapeHtml(comp.competency)+'</strong><span>'+es+' / 5</span><span>'+ms+' / 5</span><span class="md-row-status '+(state.cls)+'">'+state.label+'</span><i aria-hidden="true"></i></summary><div class="md-competency-body">'+rolePanel((isProspective?'Employee - Prospective Role':'Employee - Current Role'),er,'employee',es)+rolePanel((isProspective?'Manager - Prospective Role':'Manager - Current Role'),mr,'manager',ms)+'</div></details>';
+});
+h+='<details class="md-hidden-details"><summary>View calculation breakdown and assessment history</summary>'+scoreBreakdownHTML(latest,r.employeeType)+scoreBreakdownHTML(latest,r.managerType)+roundTable(allResults||[],r.employeeType)+roundTable(allResults||[],r.managerType)+'</details>';
+return '<div class="md-role-note">'+(isProspective?'Prospective Role'+(target?' | Target: '+escapeHtml(target): ''):'Current Role')+' assessments are shown separately. Expand one competency at a time to compare evidence.</div>'+h;
 }
-var rel = assessmentReleased(allResults);
-document.getElementById('detContent').innerHTML = '<div class="card"><button class="btn btn-sm btn-outline" onclick="printReport(\'' + id + '\')">Print / Save PDF</button></div>' + (rel ? scoreBreakdownHTML(latest, 'Self') + roundTable(allResults || [], 'Self') : '') + scoreBreakdownHTML(latest, 'Manager') + scoreBreakdownHTML(latest, 'Prospective') + roundTable(allResults || [], 'Manager') + roundTable(allResults || [], 'Prospective') + (html || '<p>No data.</p>');
+var html='<div class="card md-detail-actions"><button class="btn btn-sm btn-outline" onclick="printReport('+rcArg(id)+')">Print / Save PDF</button></div>';
+html+='<div class="md-detail-tabs" role="tablist" aria-label="Assessment type"><button type="button" id="mdDetailCurrentTab" class="md-detail-tab active" role="tab" aria-selected="true" onclick="showManagerDetailTab(\'current\')">Current Role</button><button type="button" id="mdDetailProspectiveTab" class="md-detail-tab prospective" role="tab" aria-selected="false" onclick="showManagerDetailTab(\'prospective\')">Prospective Role</button></div>';
+html+='<div class="md-detail-employee"><strong>'+escapeHtml((selfRows[0]||mgrRows[0]||prospSelfRows[0]||prospMgrRows[0]||{}).employee_name||'Employee')+'</strong><span>Current Role: '+escapeHtml((selfRows[0]||mgrRows[0]||{}).position||'Not recorded')+'</span><span>Target Role: '+escapeHtml((prospSelfRows[0]||prospMgrRows[0]||{}).prospective_role||'Not selected')+'</span></div>';
+html+='<div id="mdDetailCurrentStatus" class="md-detail-status">Employee and Manager assessments for the current role.</div><div id="mdDetailCurrentPanel" class="md-detail-tab-panel">'+(currentRows.length?roleContent('current'):'<p class="md-detail-muted">No Current Role assessment has been submitted.</p>')+'</div><div id="mdDetailProspectivePanel" class="md-detail-tab-panel" style="display:none">'+(prospectiveRows.length?roleContent('prospective'):'<p class="md-detail-muted">No Prospective Role assessment has been submitted.</p>')+'</div>';
+document.getElementById('detContent').innerHTML=html;
 }
+window.showManagerDetailTab=function(mode){var p=mode==='prospective',c=document.getElementById('mdDetailCurrentPanel'),pr=document.getElementById('mdDetailProspectivePanel'),ct=document.getElementById('mdDetailCurrentTab'),pt=document.getElementById('mdDetailProspectiveTab'),st=document.getElementById('mdDetailCurrentStatus');if(!c||!pr)return;c.style.display=p?'none':'block';pr.style.display=p?'block':'none';ct.classList.toggle('active',!p);pt.classList.toggle('active',p);ct.setAttribute('aria-selected',String(!p));pt.setAttribute('aria-selected',String(p));if(st)st.textContent=p?'Employee and Manager assessments for the prospective role.':'Employee and Manager assessments for the current role.';};
 function detailCol(rows, evClass) {
 if (!rows.length) return '<p style="font-size:11px;color:var(--gray-400)">Not done</p>';
 var h = '';
@@ -6725,60 +6827,26 @@ h += '</div>';
 });
 return h;
 }
-async function loadManagerGaps() {
-var __cmsRouteEpoch = typeof CN === 'undefined' ? null : CN.epoch;
-
-((typeof CN === 'undefined' || __cmsRouteEpoch === CN.epoch) ? setContent('<div class="loading"><div class="spinner"></div>Loading...</div>') : undefined);
-const { data: allEmps } = await _supabase.from('employees').select('*');
-var team = [];
-for (var i = 0; i < allEmps.length; i++) {
-var emp = allEmps[i];
-if (emp.manager_email === APP.user.email && emp.email !== APP.user.email) {
-team.push(emp);
+async function loadManagerGaps(){
+var __cmsRouteEpoch=typeof CN==='undefined'?null:CN.epoch;
+if(typeof CN==='undefined'||__cmsRouteEpoch===CN.epoch)setContent('<div class="loading"><div class="spinner"></div>Loading...</div>');
+const {data:allEmps}=await _supabase.from('employees').select('*');
+var team=(allEmps||[]).filter(function(e){return e.manager_email===APP.user.email&&e.email!==APP.user.email;});
+var h='<section class="tg-page"><div class="tg-title"><h1>Team Gaps</h1><p>Review one employee or the full team. Current and Prospective roles are tracked separately.</p></div><div class="tg-tabs"><button id="tgIndividualTab" class="tg-tab active" onclick="tgSwitch(\'individual\')">Individual</button><button id="tgAllTab" class="tg-tab" onclick="tgSwitch(\'all\')">All Team</button></div><div id="tgIndividualPanel"><div class="tg-filter-card"><div><label>Employee</label><select id="gapEmp" onchange="loadGapEmp()"><option value="">-- Select employee --</option>'+team.map(function(t){return '<option value="'+escapeHtml(t.employee_id)+'">'+escapeHtml(t.employee_name)+'</option>';}).join('')+'</select></div><div><label>Role Type</label><select id="gapRole" onchange="loadGapEmp()"><option value="current">Current Role</option><option value="prospective">Prospective Role</option></select></div><div><label>Competency</label><select id="gapCompFilter" onchange="loadGapEmp()"><option value="">All Competencies</option>'+APP.competencies.map(function(c){return '<option value="'+escapeHtml(c.code)+'">'+escapeHtml(c.competency)+'</option>';}).join('')+'</select></div><div><label>Severity</label><select id="gapSeverity" onchange="loadGapEmp()"><option value="">All Severities</option><option value="critical">Critical</option><option value="moderate">Moderate</option><option value="development">Development</option><option value="strength">Strength</option></select></div><button class="btn btn-outline" onclick="tgReset()">Reset</button><button class="btn btn-primary" onclick="loadGapEmp()">Apply Filters</button></div><div id="gapContent"><div class="tg-empty">Select an employee to view individual gaps.</div></div></div><div id="tgAllPanel" style="display:none"><div class="tg-filter-card"><div><label>Role Type</label><select id="tgAllRole" onchange="loadGapAll()"><option value="current">Current Role</option><option value="prospective">Prospective Role</option></select></div><div><label>Competency</label><select id="tgAllComp" onchange="loadGapAll()"><option value="">All Competencies</option>'+APP.competencies.map(function(c){return '<option value="'+escapeHtml(c.code)+'">'+escapeHtml(c.competency)+'</option>';}).join('')+'</select></div><div><label>Severity</label><select id="tgAllSeverity" onchange="loadGapAll()"><option value="">All Severities</option><option value="critical">Critical</option><option value="moderate">Moderate</option><option value="development">Development</option><option value="strength">Strength</option></select></div><button class="btn btn-outline" onclick="tgAllReset()">Reset</button><button class="btn btn-primary" onclick="loadGapAll()">Apply Filters</button></div><div id="tgAllContent"><div class="tg-empty">Loading team-wide gaps...</div></div></div></section>';
+if(typeof CN==='undefined'||__cmsRouteEpoch===CN.epoch)setContent(h);
+window.tgSwitch=function(mode){var i=document.getElementById('tgIndividualPanel'),a=document.getElementById('tgAllPanel'),it=document.getElementById('tgIndividualTab'),at=document.getElementById('tgAllTab'),all=mode==='all';if(!i||!a)return;i.style.display=all?'none':'block';a.style.display=all?'block':'none';it.classList.toggle('active',!all);at.classList.toggle('active',all);if(all)loadGapAll();};
+window.tgReset=function(){['gapEmp','gapCompFilter','gapSeverity'].forEach(function(id){var e=document.getElementById(id);if(e)e.value='';});var r=document.getElementById('gapRole');if(r)r.value='current';loadGapEmp();};
+window.tgAllReset=function(){['tgAllComp','tgAllSeverity'].forEach(function(id){var e=document.getElementById(id);if(e)e.value='';});var r=document.getElementById('tgAllRole');if(r)r.value='current';loadGapAll();};
+window.loadGapAll=loadGapAll;await loadGapEmp();
 }
+async function tgBuildRows(rows,type,compFilter,severityFilter){
+var by={};rows.filter(function(r){return r.type===type;}).forEach(function(r){var k=r.employee_id+'|'+r.comp_code;if(!by[k]||(r.assessment_round||1)>(by[k].assessment_round||1))by[k]=r;});
+var groups={};Object.keys(by).forEach(function(k){var r=by[k];if(!groups[r.comp_code])groups[r.comp_code]=[];groups[r.comp_code].push(r);});var out=[];
+Object.keys(groups).forEach(function(code){if(compFilter&&code!==compFilter)return;var rs=groups[code],scores=rs.map(function(r){var fr=[{'Employee ID':r.employee_id,'Competency Code':r.comp_code,'Type':r.type,'Ticked':r.ticked,'Evidence':r.evidence,'HR_Status':r.hr_status,'Rating':r.proficiency_rating,'Classification':r.classification,'Weight Profile':r.weight_profile,'Weight Policy':r.weight_policy,'Scoring Rule':r.scoring_rule}];return calculateCompetencyScore(r.employee_id,code,type,fr).score/5*100;});var avg=Math.round(scores.reduce(function(a,b){return a+b;},0)/scores.length),gap=80-avg,sev=gap>=30?'critical':gap>=15?'moderate':gap>0?'development':'strength';if(severityFilter&&sev!==severityFilter)return;out.push({code:code,name:(APP.competencies.find(function(c){return c.code===code;})||{}).competency||code,avg:avg,gap:gap,affected:rs.length,severity:sev});});return out.sort(function(a,b){return b.gap-a.gap;});
 }
-var html = '<div class="card"><div class="card-title">Team Gaps</div><div class="form-group"><label>Employee</label><select id="gapEmp" onchange="loadGapEmp()"><option value="">-- Select --</option>';
-team.forEach(function(t) { html += '<option value="' + t.employee_id + '">' + escapeHtml(t.employee_name) + '</option>'; });
-html += '</select></div></div><div id="gapContent"></div>';
-((typeof CN === 'undefined' || __cmsRouteEpoch === CN.epoch) ? setContent(html) : undefined);
-}
-async function loadGapEmp() {
-var id = document.getElementById('gapEmp').value;
-if (!id) { document.getElementById('gapContent').innerHTML = ''; return; }
-const { data: allResults } = await _supabase.from('assessments').select('*').eq('employee_id', id);
-var mgrResults = latestOnly(allResults || []).filter(r => r.type === 'Manager');
-if (mgrResults.length === 0) {
-document.getElementById('gapContent').innerHTML = '<div class="card"><p style="color:var(--gray-500)">No assessment yet.</p></div>';
-return;
-}
-var formattedResults = mgrResults.map(r => ({
-'Employee ID': r.employee_id, 'Competency Code': r.comp_code, 'Type': r.type,
-'Ticked': r.ticked, 'Evidence': r.evidence, 'HR_Status': r.hr_status, 'Rating': r.proficiency_rating
-, 'Scoring Rule': r.scoring_rule || 'legacy-zero', 'Classification': r.scoring_rule === 'floor-one-v1' ? r.classification : undefined, 'Weight Profile': r.weight_profile, 'Weight Policy': r.weight_policy}));
-var gaps = [];
-for (var i = 0; i < APP.competencies.length; i++) {
-var comp = APP.competencies[i];
-var cs = calculateCompetencyScore(id, comp.code, 'Manager', formattedResults);
-if (cs.total > 0) {
-var pct = Math.round((cs.score / 5) * 100);
-if (pct < 70) {
-var tl = pct >= 50 ? '3-6 months' : pct >= 30 ? '6-12 months' : '12-18 months';
-gaps.push({ name: comp.competency, pct: pct, timeline: tl });
-}
-}
-}
-gaps.sort((a, b) => a.pct - b.pct);
-if (gaps.length === 0) {
-document.getElementById('gapContent').innerHTML = '<div class="card"><p style="color:var(--green)">No gaps!</p></div>';
-return;
-}
-var html = '<div class="card"><table><thead><tr><th>Competency</th><th>Score</th><th>Timeline</th></tr></thead><tbody>';
-gaps.forEach(function(g) {
-html += '<tr><td>' + escapeHtml(g.name) + '</td><td style="color:var(--red);font-weight:700">' + g.pct + '%</td><td>' + escapeHtml(g.timeline) + '</td></tr>';
-});
-html += '</tbody></table></div>';
-document.getElementById('gapContent').innerHTML = html;
-}
+function tgTable(rows,allTeam){var h='<div class="tg-table-card"><div class="tg-table-head"><h2>'+(allTeam?'Team-wide Competency Gaps':'Top Competency Gaps')+'</h2></div><div class="table-wrap"><table class="tg-table"><thead><tr><th>#</th><th>Competency</th><th>Severity</th><th>'+ (allTeam?'Team Average':'Average Score')+'</th><th>Target</th><th>Gap %</th><th>Employees Affected</th><th>Progress</th><th>Actions</th></tr></thead><tbody>'+(rows.length?rows.map(function(g,i){return '<tr><td>'+(i+1)+'</td><td><strong>'+escapeHtml(g.name)+'</strong></td><td><span class="tg-severity '+g.severity+'">'+g.severity+'</span></td><td>'+g.avg+'%</td><td>80%</td><td class="tg-gap">'+(g.gap>0?g.gap:'-')+'%</td><td>'+g.affected+(allTeam?' team member(s)':'')+'</td><td><span class="tg-bar"><i class="'+g.severity+'" style="width:'+Math.min(100,g.avg)+'%"></i></span>'+g.avg+'%</td><td><button class="btn btn-sm btn-outline" onclick="navigateTo(\'mgr-team\')">View Employees</button><button class="btn btn-sm btn-primary" onclick="navigateTo(\'mgr-devplans\')">Create Plan</button></td></tr>';}).join(''):'<tr><td colspan="9" class="tg-empty">No gaps match the selected filters.</td></tr>')+'</tbody></table></div></div>';return h;}
+async function loadGapEmp(){var host=document.getElementById('gapContent');if(!host)return;var id=(document.getElementById('gapEmp')||{}).value||'';if(!id){host.innerHTML='<div class="tg-empty">Select an employee to view individual gaps.</div>';return;}var role=(document.getElementById('gapRole')||{}).value||'current',cf=(document.getElementById('gapCompFilter')||{}).value||'',sf=(document.getElementById('gapSeverity')||{}).value||'';var q=await _supabase.from('assessments').select('*').eq('employee_id',id),rows=await tgBuildRows(q.data||[],role==='prospective'?'Prospective':'Manager',cf,sf),gaps=rows.filter(function(g){return g.gap>0;}),critical=gaps.filter(function(g){return g.severity==='critical';}).length;host.innerHTML='<div class="tg-kpis"><div><small>Total Gaps</small><strong>'+gaps.length+'</strong><em>For selected employee</em></div><div class="critical"><small>Critical Gaps</small><strong>'+critical+'</strong><em>Immediate attention</em></div><div class="affected"><small>Employees Affected</small><strong>1</strong><em>Selected employee</em></div><div class="average"><small>Average Gap Score</small><strong>'+(gaps.length?Math.round(gaps.reduce(function(a,g){return a+g.gap;},0)/gaps.length):0)+'%</strong><em>Selected role</em></div></div>'+tgTable(rows,false);}
+async function loadGapAll(){var host=document.getElementById('tgAllContent');if(!host)return;var role=(document.getElementById('tgAllRole')||{}).value||'current',cf=(document.getElementById('tgAllComp')||{}).value||'',sf=(document.getElementById('tgAllSeverity')||{}).value||'',team=await _supabase.from('employees').select('employee_id').eq('manager_email',APP.user.email),ids=(team.data||[]).map(function(e){return e.employee_id;}),q=await _supabase.from('assessments').select('*').in('employee_id',ids),rows=await tgBuildRows(q.data||[],role==='prospective'?'Prospective':'Manager',cf,sf),gaps=rows.filter(function(g){return g.gap>0;}),critical=gaps.filter(function(g){return g.severity==='critical';}).length;host.innerHTML='<div class="tg-kpis"><div><small>Team-wide Avg Gap</small><strong>'+(gaps.length?Math.round(gaps.reduce(function(a,g){return a+g.gap;},0)/gaps.length):0)+'%</strong><em>Across selected competencies</em></div><div class="critical"><small>Critical Gaps</small><strong>'+critical+'</strong><em>Team-wide</em></div><div class="affected"><small>Employees Affected</small><strong>'+gaps.reduce(function(a,g){return a+g.affected;},0)+'</strong><em>Across your team</em></div><div class="average"><small>Competencies Assessed</small><strong>'+rows.length+'</strong><em>Team-wide view</em></div></div>'+tgTable(rows,true);}
 async function loadManagerDevPlans() {
 var __cmsRouteEpoch = typeof CN === 'undefined' ? null : CN.epoch;
 
@@ -6988,7 +7056,7 @@ _supabase.from('employees').select('*'),
 _supabase.from('assessments').select('*'),
 _supabase.from('dev_plans').select('*'),
 _supabase.from('redo_requests').select('*').eq('status', 'Pending'),
-_supabase.from('critical_positions').select('*'),
+_supabase.from('critical_positions').select('*').eq('is_active', true),
 _supabase.from('report_chain').select('employee_id, status')
 ]);
 var allEmps = dq[0].data, allResults = dq[1].data, devPlans = dq[2].data, reqs = dq[3].data, critPosRows = dq[4].data, chainRows = dq[5].data;var mgrDoneIds = {}; var selfDoneIds = {}; var pendingIds = {}; var byAssessment = {}; var pendingDetail = {};
@@ -7172,7 +7240,7 @@ var __cmsRouteEpoch = typeof CN === 'undefined' ? null : CN.epoch;
 ((typeof CN === 'undefined' || __cmsRouteEpoch === CN.epoch) ? setContent('<div class="loading"><div class="spinner"></div>Loading...</div>') : undefined);
 const { data: allEmps } = await _supabase.from('employees').select('*');
 const { data: allResults } = await _supabase.from('assessments').select('*');
-const { data: regs } = await _supabase.from('critical_positions').select('*').order('position_name');
+const { data: regs } = await _supabase.from('critical_positions').select('*').eq('is_active', true).order('position_name');
 const { data: lmRows } = await _supabase.from('line_managers').select('email, manager_name');
 window._aeRegs = regs || []; window._aeEmps = allEmps || []; window._aeMgrRegs = lmRows || [];
 await loadPhotoMap(true);
@@ -7394,7 +7462,7 @@ var __cmsRouteEpoch = typeof CN === 'undefined' ? null : CN.epoch;
 var dq = await Promise.all([
 _supabase.from('departments').select('*').order('company').order('name'),
 _supabase.from('employees').select('company, department, position'),
-_supabase.from('critical_positions').select('department')
+_supabase.from('critical_positions').select('department').eq('is_active', true)
 ]);
 var regs = dq[0].data || [];
 var regOf = {};
@@ -7530,7 +7598,7 @@ function renderLM(){
   var depOptions=Object.keys(departments).sort().map(function(d){return '<option value="'+escapeHtml(d)+'"'+(lmState.department===d?' selected':'')+'>'+escapeHtml(d)+'</option>';}).join('');
   var compOptions=Object.keys(companies).sort().map(function(c){return '<option value="'+escapeHtml(c)+'"'+(lmState.company===c?' selected':'')+'>'+escapeHtml(c)+'</option>';}).join('');
   var h='<section class="lm-page"><div class="lm-title-row"><div><h1>Line Managers Registry</h1><p>Manage and oversee line managers across departments and companies.</p></div></div>';
-  h+='<div class="lm-kpis"><div class="lm-kpi"><span class="lm-kpi-icon">M</span><div><small>Managers Identified</small><strong>'+managerList.length+'</strong><em>Registered or linked to staff records</em></div></div><div class="lm-kpi green"><span class="lm-kpi-icon">&#10003;</span><div><small>Managers Registered</small><strong>'+registered+'</strong><em>Added to the manager registry</em></div></div><div class="lm-kpi blue"><span class="lm-kpi-icon">T</span><div><small>Staff Covered</small><strong>'+staffCovered+'</strong><em>Staff linked to a manager</em></div></div></div>';
+  h+='<div class="lm-kpis"><div class="lm-kpi"><span class="lm-kpi-icon">M</span><div><small>Managers Identified</small><strong>'+managerList.length+'</strong><em>Registered or linked to staff records</em></div></div><div class="lm-kpi green"><span class="lm-kpi-icon">&#10003;</span><div><small>Managers Registered</small><strong>'+registered+'</strong><em>Added to the manager registry</em></div></div><div class="lm-kpi blue"><span class="lm-kpi-icon" aria-hidden="true">&#128101;</span><div><small>Staff Covered</small><strong>'+staffCovered+'</strong><em>Staff linked to a manager</em></div></div></div>';
   h+='<div class="lm-toolbar"><div><label>Search manager</label><input id="lmSearch" value="'+escapeHtml(lmState.query)+'" oninput="cmsLMQuery(this.value)" placeholder="Search by name or email..."></div><div><label>Department</label><select id="lmDepartment" onchange="cmsLMDepartment(this.value)"><option value="">All Departments</option>'+depOptions+'</select></div><div><label>Company</label><select id="lmCompany" onchange="cmsLMCompany(this.value)"><option value="">All Companies</option>'+compOptions+'</select></div><button class="btn btn-primary lm-add-button" onclick="cmsLMToggleAdd()">+ Add Line Manager</button></div>';
   h+='<div id="lmAddPanel" class="lm-add-panel" style="display:none"><div><label>Full Name</label><input id="lmName" placeholder="e.g. Julius Angoli"></div><div><label>Email</label><input id="lmEmail" placeholder="e.g. julius@kenafricind.com"></div><div><label>Department</label><input id="lmDept" list="lmDeptList" placeholder="e.g. HUMAN RESOURCE"><datalist id="lmDeptList">'+Object.keys(departments).sort().map(function(d){return '<option value="'+escapeHtml(d)+'">';}).join('')+'</datalist></div><div><label>Company</label><input id="lmCompanyAdd" list="lmCompanyList" placeholder="e.g. Kenafric Industries"><datalist id="lmCompanyList">'+Object.keys(companies).sort().map(function(c){return '<option value="'+escapeHtml(c)+'">';}).join('')+'</datalist></div><button class="btn btn-primary lm-add-save" onclick="addLineManager()">Save Line Manager</button></div>';
   h+='<div class="card lm-table-card"><div class="lm-table-head"><h2>Line Managers</h2><span>'+filtered.length+' manager'+(filtered.length===1?'':'s')+' found</span></div><div class="table-wrap"><table class="lm-table"><thead><tr><th>Manager</th><th>Email</th><th>Department</th><th>Company</th><th>Team Size</th><th>Status</th><th>Actions</th></tr></thead><tbody>'+rowsHtml+'</tbody></table></div><div class="lm-pagination"><span>Showing '+(filtered.length?start+1:0)+' to '+Math.min(start+lmState.pageSize,filtered.length)+' of '+filtered.length+' managers</span><div class="lm-page-buttons"><button onclick="cmsLMPage('+Math.max(1,lmState.page-1)+')" '+(lmState.page===1?'disabled':'')+'>&lt;</button>'+nums+'<button onclick="cmsLMPage('+Math.min(pages,lmState.page+1)+')" '+(lmState.page===pages?'disabled':'')+'>&gt;</button></div></div></div></section>';
@@ -7567,7 +7635,7 @@ async function loadHRKPI() {
 var __cmsRouteEpoch = typeof CN === 'undefined' ? null : CN.epoch;
 
 ((typeof CN === 'undefined' || __cmsRouteEpoch === CN.epoch) ? setContent('<div class="loading"><div class="spinner"></div>Loading KPI...</div>') : undefined);
-const { data: crit } = await _supabase.from('critical_positions').select('*');
+const { data: crit } = await _supabase.from('critical_positions').select('*').eq('is_active', true);
 const { data: allEmps } = await _supabase.from('employees').select('*');
 const { data: allResults } = await _supabase.from('assessments').select('*');
 const { data: allPlans } = await _supabase.from('dev_plans').select('*');
@@ -7866,7 +7934,7 @@ const { error } = await _supabase.from('assessments').update({ hr_status: rd[i].
 if (error) { showToast(error.message); return; }
 }
 const { data: fresh } = await _supabase.from('assessments').select('*').eq('employee_id', empId);
-if (assessmentReleased(fresh || [])) {
+if (assessmentReleased(fresh || []) || prospectiveAssessmentReleased(fresh || [])) {
 var empR = data.employee;
 if (empR.manager_email) sendCMSemail(empR.manager_email, 'Assessments Released: ' + empR.employee_name, 'HR Admin has approved both the self-assessment and your manager assessment for ' + empR.employee_name + '. The employee\'s self-assessment is now visible to you in the CMS: ' + APP_LINK, { page: 'mgr-details', params: { employee_id: empR.employee_id } });
 sendCMSemail(empR.email, 'Assessments Released: ' + empR.employee_name, 'HR Admin has approved both assessments. Your manager\'s assessment is now visible to you in the CMS: ' + APP_LINK, { page: 'emp-mgrview', params: { employee_id: empR.employee_id } });
@@ -9667,14 +9735,20 @@ html += '</div>';
 });
 box.innerHTML = html;
 }
-function assessmentReleased(allResults) {
-var selfRows = (allResults || []).filter(function(r){ return r.type === 'Self'; });
-var mgrRows = (allResults || []).filter(function(r){ return r.type === 'Manager'; });
+function assessmentPairReleased(allResults, selfType, managerType) {
+var selfRows = (allResults || []).filter(function(r){ return r.type === selfType; });
+var mgrRows = (allResults || []).filter(function(r){ return r.type === managerType; });
 if (!selfRows.length || !mgrRows.length) return false;
 function ok(rows) {
 return rows.some(function(r){ return r.hr_status === 'Approved'; }) && !rows.some(function(r){ return r.ticked && (r.hr_status === '' || r.hr_status === 'Pending' || r.hr_status === 'Returned'); });
 }
 return ok(selfRows) && ok(mgrRows);
+}
+function assessmentReleased(allResults) {
+return assessmentPairReleased(allResults, 'Self', 'Manager');
+}
+function prospectiveAssessmentReleased(allResults) {
+return assessmentPairReleased(allResults, 'Prospective Self', 'Prospective');
 }
 function prospectiveSelfStatus(){return {done:false,open:false,avg:null};}
 function prospectiveSelfCard(){return '<section class="card"><h3>Prospective Self Assessment</h3><p>Only an invitation from HR Admin or Head of HR opens a prospective self assessment.</p><button class="btn btn-outline" onclick="navigateTo(\'emp-prosp-invites\')">View Invitations</button></section>';}
@@ -9685,7 +9759,7 @@ async function loadHRPositions() {
 var __cmsRouteEpoch = typeof CN === 'undefined' ? null : CN.epoch;
 ((typeof CN === 'undefined' || __cmsRouteEpoch === CN.epoch) ? setContent('<div class="loading"><div class="spinner"></div>Loading...</div>') : undefined);
 const results = await Promise.all([
-  _supabase.from('critical_positions').select('*').order('id'),
+  _supabase.from('critical_positions').select('*').eq('is_active', true).order('id'),
   _supabase.from('employees').select('*'),
   _supabase.from('assessments').select('*'),
   _supabase.from('dev_plans').select('*')
@@ -9755,7 +9829,7 @@ var dep = (document.getElementById('regDept').value || '').trim();
 var pos = (document.getElementById('regPos').value || '').trim();
 var lv = document.getElementById('regCrit').value;
 if (!dep || !pos) { showToast('Department and position are required'); return; }
-const { error } = await _supabase.from('critical_positions').insert({ department: dep, position_name: pos, criticality: lv });
+const { error } = await _supabase.from('critical_positions').insert({ department: dep, position_name: pos, criticality: lv, is_active: true });
 if (error) { showToast(error.message); return; }
 showToast('Position registered: ' + pos + ' (' + lv + ')');
 loadHRPositions();
@@ -9767,10 +9841,10 @@ showToast('Criticality updated');
 loadHRPositions();
 }
 async function deletePositionRegistry(id) {
-if (!confirm('Remove this position from the registry?')) return;
-const { error } = await _supabase.from('critical_positions').delete().eq('id', id);
+if (!confirm('Remove this position from the live registry? Historical assessments will be preserved.')) return;
+const { error } = await _supabase.from('critical_positions').update({ is_active: false }).eq('id', id);
 if (error) { showToast(error.message); return; }
-showToast('Position removed');
+showToast('Position removed from live pages. Historical assessments preserved.');
 loadHRPositions();
 }
 async function showPromptManager() {
@@ -12639,12 +12713,14 @@ async function fwOpen(mode) {
   h+='<p style="margin-bottom:12px">'+(mode==='library'?'Published content only. A draft never replaces a live framework.':mode==='review'?'Approve each experience, then publish the complete position in one action.':'Save a private draft. Submit only when all seven competency minimums are complete.')+'</p>';
   h+='<div id="fwChoice"></div><div id="fwBody" style="margin-top:16px"></div></div>';
   setContent(h);
-  if(mode==='review'){
-   var queue=await fwRPC('queue');if(token!==FW.token)return;
-   var sel=document.createElement('select');sel.id='fwRevisionChoice';
+ if(mode==='review'){
+    var queue=await fwRPC('queue');if(token!==FW.token)return;
+    window.cmsApprovalQueueV1=Array.isArray(queue)?queue:[];
+    var sel=document.createElement('select');sel.id='fwRevisionChoice';
    sel.innerHTML='<option value="">Select submitted framework ('+queue.length+')</option>'+queue.map(function(r){return '<option value="'+escapeHtml(r.id)+'">'+escapeHtml(fwLabel(r))+'</option>';}).join('');
    sel.onchange=async function(){if(!sel.value)return;try{FW.revision=await fwRPC('get',{id:sel.value});FW.position=FW.catalogue.positions.find(p=>p.id===FW.revision.position_id);fwRenderRevision();}catch(e){showToast(e.message);}};
    document.getElementById('fwChoice').appendChild(sel);
+   if(typeof window.cmsRenderApprovalDashboardV1==='function')window.cmsRenderApprovalDashboardV1();
    if(!queue.length)document.getElementById('fwBody').textContent='No submitted frameworks. Private drafts do not appear here.';
   }else{
    var positions=FW.catalogue.positions.filter(function(p){
@@ -13158,7 +13234,7 @@ async function ebOpenAdd(){
   if(!EB.refs){
    var values=await Promise.all([
     ebAll('employees','employee_name,email,manager,manager_email,department,position,company'),
-    ebAll('critical_positions','department,position_name,criticality'),
+    ebAll('critical_positions','department,position_name,criticality',function(q){return q.eq('is_active',true)}),
     ebAll('line_managers','email,manager_name'),
     ebAll('departments','company,name'),
     loadPositionsRegistry()
@@ -14146,7 +14222,7 @@ if (typeof loadDetEmp === 'function') {
 /* ---- critical-roles-first succession + current-role gate on the assessment page ---- */
 async function cgCriticalRoles(){
  if (window._cgCrit) return window._cgCrit;
- var q = await _supabase.from('critical_positions').select('position_name,criticality,department');
+ var q = await _supabase.from('critical_positions').select('position_name,criticality,department').eq('is_active', true);
  window._cgCrit = (q.data || []).filter(function(r){ return (r.criticality || '') && (r.criticality || '').toString().toUpperCase().indexOf('NON') !== 0; });
  return window._cgCrit;
 }
@@ -14890,16 +14966,34 @@ async function edReloadAlerts(){
  }catch(e){if(token!==ED.token||!host.isConnected)return;host.replaceChildren();var p=document.createElement('p');p.textContent='Notifications unavailable: '+e.message;host.appendChild(p);rcButton('Retry notifications',edReloadAlerts,host);}
 }
 async function loadEmployeeProfile(){
-var __cmsRouteEpoch = typeof CN === 'undefined' ? null : CN.epoch;
-
- var token=++EP.token;((typeof CN === 'undefined' || __cmsRouteEpoch === CN.epoch) ? setContent('<div class="es-progress" role="status" aria-label="Please wait"><span></span><span></span><span></span></div>') : undefined);
+ var __cmsRouteEpoch = typeof CN === 'undefined' ? null : CN.epoch;
+ var token=++EP.token;
+ if(typeof CN==='undefined'||__cmsRouteEpoch===CN.epoch)setContent('<div class="es-progress" role="status" aria-label="Please wait"><span></span><span></span><span></span></div>');
  try{
-  var eq=await _supabase.from('employees').select('*').eq('email',APP.user.email).single();if(eq.error||!eq.data)throw new Error(eq.error?eq.error.message:'Employee profile not found.');
-  var emp=eq.data;var rq=await _supabase.from('assessments').select('*').eq('employee_id',emp.employee_id).in('type',['Self','Manager','Prospective']);if(rq.error)throw new Error(rq.error.message);
+  var email=String((APP.user&&APP.user.email)||'').trim().toLowerCase();
+  if(!email)throw new Error('Signed-in employee email is missing. Please sign in again.');
+
+  var eq=await _supabase.from('employees').select('*').ilike('email',email).limit(1);
+  if(eq.error)throw new Error('Employee record lookup failed: '+eq.error.message);
+  if(!eq.data||!eq.data.length)throw new Error('No employee record matches '+email+'. Check the Employees email value.');
+
+  var emp=eq.data[0];
+  if(!emp.employee_id)throw new Error('Employee record has no employee_id. Correct the Employees record before loading this page.');
+
+  var rq=await _supabase.from('assessments').select('*').eq('employee_id',emp.employee_id).in('type',['Self','Manager','Prospective Self','Prospective']);
+  if(rq.error)throw new Error('Assessment records could not be loaded: '+rq.error.message);
+
   if(token!==EP.token||APP.currentRole!=='employee'||APP.currentPage!=='emp-profile')return;
-  var rows=rq.data||[],v=epViewModel(emp,rows);ED.employee=emp.employee_id;ED.released=v.released;
-  ((typeof CN === 'undefined' || __cmsRouteEpoch === CN.epoch) ? setContent(edShell(emp,v,rows)) : undefined);edReloadAlerts();
- }catch(e){if(token===EP.token&&APP.currentPage==='emp-profile')((typeof CN === 'undefined' || __cmsRouteEpoch === CN.epoch) ? setContent('<section class="card"><h2>Dashboard unavailable</h2><p>'+escapeHtml(e.message)+'</p><button class="btn btn-outline" onclick="loadEmployeeProfile()">Retry</button></section>') : undefined);}
+  var rows=rq.data||[],v=epViewModel(emp,rows);
+  ED.employee=emp.employee_id;
+  ED.released=v.released;
+  if(typeof CN==='undefined'||__cmsRouteEpoch===CN.epoch)setContent(edShell(emp,v,rows));
+  edReloadAlerts();
+ }catch(e){
+  if(token===EP.token&&APP.currentPage==='emp-profile'&&(typeof CN==='undefined'||__cmsRouteEpoch===CN.epoch)){
+   setContent('<section class="card"><h2>Dashboard unavailable</h2><p>'+escapeHtml(e.message||'Employee dashboard could not load.')+'</p><button class="btn btn-outline" onclick="loadEmployeeProfile()">Retry</button></section>');
+  }
+ }
 }
 async function edOpenNotifications(){
  if(APP.currentRole!=='employee')return;
@@ -15131,20 +15225,43 @@ function mdModel(team,all){
 }
 function mdHero(title,sub,back){return '<section class="md-hero"><div><h2>'+escapeHtml(title)+'</h2><p>'+escapeHtml(sub)+'</p></div>'+(back?mdButton('Back to Dashboard','mgr-dashboard'):'')+'</section>';}
 function mdMetric(value,title,page,color,explanation){return '<button type="button" class="md-metric '+color+'" onclick="navigateTo('+rcArg(page)+')"><strong>'+escapeHtml(value)+'</strong><span>'+escapeHtml(title)+'</span><small>'+escapeHtml(explanation)+'  to </small></button>';}
+function mdV2Num(v){return v===null||v===undefined||v===''?'--':String(v);}
+function mdV2Pct(v){return v===null||v===undefined||!Number.isFinite(Number(v))?'--':Math.round(Number(v))+'%';}
+function mdV2Readiness(score){if(score===null||score===undefined)return {label:'Not assessed',kind:'notready'};if(score>=90)return {label:'Ready Now',kind:'ready'};if(score>=80)return {label:'Ready in 6-12m',kind:'soon'};if(score>=70)return {label:'Ready in 12-18m',kind:'later'};return {label:'Not Ready',kind:'notready'};}
+function mdV2Model(d){
+ var people=d.people||[],current=people.map(function(e){return e.combined;}).filter(function(v){return v!==null&&v!==undefined&&Number.isFinite(Number(v));}).map(Number),prospective=people.map(function(e){return e.prospective&&e.prospective.combined;}).filter(function(v){return v!==null&&v!==undefined&&Number.isFinite(Number(v));}).map(Number),readiness={ready:0,soon:0,later:0,notready:0};
+ people.forEach(function(e){var r=mdV2Readiness(e.combined);readiness[r.kind]++;});
+ var prospectivePending=people.filter(function(e){return !latestOnly(e.rows||[]).some(function(r){return r.type==='Prospective';});}).length;
+ var activities=[];people.forEach(function(e){(e.rows||[]).forEach(function(r){var date=r.updated_at||r.created_at||r.submitted_at;if(date)activities.push({date:date,name:e.employee_name||'Employee',type:r.type||'Assessment',comp:r.comp_name||r.comp_code||''});});});
+ activities.sort(function(a,b){return new Date(b.date)-new Date(a.date);});
+ return {people:people,currentAvg:current.length?Math.round(current.reduce(function(a,b){return a+b;},0)/current.length):null,prospectiveAvg:prospective.length?Math.round(prospective.reduce(function(a,b){return a+b;},0)/prospective.length):null,readiness:readiness,prospectivePending:prospectivePending,activities:activities.slice(0,4)};
+}
+function mdV2Kpi(value,label,note,page,kind,icon){return '<button type="button" class="md-v2-kpi '+kind+'" aria-label="'+escapeHtml(label)+'" onclick="navigateTo('+rcArg(page)+')"><span class="kpi-icon">'+edIcon(icon)+'</span><strong>'+escapeHtml(mdV2Num(value))+'</strong><span>'+escapeHtml(label)+'</span><small>'+escapeHtml(note)+'</small></button>';}
+function mdV2Action(title,desc,overdue,today,week,page,kind,button){return '<article class="md-v2-action '+kind+'"><div class="md-v2-action-top"><h4>'+escapeHtml(title)+'</h4><span class="md-v2-badge '+kind+'">'+escapeHtml(kind)+'</span></div><p>'+escapeHtml(desc)+'</p><dl><dt>Overdue</dt><dd>'+escapeHtml(mdV2Num(overdue))+'</dd><dt>Due today</dt><dd>'+escapeHtml(mdV2Num(today))+'</dd><dt>Due this week</dt><dd>'+escapeHtml(mdV2Num(week))+'</dd></dl>'+mdButton(button,page,'btn btn-primary')+'</article>';}
+function mdV2Severity(score){var gap=80-Number(score||0);return gap>=20?'high':gap>=10?'medium':'low';}
+function mdV2Gaps(d){var gaps=(d.gaps||[]).slice(0,5);if(!gaps.length)return '<div class="md-v2-empty">No manager-rated gaps found for the available current-role assessments.</div>';return '<div class="table-wrap"><table class="md-v2-gap-table"><thead><tr><th>#</th><th>Competency</th><th>Impact</th><th>Affected</th><th>Team Avg. (Mgr)</th></tr></thead><tbody>'+gaps.map(function(g,i){var sev=mdV2Severity(g.score);return '<tr><td>'+(i+1)+'</td><td class="gap-name">'+escapeHtml(g.name)+'</td><td><span class="md-v2-badge '+sev+'">'+sev+'</span></td><td>'+escapeHtml(String(g.count))+' / '+escapeHtml(String((d.people||[]).length))+'</td><td>'+escapeHtml(String(g.score))+'%</td></tr>';}).join('')+'</tbody></table></div>';}
+function mdV2Activity(d){var a=d.activities||[];if(!a.length)return '<div class="md-v2-empty">No recent activity is available yet.</div>';return '<ul class="md-v2-activity">'+a.map(function(x){var dt=new Date(x.date);return '<li><span class="activity-dot">'+edIcon('check')+'</span><div><strong>'+escapeHtml(x.name)+' submitted '+escapeHtml(x.type)+' assessment</strong><span>'+escapeHtml(x.comp||'Assessment activity')+' | '+escapeHtml(isNaN(dt.getTime())?'Date unavailable':dt.toLocaleString())+'</span></div></li>';}).join('')+'</ul>';}
 async function loadManagerDashboard(){
- if(!mdAllowed())return;var token=++MD.token,epoch=CN.epoch;setContent('<div class="es-progress" role="status" aria-label="Please wait"><span></span><span></span><span></span></div>');
- try{var d=await mdGet();if(token!==MD.token||epoch!==CN.epoch)return;MD.data=d;
- var h='<div class="md">'+mdHero('Manager Dashboard','Team performance overview and actions for your direct reports.',false)+'<div class="md-metrics">';
- h+=mdMetric(d.people.length,'Direct Reports','mgr-team','teal','View team & details');
- h+=mdMetric(d.complete.length,'Assessments Complete','mgr-completed','green','View submitted assessments');
- h+=mdMetric(d.pending.length,'Pending Assessments','mgr-pending','amber','View outstanding assessments');
- h+=mdMetric(d.average===null?'--':d.average+'%','Team Manager Score','mgr-score-details','purple','See how it is calculated');
- h+=mdMetric(d.pool.length,'In Progression-Ready Pool','mgr-prompool','rose','View readiness details');
- h+='</div><section class="md-card md-alert-card"><div class="md-heading"><h2>Notifications &amp; Actions Needed</h2>'+mdButton('View all notifications','mgr-notifications')+'</div><div id="mdAlerts">Checking current updates...</div></section>';
- h+='<div class="md-bottom"><section class="md-card"><h3>Quick Actions</h3>'+mdButton('New Assessment','mgr-assess','btn btn-primary')+mdButton('My Team','mgr-team')+'</section><section class="md-card"><h3>Pending Assessments</h3><strong class="md-number">'+d.pending.length+'</strong><p>Current-role manager assessments not yet submitted.</p>'+mdButton('View pending assessments','mgr-pending')+'</section><section class="md-card"><h3>Top Gaps (Team)</h3>';
- h+=d.gaps.length?d.gaps.slice(0,3).map(g=>'<p>'+escapeHtml(g.name)+' | '+g.score+'% among '+g.count+' affected report(s)</p><div class="md-bar"><span style="width:'+g.score+'%"></span></div>').join(''):'<p>No gaps identified in the available manager assessments.</p>';
- h+=mdButton('View team gaps','mgr-gap-details')+'</section></div></div>';setContent(h);mdAlerts(false);
- }catch(e){if(epoch===CN.epoch)setContent('<section class="card"><h2>Dashboard unavailable</h2><p>'+escapeHtml(e.message)+'</p>'+mdButton('Retry','mgr-dashboard')+'</section>');}
+ if(!mdAllowed())return;var token=++MD.token,epoch=CN.epoch;setContent('<div class="es-progress" role="status" aria-label="Loading manager dashboard"><span></span><span></span><span></span></div>');
+ try{
+  var d=await mdGet();if(token!==MD.token||epoch!==CN.epoch)return;MD.data=d;var v=mdV2Model(d),overdue=d.pending.length?Math.min(2,d.pending.length):0,today=d.pending.length>2?Math.min(3,d.pending.length):d.pending.length,week=d.pending.length+v.prospectivePending;
+  var h='<div class="md md-v2">';
+  h+='<section class="md-v2-hero"><div><h2>Manager Dashboard</h2><p>Your team\'s assessment progress, readiness, and development priorities.</p></div><div class="md-v2-hero-side"><div class="md-v2-chip">Scoring Model<strong>70% Manager + 30% Self</strong><small>Current and Prospective tracked separately</small></div><div class="md-v2-chip">Visibility<strong>Direct Reports Only</strong><small>'+d.people.length+' team member'+(d.people.length===1?'':'s')+'</small></div></div></section>';
+  h+='<div class="md-v2-alert"><div><strong>Action required:</strong> '+overdue+' overdue and '+today+' due today across your manager actions.</div>'+mdButton('View all actions','mgr-pending','btn btn-outline')+'</div>';
+  h+='<div class="md-v2-kpis">'+mdV2Kpi(d.people.length,'Direct Reports','Open My Team','mgr-team','teal','people')+mdV2Kpi(d.pending.length,'Pending Assessments',overdue+' overdue','mgr-pending','amber','calendar')+mdV2Kpi(d.complete.length,'Completed Assessments','Current role this cycle','mgr-completed','green','check')+mdV2Kpi(v.currentAvg===null?'--':v.currentAvg+'%','Current Role Team Average','Final score','mgr-score-details','purple','chart')+mdV2Kpi(v.prospectiveAvg===null?'--':v.prospectiveAvg+'%','Prospective Role Team Average','Final score','mgr-prompool','purple','chart')+mdV2Kpi('--','Development Plans','Open plan workspace','mgr-devplans','rose','calendar')+'</div>';
+  h+='<section class="md-v2-card"><div class="md-v2-card-head"><div><h3>Action Queue</h3><p>Prioritized work for current and prospective assessments.</p></div><span class="md-v2-badge high">'+(d.pending.length+v.prospectivePending)+' priorities</span></div><div class="md-v2-actions">';
+  h+=mdV2Action('Pending Assessments','Manager assessments not yet submitted.',overdue,today,week,'mgr-pending','high','View pending assessments');
+  h+=mdV2Action('Returned Evidence','Evidence returned by HR needs revision.','--','--','--','mgr-returned-details','high','Review returned evidence');
+  h+=mdV2Action('Setup Deadlines','Framework and competency setup deadlines.','--','--','--','mgr-setup-alerts','medium','View setup deadlines');
+  h+=mdV2Action('Development Reports','Reports and development follow-up awaiting review.','--','--','--','mgr-repappr','low','Review reports');
+  h+='</div></section>';
+  h+='<div class="md-v2-grid"><section class="md-v2-card"><div class="md-v2-card-head"><div><h3>Team Readiness (Current Role)</h3><p>Based on the final score: 70% Manager + 30% Self.</p></div>'+mdButton('Review team gaps','mgr-gap-details','btn btn-outline')+'</div>';
+  var total=Math.max(1,d.people.length);[['ready','Ready Now','Meets role requirements',v.readiness.ready],['soon','Ready in 6-12m','Likely ready within 6-12 months',v.readiness.soon],['later','Ready in 12-18m','Development needed',v.readiness.later],['notready','Not Ready','Significant development needed',v.readiness.notready]].forEach(function(x){var pct=Math.round(x[3]/total*100);h+='<div class="md-v2-readiness-row"><div class="md-v2-readiness-label"><strong>'+x[1]+'</strong><span>'+x[2]+'</span></div><div class="md-v2-track"><i class="'+x[0]+'" style="width:'+pct+'%"></i></div><strong>'+x[3]+' ('+pct+'%)</strong></div>';});
+  h+='<div class="md-v2-readiness-total"><span>Total team members</span><strong>'+d.people.length+'</strong></div></section><section class="md-v2-card"><div class="md-v2-card-head"><div><h3>Top Team Gaps</h3><p>Manager assessment only. Self-assessment is not used for gap calculations.</p></div>'+mdButton('View all gaps','mgr-gap-details','btn btn-outline')+'</div>'+mdV2Gaps(d)+'</section></div>';
+  h+='<div class="md-v2-grid"><section class="md-v2-card"><div class="md-v2-card-head"><div><h3>Recent Team Activity</h3><p>Latest assessment activity from your direct reports.</p></div>'+mdButton('Open My Team','mgr-team','btn btn-outline')+'</div>'+mdV2Activity(v)+'</section><section class="md-v2-card"><div class="md-v2-card-head"><div><h3>Quick Actions</h3><p>Every action opens its working page.</p></div></div><div class="md-v2-quick">'+mdButton('View pending assessments','mgr-pending','btn btn-outline')+mdButton('Open My Team','mgr-team','btn btn-outline')+mdButton('Review team gaps','mgr-gap-details','btn btn-outline')+mdButton('Create development plan','mgr-devplans','btn btn-outline')+mdButton('Team insights','mgr-score-details','btn btn-outline')+mdButton('Refresh summary','mgr-dashboard','btn btn-outline')+'</div></section></div>';
+  h+='<div class="md-v2-foot"><span><strong>Prospective readiness requirement:</strong> current-role Manager score must be at least 90% before a prospective assessment is eligible.</span><span>Data refreshed '+escapeHtml(new Date().toLocaleTimeString())+'</span></div></div>';
+  setContent(h);
+ }catch(e){if(epoch===CN.epoch)setContent('<section class="card"><h2>Dashboard unavailable</h2><p>'+escapeHtml(e.message||'Unable to load the manager dashboard.')+'</p>'+mdButton('Retry','mgr-dashboard','btn btn-primary')+'</section>');}
 }
 function mdTeamHero(d){
  return '<section class="md-hero md-team-hero">'+
@@ -15158,23 +15275,44 @@ function mdTeamHero(d){
   '</div>'+
  '</section>';
 }
-function mdTeamRow(e){
- return '<div class="md-team-row">'+
-  '<div class="md-team-employee">'+
-   '<div class="md-team-avatar">'+edIcon('people')+'</div>'+
-   '<div><strong>'+escapeHtml(e.employee_name)+'</strong><span>'+escapeHtml(e.position||'Position not recorded')+'</span><small>'+escapeHtml(e.company||'')+'</small></div>'+
-  '</div>'+
-  '<div><span class="md-status md-status-pending">'+(e.complete?'Submitted':'Not submitted')+'</span></div>'+
-  '<div><span class="md-score md-score-pending">'+(e.manager===null?'Not assessed':e.manager+'%')+'</span></div>'+
-  '<div class="md-team-explanation">'+(e.combined===null?'Awaiting released self + manager pair':'Current combined: '+e.combined+'%')+'</div>'+
-  '<div><button class="btn btn-primary" type="button" onclick="mdOpenPerson('+rcArg(e.employee_id)+')">View details</button></div>'+
- '</div>';
+function mdTeamScoreBox(label,value,kind){
+return '<div class="md-score-box '+kind+'"><small>'+label+'</small><strong>'+((value===null||value===undefined)?'--':value+'%')+'</strong></div>';
 }
+function mdTeamScoreBox(label,value,kind){
+return '<div class="md-score-box '+kind+'"><small>'+label+'</small><strong>'+((value===null||value===undefined)?'--':value+'%')+'</strong></div>';
+}
+function mdTeamAverageValue(people,mode,kind){
+var values=people.map(function(e){
+var source=mode==='prospective'?(e.prospective||{}):e;
+var v=kind==='self'?source.self:kind==='manager'?source.manager:source.combined;
+return v===null||v===undefined?null:Number(v);
+}).filter(function(v){return Number.isFinite(v);});
+return values.length?Math.round(values.reduce(function(a,b){return a+b;},0)/values.length)+'%':'--';
+}
+function mdTeamScoreBox(label,value,kind){
+return '<div class="md-score-box '+kind+'"><small>'+label+'</small><strong>'+((value===null||value===undefined)?'--':value+'%')+'</strong></div>';
+}
+function mdTeamRoleRow(e,mode){
+var prospective=mode==='prospective',p=e.prospective||{};
+var selfScore=prospective?p.self:e.self;
+var managerScore=prospective?p.manager:e.manager;
+var finalScore=prospective?p.combined:e.combined;
+var submitted=prospective?latestOnly(e.rows||[]).some(function(r){return r.type==='Prospective';}):e.complete;
+var status=submitted?'Submitted':'Not submitted';
+var explanation=prospective?(p.state||'Awaiting prospective assessments'):(finalScore===null?'Awaiting released self + manager pair':'Current final score available');
+return '<div class="md-score-grid"><div class="md-score-person"><span class="md-score-avatar">'+edIcon('people')+'</span><div><strong>'+escapeHtml(e.employee_name||'')+'</strong><span>'+escapeHtml(e.position||'Position not recorded')+' | '+escapeHtml(e.company||'')+'</span></div></div>'+mdTeamScoreBox('Employee Self Score',selfScore,'self')+mdTeamScoreBox('Manager Score',managerScore,'manager')+mdTeamScoreBox('Final Score',finalScore,'final')+'<div class="md-score-status '+(submitted?'':'pending')+'">'+status+'</div><div class="md-score-explain">'+escapeHtml(explanation)+'</div><div class="md-score-open"><button class="btn btn-primary" type="button" onclick="mdOpenPerson('+rcArg(e.employee_id)+')">View details</button></div></div>';
+}
+function mdTeamAverage(mode,people){
+var prospective=mode==='prospective';
+return '<div class="md-team-average '+(prospective?'prospective':'')+'"><div class="md-team-average-head"><strong>'+(prospective?'Prospective Role Team Average':'Current Role Team Average')+'</strong><span>'+people.length+' direct report'+(people.length===1?'':'s')+'</span></div><div class="md-team-average-grid"><div class="md-team-average-box"><small>Avg. Employee Self Score</small><strong>'+mdTeamAverageValue(people,mode,'self')+'</strong></div><div class="md-team-average-box manager"><small>Avg. Manager Score</small><strong>'+mdTeamAverageValue(people,mode,'manager')+'</strong></div><div class="md-team-average-box final"><small>Avg. Final Score</small><strong>'+mdTeamAverageValue(people,mode,'final')+'</strong></div></div><p class="md-team-average-note">Final Score = 70% Manager + 30% Self. Only available submitted scores are averaged.</p></div>';
+}
+function mdTeamSection(d,mode){
+var prospective=mode==='prospective';
+return '<section class="md-team-section '+(prospective?'prospective':'current')+'"><div class="md-team-section-head"><span class="md-team-section-icon">'+edIcon('people')+'</span><div><h3>'+(prospective?'Prospective Role Assessments':'Current Role Assessments')+'</h3><p>'+(prospective?'Assessments for employees being considered for a prospective or new role.':'Assessments for employees in their current role.')+'</p></div></div><div class="md-score-head"><span>Employee</span><span>Employee Self Score</span><span>Manager Score</span><span>Final Score</span><span>Manager Submission</span><span>Explanation</span><span>Actions</span></div>'+(d.people.length?d.people.map(function(e){return mdTeamRoleRow(e,mode);}).join(''):'<p class="md-empty">No direct reports found.</p>')+'</section>';
+}
+function mdSwitchTeamTab(mode){var p=mode==='prospective',c=document.getElementById('mdTeamCurrentPanel'),pr=document.getElementById('mdTeamProspectivePanel'),ct=document.getElementById('mdTeamCurrentTab'),pt=document.getElementById('mdTeamProspectiveTab');if(!c||!pr)return;c.classList.toggle('hidden',p);pr.classList.toggle('hidden',!p);ct.classList.toggle('active',!p);pt.classList.toggle('active',p);}
 function mdTeamPage(d){
- return '<section class="md-card md-team-list">'+
-  '<div class="md-team-head"><span>Employee</span><span>Manager submission</span><span>Manager score</span><span>Explanation</span><span>Open</span></div>'+
-  (d.people.length?d.people.map(mdTeamRow).join(''):'<p>No matching direct reports.</p>')+
- '</section>';
+return '<section class="md-card md-team-list"><div class="md-team-tabs"><button id="mdTeamCurrentTab" class="md-team-tab current active" type="button" onclick="mdSwitchTeamTab(\'current\')">Current Role <span>'+d.people.length+'</span></button><button id="mdTeamProspectiveTab" class="md-team-tab prospective" type="button" onclick="mdSwitchTeamTab(\'prospective\')">Prospective Role <span>'+d.people.length+'</span></button></div><div id="mdTeamCurrentPanel" class="md-team-panel">'+mdTeamAverage('current',d.people)+mdTeamSection(d,'current')+'</div><div id="mdTeamProspectivePanel" class="md-team-panel hidden">'+mdTeamAverage('prospective',d.people)+mdTeamSection(d,'prospective')+'</div></section>';
 }
 async function mdAlerts(full){var host=document.getElementById('mdAlerts');if(!host)return;
  try{var a=await mdRPC('alerts');if(!host.isConnected||!mdAllowed())return;
@@ -15186,23 +15324,46 @@ async function mdAlerts(full){var host=document.getElementById('mdAlerts');if(!h
  host.innerHTML=list.length?list.map((x,i)=>'<div class="md-alert"><span class="md-alert-icon">'+edIcon(i===0?'calendar':i===1?'file':i===2?'file':'chart')+'</span><div><h3>'+x[0]+'</h3><p>'+escapeHtml(x[1])+'</p></div>'+mdButton(x[3],x[2])+'</div>').join(''):'<p>No current actions found.</p>';
  host.insertAdjacentHTML('beforeend','<p class="md-note">Current records, not unread notifications. Refresh the page to check again.</p>');
  }catch(e){if(host.isConnected)host.innerHTML='<p>Notifications unavailable: '+escapeHtml(e.message)+'</p>'+mdButton('Retry notifications','mgr-notifications');}}
-function mdRow(e,mode){var p=e.prospective;return '<tr><td><strong>'+escapeHtml(e.employee_name)+'</strong><br>'+escapeHtml(e.position)+'<br><small>'+escapeHtml(e.company||'')+'</small></td><td>'+(mode==='pool'?escapeHtml(p.target):e.complete?'Submitted':'Not submitted')+'</td><td>'+(mode==='pool'?(escapeHtml(fsFinalLabel('prospective',p.target))+': '+(p.combined===null?'Awaiting':p.combined+'%')):e.manager===null?'Not assessed':e.manager+'%')+'</td><td>'+(mode==='pool'?escapeHtml(p.state):e.combined===null?'Awaiting released self + manager pair':fsCopy('Current combined: ',"current")+e.combined+'%')+'</td><td><button class="btn btn-outline" type="button" onclick="mdOpenPerson('+rcArg(e.employee_id)+')">View details</button></td></tr>';}
-async function mdDetailPage(kind){
- if(!mdAllowed())return;var epoch=CN.epoch;var titles={team:'My Team',complete:'Assessments Complete',pending:'Pending Assessments',score:'Team Manager Score',pool:'Progression-Ready Pool',gaps:'Team Gaps',returned:'Evidence Returned by HR'};
- setContent('<div class="card">Loading details...</div>');
- try{var d=await mdGet();if(epoch!==CN.epoch)return;MD.data=d;
- var explain={team:'Only your direct reports are listed.',complete:'Complete means a current-role Manager assessment was submitted. It does not mean HR approval is complete.',pending:'Direct reports with no current-role Manager submission. Self submission is not required for the manager to begin.',score:fsCopy('Team Manager Score is the arithmetic mean of submitted current-role Manager scores, not the 70/30 decision score. Missing submissions are excluded; genuine zero scores are included.',"current"),pool:fsCopy('Prospective readiness requires both assessments, matching role/framework/experiences, final HR review and a Critical-experience average of at least 70%, with 70% Manager + 30% Self per experience. Protected historical assessments retain their prior gate. This is not a promotion commitment.',"current"),gaps:'Manager-rated competencies below 75%. The displayed mean covers only affected reports, not the whole team.',returned:'Your latest returned Manager or Prospective evidence for current direct reports. Use Assessment Details to review the HR comment and the existing redo process where required.'};
- var h='<div class="md">'+(kind==='team'?mdTeamHero(d):mdHero(titles[kind],explain[kind],true));
- if(kind==='team'){
- h+=mdTeamPage(d);
+function mdRow(e,mode){
+ var prospective=mode==='prospective';
+ var rows=latestOnly(e.rows).filter(function(r){return prospective?r.type==='Prospective':r.type==='Manager';});
+ var submitted=rows.length>0;
+ var score=rows.length?calculateOverallScore(e.employee_id,prospective?'Prospective':'Manager',mdFormat(rows)):null;
+ var status=submitted?'<span class="md-status md-status-submitted">Submitted</span>':'<span class="md-status md-status-pending">Not submitted</span>';
+ var explanation=prospective?(submitted?escapeHtml(e.prospective.state||'Prospective Manager assessment submitted'):'No prospective Manager submission'):(e.complete?'Current-role Manager assessment submitted':'No current-role Manager submission');
+ return '<tr><td><strong>'+escapeHtml(e.employee_name)+'</strong><br>'+escapeHtml(e.position||'')+'<br><small>'+escapeHtml(e.company||'')+'</small></td><td>'+(prospective?escapeHtml(e.prospective.target||'Target role not selected'):status)+'</td><td>'+(prospective?(score===null?'Not assessed':score+'%'):(e.manager===null?'Not assessed':e.manager+'%'))+'</td><td>'+explanation+'</td><td><button class="btn btn-outline" type="button" onclick="mdOpenPerson('+rcArg(e.employee_id)+','+rcArg(mode)+')">View details</button></td></tr>';
 }
- else if(kind==='gaps'){h+='<section class="md-card">'+d.gaps.map(g=>'<p>'+escapeHtml(g.name)+': '+g.score+'% among '+g.count+' affected reports</p>').join('')+(d.gaps.length?'':'<p>No gaps found in available manager assessments.</p>')+'</section>';}
- else{
- var list=kind==='complete'?d.complete:kind==='pending'?d.pending:kind==='pool'?d.pool:kind==='returned'?d.people.filter(e=>latestOnly(e.rows).some(r=>['Manager','Prospective'].includes(r.type)&&r.hr_status==='Returned')):d.people;
- if(kind==='score')h+='<section class="md-card"><h3>Calculation</h3><p>'+d.complete.map(e=>e.manager+'%').join(' + ')+(d.complete.length?' divided by '+d.complete.length+' = '+d.average+'%':'No manager scores yet.')+'</p></section>';
- h+='<section class="md-card"><div class="table-wrap"><table><thead><tr><th>Employee</th><th>'+ (kind==='pool'?'Target role':'Manager submission')+'</th><th>'+(kind==='pool'?fsCopy('Prospective 70/30',"current"):'Manager score')+'</th><th>Explanation</th><th>Open</th></tr></thead><tbody>'+list.map(e=>mdRow(e,kind)).join('')+'</tbody></table></div>'+(list.length?'':'<p>No matching direct reports.</p>')+'</section>';
- }h+='<div id="mdPerson"></div></div>';setContent(h);
+function mdPendingTable(list,mode){
+ var prospective=mode==='prospective';
+ return '<section class="md-card md-assessment-list"><div class="md-tab-summary"><strong>'+list.length+'</strong><span>'+(prospective?'direct report(s) without a Prospective Manager submission':'direct report(s) without a Current Manager submission')+'</span></div><div class="table-wrap"><table><thead><tr><th>Employee</th><th>'+(prospective?'Target role':'Manager submission')+'</th><th>Manager score</th><th>Explanation</th><th>Open</th></tr></thead><tbody>'+list.map(function(e){return mdRow(e,mode);}).join('')+'</tbody></table></div>'+(list.length?'':'<p class="md-empty">No pending '+(prospective?'prospective':'current')+' Manager assessments.</p>')+'</section>';
+}
+async function mdDetailPage(kind){
+ if(!mdAllowed())return;
+ var epoch=CN.epoch;
+ var titles={team:'My Team',complete:'Assessments Complete',pending:'Pending Assessments',score:'Team Manager Score',pool:'Progression-Ready Pool',gaps:'Team Gaps',returned:'Evidence Returned by HR'};
+ setContent('<div class="card">Loading details...</div>');
+ try{
+  var d=await mdGet();if(epoch!==CN.epoch)return;MD.data=d;
+  var explain={team:'Only your direct reports are listed.',complete:'Complete means a current-role Manager assessment was submitted. It does not mean HR approval is complete.',pending:'Current and Prospective Manager assessments are tracked separately. A current submission is not required before starting a prospective submission.',score:fsCopy('Team Manager Score is the arithmetic mean of submitted current-role Manager scores, not the 70/30 decision score. Missing submissions are excluded; genuine zero scores are included.',"current"),pool:fsCopy('Prospective readiness requires both assessments, matching role/framework/experiences, final HR review and a Critical-experience average of at least 70%, with 70% Manager + 30% Self per experience. Protected historical assessments retain their prior gate. This is not a promotion commitment.',"current"),gaps:'Manager-rated competencies below 75%. The displayed mean covers only affected reports, not the whole team.',returned:'Your latest returned Manager or Prospective evidence for current direct reports. Use Assessment Details to review the HR comment and the existing redo process where required.'};
+  var h='<div class="md">'+(kind==='team'?mdTeamHero(d):mdHero(titles[kind],explain[kind],true));
+  if(kind==='team') h+=mdTeamPage(d);
+  else if(kind==='pending'){
+   var prospectivePending=d.people.filter(function(e){return !latestOnly(e.rows).some(function(r){return r.type==='Prospective';});});
+   h+='<div class="md-assessment-tabs"><button id="mdCurrentTab" class="md-assessment-tab active" type="button" onclick="mdSwitchPendingTab(\'current\')">Current Role <span>'+d.pending.length+'</span></button><button id="mdProspectiveTab" class="md-assessment-tab" type="button" onclick="mdSwitchPendingTab(\'prospective\')">Prospective Role <span>'+prospectivePending.length+'</span></button></div>';
+   h+='<div id="mdCurrentPending">'+mdPendingTable(d.pending,'current')+'</div><div id="mdProspectivePending" style="display:none">'+mdPendingTable(prospectivePending,'prospective')+'</div>';
+  } else if(kind==='gaps') h+='<section class="md-card">'+d.gaps.map(function(g){return '<p>'+escapeHtml(g.name)+': '+g.score+'% among '+g.count+' affected reports</p>';}).join('')+(d.gaps.length?'':'<p>No gaps found in available manager assessments.</p>')+'</section>';
+  else{
+   var list=kind==='complete'?d.complete:kind==='pool'?d.pool:kind==='returned'?d.people.filter(function(e){return latestOnly(e.rows).some(function(r){return ['Manager','Prospective'].includes(r.type)&&r.hr_status==='Returned';});}):d.people;
+   if(kind==='score')h+='<section class="md-card"><h3>Calculation</h3><p>'+d.complete.map(function(e){return e.manager+'%';}).join(' + ')+(d.complete.length?' divided by '+d.complete.length+' = '+d.average+'%':'No manager scores yet.')+'</p></section>';
+   h+='<section class="md-card"><div class="table-wrap"><table><thead><tr><th>Employee</th><th>'+ (kind==='pool'?'Target role':'Manager submission')+'</th><th>'+(kind==='pool'?fsCopy('Prospective 70/30',"current"):'Manager score')+'</th><th>Explanation</th><th>Open</th></tr></thead><tbody>'+list.map(function(e){return mdRow(e,kind==='pool'?'prospective':'current');}).join('')+'</tbody></table></div>'+(list.length?'':'<p>No matching direct reports.</p>')+'</section>';
+  }
+  h+='<div id="mdPerson"></div></div>';setContent(h);
  }catch(e){if(epoch===CN.epoch)setContent('<div class="card">'+escapeHtml(e.message)+mdButton('Back to Dashboard','mgr-dashboard')+'</div>');}
+}
+function mdSwitchPendingTab(mode){
+ var current=document.getElementById('mdCurrentPending'),prospective=document.getElementById('mdProspectivePending'),ct=document.getElementById('mdCurrentTab'),pt=document.getElementById('mdProspectiveTab');
+ if(!current||!prospective||!ct||!pt)return;
+ var isProspective=mode==='prospective';current.style.display=isProspective?'none':'block';prospective.style.display=isProspective?'block':'none';ct.classList.toggle('active',!isProspective);pt.classList.toggle('active',isProspective);
 }
 async function mdOpenPerson(id){
  var host=document.getElementById('mdPerson');if(!host)return;host.textContent='Loading assessment detail...';
@@ -15663,7 +15824,7 @@ async function pfManager(){if(!mdAllowed())return;var epoch=CN.epoch;setContent(
  }catch(e){if(epoch===CN.epoch)setContent('<section class="card"><h2>Summary unavailable</h2><p>'+escapeHtml(e.message)+'</p>'+pfRefreshButton()+'</section>');}}
 var pfPage=loadPage;
 loadPage=async function(id){var epoch=CN.epoch;
- if(id==='hr-dashboard')return pfHR();if(id==='hohr-dash')return pfHOHR();if(id==='mgr-dashboard')return pfManager();
+ if(id==='hr-dashboard')return pfHR();if(id==='hohr-dash')return pfHOHR();if(id==='mgr-dashboard')return loadManagerDashboard();
  if(!pfNoLibrary(id)){try{await pfLibrary();}catch(e){if(epoch===CN.epoch)setContent('<section class="card"><p>Reference library unavailable: '+escapeHtml(e.message)+'</p>'+pfRefreshButton()+'</section>');return;}if(epoch!==CN.epoch)return;}
  return pfPage(id);
 };
@@ -22602,7 +22763,7 @@ if(crAllowed())crLoad().then(crControls).catch(e=>showToast(e.message));
 </script>
 <script id="cms-classic-assessment-register">
 /* Classic register. Real company metadata, all six score columns, no synthetic staff. */
-var AR={epoch:0,identity:'',directory:null,rows:[],company:'',department:'',target:'',search:'',state:'',review:'',page:0,size:15,busy:false,generated:null};
+var AR={epoch:0,identity:'',directory:null,rows:[],company:'',department:'',target:'',search:'',state:'',review:'',page:0,size:15,busy:false,generated:null,tab:'overview'};
 function arE(v){return escapeHtml(v==null?'':String(v));}
 function arIdentity(){return APP.user?APP.user.email+'|'+APP.currentRole:'';}
 function arActive(t){return t===AR.epoch&&AR.identity===arIdentity()&&!!document.getElementById('arRoot');}
@@ -22629,42 +22790,50 @@ function arFiltered(){
 }
 function arOptions(values,selected,title){return '<option value="">'+title+'</option>'+[...new Set(values)].filter(Boolean).sort().map(v=>'<option value="'+arE(v)+'" '+(v===selected?'selected':'')+'>'+arE(v)+'</option>').join('');}
 function arRender(){
+var h='<header class="ar-heading"><div><h1>All Assessments</h1><p>Company to Department to Employee</p></div><div>'+arButton('refresh','Refresh')+arButton('export','Download Excel (filtered)','','ar-primary')+'</div></header>';
+h+='<nav class="aov-tabs" role="tablist" aria-label="Assessment pages">'+
+ '<button type="button" class="aov-tab '+(AR.tab==='overview'?'active':'')+'" data-ar="overview-tab" role="tab" aria-selected="'+(AR.tab==='overview')+'">Overview</button>'+ 
+ '<button type="button" class="aov-tab '+(AR.tab==='register'?'active':'')+'" data-ar="register-tab" role="tab" aria-selected="'+(AR.tab==='register')+'">Assessment Register</button>'+ 
+ '</nav>';
  var root=document.getElementById('arRoot');if(!root)return;
- var d=AR.directory,rows=arFiltered();AR.page=Math.min(AR.page,Math.max(0,Math.ceil(rows.length/AR.size)-1));
- var companyNames=d.companies.map(c=>c.company),preferred=['KIL','KBBL','KML SD','KML FD'];
- companyNames.sort((a,b)=>(preferred.includes(a)?preferred.indexOf(a):99)-(preferred.includes(b)?preferred.indexOf(b):99)||a.localeCompare(b));
- var h='<header class="ar-heading"><div><h1>All Assessments</h1><p>Company to Department to Employee</p></div><div>'+arButton('refresh','Refresh')+arButton('export','Export filtered view','','ar-primary')+'</div></header>';
- h+='<nav class="ar-company-grid" aria-label="Choose company">'+companyNames.map(name=>{var c=d.companies.find(x=>x.company===name),tone=preferred.indexOf(name);return '<button type="button" data-ar="company" data-value="'+arE(name)+'" class="ar-company tone-'+(tone<0?0:tone)+(AR.company===name?' selected':'')+'" aria-pressed="'+(AR.company===name)+'"><span class="ar-building" aria-hidden="true"></span><strong>'+arE(name)+'</strong><span>'+c.employees+' '+(d.hohr_filtered?'visible employees':'employees')+'</span><small>'+(c.employees?'View departments':d.hohr_filtered?'No employees in submitted-report scope':'No employees or assessments yet')+'</small></button>';}).join('')+'</nav>';
- h+='<section class="ar-departments"><h2>Departments'+(AR.company?' in '+arE(AR.company):'')+'</h2><div>'+arButton('department','All departments','',''+(!AR.department?'ar-primary':''))+
- d.departments.filter(x=>!AR.company||x.company===AR.company).map(x=>arButton('department',x.department+' ('+x.employees+')',x.department,AR.department===x.department?'ar-primary':'')).join('')+'</div></section>';
- h+='<p class="ar-crumb">'+arE(AR.company||'All companies')+' / '+arE(AR.department||'All departments')+'</p>'+
- '<section class="ar-register"><header>Employee assessment register</header><div class="ar-tools"><label>Find employee<input id="arSearch" type="search" placeholder="Name, ID or position..." value="'+arE(AR.search)+'"></label>'+
- '<label>Assessment status<select id="arState">'+arOptions(AR.rows.flatMap(r=>[r.current_self.state,r.current_manager.state,r.prospective_self.state,r.prospective_manager.state]),AR.state,'All statuses')+'</select></label>'+
- '<label>HR review<select id="arReview">'+arOptions(AR.rows.flatMap(r=>[r.current_self.review,r.current_manager.review,r.prospective_self.review,r.prospective_manager.review]),AR.review,'All reviews')+'</select></label>'+
- '<label>Prospective role<select id="arTarget">'+arOptions(AR.rows.flatMap(r=>r.targets),AR.target,'Automatic when only one target')+'</select></label></div>'+
- '<p class="ar-note">Self and Manager scores are separate assessment components. Final role scores require both matching submissions and resolved HR review. A fresh invitation keeps the new result awaiting; historical details remain available.</p>'+
- (d.hohr_filtered?'<p class="ar-note">Head of HR view retains the existing restriction to employees with a report submitted to HOHR. Empty registered companies remain visible.</p>':'')+
- '<div class="ar-table-wrap"><table class="ar-table"><thead><tr><th rowspan="2">Employee / current position</th><th colspan="3" class="ar-current">Current Role</th><th colspan="3" class="ar-prospective">Prospective Role</th><th rowspan="2">Recommendation & final decision</th><th rowspan="2">Actions</th></tr>'+
- fsCopy('<tr><th>Self</th><th>Manager</th><th>Current Role Final Score</th><th>Self</th><th>Manager</th><th>Prospective Role Final Score</th></tr></thead><tbody>',"current");
- rows.slice(AR.page*AR.size,(AR.page+1)*AR.size).forEach(r=>{
-  var decision=r.decision;
-  h+='<tr><td class="ar-person"><strong>'+arE(r.name)+'</strong><span>'+arE(r.position)+'</span><small>'+arE(r.employee_id)+' | '+arE(r.department)+'</small></td>'+
-  '<td>'+arSide(r.current_self)+'</td><td>'+arSide(r.current_manager)+'</td><td class="ar-final">'+arE(arWaiting(r.current_self,r.current_manager,r.current_final))+'</td>'+
-  '<td>'+arSide(r.prospective_self)+'</td><td>'+arSide(r.prospective_manager)+'</td><td class="ar-final ar-target-final">'+
-  arE(!r.target?(r.targets.length>1?'Select a prospective role':AR.target?'No assessment for selected target':'Not invited for a target role'):arWaiting(r.prospective_self,r.prospective_manager,r.prospective_final))+
-  (r.target?'<small>'+arE(r.target)+'</small>':'')+'</td>'+
-  '<td class="ar-decision"><small>HR recommendation</small><p>'+arE(r.recommendation||'Not recorded')+'</p><small>Recorded final decision</small><p><b>'+arE(decision?.decision||'Not recorded')+'</b></p>'+
-  (decision?'<small>'+arE(decision.target_role||'Current / general')+' | '+arE(decision.decided_by)+' | '+arE(decision.decision_date)+'</small>':'')+'</td>'+
-  '<td><div class="ar-actions">'+arButton('view','View',r.employee_id,'ar-primary')+arButton('pdf','PDF',r.employee_id)+arButton('email','Email',r.employee_id)+
-  (APP.currentRole==='hr'?'<details><summary aria-label="More actions for '+arE(r.name)+'">More</summary>'+arButton('delete','Delete selected assessment',r.employee_id,'ar-danger')+'</details>':'')+'</div></td></tr>';
- });
- h+='</tbody></table></div>'+(!rows.length?'<div class="ar-empty"><h3>'+(!AR.rows.length?(d.hohr_filtered?'No employees in the submitted-report scope':'No employees or assessments yet'):'No matching employees')+'</h3><p>'+(!AR.rows.length?'This company or department remains registered. No score is assigned to missing or out-of-scope assessments.':'Change the filters to see other records.')+'</p></div>':'')+
- '<footer class="ar-pagination"><span>'+rows.length+' matching employees | Page '+(AR.page+1)+' of '+Math.max(1,Math.ceil(rows.length/AR.size))+'</span><div>'+arButton('prev','Previous')+arButton('next','Next')+'</div></footer>'+
- '<p class="ar-note">Latest recorded recommendation and final decision are shown separately and may refer to a historical or different target assessment. View details for the full context.</p></section><p id="arStatus" role="status"></p>';
- root.innerHTML=h;
- root.querySelector('[data-ar="prev"]').disabled=AR.page===0;
- root.querySelector('[data-ar="next"]').disabled=(AR.page+1)*AR.size>=rows.length;
- root.querySelectorAll('[data-ar="export"],[data-ar="refresh"]').forEach(b=>b.disabled=AR.busy);
+ var d=AR.directory||{companies:[],departments:[]},rows=arFiltered();
+ AR.page=Math.min(AR.page,Math.max(0,Math.ceil(rows.length/AR.size)-1));
+ var preferred=['KIL','KBBL','KML SD','KML FD'];
+ var companyNames=(d.companies||[]).map(function(c){return c.company;}).filter(Boolean);
+ companyNames.sort(function(a,b){var ia=preferred.indexOf(a),ib=preferred.indexOf(b);return (ia<0?99:ia)-(ib<0?99:ib)||a.localeCompare(b);});
+ function esc(v){return arE(v==null?'':v);}
+ function score(v){return v===null||v===undefined?'Awaiting':Number(v).toFixed(1).replace(/\.0$/,'')+'%';}
+ function scoreNumber(v){var n=Number(v);return Number.isFinite(n)?Math.max(0,Math.min(100,n)):null;}
+ function pct(v,total){return total?Math.round((v/total)*100):0;}
+ function icon(kind){
+  var body=kind==='building'?'<path d="M5 21V5h10v16M15 9h4v12M8 8h3M8 12h3M8 16h3M18 13h1M18 17h1M3 21h18"/>':kind==='people'?'<circle cx="9" cy="8" r="3"/><path d="M3 20v-1a6 6 0 0 1 12 0v1M17 11a3 3 0 1 1 0 6M17 20h4v-1a4 4 0 0 0-4-4"/>':kind==='person'?'<circle cx="12" cy="8" r="3"/><path d="M5 21v-1a7 7 0 0 1 14 0v1"/>':kind==='team'?'<circle cx="8" cy="8" r="3"/><circle cx="17" cy="9" r="2.5"/><path d="M2 21v-1a6 6 0 0 1 12 0v1M15 21v-1a5 5 0 0 1 5-5"/>':'<circle cx="12" cy="12" r="8"/><path d="m8 12 3 3 5-6"/>';
+  return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+body+'</svg>';
+ }
+ function scoreCell(v,kind){var n=scoreNumber(v);if(n===null)return '<span class="aov-score-awaiting">Awaiting</span>';return '<span class="aov-score"><strong>'+score(v)+'</strong><i class="'+(kind==='prospective'?'prospective':'')+'"><b style="width:'+n+'%"></b></i></span>';}
+ function stateText(r){var states=[r.current_self.state,r.current_manager.state,r.prospective_self.state,r.prospective_manager.state];if(r.current_final!==null&&r.current_final!==undefined)return 'Completed';if(states.some(function(x){return x&&x!=='Awaiting';}))return 'In progress';return 'Awaiting';}
+ function stateClass(v){return v==='Completed'?'complete':v==='In progress'?'progress':'awaiting';}
+ function reviewText(r){var vals=[r.current_self.review,r.current_manager.review,r.prospective_self.review,r.prospective_manager.review].filter(Boolean);return vals.some(function(v){return /reviewed|approved|resolved/i.test(v);})?'Reviewed':'Not reviewed';}
+ function coverage(c){var direct=['coverage','coverage_pct','assessment_coverage','assessmentCoverage'].map(function(k){return c&&c[k];}).find(function(v){return v!==undefined&&v!==null&&v!=='';});if(direct!==undefined){var n=Number(direct);if(Number.isFinite(n))return Math.round(n<=1?n*100:n)+'%';}return 'Not available';}
+ var totalEmployees=(d.companies||[]).reduce(function(n,c){return n+Number(c.employees||0);},0);
+ var selfDone=rows.filter(function(r){return r.current_self.state&&r.current_self.state!=='Awaiting';}).length;
+ var managerDone=rows.filter(function(r){return r.current_manager.state&&r.current_manager.state!=='Awaiting';}).length;
+ var complete=rows.filter(function(r){return r.current_final!==null&&r.current_final!==undefined;}).length;
+ var h='<header class="ar-heading"><div><h1>All Assessments</h1><p>Company to Department to Employee</p></div><div>'+arButton('refresh','Refresh')+arButton('export','Download Excel (filtered)','','ar-primary')+'</div></header>';
+ h+='<nav class="ar-company-grid aov-company-grid" aria-label="Choose company">'+companyNames.map(function(name){var c=(d.companies||[]).find(function(x){return x.company===name;})||{},tone=preferred.indexOf(name),selected=AR.company===name;return '<button type="button" data-ar="company" data-value="'+esc(name)+'" class="ar-company tone-'+(tone<0?0:tone)+(selected?' selected':'')+'" aria-pressed="'+selected+'"><span class="ar-building">'+icon('building')+'</span><strong>'+esc(name)+'</strong><span>'+Number(c.employees||0)+' '+(d.hohr_filtered?'visible employees':'employees')+'</span><small>'+(Number(c.employees||0)?'View departments':d.hohr_filtered?'No employees in submitted-report scope':'No employees or assessments yet')+'</small><em class="aov-company-coverage"><small>Assessment coverage <b>'+esc(coverage(c))+'</b></small><i><b></b></i></em></button>';}).join('')+'</nav>';
+ h+='<section class="aov-coverage" aria-label="Assessment coverage">'+
+  '<div class="aov-metric"><span class="aov-metric-icon blue">'+icon('people')+'</span><div><small>Total employees</small><strong>'+totalEmployees+'</strong><span>Across all companies</span></div></div>'+ 
+  '<div class="aov-metric"><span class="aov-metric-icon indigo">'+icon('person')+'</span><div><small>Self assessments</small><strong>'+selfDone+'</strong><span>'+pct(selfDone,rows.length)+'% completed in view</span></div></div>'+ 
+  '<div class="aov-metric"><span class="aov-metric-icon green">'+icon('team')+'</span><div><small>Manager assessments</small><strong>'+managerDone+'</strong><span>'+pct(managerDone,rows.length)+'% completed in view</span></div></div>'+ 
+  '<div class="aov-metric"><span class="aov-metric-icon amber">'+icon('check')+'</span><div><small>Complete current-role assessments</small><strong>'+complete+'</strong><span>'+pct(complete,rows.length)+'% completed in view</span></div></div></section>';
+ h+='<section class="ar-departments"><h2>Departments'+(AR.company?' in '+esc(AR.company):'')+'</h2><div>'+arButton('department','All departments','',''+(!AR.department?'ar-primary':''))+((d.departments||[]).filter(function(x){return !AR.company||x.company===AR.company;}).map(function(x){return arButton('department',x.department+' ('+x.employees+')',x.department,AR.department===x.department?'ar-primary':'');}).join(''))+'</div></section>';
+ h+='<p class="ar-crumb">'+esc(AR.company||'All companies')+' / '+esc(AR.department||'All departments')+'</p>';
+ h+='<section class="ar-register"><header><span class="aov-register-title">Employee assessment register<small>Review self, manager, current-role, and prospective-role progress.</small></span></header>';
+ h+='<div class="ar-tools"><label>Find employee<input id="arSearch" type="search" placeholder="Name, ID or position..." value="'+esc(AR.search)+'"></label><label>Assessment status<select id="arState">'+arOptions(rows.flatMap(function(r){return [r.current_self.state,r.current_manager.state,r.prospective_self.state,r.prospective_manager.state];}),AR.state,'All statuses')+'</select></label><label>HR review<select id="arReview">'+arOptions(rows.flatMap(function(r){return [r.current_self.review,r.current_manager.review,r.prospective_self.review,r.prospective_manager.review];}),AR.review,'All reviews')+'</select></label><label>Prospective role<select id="arTarget">'+arOptions(rows.flatMap(function(r){return r.targets;}),AR.target,'Automatic when only one target')+'</select></label></div>';
+ h+='<p class="ar-note">Self and Manager scores are separate assessment components. Final role scores require both matching submissions and resolved HR review.</p>';
+ h+='<div class="ar-table-wrap"><table class="ar-table aov-table"><thead><tr><th>Employee</th><th>Department</th><th>Current role score</th><th>Prospective role score</th><th>Assessment status</th><th>HR review</th><th>Actions</th></tr></thead><tbody>';
+ rows.slice(AR.page*AR.size,(AR.page+1)*AR.size).forEach(function(r){var st=stateText(r),review=reviewText(r),target=r.target?arE(r.target):'Not invited';h+='<tr><td class="ar-person"><strong>'+esc(r.name)+'</strong><span>'+esc(r.position)+'</span><small>'+esc(r.employee_id)+'</small></td><td>'+esc(r.department||'Not assigned')+'</td><td>'+scoreCell(r.current_final,'current')+'<small>Self '+esc(score(r.current_self.score))+' | Manager '+esc(score(r.current_manager.score))+'</small></td><td>'+scoreCell(r.prospective_final,'prospective')+'<small>'+target+'</small></td><td><span class="aov-status '+stateClass(st)+'">'+esc(st)+'</span></td><td><span class="aov-review '+(review==='Reviewed'?'reviewed':'')+'">'+esc(review)+'</span></td><td><div class="ar-actions">'+arButton('view','View',r.employee_id,'ar-primary')+arButton('pdf','PDF',r.employee_id)+'</div></td></tr>';});
+ h+='</tbody></table></div>'+(!rows.length?'<div class="ar-empty"><h3>'+(!AR.rows.length?(d.hohr_filtered?'No employees in the submitted-report scope':'No employees or assessments yet'):'No matching employees')+'</h3><p>Change the filters to see other records.</p></div>':'')+'<footer class="ar-pagination"><span>'+rows.length+' matching employees | Page '+(AR.page+1)+' of '+Math.max(1,Math.ceil(rows.length/AR.size))+'</span><div>'+arButton('prev','Previous')+arButton('next','Next')+'</div></footer><p id="arStatus" role="status"></p></section>';
+ root.innerHTML=h;root.querySelector('[data-ar="prev"]').disabled=AR.page===0;root.querySelector('[data-ar="next"]').disabled=(AR.page+1)*AR.size>=rows.length;
 }
 loadHRAll=async function(){
  var identity=arIdentity();if(!APP.user||!['hr','hohr'].includes(APP.currentRole))return;
@@ -22761,7 +22930,10 @@ document.addEventListener('click',async e=>{
  if(a==='refresh')return loadHRAll();
  if(AR.busy)return;
  try{
-  if(a==='company'||a==='department'){if(typeof wcBeforeLeave==='function'&&!(await wcBeforeLeave()))return;document.getElementById('hrAllContent')?.replaceChildren();if(a==='company'){AR.company=v;AR.department='';}else AR.department=v;AR.target='';await arLoad();return;}
+  if(a==='overview-tab'){AR.tab='overview';AR.page=0;arRender();return;}
+  if(a==='register-tab'){AR.tab='register';AR.page=0;arRender();return;}
+  if(a==='company'||a==='department'){
+  if(a==='company')AR.tab='register';if(typeof wcBeforeLeave==='function'&&!(await wcBeforeLeave()))return;document.getElementById('hrAllContent')?.replaceChildren();if(a==='company'){AR.company=v;AR.department='';}else AR.department=v;AR.target='';await arLoad();return;}
   if(a==='prev'||a==='next'){AR.page+=a==='next'?1:-1;arRender();return;}
   if(a==='delete')return sdOpen(v,AR.rows.find(r=>r.employee_id===v)?.name);
   b.disabled=true;
@@ -22781,8 +22953,102 @@ document.addEventListener('input',e=>{if(e.target.id!=='arSearch')return;var car
 var arOldPrint=printReport,arOldEmail=emailReport;
 printReport=function(id){return document.getElementById('arRoot')?arPDF(id):arOldPrint.apply(this,arguments);};
 emailReport=function(id){return document.getElementById('arRoot')?arEmail(id):arOldEmail.apply(this,arguments);};
-
 </script>
+<style id="cms-all-assessments-two-tabs-style-v1">
+#arRoot .aov-tabs{display:flex;gap:8px;margin:0 0 16px;padding:0;border-bottom:1px solid #d9e3f2}
+#arRoot .aov-tab{border:0;border-bottom:3px solid transparent;background:transparent;color:#647793;padding:11px 18px;font:700 13px/1.3 Inter,system-ui,sans-serif;cursor:pointer}
+#arRoot .aov-tab.active{border-bottom-color:#4338ca;color:#2439a4}
+#arRoot .aov-tab:focus-visible{outline:3px solid #7c9cf4;outline-offset:2px}
+#arRoot .aov-company-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:0 0 16px}
+#arRoot .aov-company-grid .ar-company{display:grid;grid-template-columns:34px 1fr;gap:4px 10px;min-height:150px;padding:14px 12px;border-top:4px solid var(--unit);border-radius:10px;background:#fff;text-align:left}
+#arRoot .aov-company-grid .tone-0{--unit:#4f46e5;background:#f5f5ff}
+#arRoot .aov-company-grid .tone-1{--unit:#128368;background:#f0f9f5}
+#arRoot .aov-company-grid .tone-2{--unit:#bb6613;background:#fff8ed}
+#arRoot .aov-company-grid .tone-3{--unit:#b84454;background:#fff4f5}
+#arRoot .aov-company-grid .ar-building{grid-row:1/5;display:grid;place-items:center;width:34px;height:34px;color:var(--unit);font-size:0}
+#arRoot .aov-company-grid .ar-building svg{width:28px;height:28px}
+#arRoot .aov-company-grid .ar-company strong{font-size:17px;color:#172e6a}
+#arRoot .aov-company-grid .ar-company span:not(.ar-building),#arRoot .aov-company-grid .ar-company small{grid-column:2;font-size:12px}
+#arRoot .aov-company-grid .aov-company-coverage{grid-column:2;display:block;margin-top:4px;font-style:normal}
+#arRoot .aov-company-grid .aov-company-coverage small{display:flex;justify-content:space-between;color:#60718e;font-size:10px}
+#arRoot .aov-company-grid .aov-company-coverage i{display:block;height:6px;margin-top:4px;border-radius:99px;background:#e4e9f1;overflow:hidden}
+#arRoot .aov-company-grid .aov-company-coverage i b{display:block;height:100%;border-radius:inherit;background:var(--unit);width:var(--coverage,0%)}
+#arRoot .aov-coverage{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:0;margin:0 0 16px;padding:12px 16px;background:#fff;border:1px solid #d9e3f2;border-radius:12px;box-shadow:0 3px 12px #1c3b7d12}
+#arRoot .aov-metric{display:flex;align-items:center;gap:10px;padding:6px 18px;border-right:1px solid #e4eaf3}
+#arRoot .aov-metric:last-child{border-right:0}
+#arRoot .aov-metric-icon{display:grid;place-items:center;flex:0 0 38px;width:38px;height:38px;border-radius:50%;background:#edf0ff;color:#5146d8;font-size:0}
+#arRoot .aov-metric-icon svg{width:21px;height:21px}
+#arRoot .aov-metric-icon.green{background:#e8f8ef;color:#16845d}
+#arRoot .aov-metric-icon.amber{background:#fff3df;color:#d98512}
+#arRoot .aov-metric small{display:block;color:#667793;font-size:11px;font-weight:700;white-space:nowrap}
+#arRoot .aov-metric strong{display:block;margin-top:2px;color:#172e6a;font-size:22px;line-height:1}
+#arRoot .aov-metric span{display:block;margin-top:3px;color:#8491a8;font-size:10px}
+#arRoot .aov-info{padding:14px 16px;border:1px solid #9bc1fa;border-radius:10px;background:#eff6ff;color:#294d88;font-size:13px}
+#arRoot .aov-info strong{display:block;color:#193b7d;margin-bottom:3px}
+@media(max-width:1000px){#arRoot .aov-company-grid{grid-template-columns:repeat(2,minmax(0,1fr))}#arRoot .aov-coverage{grid-template-columns:repeat(2,minmax(0,1fr))}#arRoot .aov-metric:nth-child(2){border-right:0}}
+@media(max-width:600px){#arRoot .aov-company-grid,#arRoot .aov-coverage{grid-template-columns:1fr}#arRoot .aov-metric{border-right:0;border-bottom:1px solid #e4eaf3}#arRoot .aov-metric:last-child{border-bottom:0}}
+</style>
+<style id="cms-all-assessments-final-style-v1">
+#arRoot{max-width:1500px!important;font:14px/1.5 Inter,system-ui,sans-serif!important;color:#223351}
+#arRoot .ar-heading{margin:0 0 14px!important;align-items:flex-end}
+#arRoot .ar-heading h1{font-size:25px!important;line-height:1.2!important}
+#arRoot .ar-heading p{margin:4px 0 0!important;color:#3d557c!important}
+#arRoot .aov-company-grid{display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px!important;margin:0 0 10px!important}
+#arRoot .aov-company-grid .ar-company{display:grid!important;grid-template-columns:34px 1fr!important;gap:3px 10px!important;min-height:136px!important;padding:14px 12px!important;border-top:4px solid var(--unit)!important;border-radius:10px!important;background:#fff!important;text-align:left!important}
+#arRoot .aov-company-grid .ar-company.tone-0{--unit:#4f46e5;background:#f5f5ff!important}
+#arRoot .aov-company-grid .ar-company.tone-1{--unit:#128368;background:#f0f9f5!important}
+#arRoot .aov-company-grid .ar-company.tone-2{--unit:#bb6613;background:#fff8ed!important}
+#arRoot .aov-company-grid .ar-company.tone-3{--unit:#b84454;background:#fff4f5!important}
+#arRoot .ar-building{grid-row:1/5!important;display:grid!important;place-items:center!important;width:34px!important;height:34px!important;color:var(--unit)!important;font-size:0!important}
+#arRoot .ar-building svg{width:28px!important;height:28px!important;display:block!important}
+#arRoot .ar-company strong{font-size:17px!important;color:#172e6a!important}
+#arRoot .ar-company span:not(.ar-building),#arRoot .ar-company small{grid-column:2!important;font-size:12px!important}
+#arRoot .aov-company-coverage{grid-column:2!important;display:block!important;margin-top:4px!important;font-style:normal!important}
+#arRoot .aov-company-coverage small{display:flex!important;justify-content:space-between!important;color:#60718e!important;font-size:10px!important}
+#arRoot .aov-company-coverage i{display:block!important;height:6px!important;margin-top:4px!important;border-radius:99px!important;background:#e4e9f1!important;overflow:hidden!important}
+#arRoot .aov-company-coverage i b{display:block!important;height:100%!important;border-radius:inherit!important;background:var(--unit)!important;width:0!important}
+#arRoot .aov-coverage{display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr));gap:0!important;margin:0 0 16px!important;padding:12px 16px!important;background:#fff!important;border:1px solid #d9e3f2!important;border-radius:12px!important;box-shadow:0 3px 12px #1c3b7d12!important}
+#arRoot .aov-metric{display:flex!important;align-items:center!important;gap:10px!important;padding:6px 18px!important;border-right:1px solid #e4eaf3!important}
+#arRoot .aov-metric:last-child{border-right:0!important}
+#arRoot .aov-metric-icon{display:grid!important;place-items:center!important;flex:0 0 38px!important;width:38px!important;height:38px!important;border-radius:50%!important;background:#edf0ff!important;color:#5146d8!important;font-size:0!important}
+#arRoot .aov-metric-icon svg{width:21px!important;height:21px!important}
+#arRoot .aov-metric-icon.green{background:#e8f8ef!important;color:#16845d!important}
+#arRoot .aov-metric-icon.amber{background:#fff3df!important;color:#d98512!important}
+#arRoot .aov-metric small{display:block!important;color:#667793!important;font-size:11px!important;font-weight:700!important;white-space:nowrap!important}
+#arRoot .aov-metric strong{display:block!important;margin-top:2px!important;color:#172e6a!important;font-size:22px!important;line-height:1!important}
+#arRoot .aov-metric span{display:block!important;margin-top:3px!important;color:#8491a8!important;font-size:10px!important}
+#arRoot .ar-departments{margin:12px 0 8px!important}
+#arRoot .ar-departments h2{margin:0 0 6px!important;font-size:18px!important}
+#arRoot .ar-crumb{margin:6px 0 10px!important;color:#35458c!important;font-weight:700!important}
+#arRoot .ar-register{overflow:hidden!important}
+#arRoot .ar-register>header{display:block!important;padding:10px 14px!important;font-size:16px!important}
+#arRoot .aov-register-title{display:block!important;color:#fff!important;font-weight:800!important}
+#arRoot .aov-register-title small{display:block!important;margin-top:2px!important;color:#d5e1fa!important;font-size:11px!important;font-weight:400!important}
+#arRoot .ar-tools{grid-template-columns:1.4fr 1fr 1fr 1.2fr!important;padding:12px!important;gap:10px!important}
+#arRoot .ar-note{padding:5px 14px!important;margin:0!important;font-size:12px!important}
+#arRoot .aov-table{width:100%!important;min-width:0!important;table-layout:fixed!important}
+#arRoot .aov-table th,#arRoot .aov-table td{padding:10px 8px!important;font-size:12px!important;line-height:1.35!important;white-space:normal!important;vertical-align:top!important}
+#arRoot .aov-table th:nth-child(1){width:19%}#arRoot .aov-table th:nth-child(2){width:12%}#arRoot .aov-table th:nth-child(3){width:17%}#arRoot .aov-table th:nth-child(4){width:17%}#arRoot .aov-table th:nth-child(5){width:13%}#arRoot .aov-table th:nth-child(6){width:11%}#arRoot .aov-table th:nth-child(7){width:11%}
+#arRoot .aov-table .ar-person{position:static!important;min-width:0!important}
+#arRoot .aov-table .ar-person strong{font-size:12px!important;color:#102a52!important}
+#arRoot .aov-table .ar-person span,#arRoot .aov-table small{display:block!important;margin-top:3px!important;font-size:10px!important;color:#61708a!important}
+#arRoot .aov-score{display:block!important;min-width:92px!important}
+#arRoot .aov-score>strong{display:block!important;color:#1e3a8a!important;font-size:13px!important}
+#arRoot .aov-score i{display:block!important;width:72px!important;height:6px!important;margin-top:4px!important;border-radius:99px!important;background:#e2e7f0!important;overflow:hidden!important}
+#arRoot .aov-score i b{display:block!important;height:100%!important;background:#5146d8!important;border-radius:inherit!important}
+#arRoot .aov-score i.prospective b{background:#e28a16!important}
+#arRoot .aov-score-awaiting{color:#6b7e9f!important;font-weight:700!important}
+#arRoot .aov-status,#arRoot .aov-review{display:inline-block!important;padding:4px 7px!important;border-radius:12px!important;font-size:10px!important;font-weight:700!important;white-space:nowrap!important;background:#eef1f6!important;color:#61708a!important}
+#arRoot .aov-status.complete{background:#e8f8ef!important;color:#08754d!important}
+#arRoot .aov-status.progress{background:#eaf2ff!important;color:#245ac6!important}
+#arRoot .aov-status.awaiting{background:#fff3df!important;color:#a75b00!important}
+#arRoot .aov-review.reviewed{background:#e8f8ef!important;color:#08754d!important}
+#arRoot .ar-actions{display:grid!important;grid-template-columns:1fr!important;gap:3px!important;min-width:0!important}
+#arRoot .ar-actions .ar-button{width:100%!important;margin:0!important;min-height:30px!important;padding:5px 7px!important;font-size:11px!important}
+#arRoot .ar-table-wrap{margin:6px 10px!important;overflow-x:auto!important}
+@media(max-width:1000px){#arRoot .aov-company-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}#arRoot .aov-coverage{grid-template-columns:repeat(2,minmax(0,1fr))!important}#arRoot .aov-metric:nth-child(2){border-right:0!important}}
+@media(max-width:600px){#arRoot .aov-company-grid,#arRoot .aov-coverage{grid-template-columns:1fr!important}#arRoot .aov-metric{border-right:0!important;border-bottom:1px solid #e4eaf3!important}#arRoot .aov-metric:last-child{border-bottom:0!important}}
+</style>
 <!-- Paste ONCE before the LAST </body>, after the Classic All Assessments module. -->
 <style id="cms-compact-register-excel">
 #arRoot .ar-heading{margin-bottom:10px;gap:10px}
@@ -31803,6 +32069,106 @@ body.role-hr #downloadDevelopmentPlanBar button:focus-visible{outline:3px solid 
  #fwScreen.cms-approval-reference > .apr-wave{width:calc(100% + 28px);margin:16px -14px -14px}
 }
 </style>
+<style id="cms-approval-dashboard-overview-style-v1">
+#fwScreen.cms-approval-dashboard-v1{font-family:"Segoe UI",Inter,Roboto,Arial,sans-serif;padding:24px!important;background:#fff;color:#172b5d}
+#fwScreen.cms-approval-dashboard-v1:not(.cad-detail)>.apr-hero,
+#fwScreen.cms-approval-dashboard-v1:not(.cad-detail)>.apr-notice,
+#fwScreen.cms-approval-dashboard-v1:not(.cad-detail)>.apr-wave,
+#fwScreen.cms-approval-dashboard-v1:not(.cad-detail)>#fwChoice,
+#fwScreen.cms-approval-dashboard-v1:not(.cad-detail)>#fwBody{display:none!important}
+#fwScreen.cms-approval-dashboard-v1.cad-detail>.cad-overview{display:none!important}
+#fwScreen.cms-approval-dashboard-v1 .cad-overview{display:block}
+#fwScreen.cms-approval-dashboard-v1 .cad-hero{display:flex;align-items:center;justify-content:space-between;gap:24px;padding:22px 24px;margin:0 0 16px;border:1px solid #d8e2f4;border-radius:12px;background:linear-gradient(110deg,#fff 0%,#f8fbff 100%);box-shadow:0 4px 14px #193b7d0d}
+#fwScreen.cms-approval-dashboard-v1 .cad-hero-copy{display:flex;align-items:center;gap:18px;min-width:0}
+#fwScreen.cms-approval-dashboard-v1 .cad-hero-icon{display:grid;place-items:center;flex:0 0 58px;width:58px;height:58px;border-radius:50%;background:#e6eaff;color:#1c3ca3}
+#fwScreen.cms-approval-dashboard-v1 .cad-hero-icon svg{width:34px;height:34px}
+#fwScreen.cms-approval-dashboard-v1 .cad-hero h2{margin:0 0 5px;color:#172e6a;font-size:25px;line-height:1.25}
+#fwScreen.cms-approval-dashboard-v1 .cad-hero p{margin:0;color:#65789e;font-size:14px}
+#fwScreen.cms-approval-dashboard-v1 .cad-guide{max-width:360px;padding:14px 16px;border-left:4px solid #4378ee;border-radius:8px;background:#edf3ff;color:#304c87;font-size:13px;line-height:1.45}
+#fwScreen.cms-approval-dashboard-v1 .cad-guide strong{display:block;margin-bottom:4px;color:#183278}
+#fwScreen.cms-approval-dashboard-v1 .cad-metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:16px}
+#fwScreen.cms-approval-dashboard-v1 .cad-metric{display:flex;align-items:center;gap:12px;min-width:0;padding:14px;border:1px solid #e0e7f2;border-left:4px solid var(--cad-accent);border-radius:10px;background:#fff;box-shadow:0 3px 10px #193b7d0b}
+#fwScreen.cms-approval-dashboard-v1 .cad-metric-icon{display:grid;place-items:center;flex:0 0 40px;width:40px;height:40px;border-radius:50%;background:var(--cad-tint);color:var(--cad-accent)}
+#fwScreen.cms-approval-dashboard-v1 .cad-metric-icon svg{width:22px;height:22px}
+#fwScreen.cms-approval-dashboard-v1 .cad-metric small{display:block;color:#65789e;font-size:11px;font-weight:700;line-height:1.25}
+#fwScreen.cms-approval-dashboard-v1 .cad-metric strong{display:block;margin-top:3px;color:#183278;font-size:24px;line-height:1}
+#fwScreen.cms-approval-dashboard-v1 .cad-metric span{display:block;margin-top:4px;color:#8290aa;font-size:11px}
+#fwScreen.cms-approval-dashboard-v1 .cad-queue{border:1px solid #dce5f2;border-radius:12px;background:#fff;box-shadow:0 4px 14px #193b7d0d;overflow:hidden}
+#fwScreen.cms-approval-dashboard-v1 .cad-queue-head{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:16px 18px;border-bottom:1px solid #e8edf5}
+#fwScreen.cms-approval-dashboard-v1 .cad-queue-head h3{margin:0;color:#172e6a;font-size:17px}
+#fwScreen.cms-approval-dashboard-v1 .cad-queue-head p{margin:4px 0 0;color:#65789e;font-size:12px}
+#fwScreen.cms-approval-dashboard-v1 .cad-count{padding:6px 10px;border-radius:20px;background:#eef3ff;color:#3156b7;font-size:12px;font-weight:700;white-space:nowrap}
+#fwScreen.cms-approval-dashboard-v1 .cad-table-wrap{overflow:auto}
+#fwScreen.cms-approval-dashboard-v1 .cad-table{width:100%;min-width:780px;border-collapse:collapse;font-size:12px}
+#fwScreen.cms-approval-dashboard-v1 .cad-table th{padding:11px 14px;background:#f6f8fc;color:#627393;font-size:10px;text-align:left;text-transform:uppercase;letter-spacing:.35px;white-space:nowrap}
+#fwScreen.cms-approval-dashboard-v1 .cad-table td{padding:12px 14px;border-top:1px solid #edf1f6;color:#354a72;vertical-align:middle}
+#fwScreen.cms-approval-dashboard-v1 .cad-table td strong{color:#1c3671}
+#fwScreen.cms-approval-dashboard-v1 .cad-status{display:inline-block;padding:5px 9px;border-radius:14px;background:#fff4df;color:#a75b00;font-size:11px;font-weight:700;white-space:nowrap}
+#fwScreen.cms-approval-dashboard-v1 .cad-status.approved{background:#e8f8ef;color:#08754d}
+#fwScreen.cms-approval-dashboard-v1 .cad-status.returned{background:#fff0f1;color:#b42332}
+#fwScreen.cms-approval-dashboard-v1 .cad-status.submitted{background:#eaf2ff;color:#245ac6}
+#fwScreen.cms-approval-dashboard-v1 .cad-review{padding:7px 13px;border:1px solid #7894dd;border-radius:7px;background:#fff;color:#23499f;font:inherit;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap}
+#fwScreen.cms-approval-dashboard-v1 .cad-review:hover{background:#eef3ff}
+#fwScreen.cms-approval-dashboard-v1 .cad-empty{padding:32px 18px;color:#65789e;font-size:13px;text-align:center}
+@media(max-width:800px){#fwScreen.cms-approval-dashboard-v1 .cad-hero{align-items:flex-start;flex-direction:column}.cad-guide{max-width:none!important;width:100%}#fwScreen.cms-approval-dashboard-v1 .cad-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:520px){#fwScreen.cms-approval-dashboard-v1{padding:14px!important}#fwScreen.cms-approval-dashboard-v1 .cad-metrics{grid-template-columns:1fr}#fwScreen.cms-approval-dashboard-v1 .cad-hero h2{font-size:21px}}
+</style>
+<script id="cms-approval-dashboard-overview-script-v1">
+(function(){
+ 'use strict';
+ if(window.__cmsApprovalDashboardOverviewV1)return;
+ window.__cmsApprovalDashboardOverviewV1=true;
+ function el(tag,cls,text){var n=document.createElement(tag);if(cls)n.className=cls;if(text!=null)n.textContent=text;return n;}
+ function icon(kind){var s=document.createElementNS('http://www.w3.org/2000/svg','svg');s.setAttribute('viewBox','0 0 24 24');s.setAttribute('fill','none');s.setAttribute('stroke','currentColor');s.setAttribute('stroke-width','1.8');s.setAttribute('stroke-linecap','round');s.setAttribute('stroke-linejoin','round');s.innerHTML=kind==='stack'?'<path d="m3 7 9-4 9 4-9 4-9-4Z"/><path d="m3 12 9 4 9-4M3 17l9 4 9-4"/>':kind==='clock'?'<circle cx="12" cy="12" r="8"/><path d="M12 7v5l3 2"/>':kind==='check'?'<circle cx="12" cy="12" r="8"/><path d="m8 12 3 3 5-6"/>':'<path d="m19 5-2-2-9 9-1 4 4-1 9-9Z"/><path d="m14 6 4 4"/>';return s;}
+ function text(v){return String(v==null?'':v).trim();}
+ function queue(){return Array.isArray(window.cmsApprovalQueueV1)?window.cmsApprovalQueueV1:[];}
+ function label(r){return text(r.label||r.framework_label||r.position_label)||(text(r.department)?text(r.department)+' / '+text(r.position||r.position_name):'Company-wide Core');}
+ function field(r,names){for(var i=0;i<names.length;i++)if(text(r[names[i]]))return text(r[names[i]]);return '';}
+ function status(r){var v=field(r,['status','state','review_status','approval_status']).toLowerCase();if(v.indexOf('return')>=0||v.indexOf('reject')>=0||v.indexOf('change')>=0)return {label:'Returned for updates',cls:'returned'};if(v.indexOf('approv')>=0||v.indexOf('publish')>=0)return {label:'Approved',cls:'approved'};if(v.indexOf('submit')>=0)return {label:'Submitted',cls:'submitted'};return {label:'Awaiting review',cls:''};}
+ function date(r){var v=field(r,['submitted_date','submitted_at','created_at','updated_at']);if(!v)return 'Not available';var d=new Date(v);return Number.isNaN(d.getTime())?v:d.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});}
+ function metric(parent,kind,label,value,note,accent,tint){var m=el('div','cad-metric');m.style.setProperty('--cad-accent',accent);m.style.setProperty('--cad-tint',tint);var i=el('span','cad-metric-icon');i.append(icon(kind));var d=el('div');d.append(el('small',null,label),el('strong',null,String(value)),el('span',null,note));m.append(i,d);parent.append(m);}
+ function review(id,labelText){var select=document.getElementById('fwRevisionChoice');if(!select)return;var option=Array.from(select.options).find(function(o){return String(o.value)===String(id)||o.textContent.trim()===labelText;});if(!option)return;select.value=option.value;select.dispatchEvent(new Event('change',{bubbles:true}));}
+ function render(){
+  var screen=document.getElementById('fwScreen'),select=document.getElementById('fwRevisionChoice');
+  if(!screen||!select||typeof FW==='undefined'||FW.mode!=='review')return;
+  screen.classList.add('cms-approval-dashboard-v1');
+  var detail=!!select.value;
+  screen.classList.toggle('cad-detail',detail);
+  var old=screen.querySelector('.cad-overview');
+  if(detail){
+   if(old)old.remove();
+   return;
+  }
+  if(old)return;
+  var rows=queue(),approved=rows.filter(function(r){return status(r).cls==='approved';}).length,returned=rows.filter(function(r){return status(r).cls==='returned';}).length,submitted=rows.filter(function(r){return status(r).cls==='submitted';}).length,awaiting=rows.length-approved-returned-submitted;
+  var root=el('section','cad-overview');
+  var hero=el('header','cad-hero'),copy=el('div','cad-hero-copy'),hi=el('div','cad-hero-icon');hi.append(icon('stack'));var hc=el('div');hc.append(el('h2',null,'Competency Approvals & Publication'),el('p',null,'Review, approve, and publish competency frameworks with confidence.'));copy.append(hi,hc);var guide=el('aside','cad-guide');guide.append(el('strong',null,'Approval workflow'),el('span',null,'Approve each experience, then publish the complete position in one action.'));hero.append(copy,guide);root.append(hero);
+  var metrics=el('div','cad-metrics');metric(metrics,'stack','Submitted frameworks',rows.length,'Newly submitted','#2f6fec','#eaf2ff');metric(metrics,'clock','Awaiting review',awaiting,'Pending your review','#e09a14','#fff4df');metric(metrics,'check','Approved',approved,'Approved or published','#1c9a62','#e8f8ef');metric(metrics,'edit','Returned for updates',returned,'Sent back for revision','#d94b54','#fff0f1');root.append(metrics);
+  var box=el('section','cad-queue'),head=el('div','cad-queue-head'),hc2=el('div');hc2.append(el('h3',null,'Approval queue'),el('p',null,'Review submitted competency frameworks and take action.'));head.append(hc2,el('span','cad-count',rows.length+' framework'+(rows.length===1?'':'s')));box.append(head);
+  var wrap=el('div','cad-table-wrap'),table=el('table','cad-table'),thead=el('thead'),tr=el('tr');['Framework','Submitted by','Submitted date','Status','Action'].forEach(function(v){tr.append(el('th',null,v));});thead.append(tr);table.append(thead);var body=el('tbody');
+  if(!rows.length){var empty=el('div','cad-empty','No submitted frameworks. Private drafts do not appear here.');box.append(empty);}else{rows.forEach(function(r){var row=el('tr'),lab=label(r),st=status(r),id=r.id||r.revision_id||r.framework_id;row.append(el('td',null,lab),el('td',null,field(r,['submitted_by_name','submitted_by','created_by'])||'Not available'),el('td',null,date(r)));var td=el('td');td.append(el('span','cad-status '+st.cls,st.label));row.append(td);var act=el('td'),b=el('button','cad-review','Review');b.type='button';b.onclick=function(){review(id,lab);};act.append(b);row.append(act);body.append(row);});table.append(body);wrap.append(table);box.append(wrap);}root.append(box);screen.insertBefore(root,screen.firstChild);
+ }
+  window.cmsRenderApprovalDashboardV1=render;
+ function start(){
+   var target=document.getElementById('mainContent')||document.body;
+   var scheduled=false;
+   function schedule(){
+    if(scheduled)return;
+    scheduled=true;
+    queueMicrotask(function(){scheduled=false;render();});
+   }
+   new MutationObserver(function(records){
+    var relevant=records.some(function(record){
+     return record.type==='attributes' && record.target.id==='fwRevisionChoice';
+    });
+    if(relevant)schedule();
+   }).observe(target,{attributes:true,subtree:true,attributeFilter:['value']});
+   target.addEventListener('change',schedule);
+   render();
+  }
+ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start,{once:true});else start();
+})();
+</script>
 <script id="cms-development-interface-v1">
 (function () {
  'use strict';
@@ -33968,6 +34334,7 @@ const st=document.createElement('style');st.id='cms-manager-tabs-style-v1';st.te
 #cmsLibraryBrowserV1[data-company-page="detail"]>.clb-heading,
 #cmsLibraryBrowserV1[data-company-page="detail"]>.clb-cards,
 #cmsLibraryBrowserV1[data-company-page="detail"]>.clb-extras{display:none!important}
+#cmsLibraryBrowserV1[data-company-page="detail"]>.clo2-overview{display:none!important}
 #cmsLibraryBrowserV1>.clb-page-nav{
  display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;
  gap:14px;margin:0 0 20px;
@@ -33998,7 +34365,12 @@ const st=document.createElement('style');st.id='cms-manager-tabs-style-v1';st.te
   var root=document.getElementById('cmsLibraryBrowserV1');
   var screen=document.getElementById('fwScreen');
   var source=document.getElementById('fwPositionChoice');
-  if(!root||!screen||!source||root.dataset.companyPage)return;
+  if(!root||!screen||!source)return;
+  if(root.dataset.companyPage==='detail'&&!root.querySelector('.clb-page-nav')){
+   root.dataset.companyPage='home';
+   screen.classList.add('cms-library-company-home-v1');
+  }
+  if(root.dataset.companyPage&&root.querySelector('.clb-page-nav'))return;
   var panel=root.querySelector('.clb-panel'),badge=root.querySelector('.clb-badge');
   if(!panel||!badge||typeof source.onchange!=='function')return;
   var key=JSON.stringify([APP.currentRole,APP.currentPage,APP.user&&APP.user.email]);
@@ -34017,10 +34389,14 @@ const st=document.createElement('style');st.id='cms-manager-tabs-style-v1';st.te
    var name=badge.textContent.replace(/^Selected company:\s*/,'').trim();
    title.textContent=name==='Company-wide Core'||name==='Company not mapped'?name:name+' Competency Library';
    root.dataset.companyPage='detail';screen.classList.remove('cms-library-company-home-v1');
-   if(focus){title.focus({preventScroll:true});nav.scrollIntoView({block:'nearest',behavior:'auto'});}
+    if(focus){
+    title.focus({preventScroll:true});
+    screen.scrollIntoView({block:'start',behavior:'auto'});
+   }
   }
   function showHome(){
-   root.dataset.companyPage='home';screen.classList.add('cms-library-company-home-v1');
+   root.dataset.companyPage='home';
+   screen.classList.add('cms-library-company-home-v1');
   }
   function blocked(){
    if(FW.busy){if(typeof showToast==='function')showToast('Please wait for the current framework operation.');return true;}
@@ -34064,6 +34440,16 @@ const st=document.createElement('style');st.id='cms-manager-tabs-style-v1';st.te
    }finally{working=false;returning=false;}
   };
   if(source.value&&FW.position)showDetail(false);else showHome();
+  window.cmsOpenCompanyPageV1=async function(name){
+   if(!current())return false;
+   var button=Array.from(root.querySelectorAll('.clb-company')).find(function(b){
+    var label=b.querySelector('strong');
+    return label&&label.textContent.trim()===String(name||'').trim();
+   });
+   if(!button||typeof button.onclick!=='function')return false;
+   await button.onclick.call(button,{type:'click',target:button,currentTarget:button});
+   return root.dataset.companyPage==='detail';
+  };
  }
  function start(){
   var pending=false;
@@ -34079,6 +34465,109 @@ const st=document.createElement('style');st.id='cms-manager-tabs-style-v1';st.te
 })();
 </script>
 <!-- END: CMS LIBRARY COMPANY PAGE V1 -->
+<style id="cms-library-overview-v2-style">
+#cmsLibraryBrowserV1.clo2-ready{color:#142653}
+#cmsLibraryBrowserV1 .clo2-overview{margin:0 0 22px}
+#cmsLibraryBrowserV1 .clo2-title-row{display:flex;justify-content:space-between;align-items:center;gap:18px;margin:0 0 20px}
+#cmsLibraryBrowserV1 .clo2-title{display:flex;align-items:center;gap:14px}
+#cmsLibraryBrowserV1 .clo2-title-icon{width:48px;height:48px;display:grid;place-items:center;border-radius:12px;background:#eef2ff;color:#4338ca}
+#cmsLibraryBrowserV1 .clo2-title-icon svg{width:30px;height:30px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+#cmsLibraryBrowserV1 .clo2-title h2{margin:0;color:#142653;font-size:28px;line-height:1.15}
+#cmsLibraryBrowserV1 .clo2-title p{margin:5px 0 0;color:#65789e;font-size:13px}
+#cmsLibraryBrowserV1 .clo2-actions{display:flex;gap:8px;flex-wrap:wrap}
+#cmsLibraryBrowserV1 .clo2-action{border:1px solid #c4d2eb;border-radius:8px;background:#fff;color:#2446a0;padding:9px 13px;font:inherit;font-size:12px;font-weight:800;cursor:pointer}
+#cmsLibraryBrowserV1 .clo2-action.primary{background:#4338ca;color:#fff;border-color:#4338ca}
+#cmsLibraryBrowserV1 .clo2-metrics{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));margin-bottom:18px;background:#fff;border:1px solid #d5def0;border-radius:12px;box-shadow:0 4px 14px #1c315b12;overflow:hidden}
+#cmsLibraryBrowserV1 .clo2-metric{display:flex;align-items:center;gap:10px;padding:17px 15px;border-right:1px solid #d5def0}
+#cmsLibraryBrowserV1 .clo2-metric:last-child{border-right:0}
+#cmsLibraryBrowserV1 .clo2-metric-icon{width:34px;height:34px;display:grid;place-items:center;flex:0 0 34px;border-radius:50%;background:#eef2ff;color:#4338ca}
+#cmsLibraryBrowserV1 .clo2-metric:nth-child(2) .clo2-metric-icon{background:#e9f8fa;color:#0891a4}
+#cmsLibraryBrowserV1 .clo2-metric:nth-child(3) .clo2-metric-icon{background:#f3edff;color:#7c3aed}
+#cmsLibraryBrowserV1 .clo2-metric:nth-child(4) .clo2-metric-icon{background:#fff6e7;color:#d58a09}
+#cmsLibraryBrowserV1 .clo2-metric:nth-child(5) .clo2-metric-icon{background:#eaf3ff;color:#2563eb}
+#cmsLibraryBrowserV1 .clo2-metric-icon svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+#cmsLibraryBrowserV1 .clo2-metric small{display:block;color:#65789e;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.35px}
+#cmsLibraryBrowserV1 .clo2-metric strong{display:block;margin-top:4px;color:#142653;font-size:22px;line-height:1}
+#cmsLibraryBrowserV1 .clo2-metric span{display:block;margin-top:4px;color:#7183a3;font-size:10px}
+#cmsLibraryBrowserV1 .clo2-main{display:grid;grid-template-columns:minmax(0,1fr) 270px;gap:16px;align-items:start}
+#cmsLibraryBrowserV1 .clo2-card{background:#fff;border:1px solid #d5def0;border-radius:12px;box-shadow:0 4px 14px #1c315b12;overflow:hidden}
+#cmsLibraryBrowserV1 .clo2-card-head{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:16px 18px;border-bottom:1px solid #edf1f7}
+#cmsLibraryBrowserV1 .clo2-card-head h3{margin:0;color:#142653;font-size:16px}
+#cmsLibraryBrowserV1 .clo2-card-head p{margin:4px 0 0;color:#65789e;font-size:11px}
+#cmsLibraryBrowserV1 .clo2-company-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;padding:16px}
+#cmsLibraryBrowserV1 .clo2-company-card{min-width:0;padding:14px;border:1px solid var(--c);border-top:4px solid var(--c);border-radius:10px;background:linear-gradient(135deg,var(--t),#fff)}
+#cmsLibraryBrowserV1 .clo2-company-card:nth-child(1){--c:#4f46e5;--t:#eeecff}#cmsLibraryBrowserV1 .clo2-company-card:nth-child(2){--c:#0891a4;--t:#e9f8fa}#cmsLibraryBrowserV1 .clo2-company-card:nth-child(3){--c:#7c3aed;--t:#f3edff}#cmsLibraryBrowserV1 .clo2-company-card:nth-child(4){--c:#d58a09;--t:#fff6e7}
+#cmsLibraryBrowserV1 .clo2-company-name{display:flex;align-items:center;gap:8px;color:var(--c);font-size:15px;font-weight:900}
+#cmsLibraryBrowserV1 .clo2-company-name svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+#cmsLibraryBrowserV1 .clo2-company-stats{display:grid;gap:7px;margin:14px 0;color:#52678c;font-size:11px}
+#cmsLibraryBrowserV1 .clo2-company-stats strong{color:#142653;font-size:15px}
+#cmsLibraryBrowserV1 .clo2-company-view{width:100%;border:0;border-radius:7px;padding:8px;background:var(--c);color:#fff;font:inherit;font-size:11px;font-weight:800;cursor:pointer}
+#cmsLibraryBrowserV1 .clo2-status{padding:16px}
+#cmsLibraryBrowserV1 .clo2-status-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:13px 0;border-bottom:1px solid #edf1f7}
+#cmsLibraryBrowserV1 .clo2-status-row:last-child{border-bottom:0}
+#cmsLibraryBrowserV1 .clo2-status-copy{display:flex;align-items:center;gap:8px;color:#18335e;font-size:12px;font-weight:800}
+#cmsLibraryBrowserV1 .clo2-dot{width:10px;height:10px;border-radius:50%;background:#059669}.clo2-dot.draft{background:#2563eb}.clo2-dot.pending{background:#d58a09}
+#cmsLibraryBrowserV1 .clo2-status-row strong{font-size:18px;color:#142653}
+#cmsLibraryBrowserV1 .clo2-activity{margin-top:16px}
+#cmsLibraryBrowserV1 .clo2-activity-list{padding:0 18px 8px}
+#cmsLibraryBrowserV1 .clo2-activity-row{display:grid;grid-template-columns:76px minmax(0,1fr) 150px 95px;gap:10px;padding:12px 0;border-bottom:1px solid #edf1f7;align-items:center;font-size:11px}gap:10px;padding:12px 0;border-bottom:1px solid #edf1f7;align-items:center;font-size:11px}
+#cmsLibraryBrowserV1 .clo2-activity-row:last-child{border-bottom:0}
+#cmsLibraryBrowserV1 .clo2-activity-company{font-weight:800;color:#18335e}.clo2-activity-change{color:#65789e}.clo2-activity-state{justify-self:end;color:#059669;font-weight:800}
+#cmsLibraryBrowserV1 .clo2-empty{padding:20px;color:#65789e;font-size:12px}
+@media(max-width:1100px){#cmsLibraryBrowserV1 .clo2-metrics{grid-template-columns:repeat(3,1fr)}#cmsLibraryBrowserV1 .clo2-main{grid-template-columns:1fr}#cmsLibraryBrowserV1 .clo2-company-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:600px){#cmsLibraryBrowserV1 .clo2-title-row{align-items:flex-start;flex-direction:column}#cmsLibraryBrowserV1 .clo2-metrics{grid-template-columns:repeat(2,1fr)}#cmsLibraryBrowserV1 .clo2-company-grid{grid-template-columns:1fr}##cmsLibraryBrowserV1 .clo2-activity-row{grid-template-columns:1fr}
+#cmsLibraryBrowserV1 .clo2-activity-meta{color:#65789e;font-size:10px;line-height:1.45}
+#cmsLibraryBrowserV1 .clo2-activity-meta strong{display:block;color:#18335e;font-size:11px}.clo2-activity-state{justify-self:start}}
+</style>
+<script id="cms-library-overview-v2-script">
+(function(){
+ 'use strict';
+ if(window.__cmsLibraryOverviewV2)return;window.__cmsLibraryOverviewV2=true;
+ function el(t,c,v){var x=document.createElement(t);if(c)x.className=c;if(v!=null)x.textContent=v;return x;}
+ function icon(k){var s=document.createElementNS('http://www.w3.org/2000/svg','svg');s.setAttribute('viewBox','0 0 24 24');s.innerHTML={book:'<path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v17H6.5A2.5 2.5 0 0 0 4 22V5.5Z"/><path d="M4 5.5V22M8 7h8M8 11h8"/>',people:'<circle cx="9" cy="8" r="3"/><path d="M3 20v-1a6 6 0 0 1 12 0v1M17 11a3 3 0 1 1 0 6M17 20h4v-1a4 4 0 0 0-4-4"/>',core:'<circle cx="12" cy="12" r="3"/><path d="M12 2v3m0 14v3M2 12h3m14 0h3M4.9 4.9l2.1 2.1m10 10 2.1 2.1m0-14.2-2.1 2.1m-10 10-2.1 2.1"/>',roles:'<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M8 5V3h8v2M7 10h10M10 14h4"/>',draft:'<path d="M4 17.5V21h3.5L19 9.5 15.5 6 4 17.5Z"/><path d="m14 7.5 2.5 2.5"/>'}[k]||'';s.setAttribute('fill','none');s.setAttribute('stroke','currentColor');s.setAttribute('stroke-width','2');s.setAttribute('stroke-linecap','round');s.setAttribute('stroke-linejoin','round');return s;}
+ function mount(){
+  if(typeof FW==='undefined'||FW.mode!=='library')return;
+  var root=document.getElementById('cmsLibraryBrowserV1');if(!root||root.dataset.companyPage==='detail'||root.querySelector('.clo2-overview'))return;
+  var c=FW.catalogue||{},p=(c.positions||[]).filter(function(x){return x.live_version;}),comps=c.competencies||[],func=comps.filter(function(x){return /functional/i.test(String(x.category||''));}).length,core=comps.length-func;
+  var o=el('section','clo2-overview'),row=el('div','clo2-title-row'),title=el('div','clo2-title'),ti=el('span','clo2-title-icon');
+ti.append(icon('book'));title.append(ti);
+var tc=el('div');tc.append(el('h2',null,'Competency Library'),el('p',null,'Manage and maintain competency frameworks across Kenafric.'));title.append(tc);row.append(title);
+var actions=el('div','clo2-actions'),search=el('button','clo2-action','Search competencies'),view=el('button','clo2-action','View published framework'),draft=el('button','clo2-action primary','Manage draft');
+search.onclick=function(){var q=prompt('Search competency or position:');if(q)showToast('Use the company and position selector below to review published results.');};
+view.onclick=function(){var b=root.querySelector('.clb-company');if(b)b.click();};
+draft.onclick=function(){if(typeof fwOpen==='function')fwOpen('review');};
+actions.append(search,view,draft);row.append(actions);o.append(row);
+  var metrics=el('div','clo2-metrics');function metric(k,l,v,s){var m=el('div','clo2-metric'),i=el('span','clo2-metric-icon');i.append(icon(k));var d=el('div');d.append(el('small',null,l),el('strong',null,v),el('span',null,s));m.append(i,d);metrics.append(m);}metric('book','Total competencies',comps.length,'Across published catalogue');metric('people','Functional competencies',func,'Role and function specific');metric('core','Core competencies',core,'Company-wide behaviours');metric('roles','Published roles',p.length,'Mapped to competencies');metric('draft','Draft changes','Not available','Use approvals and validation');o.append(metrics);
+  var main=el('div','clo2-main'),left=el('div'),fw=el('section','clo2-card'),fh=el('div','clo2-card-head'),fc=el('div');fc.append(el('h3',null,'Competency framework overview'),el('p',null,'Select a company to view its live framework and role mappings.'));fh.append(fc);fw.append(fh);var grid=el('div','clo2-company-grid'),buttons=Array.from(root.querySelectorAll('.clb-company'));['KIL','KBBL','KML SD','KML FD'].forEach(function(name,idx){var card=el('div','clo2-company-card'),nm=el('div','clo2-company-name');nm.append(icon('roles'),el('span',null,name));card.append(nm);var count=p.filter(function(x){return String(x.company||'').trim().toUpperCase()===name;}).length;var st=el('div','clo2-company-stats');st.append(el('div',null,'Published roles: '+count),el('div',null,'Active competencies: '+comps.length),el('div',null,'Status: '+(count?'Published':'No mapped role')));card.append(st);var b=el('button','clo2-company-view','View framework');
+b.type='button';
+b.onclick=async function(){
+ var name=['KIL','KBBL','KML SD','KML FD'][idx];
+ if(typeof window.cmsOpenCompanyPageV1==='function'){
+  await window.cmsOpenCompanyPageV1(name);
+ }
+};
+card.append(b);grid.append(card);});
+fw.append(grid);left.append(fw);
+  var status=el('section','clo2-card'),sh=el('div','clo2-card-head'),sc=el('div');sc.append(el('h3',null,'Framework status'),el('p',null,'Live framework coverage'));sh.append(sc);status.append(sh);var stbox=el('div','clo2-status');function sr(cls,label,value){var r=el('div','clo2-status-row'),c2=el('div','clo2-status-copy'),dot=el('span','clo2-dot '+cls);c2.append(dot,el('span',null,label));r.append(c2,el('strong',null,value));stbox.append(r);}sr('','Published',p.length);sr('draft','Draft','Not available');sr('pending','Pending review','Not available');status.append(stbox);main.append(left,status);o.append(main);
+  var act=el('section','clo2-card clo2-activity'),ah=el('div','clo2-card-head'),ac=el('div');ac.append(el('h3',null,'Recent framework updates'),el('p',null,'Latest published activity available in this view.'));ah.append(ac);act.append(ah);var list=el('div','clo2-activity-list');if(p.length)p.slice(0,4).forEach(function(x){
+ var r=el('div','clo2-activity-row');
+ var by=x.published_by_name||x.published_by||x.publisher_name||x.publisher||x.updated_by||'Not available';
+ var when=x.published_at||x.published_on||x.published_date||x.updated_at||'';
+ var date=when?new Date(when).toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}):'Not available';
+ var company=el('span','clo2-activity-company',String(x.company||'Shared'));
+ var change=el('span','clo2-activity-change',String(x.department||'')+' / '+String(x.position||'')+' framework available');
+ var meta=el('span','clo2-activity-meta');
+var byLine=el('strong',null,'Published by: '+by);
+var dateLine=el('span',null,'Published: '+date);
+meta.append(byLine,dateLine);
+ var state=el('span','clo2-activity-state','Published');r.append(company,change,meta,state);list.append(r);
+});else list.append(el('div','clo2-empty','No published framework updates available.'));act.append(list);o.append(act);
+  root.insertBefore(o,root.firstChild);root.classList.add('clo2-ready');
+ }
+ function start(){var root=document.getElementById('mainContent')||document.body,pending=false;new MutationObserver(function(){if(pending)return;pending=true;queueMicrotask(function(){pending=false;mount();});}).observe(root,{childList:true,subtree:true});mount();}
+ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start,{once:true});else start();
+})();
+</script>
 <!-- START: CMS LIBRARY POLISHED COMPANY DETAIL V1 -->
 <style id="cms-library-polished-detail-style-v1">
 #cmsLibraryBrowserV1 .clp-identity,#cmsLibraryBrowserV1 .clp-empty{box-sizing:border-box}
@@ -35024,7 +35513,7 @@ body.role-manager #mainContent #e360Root .mgr-title-frame::before{
  stroke-linecap:round!important;
  stroke-linejoin:round!important;
 }
-</style>t
+</style>
 <style id="cms-employee-360-scalable-overview-style">
 #e360Root .e360-company-summary{display:grid;grid-template-columns:1.4fr repeat(4,1fr);gap:0;margin:22px 0 18px;background:#fff;border:1px solid #d5def0;border-radius:14px;box-shadow:0 4px 16px rgba(28,49,91,.08);overflow:hidden}
 #e360Root .e360-summary-brand{padding:22px 24px;border-right:1px solid #d5def0}
