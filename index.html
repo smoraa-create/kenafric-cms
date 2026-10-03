@@ -5218,7 +5218,7 @@ var APP = { user: null, currentRole: 'employee', currentPage: '', competencies: 
 var ALLOWED_COMPS = ['Customer Centricity','Collaboration','Trustworthy','Bold','Analytical Thinking & Problem Solving','Judgement & Decision Making','Planning','Execution','Continuous Learning & Improvement','People Skills','Leadership'];
 function normCompName(s){ return (s||'').toString().toLowerCase().replace(/[^a-z]/g,''); }
 function isAllowedComp(name){ var n = normCompName(name); if (!n) return false; for (var i=0;i<ALLOWED_COMPS.length;i++){ if (normCompName(ALLOWED_COMPS[i]) === n) return true; } return false; }
-var ASSESS_COLS = 'id, employee_id, employee_name, comp_code, type, ticked, proficiency_rating, hr_status, hr_comment, hr_reviewer, hr_review_date, assessment_round, assessment_date, evidence_stub, classification, scoring_rule, weight_profile, weight_policy';
+var ASSESS_COLS = 'id, employee_id, employee_name, comp_code, type, ticked, proficiency_rating, hr_status, hr_comment, hr_reviewer, hr_review_date, assessment_round, assessment_date, evidence, evidence_stub, attachment_name, attachment_url, evidence_link, classification, scoring_rule, weight_profile, weight_policy';
 async function cached(key, ttlMs, loader) {
 try { var raw = localStorage.getItem('kcache_' + key); if (raw) { var o = JSON.parse(raw); if (Date.now() - o.t < ttlMs) return o.d; } } catch (e) {}
 var d = await loader();
@@ -5960,7 +5960,7 @@ out.forEach(function(comp, ci) {
 html += '<div class="competency-block"><div class="competency-header"><span class="competency-name">' + escapeHtml(comp.name) + '</span><span class="competency-cat">' + escapeHtml(comp.category) + ' | ' + weightPct(comp.weight) + '%</span></div>';
 comp.experiences.forEach(function(exp, ei) {
 html += '<div class="exp-item" data-classification="' + escapeHtml(exp.classification || '') + '" data-text="' + escapeHtml(exp.text) + '" id="exp-' + ci + '-' + ei + '"><label style="display:flex;align-items:flex-start;gap:8px;cursor:pointer"><input type="checkbox" onchange="toggleEvidence(' + ci + ',' + ei + ')" style="width:auto;margin-top:2px"><span class="exp-text">' + escapeHtml(exp.text) + ' ' + getClassificationBadge(exp.classification) + '</span></label>';
-html += '<div id="evidence-' + ci + '-' + ei + '" style="display:none;margin-top:6px"><textarea placeholder="' + escapeHtml(getEvidencePlaceholder(exp.classification)) + '" rows="2" style="font-size:12px"></textarea><div style="margin-top:8px"><label style="display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:700;color:var(--primary-dark);cursor:pointer;border:1px solid var(--primary);border-radius:6px;padding:4px 10px;background:var(--primary-light)"><span style="font-size:13px"></span><span>Attach supporting proof <span style="font-weight:500;color:var(--gray-600);font-size:11px">(photo, PDF, Word or Excel)</span></span><input type="file" id="att-exp-' + ci + '-' + ei + '" style="display:none" accept="image/*,.pdf,.doc,.docx,.xls,.xlsx" onchange="showAttName(this,\'attname-exp-' + ci + '-' + ei + '\')"></label><div id="attname-exp-' + ci + '-' + ei + '" style="font-size:11px;font-weight:700;color:var(--green);margin-top:4px"></div></div>' + rateBoxesHTML('exp-' + ci + '-' + ei, 'updateScore(' + ci + ',\'exp-\',\'score-\')') + '</div>';
+html += '<div id="evidence-' + ci + '-' + ei + '" style="display:none;margin-top:6px"><textarea placeholder="' + escapeHtml(getEvidencePlaceholder(exp.classification)) + '" rows="2" style="font-size:12px"></textarea><div style="margin-top:8px"><label style="display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:700;color:var(--primary-dark);cursor:pointer;border:1px solid var(--primary);border-radius:6px;padding:4px 10px;background:var(--primary-light)"><span style="font-size:13px"></span><span>Attach supporting proof <span style="font-weight:500;color:var(--gray-600);font-size:11px">(photo, PDF, Word or Excel)</span></span><input type="file" id="att-exp-' + ci + '-' + ei + '" style="display:none" accept="image/*,.pdf,.doc,.docx,.xls,.xlsx" onchange="showAttName(this,\'attname-exp-' + ci + '-' + ei + '\')"></label><div id="attname-exp-' + ci + '-' + ei + '" style="font-size:11px;font-weight:700;color:var(--green);margin-top:4px"></div></div><div style="margin-top:8px"><label style="font-size:11px;color:var(--primary-dark)">Supporting link (optional)</label><input type="url" id="link-exp-' + ci + '-' + ei + '" placeholder="https://..." style="font-size:12px"></div>' + rateBoxesHTML('exp-' + ci + '-' + ei, 'updateScore(' + ci + ',\'exp-\',\'score-\')') + '</div>';
 html += '<div style="margin-top:4px"><button type="button" class="btn btn-sm btn-outline" onclick="aiCoach(\'exp-' + ci + '-' + ei + '\')">AI Assist</button> <button type="button" class="btn btn-sm btn-outline" onclick="aiRefine(\'exp-' + ci + '-' + ei + '\')"> Refine Evidence</button></div><div id="ai-exp-' + ci + '-' + ei + '"></div></div>';
 });
 html += '<div style="display:flex;justify-content:space-between;margin-top:10px;padding-top:8px;border-top:1px solid #e2e8f0"><span style="font-size:12px;color:var(--gray-500)">Weighted Score</span><span id="score-' + ci + '" style="font-size:13px;font-weight:700;color:var(--primary)">1.0 / 5</span></div></div>';
@@ -5987,8 +5987,8 @@ if (parts.length !== 2) return;
 var key = parts[0] + '-' + parts[1];
 var cb = item.querySelector('input[type=checkbox]');
 var evEl = document.getElementById(evPre + key);
-var ta = evEl ? evEl.querySelector('textarea') : null;var rsel2 = evEl ? evEl.querySelector('input[type=radio]:checked') : null;
-d[key] = { t: cb ? cb.checked : false, e: ta ? ta.value : '', r: rsel2 ? rsel2.value : '' };
+var ta = evEl ? evEl.querySelector('textarea') : null;var rsel2 = evEl ? evEl.querySelector('input[type=radio]:checked') : null;var linkEl = evEl ? evEl.querySelector('input[type=url]') : null;
+d[key] = { t: cb ? cb.checked : false, e: ta ? ta.value : '', r: rsel2 ? rsel2.value : '', l: linkEl ? linkEl.value : '' };
 });
 if (!Object.keys(d).length) return;
 localStorage.setItem('cms_draft_' + type + '_' + empId, JSON.stringify(d));
@@ -6004,7 +6004,7 @@ function restoreDraft(type, itemPre, evPre, scorePre, empId) {
 var raw = localStorage.getItem('cms_draft_' + type + '_' + empId);
 if (!raw) return;
 var d; try { d = JSON.parse(raw); } catch (e) { return; }
-var has = Object.keys(d).some(function(k){ return d[k].t || (d[k].e || '').trim(); });
+var has = Object.keys(d).some(function(k){ return d[k].t || (d[k].e || '').trim() || (d[k].l || '').trim(); });
 if (!has) return;
 var touched = {};
 Object.keys(d).forEach(function(key) {
@@ -6013,7 +6013,7 @@ if (!item) return;
 var cb = item.querySelector('input[type=checkbox]');
 var evEl = document.getElementById(evPre + key);
 if (d[key].t && cb) { cb.checked = true; item.classList.add('ticked'); if (evEl) evEl.style.display = 'block'; }
-if (evEl) { var ta = evEl.querySelector('textarea'); if (ta && d[key].e) ta.value = d[key].e; if (d[key].r) { var rsel3 = evEl.querySelector('input[type=radio][value="' + d[key].r + '"]'); if (rsel3) rsel3.checked = true; } }
+if (evEl) { var ta = evEl.querySelector('textarea'); var link = evEl.querySelector('input[type=url]'); if (ta && d[key].e) ta.value = d[key].e; if (link && d[key].l) link.value = d[key].l; if (d[key].r) { var rsel3 = evEl.querySelector('input[type=radio][value="' + d[key].r + '"]'); if (rsel3) rsel3.checked = true; } }
 touched[key.split('-')[0]] = true;
 });
 Object.keys(touched).forEach(function(ci) { updateScore(parseInt(ci), itemPre, scorePre); });
@@ -6029,9 +6029,19 @@ if (item) { var rc = item.querySelector('input[type=radio]:checked'); var ta2 = 
 var el = document.getElementById(scorePrefix + ci);
 if (el) el.textContent = calculateWeightedDisplayScore(experiences) + ' / 5';
 }
-function showAttName(inp, spanId) {
-var s = document.getElementById(spanId);
-if (s) s.textContent = (inp.files && inp.files[0]) ? ' Attached: ' + inp.files[0].name : '';
+function cmsEvidenceLinkHTML(row) {
+  var raw = String(row && row.evidence_link || '').trim();
+  if (!raw) return '';
+  var href = /^https?:\/\//i.test(raw) ? raw : 'https://' + raw;
+  try {
+    var u = new URL(href);
+    if (!['http:', 'https:'].includes(u.protocol) || u.username || u.password) {
+      return '<div style="font-size:11px;color:var(--orange);margin-top:4px">Supporting link is invalid.</div>';
+    }
+    return '<div style="font-size:11px;margin-top:4px"><a href="' + escapeHtml(u.href) + '" target="_blank" rel="noopener noreferrer">Open supporting link</a></div>';
+  } catch (e) {
+    return '<div style="font-size:11px;color:var(--orange);margin-top:4px">Supporting link is invalid.</div>';
+  }
 }
 async function uploadEvidenceAttachments(rows, assessmentId) {
 for (var a = 0; a < rows.length; a++) {
@@ -6061,7 +6071,9 @@ data.competencies.forEach(function(comp, ci) {
 comp.experiences.forEach(function(exp, ei) {
 var item = document.getElementById('exp-' + ci + '-' + ei);
 var cb = item.querySelector('input[type=checkbox]');
-var ta = document.getElementById('evidence-' + ci + '-' + ei).querySelector('textarea');
+var evBox = document.getElementById('evidence-' + ci + '-' + ei);
+var ta = evBox.querySelector('textarea');
+var linkEl = evBox.querySelector('input[type="url"]');
 
 // FIX: Read from the checked radio button instead of the missing .rate-sel dropdown
 var rEl = item.querySelector('input[type="radio"]:checked');
@@ -6074,7 +6086,7 @@ employee_id: data.employee.employee_id, employee_name: data.employee.employee_na
 position: data.employee.position, prospective_role: '', type: 'Self',
 comp_code: comp.code, comp_name: comp.name, weight: comp.weight / comp.experiences.length,
 experience_index: ei, experience_text: exp.text, ticked: ticked, scoring_rule: 'floor-one-v1', weight_profile:CMS_WEIGHT_PROFILE, weight_policy:'weights-5-14-8-v1',
-evidence: ticked ? ta.value.trim() : '', assessor_email: APP.user.email,
+evidence: ticked ? ta.value.trim() : '', evidence_link: linkEl ? linkEl.value.trim() : '', assessor_email: APP.user.email,
 hr_status: '', hr_comment: '', hr_reviewer: '', classification: exp.classification || '', 
 proficiency_rating: ratingVal, _att: 'att-exp-' + ci + '-' + ei
 });
@@ -6119,6 +6131,7 @@ html += '<div class="exp-item ' + cls + '">';
 html += '<div class="exp-text">' + (exp.ticked ? 'Yes ' : 'No ') + escapeHtml(exp.experience_text || ('Experience ' + (exp.experience_index+1))) + (exp.ticked ? '' : ' <span class="badge badge-warning">Not Yet Demonstrated</span>') + '</div>';
 if (exp.ticked && exp.evidence) html += '<div class="exp-evidence mgr-evidence">' + escapeHtml(exp.evidence) + '</div>';
 if (exp.attachment_url) html += '<div style="font-size:11px;margin-top:4px"> <a href="' + exp.attachment_url + '" target="_blank">' + escapeHtml(exp.attachment_name || 'View attachment') + '</a></div>';
+if (exp.evidence_link) html += cmsEvidenceLinkHTML(exp);
 if (st === 'Disapproved') html += '<span class="badge badge-danger" style="margin-top:4px">HR Disapproved</span>';
 else if (st === 'Approved') html += '<span class="badge badge-success" style="margin-top:4px">HR Approved</span>';
 else if (st === 'Returned') html += '<span class="badge badge-warning" style="margin-top:4px">Returned to Manager</span>';if (exp.hr_comment) html += '<div style="font-size:11px;color:var(--gray-500);margin-top:6px">Comment: ' + escapeHtml(exp.hr_comment) + '</div>';
@@ -6655,7 +6668,7 @@ window['_cnt_' + pre + '_' + ci] = comp.experiences.length;
 html += '<div class="competency-block"><div class="competency-header"><span class="competency-name">' + escapeHtml(comp.name) + '</span><span class="competency-cat">' + escapeHtml(comp.category) + ' | ' + weightPct(comp.weight) + '%</span></div>';
 comp.experiences.forEach(function(exp, ei) {
 html += '<div class="exp-item" data-classification="' + escapeHtml(exp.classification || '') + '" data-text="' + escapeHtml(exp.text) + '" id="' + pre + '-' + ci + '-' + ei + '"><label style="display:flex;align-items:flex-start;gap:8px;cursor:pointer"><input type="checkbox" onchange="toggleGen(\'' + pre + '\',\'' + spre + '\',' + ci + ',' + ei + ')" style="width:auto;margin-top:2px"><span class="exp-text">' + escapeHtml(exp.text) + ' ' + getClassificationBadge(exp.classification) + '</span></label>';
-html += '<div id="' + pre + 'e-' + ci + '-' + ei + '" style="display:none;margin-top:6px"><textarea placeholder="' + escapeHtml(getEvidencePlaceholder(exp.classification)) + '" rows="2" style="font-size:12px"></textarea><div style="margin-top:8px"><label style="display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:700;color:var(--primary-dark);cursor:pointer;border:1px solid var(--primary);border-radius:6px;padding:4px 10px;background:var(--primary-light)"><span style="font-size:13px"></span><span>Attach supporting proof <span style="font-weight:500;color:var(--gray-600);font-size:11px">(photo, PDF, Word or Excel)</span></span><input type="file" id="att-' + pre + '-' + ci + '-' + ei + '" style="display:none" accept="image/*,.pdf,.doc,.docx,.xls,.xlsx" onchange="showAttName(this,\'attname-' + pre + '-' + ci + '-' + ei + '\')"></label><div id="attname-' + pre + '-' + ci + '-' + ei + '" style="font-size:11px;font-weight:700;color:var(--green);margin-top:4px"></div></div>' + rateBoxesHTML(pre + '-' + ci + '-' + ei, 'updateScore(' + ci + ',\'' + pre + '-\',\'' + spre + '-\')') + '</div>';
+html += '<div id="' + pre + 'e-' + ci + '-' + ei + '" style="display:none;margin-top:6px"><textarea placeholder="' + escapeHtml(getEvidencePlaceholder(exp.classification)) + '" rows="2" style="font-size:12px"></textarea><div style="margin-top:8px"><label style="display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:700;color:var(--primary-dark);cursor:pointer;border:1px solid var(--primary);border-radius:6px;padding:4px 10px;background:var(--primary-light)"><span style="font-size:13px"></span><span>Attach supporting proof <span style="font-weight:500;color:var(--gray-600);font-size:11px">(photo, PDF, Word or Excel)</span></span><input type="file" id="att-' + pre + '-' + ci + '-' + ei + '" style="display:none" accept="image/*,.pdf,.doc,.docx,.xls,.xlsx" onchange="showAttName(this,\'attname-' + pre + '-' + ci + '-' + ei + '\')"></label><div id="attname-' + pre + '-' + ci + '-' + ei + '" style="font-size:11px;font-weight:700;color:var(--green);margin-top:4px"></div></div><div style="margin-top:8px"><label style="font-size:11px;color:var(--primary-dark)">Supporting link (optional)</label><input type="url" id="link-' + pre + '-' + ci + '-' + ei + '" placeholder="https://..." style="font-size:12px"></div>' + rateBoxesHTML(pre + '-' + ci + '-' + ei, 'updateScore(' + ci + ',\'' + pre + '-\',\'' + spre + '-\')') + '</div>';
 html += '<div style="margin-top:4px"><button type="button" class="btn btn-sm btn-outline" onclick="aiCoach(\'' + pre + '-' + ci + '-' + ei + '\')">AI Assist</button></div><div id="ai-' + pre + '-' + ci + '-' + ei + '"></div></div>';
 });
 html += '<div style="display:flex;justify-content:space-between;margin-top:10px;padding-top:8px;border-top:1px solid #e2e8f0"><span style="font-size:12px;color:var(--gray-500)">Weighted Score</span><span id="' + spre + '-' + ci + '" style="font-size:13px;font-weight:700;color:var(--primary)">1.0 / 5</span></div></div>';
@@ -6714,7 +6727,9 @@ data.competencies.forEach(function(comp, ci) {
 comp.experiences.forEach(function(exp, ei) {
 var item = document.getElementById(pre + '-' + ci + '-' + ei);
 var cb = item.querySelector('input[type=checkbox]');
-var ta = document.getElementById(pre + 'e-' + ci + '-' + ei).querySelector('textarea');
+var evBox = document.getElementById(pre + 'e-' + ci + '-' + ei);
+var ta = evBox.querySelector('textarea');
+var linkEl = evBox.querySelector('input[type="url"]');
 
 // FIX: Read from the checked radio button instead of the missing .rate-sel dropdown
 var rEl = item.querySelector('input[type="radio"]:checked');
@@ -6727,7 +6742,7 @@ employee_id: emp.employee_id, employee_name: emp.employee_name,
 position: emp.position, prospective_role: (type === 'Prospective' || type === 'Prospective Self') ? prospRole : '', type: type,
 comp_code: comp.code, comp_name: comp.name, weight: comp.weight / comp.experiences.length,
 experience_index: ei, experience_text: exp.text, ticked: ticked, scoring_rule: 'floor-one-v1', weight_profile:CMS_WEIGHT_PROFILE, weight_policy:'weights-5-14-8-v1',
-evidence: ticked ? ta.value.trim() : '', assessor_email: APP.user.email,
+evidence: ticked ? ta.value.trim() : '', evidence_link: linkEl ? linkEl.value.trim() : '', assessor_email: APP.user.email,
 hr_status: (type === 'Prospective Self' ? '' : 'Pending'), hr_comment: '', hr_reviewer: '', classification: exp.classification || '',hr_status: 'Pending', hr_comment: '', hr_reviewer: '', classification: exp.classification || '', 
 proficiency_rating: ratingVal, _att: 'att-' + pre + '-' + ci + '-' + ei
 });
@@ -6876,6 +6891,7 @@ html += '<div class="plan-card"><div class="plan-comp">' + escapeHtml(r.employee
 html += '<div class="plan-task"><strong>Task:</strong> ' + escapeHtml(r.task || '') + '</div>';
 html += '<div style="font-size:12px;background:var(--gray-50);padding:8px;border-radius:6px;margin:6px 0;white-space:pre-wrap">' + escapeHtml(r.report_text || '') + '</div>';
 if (r.attachment_url) html += '<div style="font-size:11px;margin:4px 0"> <a href="' + r.attachment_url + '" target="_blank">' + escapeHtml(r.attachment_name) + '</a></div>';
+if (r.evidence_link) html += cmsEvidenceLinkHTML(r);
 if (r.ai_note) html += '<div style="font-size:11px;color:' + (r.ai_note.indexOf('valid') >= 0 ? 'var(--green)' : 'var(--orange)') + ';margin:4px 0">' + escapeHtml(r.ai_note) + '</div>';
 html += '<div class="form-group" style="margin-top:6px"><input id="dprc-' + r.id + '" placeholder="Your comment (required when returning)"></div>';
 html += '<button class="btn btn-sm btn-success" onclick="decideDPReport(' + rcArg(r.id) + ',true)">Approve & Send to HR</button> <button class="btn btn-sm btn-danger" onclick="decideDPReport(' + rcArg(r.id) + ',false)">Return to Employee</button></div>';
@@ -8034,6 +8050,7 @@ var st = !r.emp_submitted ? (d < 0 ? '<span class="badge badge-danger">Overdue b
 html += '<div class="plan-card"><div class="plan-comp">Month ' + r.month_no + ' - ' + escapeHtml(r.task || '') + '</div><div class="plan-task">' + st + '</div>';
 if (r.report_text) html += '<div style="font-size:11px;background:var(--gray-50);padding:6px;border-radius:4px;margin:4px 0;white-space:pre-wrap">' + escapeHtml(r.report_text) + '</div>';
 if (r.attachment_url) html += '<div style="font-size:11px;margin:4px 0"> <a href="' + r.attachment_url + '" target="_blank">' + escapeHtml(r.attachment_name) + '</a></div>';
+if (r.evidence_link) html += cmsEvidenceLinkHTML(r);
 if (r.ai_note) html += '<div style="font-size:11px;color:' + (r.ai_note.indexOf('valid') >= 0 ? 'var(--green)' : 'var(--orange)') + ';margin:4px 0">' + escapeHtml(r.ai_note) + '</div>';
 if (r.mgr_comment) html += '<div style="font-size:11px;color:var(--gray-600);margin:4px 0"><strong>Manager comment:</strong> ' + escapeHtml(r.mgr_comment) + '</div>';
 if (r.mgr_status === 'Approved' && r.hr_status !== 'Received') {
@@ -9179,6 +9196,7 @@ html += '<div class="exp-text">' + (ticked ? 'Yes ' : 'No ') + escapeHtml(r.expe
 if (ticked && r.evidence) html += '<div class="exp-evidence mgr-evidence"><strong>Evidence:</strong> ' + escapeHtml(r.evidence) + '</div>';
 
 if (r.attachment_url && /^https:\/\//i.test(r.attachment_url)) html += '<div style="font-size:12px;margin-top:4px"> <a href="' + escapeHtml(r.attachment_url) + '" target="_blank" rel="noopener noreferrer">' + escapeHtml(r.attachment_name || 'Attachment') + '</a></div>';
+if (r.evidence_link) html += cmsEvidenceLinkHTML(r);
 html += cmsRowRatingHTML(r);
 html += '<div style="margin-top:4px">' + hrStatusBadge(r.hr_status);
 if (r.hr_reviewer) html += ' <span style="font-size:11px;color:var(--gray-500)">by ' + escapeHtml(r.hr_reviewer) + (r.hr_review_date ? ' on ' + escapeHtml(r.hr_review_date) : '') + '</span>';
@@ -9720,6 +9738,7 @@ html += '<div class="exp-item ' + (ticked ? (r.hr_status === 'Disapproved' ? 'di
 html += '<div class="exp-text">' + (ticked ? 'Yes ' : 'No ') + escapeHtml(r.experience_text || ('Experience ' + ((r.experience_index||0)+1))) + ' ' + getClassificationBadge(r.classification) + (ticked ? '' : ' <span class="badge badge-warning">Not Yet Demonstrated</span>') + '</div>';
 if (ticked && r.evidence) html += '<div class="exp-evidence ' + (type === 'Self' ? 'self-evidence' : 'mgr-evidence') + '"><strong>Evidence:</strong> ' + escapeHtml(r.evidence) + '</div>';
 if (r.attachment_url) html += '<div style="font-size:11px;margin-top:4px"> <a href="' + r.attachment_url + '" target="_blank">' + escapeHtml(r.attachment_name || 'View attachment') + '</a></div>';
+if (r.evidence_link) html += cmsEvidenceLinkHTML(r);
 html += cmsRowRatingHTML(r);
 if (type !== 'Self') {
 html += '<div style="margin-top:6px">' + hrStatusBadge(r.hr_status);
@@ -20487,11 +20506,13 @@ function adRender(s){
  s.items.forEach((item,index)=>{
   var v=s.values[item.id],name=s.competencies.find(c=>c.code===item.code)?.competency||item.code;
   html+='<article class="ad-experience" data-ad-item="'+adText(item.id)+'"><h2>'+adText(name)+' <small>Experience '+(index+1)+' of '+s.items.length+'</small></h2><p>'+adText(item.text)+'</p><small>'+adText(item.classification)+'</small>'+
-  '<label class="ad-tick"><input type="checkbox" data-ad-field="ticked" '+(v.ticked?'checked':'')+' '+(!s.canSave?'disabled':'')+'>I have demonstrated this experience</label>'+
-  '<label>Evidence: action, context and result<textarea rows="3" data-ad-field="evidence" maxlength="20000" '+(!s.canSave?'readonly':'')+'>'+adText(v.evidence)+'</textarea></label>'+
-  '<label>Rating<select data-ad-field="rating" '+(!s.canSave?'disabled':'')+'><option value="">Select rating</option>'+[1,2,3,4,5].map(n=>'<option value="'+n+'" '+(Number(v.rating)===n?'selected':'')+'>'+n+' - '+adText(cmsRatingLabel(n))+': '+adText(cmsRatingDescription(n))+'</option>').join('')+'</select></label>'+
-  '<label>Supporting proof<input type="file" data-ad-field="file" accept=".pdf,.doc,.docx,.xls,.xlsx,image/*" '+(!s.canSave?'disabled':'')+'></label><p class="ad-file" data-ad-file="'+adText(item.id)+'">'+adText(v.attachment_name?'Saved proof: '+v.attachment_name:'No uploaded proof')+'</p></article>';
- });
+'<label class="ad-tick"><input type="checkbox" data-ad-field="ticked" '+(v.ticked?'checked':'')+' '+(!s.canSave?'disabled':'')+'>I have demonstrated this experience</label>'+
+'<label>Evidence: action, context and result<textarea rows="3" data-ad-field="evidence" maxlength="20000" '+(!s.canSave?'readonly':'')+'>'+adText(v.evidence)+'</textarea></label>'+
+'<label>Rating<select data-ad-field="rating" '+(!s.canSave?'disabled':'')+'><option value="">Select rating</option>'+[1,2,3,4,5].map(n=>'<option value="'+n+'" '+(Number(v.rating)===n?'selected':'')+'>'+n+' - '+adText(cmsRatingLabel(n))+': '+adText(cmsRatingDescription(n))+'</option>').join('')+'</select></label>'+
+'<label>Supporting proof<input type="file" data-ad-field="file" accept=".pdf,.doc,.docx,.xls,.xlsx,image/*" '+(!s.canSave?'disabled':'')+'></label>'+
+'<label>Supporting link (optional)<input type="url" data-ad-field="evidence_link" placeholder="https://..." value="'+adText(v.evidence_link||'')+'" '+(!s.canSave?'readonly':'')+'></label>'+
+'<p class="ad-file" data-ad-file="'+adText(item.id)+'">'+adText(v.attachment_name?'Saved proof: '+v.attachment_name:'No uploaded proof')+'</p></article>';
+});
  html+='</section><footer class="ad-footer">'+adBtn('save','Save draft')+adBtn('preview','Submit assessment',true)+'<p>One complete submission per invitation. Redos require a reason, approval and a fresh invitation.</p></footer>';
  document.getElementById('adRoot').innerHTML=html;
  adStickyOffset();
@@ -21369,7 +21390,9 @@ adRender=function(s){
    ['yes','no'].map(a=>'<label><input type="radio" data-fp-answer="'+a+'" name="fp-answer-'+sxE(item.id)+'" value="'+a+'" '+(fpAnswer(v)===a?'checked':'')+'>'+ (a==='yes'?'Yes':'No')+'</label>').join('');
   var evidence=document.createElement('div');evidence.className='fp-evidence';
   var ta=el.querySelector('[data-ad-field="evidence"]');ta.rows=2;ta.placeholder=manager?'Employee\u2019s action, context and result':'Your action, context and result';evidence.append(ta.parentElement);
-  var file=el.querySelector('[data-ad-field="file"]');evidence.append(file.parentElement,el.querySelector('[data-ad-file]'));
+  var file=el.querySelector('[data-ad-field="file"]');
+var link=el.querySelector('[data-ad-field="evidence_link"]');
+evidence.append(file.parentElement,link.parentElement,el.querySelector('[data-ad-file]'));
   var ratings=el.querySelector('.sx-ratings');ratings.classList.add('fp-ratings');ratings.querySelector('legend').textContent='Select one';
   ratings.querySelectorAll('.sx-rating').forEach(l=>{var n=Number(l.querySelector('input').dataset.sxRating);l.title=n+' '+cmsRatingLabel(n)+': '+cmsRatingDescription(n);});
   var hiddenRating=el.querySelector('[data-ad-field="rating"]').parentElement;
