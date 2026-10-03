@@ -20438,8 +20438,15 @@ function adOwner(){return APP.user?String(APP.user.email||'').trim().toLowerCase
 function adActive(s){return AD.state===s&&s.identity===adOwner()&&!!document.getElementById('adRoot');}
 function adKey(id){return 'cms-invite-durable:v1:'+String(APP.user.email||'').trim().toLowerCase()+':'+id;}
 function adStable(items){
- return JSON.stringify(items.map(x=>({id:String(x.id),ticked:!!x.ticked,rating:x.rating?Number(x.rating):null,evidence:String(x.evidence||''),
- attachment_name:String(x.attachment_name||''),attachment_url:String(x.attachment_url||'')})).sort((a,b)=>a.id.localeCompare(b.id)));
+ return JSON.stringify(items.map(x=>({
+  id:String(x.id),
+  ticked:!!x.ticked,
+  rating:x.rating?Number(x.rating):null,
+  evidence:String(x.evidence||''),
+  evidence_items:Array.isArray(x.evidence_items)?x.evidence_items:[],
+  attachment_name:String(x.attachment_name||''),
+  attachment_url:String(x.attachment_url||'')
+ })).sort((a,b)=>a.id.localeCompare(b.id)));
 }
 function adItems(s){return s.items.map(i=>s.values[i.id]);}
 function adDirty(s){return adStable(adItems(s))!==s.savedSignature;}
@@ -20459,21 +20466,50 @@ function adLocal(s){
   dirty:adDirty(s),saved_at:s.savedAt,local_at:new Date().toISOString(),content:{items:adItems(s)}}));s.localError=false;return true;
  }catch(e){s.localError=true;adNotice(s,'Browser backup unavailable. Keep this page open until a server save succeeds.',true);return false;}
 }
+function cmsEvidenceItems(v){
+  return Array.isArray(v&&v.evidence_items) ? v.evidence_items : [];
+}
+function cmsEvidenceLinkRow(url){
+  return '<div class="ad-link-row" style="display:flex;gap:6px;margin-top:6px;align-items:center">'+
+    '<input type="url" data-ad-field="evidence-link" placeholder="https://..." value="'+adText(url||'')+'" style="flex:1">'+
+    '<button type="button" class="ad-btn" onclick="this.parentElement.remove();if(typeof AD!==\'undefined\'&&AD.state)adQueue(AD.state)">Remove</button>'+
+    '</div>';
+}
+function addEvidenceLink(button){
+  var parent=button.parentElement;
+  var box=parent ? parent.querySelector('[data-evidence-links]') : null;
+  if(!box)return;
+
+  box.insertAdjacentHTML('beforeend',cmsEvidenceLinkRow(''));
+
+  var rows=box.querySelectorAll('.ad-link-row');
+  var input=rows.length ? rows[rows.length-1].querySelector('input') : null;
+  if(input)input.focus();
+
+  if(typeof AD!=='undefined'&&AD.state)adQueue(AD.state);
+}
 function adCapture(s){
  if(!adActive(s))return;
- document.querySelectorAll('#adRoot [data-ad-item]').forEach(el=>{
+ document.querySelectorAll('#adRoot [data-ad-item]').forEach(function(el){
   var id=el.dataset.adItem,v=s.values[id];if(!v)return;
   v.ticked=el.querySelector('[data-ad-field="ticked"]').checked;
   v.evidence=el.querySelector('[data-ad-field="evidence"]').value;
   v.rating=Number(el.querySelector('[data-ad-field="rating"]').value)||null;
+  var files=(v.evidence_items||[]).filter(function(x){return x.type==='file';});
+  var links=Array.from(el.querySelectorAll('[data-ad-field="evidence-link"]')).map(function(input){
+   return String(input.value||'').trim();
+  }).filter(Boolean).map(function(url){return {type:'link',url:url};});
+  v.evidence_items=files.concat(links);
  });
 }
-function adBlank(item){return {id:String(item.id),ticked:false,evidence:'',rating:null,attachment_name:'',attachment_url:''};}
+function adBlank(item){
+ return {id:String(item.id),ticked:false,evidence:'',rating:null,evidence_items:[],attachment_name:'',attachment_url:''};
+}
 function adMerge(s,content){
  var records=content?.items||[],map=new Map(records.map(x=>[String(x.id),x]));
  s.values={};s.items.forEach(i=>{s.values[i.id]={...adBlank(i),...(map.get(String(i.id))||{}),id:String(i.id)};});
 }
-function adHasInput(records){return(records||[]).some(r=>r.ticked||r.rating||String(r.evidence||'').trim()||r.attachment_name);}
+function adHasInput(records){return(records||[]).some(function(r){return r.ticked||r.rating||String(r.evidence||'').trim()||r.attachment_name||(Array.isArray(r.evidence_items)&&r.evidence_items.length>0);});}
 function adBtn(action,label,primary=false,extra=''){return '<button type="button" class="ad-btn '+(primary?'ad-primary':'')+'" data-ad="'+action+'" '+extra+'>'+adText(label)+'</button>';}
 function adUpdateButtons(s){
  if(!adActive(s))return;
@@ -20505,13 +20541,18 @@ function adRender(s){
  '<section class="ad-experiences">';
  s.items.forEach((item,index)=>{
   var v=s.values[item.id],name=s.competencies.find(c=>c.code===item.code)?.competency||item.code;
-  html+='<article class="ad-experience" data-ad-item="'+adText(item.id)+'"><h2>'+adText(name)+' <small>Experience '+(index+1)+' of '+s.items.length+'</small></h2><p>'+adText(item.text)+'</p><small>'+adText(item.classification)+'</small>'+
+  var evidenceItems=cmsEvidenceItems(v);
+var linkRows=evidenceItems.filter(function(x){return x.type==='link';}).map(function(x){return cmsEvidenceLinkRow(x.url);}).join('') || cmsEvidenceLinkRow('');
+var savedFiles=evidenceItems.filter(function(x){return x.type==='file';});
+var savedNames=savedFiles.map(function(x){return x.name||x.file_name||'';}).filter(Boolean).join(', ');
+html+='<article class="ad-experience" data-ad-item="'+adText(item.id)+'"><h2>'+adText(name)+' <small>Experience '+(index+1)+' of '+s.items.length+'</small></h2><p>'+adText(item.text)+'</p><small>'+adText(item.classification)+'</small>'+
 '<label class="ad-tick"><input type="checkbox" data-ad-field="ticked" '+(v.ticked?'checked':'')+' '+(!s.canSave?'disabled':'')+'>I have demonstrated this experience</label>'+
 '<label>Evidence: action, context and result<textarea rows="3" data-ad-field="evidence" maxlength="20000" '+(!s.canSave?'readonly':'')+'>'+adText(v.evidence)+'</textarea></label>'+
-'<label>Rating<select data-ad-field="rating" '+(!s.canSave?'disabled':'')+'><option value="">Select rating</option>'+[1,2,3,4,5].map(n=>'<option value="'+n+'" '+(Number(v.rating)===n?'selected':'')+'>'+n+' - '+adText(cmsRatingLabel(n))+': '+adText(cmsRatingDescription(n))+'</option>').join('')+'</select></label>'+
-'<label>Supporting proof<input type="file" data-ad-field="file" accept=".pdf,.doc,.docx,.xls,.xlsx,image/*" '+(!s.canSave?'disabled':'')+'></label>'+
-'<label>Supporting link (optional)<input type="url" data-ad-field="evidence_link" placeholder="https://..." value="'+adText(v.evidence_link||'')+'" '+(!s.canSave?'readonly':'')+'></label>'+
-'<p class="ad-file" data-ad-file="'+adText(item.id)+'">'+adText(v.attachment_name?'Saved proof: '+v.attachment_name:'No uploaded proof')+'</p></article>';
+'<label>Rating<select data-ad-field="rating" '+(!s.canSave?'disabled':'')+'><option value="">Select rating</option>'+[1,2,3,4,5].map(function(n){return '<option value="'+n+'" '+(Number(v.rating)===n?'selected':'')+'>'+n+' - '+adText(cmsRatingLabel(n))+': '+adText(cmsRatingDescription(n))+'</option>';}).join('')+'</select></label>'+
+'<label>Supporting documents, optional<input type="file" data-ad-field="file" multiple accept=".pdf,.doc,.docx,.xls,.xlsx,image/*" '+(!s.canSave?'disabled':'')+'></label>'+ 
+'<p class="ad-file" data-ad-file="'+adText(item.id)+'">'+adText(savedNames||v.attachment_name||'No uploaded proof')+'</p>'+ 
+'<div data-evidence-links="'+adText(item.id)+'" style="margin-top:8px"><label>Supporting links, optional</label>'+linkRows+'</div>'+ 
+'<button type="button" class="ad-btn" style="margin-top:6px" onclick="addEvidenceLink(this)">Add another link</button></article>';
 });
  html+='</section><footer class="ad-footer">'+adBtn('save','Save draft')+adBtn('preview','Submit assessment',true)+'<p>One complete submission per invitation. Redos require a reason, approval and a fresh invitation.</p></footer>';
  document.getElementById('adRoot').innerHTML=html;
@@ -20547,15 +20588,22 @@ ihOpenWork=async function(id){
    s.canSubmit=false;s.canSave=false;s.blocked='The server draft belongs to a different invitation snapshot. Download saved versions and ask HR to review; answers have not been remapped.';
   }
   var local=raw?.content;
-  if((!local||!adHasInput(local.items||[]))&&legacy&&typeof legacy==='object'&&adHasInput(Object.values(legacy)))local={items:Object.values(legacy)};
-  var validIds=new Set(s.items.map(i=>String(i.id))),compatible=local&&Array.isArray(local.items)&&local.items.every(x=>validIds.has(String(x.id)))&&(!raw||raw.hash===s.hash);
-  if(local&&Array.isArray(local.items)&&adHasInput(local.items)&&adStable(local.items)!==s.savedSignature){
-   if(!data.draft&&compatible&&s.canSave){
-    adMerge(s,local);s.message='Recovered your browser draft. Saving it to the server...';
-   }else{
-    s.recovery={content:local,compatible:!!compatible,message:raw?.dirty?'This browser has edits not confirmed on the server. Compare before continuing.':'A previous browser copy differs from the server draft. The server copy is shown below.'};
-   }
-  }
+if((!local||!adHasInput(local.items||[]))&&legacy&&typeof legacy==='object'&&adHasInput(Object.values(legacy))){
+ local={items:Object.values(legacy)};
+}
+var validIds=new Set(s.items.map(function(i){return String(i.id);}));
+var compatible=!!(local&&Array.isArray(local.items)&&
+ local.items.every(function(x){return validIds.has(String(x.id));})&&
+ (!raw||raw.hash===s.hash));
+if(local&&Array.isArray(local.items)&&adHasInput(local.items)&&adStable(local.items)!==s.savedSignature){
+ if(compatible&&s.canSave){
+  adMerge(s,local);
+  s.recovery=null;
+  s.message='Your saved browser answers were restored. Saving to the server...';
+ }else{
+  s.recovery={content:local,compatible:!!compatible,message:raw?.dirty?'This browser has edits not confirmed on the server. Compare before continuing.':'A previous browser copy differs from the server draft. The server copy is shown below.'};
+ }
+}
   adRender(s);
   if(!s.recovery&&adDirty(s)&&s.canSave)await adSave(s);
  }catch(e){
@@ -20599,17 +20647,31 @@ function adQueue(s){
  if(!s.conflict&&!s.recovery)s.timer=setTimeout(()=>adSave(s),1200);
 }
 async function adUpload(s,el){
- var id=el.closest('[data-ad-item]').dataset.adItem,file=el.files[0];if(!file||!adActive(s)||!s.canSave)return;
+ var id=el.closest('[data-ad-item]').dataset.adItem;
+ var files=Array.from(el.files||[]);
+ if(!files.length||!adActive(s)||!s.canSave)return;
  var status=document.querySelector('#adRoot [data-ad-file="'+CSS.escape(id)+'"]');
- var stamp=Symbol('upload');s.uploads.set(id,stamp);s.uploadErrors.delete(id);adUpdateButtons(s);status.textContent='Uploading '+file.name+'...';
+ var stamp=Symbol('upload');s.uploads.set(id,stamp);s.uploadErrors.delete(id);adUpdateButtons(s);
+ var uploaded=[];
  try{
-  var clean=file.name.replace(/[^\p{L}\p{N}._ -]/gu,'_').slice(-160),path='ev/INV-'+s.id+'/'+id+'_'+crypto.randomUUID()+'_'+clean;
-  var result=await r4Timeout(_supabase.storage.from('evidence-files').upload(path,file,{upsert:false}),45000,'Proof upload');if(result.error)throw Error(result.error.message);
+  for(var i=0;i<files.length;i++){
+   var file=files[i];status.textContent='Uploading '+(i+1)+' of '+files.length+': '+file.name+'...';
+   var clean=file.name.replace(/[^\p{L}\p{N}._ -]/gu,'_').slice(-160);
+   var path='ev/INV-'+s.id+'/'+id+'_'+crypto.randomUUID()+'_'+clean;
+   var result=await r4Timeout(_supabase.storage.from('evidence-files').upload(path,file,{upsert:false}),45000,'Proof upload');
+   if(result.error)throw Error(result.error.message);
+   uploaded.push({type:'file',name:file.name,url:_supabase.storage.from('evidence-files').getPublicUrl(path).data.publicUrl});
+  }
   if(!adActive(s)||s.uploads.get(id)!==stamp)return;
-  s.values[id].attachment_name=file.name;s.values[id].attachment_url=_supabase.storage.from('evidence-files').getPublicUrl(path).data.publicUrl;
-  status.textContent='Uploaded proof: '+file.name;adCapture(s);adLocal(s);await adSave(s);
- }catch(e){if(adActive(s)&&s.uploads.get(id)===stamp){s.uploadErrors.add(id);status.textContent='Upload not saved: '+e.message+'. Select the file again to retry.';}}
- finally{if(s.uploads.get(id)===stamp)s.uploads.delete(id);adUpdateButtons(s);}
+  var oldLinks=(s.values[id].evidence_items||[]).filter(function(x){return x.type==='link';});
+  s.values[id].evidence_items=oldLinks.concat(uploaded);
+  s.values[id].attachment_name=uploaded.map(function(x){return x.name;}).join(', ');
+  s.values[id].attachment_url=uploaded.length?uploaded[0].url:'';
+  status.textContent=uploaded.length+' document(s) uploaded';
+  adCapture(s);adLocal(s);await adSave(s);
+ }catch(e){
+  if(adActive(s)&&s.uploads.get(id)===stamp){s.uploadErrors.add(id);status.textContent='Upload not saved: '+e.message+'. Select the documents again to retry.';}
+ }finally{if(s.uploads.get(id)===stamp)s.uploads.delete(id);adUpdateButtons(s);}
 }
 function adExport(content,name){
  var blob=new Blob([JSON.stringify(content,null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),30000);
@@ -21359,7 +21421,7 @@ uaEdit=function(user){
 var FP_COLORS={FC001:'#2856b6',FC002:'#7945b5',FC003:'#087e8b',FC004:'#b95920',FC005:'#318553',PC001:'#b43870',LC001:'#754172',CC001:'#247caa',CC004:'#b64d40',CC003:'#6c7d32',CC002:'#596caf'};
 function fpAnswer(v){return ['yes','no'].includes(v?.demonstrated)?v.demonstrated:v?.ticked===true?'yes':null;}
 var fpStable=adStable;
-adStable=function(items){return JSON.stringify(items.map(x=>({id:String(x.id),ticked:fpAnswer(x)==='yes',demonstrated:fpAnswer(x),rating:x.rating?Number(x.rating):null,evidence:String(x.evidence||''),attachment_name:String(x.attachment_name||''),attachment_url:String(x.attachment_url||'')})).sort((a,b)=>a.id.localeCompare(b.id)));};
+adStable=function(items){return JSON.stringify(items.map(function(x){return {id:String(x.id),ticked:fpAnswer(x)==='yes',demonstrated:fpAnswer(x),rating:x.rating?Number(x.rating):null,evidence:String(x.evidence||''),evidence_items:Array.isArray(x.evidence_items)?x.evidence_items:[],attachment_name:String(x.attachment_name||''),attachment_url:String(x.attachment_url||'')};}).sort(function(a,b){return a.id.localeCompare(b.id);}));};
 var fpBlank=adBlank;adBlank=function(item){return {...fpBlank(item),demonstrated:null};};
 var fpCapture=adCapture;
 adCapture=function(s){if(!adActive(s))return;document.querySelectorAll('#adRoot [data-ad-item]').forEach(el=>{var v=s.values[el.dataset.adItem];if(!v)return;var pick=el.querySelector('[data-fp-answer]:checked');v.demonstrated=pick?pick.value:null;el.querySelector('[data-ad-field="ticked"]').checked=v.demonstrated==='yes';});fpCapture(s);};
@@ -21391,8 +21453,13 @@ adRender=function(s){
   var evidence=document.createElement('div');evidence.className='fp-evidence';
   var ta=el.querySelector('[data-ad-field="evidence"]');ta.rows=2;ta.placeholder=manager?'Employee\u2019s action, context and result':'Your action, context and result';evidence.append(ta.parentElement);
   var file=el.querySelector('[data-ad-field="file"]');
-var link=el.querySelector('[data-ad-field="evidence_link"]');
-evidence.append(file.parentElement,link.parentElement,el.querySelector('[data-ad-file]'));
+var linkBox=el.querySelector('[data-evidence-links]');
+var addLink=el.querySelector('button[onclick^="addEvidenceLink"]');
+if(file)evidence.append(file.parentElement);
+var fileStatus=el.querySelector('[data-ad-file]');
+if(fileStatus)evidence.append(fileStatus);
+if(linkBox)evidence.append(linkBox);
+if(addLink)evidence.append(addLink);
   var ratings=el.querySelector('.sx-ratings');ratings.classList.add('fp-ratings');ratings.querySelector('legend').textContent='Select one';
   ratings.querySelectorAll('.sx-rating').forEach(l=>{var n=Number(l.querySelector('input').dataset.sxRating);l.title=n+' '+cmsRatingLabel(n)+': '+cmsRatingDescription(n);});
   var hiddenRating=el.querySelector('[data-ad-field="rating"]').parentElement;
@@ -23753,38 +23820,88 @@ document.addEventListener('click',async e=>{
 });
 /* Revoke live editor controls after deletion, without erasing local unsaved text. */
 var FV_LOCK={busy:false,key:'',blocked:false};
-async function fvAccess(){
- if(FV_LOCK.busy||!APP.user)return;
- var s=typeof AD!=='undefined'?AD.state:null,isAssessment=s&&adActive(s);
- var framework= !isAssessment&&fvSafe()&&FW.revision.state==='Draft';
- if(!isAssessment&&!framework)return;
- if(isAssessment&&s.invitation.state!=='Pending')return;
- var id=isAssessment?s.id:FW.revision.id,kind=isAssessment?'assessment':'framework',identity=adOwner(),key=identity+'|'+kind+'|'+id;
- FV_LOCK.busy=true;
- try{
-  var result=await _supabase.rpc('cms_work_access',{p_kind:kind,p_id:id});
-  if(identity!==adOwner()||(isAssessment?AD.state!==s:FW.revision?.id!==id))return;
-  if(result.error)throw Error(result.error.message);
-  if(!result.data?.allowed){
-   if(isAssessment){adCapture(s);adLocal(s);clearTimeout(s.timer);s.canSave=false;s.canSubmit=false;adUpdateButtons(s);adNotice(s,'Access locked. Saved work retained; request permission from HR. Download any unconfirmed local edits before leaving.',true);}
-   else{
-    FW.revision._fvRevoked=true;
-    var body=document.getElementById('fwBody');body.querySelectorAll('input,textarea,select,button').forEach(x=>{if(!x.hasAttribute('data-fv-excel')&&!x.hasAttribute('data-fa-download'))x.disabled=true;});
-    if(!body.querySelector('.fv-revoked')){var note=document.createElement('p');note.className='fv-revoked';note.textContent='Editing locked: invitation deleted, expired or no longer authorized. Saved work remains retained. Request HR permission in My Assigned Work.';body.prepend(note);}
-   }
-   FV_LOCK={busy:true,key,blocked:true};
-  }
- }catch(e){
-  if(identity===adOwner()){
-   if(isAssessment&&AD.state===s){adCapture(s);adLocal(s);s.canSave=false;s.canSubmit=false;clearTimeout(s.timer);adUpdateButtons(s);adNotice(s,'Could not verify editing permission. Your browser work is retained; reopen after connectivity returns.',true);}
-   else if(FW.revision?.id===id){FW.revision._fvRevoked=true;fwButtons();}
-   showToast('Editing paused: permission check failed. Reopen after connectivity returns. '+e.message);
-  }
- }
- finally{FV_LOCK.busy=false;}
+
+function fvAssessmentLocallyEditable(s){
+  return !!(
+    s &&
+    s.invitation &&
+    s.invitation.state==='Pending' &&
+    (typeof sxExpired!=='function'||!sxExpired(s.invitation)) &&
+    !s.conflict &&
+    !s.recovery &&
+    !s.submitting
+  );
 }
+
+async function fvAccess(){
+  if(FV_LOCK.busy||!APP.user)return;
+
+  var s=typeof AD!=='undefined'?AD.state:null;
+  var isAssessment=!!(s&&adActive(s));
+  var framework=!isAssessment&&typeof fvSafe==='function'&&fvSafe()&&
+    typeof FW!=='undefined'&&FW.revision&&FW.revision.state==='Draft';
+  if(!isAssessment&&!framework)return;
+  var id=isAssessment?s.id:FW.revision.id;
+  var kind=isAssessment?'assessment':'framework';
+  var identity=adOwner();
+  var key=identity+'|'+kind+'|'+id;
+
+  FV_LOCK.busy=true;
+
+  try{
+    var result=await _supabase.rpc('cms_work_access',{
+      p_kind:kind,
+      p_id:id
+    });
+
+    if(identity!==adOwner()||(isAssessment&&AD.state!==s)||
+      (!isAssessment&&(!FW.revision||FW.revision.id!==id)))return;
+
+    if(result.error)throw Error(result.error.message);
+
+   if(isAssessment&&result.data&&result.data.allowed===true){
+  FV_LOCK={busy:false,key:key,blocked:false};
+  s.canSave=true;
+  s.canSubmit=true;
+  adUpdateButtons(s);
+  adNotice(s,'Assessment is active and editable.');
+  return;
+}
+    if(!result.data||result.data.allowed!==true){
+      if(isAssessment){
+        adCapture(s);
+        adLocal(s);
+        clearTimeout(s.timer);
+        s.canSave=false;
+        s.canSubmit=false;
+        adUpdateButtons(s);
+        adNotice(s,'Editing is locked because this invitation is no longer active.',true);
+      }else{
+        FV_LOCK={busy:true,key:key,blocked:true};
+      }
+    }
+  }catch(e){
+    if(identity===adOwner()&&isAssessment&&AD.state===s&&
+      fvAssessmentLocallyEditable(s)){
+      FV_LOCK={busy:false,key:key,blocked:false};
+      s.canSave=true;
+      adUpdateButtons(s);
+      adNotice(s,'Assessment remains editable. Permission check will retry automatically.',true);
+      setTimeout(function(){
+        if(AD.state===s&&adActive(s))fvAccess();
+      },3000);
+    }else if(identity===adOwner()){
+      showToast('Permission check failed. Retrying...');
+    }
+  }finally{
+    if(identity===adOwner())FV_LOCK.busy=false;
+  }
+}
+
 setInterval(fvAccess,5000);
-document.addEventListener('visibilitychange',()=>{if(!document.hidden)fvAccess();});
+document.addEventListener('visibilitychange',function(){
+  if(!document.hidden)fvAccess();
+});
 // Clarify retention in the existing deletion preview, without bypassing confirmation.
 var fvDelete=hdDeleteOpen;
 hdDeleteOpen=async function(kind,id){await fvDelete.apply(this,arguments);if(kind!=='invitation')return;var aside=document.querySelector('#hdDeleteDialog aside');if(aside)aside.textContent='Deletes this invitation and the listed operational records, revoking its access. A restricted deletion snapshot retains the latest server-saved assessment draft and its saved versions; framework drafts remain in place. The recipient can request permission, and HR can issue a new invitation with compatible work restored. Submitted assessments are not reopened. Unconfirmed browser-only edits are not part of the server backup.';};
