@@ -6029,6 +6029,33 @@ if (item) { var rc = item.querySelector('input[type=radio]:checked'); var ta2 = 
 var el = document.getElementById(scorePrefix + ci);
 if (el) el.textContent = calculateWeightedDisplayScore(experiences) + ' / 5';
 }
+function cmsRichDisplayHTML(value) {
+  var raw = String(value == null ? '' : value);
+  var probe = document.createElement('textarea');
+  probe.innerHTML = raw;
+  var decoded = probe.value;
+  var candidate = /<\/?(strong|b|em|i|u|ul|ol|li|p|br|div)\b/i.test(decoded) ? decoded : raw;
+  var hasMarkup = /<\/?(strong|b|em|i|u|ul|ol|li|p|br|div)\b/i.test(candidate);
+  if (!hasMarkup) {
+    return escapeHtml(decoded).replace(/\r?\n/g, '<br>');
+  }
+  var box = document.createElement('div');
+  box.innerHTML = candidate;
+  box.querySelectorAll('script,style,iframe,object,embed,link,meta,form,img,svg,video,audio').forEach(function(node) {
+    node.remove();
+  });
+  var allowed = new Set(['STRONG','B','EM','I','U','UL','OL','LI','P','BR','DIV']);
+  box.querySelectorAll('*').forEach(function(node) {
+    if (!allowed.has(node.tagName)) {
+      node.replaceWith(document.createTextNode(node.textContent || ''));
+      return;
+    }
+    Array.from(node.attributes).forEach(function(attr) {
+      node.removeAttribute(attr.name);
+    });
+  });
+  return box.innerHTML;
+}
 function cmsEvidenceLinkHTML(row) {
   var raw = String(row && row.evidence_link || '').trim();
   if (!raw) return '';
@@ -6129,7 +6156,7 @@ var st = exp.hr_status || '';
 var cls = exp.ticked && exp.evidence ? (st === 'Disapproved' ? 'disapproved' : st === 'Returned' ? 'returned' : 'ticked') : '';
 html += '<div class="exp-item ' + cls + '">';
 html += '<div class="exp-text">' + (exp.ticked ? 'Yes ' : 'No ') + escapeHtml(exp.experience_text || ('Experience ' + (exp.experience_index+1))) + (exp.ticked ? '' : ' <span class="badge badge-warning">Not Yet Demonstrated</span>') + '</div>';
-if (exp.ticked && exp.evidence) html += '<div class="exp-evidence mgr-evidence">' + escapeHtml(exp.evidence) + '</div>';
+if (exp.ticked && exp.evidence) html += '<div class="exp-evidence mgr-evidence">' + cmsRichDisplayHTML(exp.evidence) + '</div>';
 if (exp.attachment_url) html += '<div style="font-size:11px;margin-top:4px"> <a href="' + exp.attachment_url + '" target="_blank">' + escapeHtml(exp.attachment_name || 'View attachment') + '</a></div>';
 if (exp.evidence_link) html += cmsEvidenceLinkHTML(exp);
 if (st === 'Disapproved') html += '<span class="badge badge-danger" style="margin-top:4px">HR Disapproved</span>';
@@ -6836,7 +6863,7 @@ rows.forEach(function(e) {
 var ticked = e.ticked === true || e.ticked === 'TRUE' || e.ticked === 1;
 h += '<div style="margin:4px 0;font-size:11px">';
 h += '<div style="color:var(--gray-700)">' + (ticked ? 'Yes ' : 'No ') + escapeHtml(e.experience_text || ('Experience ' + ((e.experience_index || 0) + 1))) + (ticked ? '' : ' - <em>Not Yet Demonstrated</em>') + '</div>';
-if (ticked && e.evidence) h += '<div class="exp-evidence ' + evClass + '" style="font-size:11px">' + escapeHtml(e.evidence) + '</div>';
+if (ticked && e.evidence) h += '<div class="exp-evidence ' + evClass + '" style="font-size:11px">' + cmsRichDisplayHTML(e.evidence) + '</div>';
 h += cmsRowRatingHTML(e);
 h += '</div>';
 });
@@ -7856,6 +7883,37 @@ html += '</tbody></table></div></div>';
 box.innerHTML = html;
 }
 /* Review attachment display only. Reuses saved URLs; never changes storage permissions. */
+function cmsReviewEvidenceLinksHTML(row) {
+  var links = [];
+  var seen = new Set();
+
+  function add(raw) {
+    raw = String(raw || '').trim();
+    if (!raw || seen.has(raw)) return;
+    var href = /^https?:\/\//i.test(raw) ? raw : 'https://' + raw;
+    try {
+      var u = new URL(href);
+      if (!['http:', 'https:'].includes(u.protocol) || u.username || u.password) return;
+      seen.add(raw);
+      links.push('<a href="' + escapeHtml(u.href) + '" target="_blank" rel="noopener noreferrer" referrerpolicy="no-referrer">Open supporting link</a>');
+    } catch (e) {}
+  }
+
+  add(row && row.evidence_link);
+
+  var items = row && row.evidence_items;
+  if (typeof items === 'string') {
+    try { items = JSON.parse(items); } catch (e) { items = []; }
+  }
+  if (Array.isArray(items)) {
+    items.forEach(function(item) {
+      if (item && (item.type === 'link' || item.url)) add(item.url || item.href);
+    });
+  }
+
+  if (!links.length) return '';
+  return '<div class="cms-review-links" style="margin:10px 0;font-size:12px;display:flex;gap:8px;flex-wrap:wrap;align-items:center"><strong>Supporting links:</strong>' + links.join('') + '</div>';
+}
 function cmsReviewAttachmentHTML(row){
  var name=String(row.attachment_name||'').trim();
  var raw=String(row.attachment_url||'').trim();
@@ -7891,14 +7949,14 @@ var notDemo = !exp.ticked || !hasEvidence;
 if (locked) {
 var ok = exp.hr_status === 'Approved';
 html += '<div class="exp-item ' + (ok ? 'ticked' : 'disapproved') + '"><div class="exp-text">' + escapeHtml(exp.experience_text || ('Experience ' + (exp.experience_index+1))) + ' ' + getClassificationBadge(exp.classification) + (notDemo ? ' <span class="badge badge-warning">Not Yet Demonstrated</span>' : '') + '</div>';
-if (exp.ticked && hasEvidence) html += '<div class="exp-evidence mgr-evidence"><strong>Evidence:</strong> ' + escapeHtml(exp.evidence) + '</div>';
+if (exp.ticked && hasEvidence) html += '<div class="exp-evidence mgr-evidence"><strong>Evidence:</strong> ' + cmsRichDisplayHTML(exp.evidence) + '</div>';
 html += cmsReviewAttachmentHTML(exp);
 html += '<div style="margin-top:6px"><span class="badge ' + (ok ? 'badge-success' : 'badge-danger') + '">' + escapeHtml(exp.hr_status) + '</span> ' + aiNoteBadge(exp.ai_note) + '</div>';
 if (exp.hr_comment) html += '<div style="font-size:11px;color:var(--gray-500);margin-top:6px">Comment: ' + escapeHtml(exp.hr_comment) + '</div>';
 html += '</div>';
 } else {
 html += '<div class="exp-item ' + (returned ? 'returned' : (exp.ticked && hasEvidence ? 'ticked' : '')) + '"><div class="exp-text">' + escapeHtml(exp.experience_text || ('Experience ' + (exp.experience_index+1))) + ' ' + getClassificationBadge(exp.classification) + (notDemo ? ' <span class="badge badge-warning">Not Yet Demonstrated</span>' : '') + '</div>';
-if (exp.ticked && hasEvidence) html += '<div class="exp-evidence mgr-evidence"><strong>Evidence:</strong> ' + escapeHtml(exp.evidence) + '</div>';
+if (exp.ticked && hasEvidence) html += '<div class="exp-evidence mgr-evidence"><strong>Evidence:</strong> ' + cmsRichDisplayHTML(exp.evidence) + '</div>';
 html += cmsReviewAttachmentHTML(exp);
 if (exp.ticked && !hasEvidence) html += '<div style="font-size:11px;color:var(--red);margin-top:4px">Ticked but no evidence: the new scoring rule applies rating 1 out of 5. Protected historical results remain unchanged.</div>';
 if (exp.ticked && hasEvidence) {
@@ -9193,7 +9251,7 @@ compRows.forEach(function(r) {
 var ticked = r.ticked === true || r.ticked === 'TRUE' || r.ticked === 1;
 html += '<div class="exp-item ' + (ticked ? (r.hr_status === 'Disapproved' ? 'disapproved' : r.hr_status === 'Returned' ? 'returned' : 'ticked') : '') + '" style="margin:4px 0">';
 html += '<div class="exp-text">' + (ticked ? 'Yes ' : 'No ') + escapeHtml(r.experience_text || '') + ' ' + getClassificationBadge(r.classification) + (ticked ? '' : ' <span class="badge badge-warning">Not Yet Demonstrated</span>') + '</div>';
-if (ticked && r.evidence) html += '<div class="exp-evidence mgr-evidence"><strong>Evidence:</strong> ' + escapeHtml(r.evidence) + '</div>';
+if (ticked && r.evidence) html += '<div class="exp-evidence mgr-evidence"><strong>Evidence:</strong> ' + cmsRichDisplayHTML(r.evidence) + '</div>';
 
 if (r.attachment_url && /^https:\/\//i.test(r.attachment_url)) html += '<div style="font-size:12px;margin-top:4px"> <a href="' + escapeHtml(r.attachment_url) + '" target="_blank" rel="noopener noreferrer">' + escapeHtml(r.attachment_name || 'Attachment') + '</a></div>';
 if (r.evidence_link) html += cmsEvidenceLinkHTML(r);
@@ -9736,7 +9794,7 @@ compRows.forEach(function(r) {
 var ticked = r.ticked === true || r.ticked === 'TRUE' || r.ticked === 1;
 html += '<div class="exp-item ' + (ticked ? (r.hr_status === 'Disapproved' ? 'disapproved' : r.hr_status === 'Returned' ? 'returned' : 'ticked') : '') + '">';
 html += '<div class="exp-text">' + (ticked ? 'Yes ' : 'No ') + escapeHtml(r.experience_text || ('Experience ' + ((r.experience_index||0)+1))) + ' ' + getClassificationBadge(r.classification) + (ticked ? '' : ' <span class="badge badge-warning">Not Yet Demonstrated</span>') + '</div>';
-if (ticked && r.evidence) html += '<div class="exp-evidence ' + (type === 'Self' ? 'self-evidence' : 'mgr-evidence') + '"><strong>Evidence:</strong> ' + escapeHtml(r.evidence) + '</div>';
+if (ticked && r.evidence) html += '<div class="exp-evidence ' + (type === 'Self' ? 'self-evidence' : 'mgr-evidence') + '"><strong>Evidence:</strong> ' + cmsRichDisplayHTML(r.evidence) + '</div>';
 if (r.attachment_url) html += '<div style="font-size:11px;margin-top:4px"> <a href="' + r.attachment_url + '" target="_blank">' + escapeHtml(r.attachment_name || 'View attachment') + '</a></div>';
 if (r.evidence_link) html += cmsEvidenceLinkHTML(r);
 html += cmsRowRatingHTML(r);
@@ -21237,13 +21295,25 @@ function srGroups(rows){var map=new Map();rows.forEach(r=>{var key=srGroupKey(r)
 function srSelected(s,type){return s.groups.find(g=>g.key===s.selection[type]);}
 function srPending(s){return Object.values(s.edits).filter(x=>x.status).length;}
 function srCapture(s){if(!srAlive(s))return;document.querySelectorAll('#srRoot [data-sr-row]').forEach(el=>{var id=el.dataset.srRow,status=el.querySelector('[data-sr-decision]')?.value,comment=el.querySelector('[data-sr-comment]')?.value;if(status)s.edits[id]={id,status,comment:comment||'',review_hash:s.rows.find(r=>r.id===id).review_hash};else delete s.edits[id];});}
+async function srLoadSavedEvidenceLinks(s) {
+  if (!s || !Array.isArray(s.rows) || !s.rows.length) return;
+  var ids = s.rows.map(function(r){ return r.id; }).filter(Boolean);
+  if (!ids.length) return;
+  var q = await _supabase.from('assessments').select('id,evidence_link').in('id',ids);
+  if (q.error || !Array.isArray(q.data)) return;
+  var byId = new Map(q.data.map(function(r){ return [String(r.id),r]; }));
+  s.rows.forEach(function(r){
+    var saved = byId.get(String(r.id));
+    if (saved && saved.evidence_link) r.evidence_link = saved.evidence_link;
+  });
+}
 loadHRRevEmp=async function(id){id=id||window._hrRevLast;if(!id)return;window._hrRevLast=id;if(typeof cnDetail==='function'&&APP.currentPage==='hr-review')cnDetail('review',id);if(SR.state&&srAlive(SR.state)){srCapture(SR.state);if(srPending(SR.state)&&!confirm('You have unsaved review choices. Save review before leaving. Leave without saving these choices?'))return;}
  var host=document.getElementById('hrRevContent');if(!host){setContent('<div id="hrRevContent"></div>');host=document.getElementById('hrRevContent');}
  var epoch=++SR.epoch,identity=adOwner();host.innerHTML='<p>Opening submitted evidence and review history...</p>';
  try{var d=await sxRPC('cms_experience_review','get',{employee_id:id});if(epoch!==SR.epoch||identity!==adOwner()||!host.isConnected)return;
  var groups=srGroups(d.rows||[]),s={id,identity,name:d.employee?.employee_name||d.rows?.[0]?.employee_name||id,position:d.employee?.position||'',rows:d.rows||[],invitations:d.invitations||[],history:d.history||[],groups,selection:{},edits:{},kind:'current',busy:false};
  ['Self','Manager','Prospective Self','Prospective'].forEach(type=>s.selection[type]=groups.find(g=>g.type===type)?.key||'');
- SR.state=s;host.innerHTML='<section id="srRoot"></section>';srRender(s);
+ SR.state=s;host.innerHTML='<section id="srRoot"></section>';await srLoadSavedEvidenceLinks(s);srRender(s);
  }catch(e){if(host.isConnected)host.innerHTML='<p>'+sxE(e.message)+'</p><p>Install the matching assessment/review setup before opening this review.</p>';}
 };
 function srSide(s,r,type){
@@ -21253,7 +21323,7 @@ function srSide(s,r,type){
  }
  var locked=['Approved','Disapproved'].includes(r.hr_status),g=srSelected(s,type),latest=s.groups.find(x=>x.type===type&&x.target===g.target);
  locked=locked||g!==latest;
- var edit=s.edits[r.id];return '<section class="sr-side '+(type.includes('Self')?'sr-self':'sr-manager')+'" data-sr-row="'+sxE(r.id)+'"><h3>'+sxE(type)+'</h3><p class="sr-meta">Round '+sxE(r.assessment_round||1)+' | '+sxE(r.assessor_email)+' | '+sxE(r.assessment_date)+'</p><p>'+sxE(r.ticked?'Demonstrated':'Not demonstrated')+'</p><div class="sr-original">'+[1,2,3,4,5].map(n=>'<label><input type="checkbox" disabled '+(Number(r.proficiency_rating)===n?'checked':'')+'>'+n+'</label>').join('')+'<strong>'+sxE(r.proficiency_rating?cmsRatingLabel(r.proficiency_rating):'Unanswered')+'</strong></div><p class="sr-evidence">'+sxE(r.evidence||'No evidence submitted')+'</p>'+cmsReviewAttachmentHTML(r)+
+ var edit=s.edits[r.id];return '<section class="sr-side '+(type.includes('Self')?'sr-self':'sr-manager')+'" data-sr-row="'+sxE(r.id)+'"><h3>'+sxE(type)+'</h3><p class="sr-meta">Round '+sxE(r.assessment_round||1)+' | '+sxE(r.assessor_email)+' | '+sxE(r.assessment_date)+'</p><p>'+sxE(r.ticked?'Demonstrated':'Not demonstrated')+'</p><div class="sr-original">'+[1,2,3,4,5].map(n=>'<label><input type="checkbox" disabled '+(Number(r.proficiency_rating)===n?'checked':'')+'>'+n+'</label>').join('')+'<strong>'+sxE(r.proficiency_rating?cmsRatingLabel(r.proficiency_rating):'Unanswered')+'</strong></div><div class="sr-evidence">'+cmsRichDisplayHTML(r.evidence||'No evidence submitted')+'</div>'+cmsReviewAttachmentHTML(r)+cmsReviewEvidenceLinksHTML(r)+
  '<p>Saved HR review: <b>'+sxE(r.hr_status||'Pending')+'</b></p>'+(r.hr_comment?'<p>'+sxE(r.hr_comment)+'</p>':'')+
  (locked?'<p class="sr-locked">Saved final or historical review: read-only.</p>':'<label>HR decision<select id="srDecision-'+sxE(r.id)+'" data-sr-decision><option value="">Choose a decision</option>'+['Approved','Returned','Disapproved'].map((v,i)=>'<option value="'+v+'" '+(edit?.status===v?'selected':'')+'>'+['Approve','Return','Disapprove'][i]+'</option>').join('')+'</select></label><label>HR comment<textarea id="srComment-'+sxE(r.id)+'" data-sr-comment rows="3" maxlength="2000" placeholder="Required for Return or Disapprove">'+sxE(edit?.comment||'')+'</textarea></label>')+'</section>';
 }
@@ -21286,7 +21356,7 @@ async function srSave(s,close){
  try{var result=await sxRPC('cms_experience_review','save',{employee_id:s.id,decisions});if(!srAlive(s))return;
  s.edits={};s.message='Saved to server '+adTime(result.saved_at);
  if(close){SR.state=null;document.getElementById('hrRevContent').innerHTML='<p>'+sxE(s.message)+'</p>';return;}
- var d=await sxRPC('cms_experience_review','get',{employee_id:s.id});if(!srAlive(s))return;s.rows=d.rows;s.history=d.history;s.invitations=d.invitations;s.groups=srGroups(s.rows);srRender(s);
+ var d=await sxRPC('cms_experience_review','get',{employee_id:s.id});if(!srAlive(s))return;s.rows=d.rows;s.history=d.history;s.invitations=d.invitations;s.groups=srGroups(s.rows);await srLoadSavedEvidenceLinks(s);srRender(s);
  }catch(e){if(srAlive(s))status.textContent='Review save not confirmed: '+e.message+'. Your selections remain here.';}
  finally{s.busy=false;if(srAlive(s))document.querySelectorAll('#srRoot button,#srRoot select,#srRoot textarea').forEach(e=>e.disabled=false);}
 }
@@ -38062,6 +38132,58 @@ body.cms-focus-editor-v1 #mainContent #fwScreen.cfu-screen #fwBody .cfe-footer {
  function schedule(){if(queued)return;queued=true;requestAnimationFrame(function(){queued=false;scan();});}
  function start(){scan();new MutationObserver(schedule).observe(document.body,{childList:true,subtree:true,attributes:true,attributeFilter:['disabled','readonly']});}
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start,{once:true});else start();
+})();
+</script>
+<style id="cms-rich-display-style-v1">
+.exp-evidence ul,
+.exp-evidence ol { margin: 6px 0 8px 24px; padding: 0; }
+.exp-evidence li { margin: 3px 0; }
+.exp-evidence p { margin: 0 0 8px; }
+.exp-evidence strong,
+.exp-evidence b { font-weight: 800; }
+.exp-evidence em,
+.exp-evidence i { font-style: italic; }
+.exp-evidence u { text-decoration: underline; }
+</style>
+<script id="cms-hr-rich-text-final-v1">
+(function(){
+  'use strict';
+  if(window.cmsHRRichTextFinalV1)return;
+  window.cmsHRRichTextFinalV1=true;
+
+  function esc(value){
+    return String(value==null?'':value).replace(/[&<>"']/g,function(ch){
+      return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch];
+    });
+  }
+  function render(value){
+    var raw=String(value==null?'':value);
+    if(!/<\/?(strong|b|em|i|u|ul|ol|li|p|br|div)\b/i.test(raw))return esc(raw).replace(/\r?\n/g,'<br>');
+    var box=document.createElement('div');box.innerHTML=raw;
+    box.querySelectorAll('script,style,iframe,object,embed,link,meta,form,img,svg,video,audio').forEach(function(n){n.remove();});
+    var allowed=new Set(['STRONG','B','EM','I','U','UL','OL','LI','P','BR','DIV']);
+    box.querySelectorAll('*').forEach(function(n){
+      if(!allowed.has(n.tagName)){n.replaceWith(document.createTextNode(n.textContent||''));return;}
+      Array.from(n.attributes).forEach(function(a){n.removeAttribute(a.name);});
+    });
+    return box.innerHTML;
+  }
+  function repair(root){
+    if(!root)return;
+    root.querySelectorAll('.exp-evidence').forEach(function(el){
+      if(el.dataset.richFixed==='1')return;
+      var text=el.textContent||'';
+      if(!/<\/?(strong|b|em|i|u|ul|ol|li|p|br|div)\b/i.test(text))return;
+      el.innerHTML=render(text);el.dataset.richFixed='1';
+    });
+  }
+  function scan(){
+    repair(document.getElementById('hrRevContent'));
+    repair(document.getElementById('mainContent'));
+  }
+  var observer=new MutationObserver(function(){scan();});
+  function start(){scan();observer.observe(document.body,{childList:true,subtree:true});}
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start,{once:true});else start();
 })();
 </script>
 </body>
