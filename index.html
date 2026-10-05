@@ -6318,13 +6318,13 @@ const { data: emp } = await fpOwnEmployee();
 if (!emp) { if (typeof CN === 'undefined' || __cmsRouteEpoch === CN.epoch) setContent('<div class="card"><p>Employee not found</p></div>'); return; }
 const { data: allResults } = await _supabase.from('assessments').select('*').eq('employee_id', emp.employee_id);
 var latestResults = latestOnly(allResults || []);
-var curMRows = latest.filter(r => r.type === 'Manager');
-var curS = latest.filter(r => r.type === 'Self');
-var proMRows = latest.filter(r => r.type === 'Prospective');
-var proS = latest.filter(r => r.type === 'Prospective Self');
+var currentMgrRows = latestResults.filter(r => r.type === 'Manager');
+var currentSelf = latestResults.filter(r => r.type === 'Self');
+var prospectiveMgrRows = latestResults.filter(r => r.type === 'Prospective');
+var prospectiveSelf = latestResults.filter(r => r.type === 'Prospective Self');
 
-var curM = cmsReviewComplete(curMRows) ? curMRows : [];
-var proM = cmsReviewComplete(proMRows) ? proMRows : [];
+var currentMgr = cmsReviewComplete(currentMgrRows) ? currentMgrRows : [];
+var prospectiveMgr = cmsReviewComplete(prospectiveMgrRows) ? prospectiveMgrRows : [];
 
 var prospectiveRole = (prospectiveMgr[0] || prospectiveSelf[0] || {}).prospective_role || '';
 function gapRows(rows) {
@@ -6402,10 +6402,14 @@ const { data: emp } = await fpOwnEmployee();
 if (!emp) { if (typeof CN === 'undefined' || __cmsRouteEpoch === CN.epoch) setContent('<div class="card"><p>Employee not found</p></div>'); return; }
 const { data: allResults } = await _supabase.from('assessments').select('*').eq('employee_id', emp.employee_id);
 var latest = latestOnly(allResults || []);
-var curM = latest.filter(r => r.type === 'Manager');
+var curMRows = latest.filter(r => r.type === 'Manager');
 var curS = latest.filter(r => r.type === 'Self');
-var proM = latest.filter(r => r.type === 'Prospective');
+var proMRows = latest.filter(r => r.type === 'Prospective');
 var proS = latest.filter(r => r.type === 'Prospective Self');
+
+var curM = cmsReviewComplete(curMRows) ? curMRows : [];
+var proM = cmsReviewComplete(proMRows) ? proMRows : [];
+
 var targetRole = (proM[0] || proS[0] || {}).prospective_role || '';
 function rowsFor(rows) { return rows.map(function(r) { return {'Employee ID':r.employee_id,'Competency Code':r.comp_code,'Type':r.type,'Ticked':r.ticked,'Evidence':r.evidence,'HR_Status':r.hr_status,'Rating':r.proficiency_rating,'Scoring Rule':r.scoring_rule || 'legacy-zero','Classification':r.scoring_rule === 'floor-one-v1' ? r.classification : undefined,'Weight Profile':r.weight_profile,'Weight Policy':r.weight_policy}; }); }
 function missing(role, m, s) { var msg = m.length === 0 && s.length === 0 ? 'Complete both assessments to view your strengths.' : (s.length === 0 ? 'Complete the self-assessment to view your strengths.' : 'The manager assessment is not available yet.'); return '<div style="padding:30px 20px;text-align:center;border:1px solid var(--gray-200);border-radius:12px;background:#fff"><div style="font-size:40px;color:#16a34a;margin-bottom:10px">&#127942;</div><h3 style="margin:0 0 8px;color:var(--gray-900)">' + escapeHtml(role) + ' strengths are not ready yet</h3><p style="color:var(--gray-500);max-width:680px;margin:0 auto">' + msg + '</p></div>'; }
