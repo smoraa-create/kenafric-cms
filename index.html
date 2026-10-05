@@ -6163,8 +6163,8 @@ proficiency_rating: ratingVal, _att: 'att-exp-' + ci + '-' + ei
 });
 });
 await uploadEvidenceAttachments(rows, assessmentId);
-var invalid = rows.some(function(r){ return r.ticked && (!r.evidence || !r.proficiency_rating); });
-if (invalid && !confirm('Some ticked items have no evidence and/or no proficiency rating - the minimum rating of 1 out of 5 will apply. Continue?')) return;
+// Evidence and rating are optional at submission.
+// HR may request clarification or supporting proof during review.
 const { error } = await _supabase.from('assessments').insert(rows);
 if (error) { showToast('Error: ' + error.message); return; }
 localStorage.removeItem('cms_draft_Self_' + data.employee.employee_id);
@@ -6925,8 +6925,8 @@ proficiency_rating: ratingVal, _att: 'att-' + pre + '-' + ci + '-' + ei
 });
 });
 await uploadEvidenceAttachments(rows, assessmentId);
-var invalid = rows.some(function(r){ return r.ticked && (!r.evidence || !r.proficiency_rating); });
-if (invalid && !confirm('Some ticked items have no evidence and/or no proficiency rating. The minimum rating of 1 out of 5 will apply. Continue?')) return;
+// Evidence and rating are optional at submission.
+// HR may request clarification or supporting proof during review.
 const { error } = await _supabase.from('assessments').insert(rows);
 if (error) { showToast('Error: ' + error.message); return; }
 localStorage.removeItem('cms_draft_' + type + '_' + emp.employee_id);
