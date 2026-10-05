@@ -15458,11 +15458,12 @@ function mdAllowed(){return APP.currentRole==='manager';}
 function mdButton(label,page,cls){return '<button type="button" class="'+(cls||'btn btn-outline')+'" onclick="navigateTo('+rcArg(page)+')">'+escapeHtml(label)+'</button>';}
 async function mdRPC(action,data){var r=await _supabase.rpc('cms_manager_dashboard',{p_action:action,p_data:data||{}});if(r.error)throw new Error(r.error.message);return r.data;}
 async function mdGet(){
- var who=APP.user.email,team=[],rows=[];
+ var who=APP.user.email,team=[],rows=[],invitations=[];
  for(var page=0;;page++){var part=await mdRPC('team',{page:page});team.push(...part);if(part.length<100)break;}
  for(var offset=0;offset<team.length;offset+=40){var ids=team.slice(offset,offset+40).map(e=>e.employee_id);for(var page=0;;page++){var part=await mdRPC('assessments',{page:page,employees:ids});rows.push(...part);if(part.length<500)break;}}
+ if(typeof ihRPC==='function'){try{invitations=await ihRPC('mine');}catch(e){invitations=[];}}
  if(!mdAllowed()||APP.user.email!==who)throw new Error('Role changed. Reopen Manager Dashboard.');
- return mdModel(team,rows);
+ return mdModel(team,rows,invitations);
 }
 function mdFormat(rows){return rows.map(r=>({'Employee ID':r.employee_id,'Competency Code':r.comp_code,'Type':r.type,'Ticked':r.ticked,'Evidence':r.evidence,'HR_Status':r.hr_status,'Rating':r.proficiency_rating,'Scoring Rule':r.scoring_rule||'legacy-zero','Classification':r.scoring_rule==='floor-one-v1'?r.classification:undefined, 'Weight Profile': r.weight_profile, 'Weight Policy': r.weight_policy}));}
 function mdProspective(rows,employeeId,managerLevel){
@@ -15486,14 +15487,18 @@ function mdProspective(rows,employeeId,managerLevel){
  var m=calculateOverallScore(employeeId,'Prospective',mdFormat(p)),ss=calculateOverallScore(employeeId,'Prospective Self',mdFormat(s));
  out.combined=Math.round(m*.7+ss*.3);out.manager=m;out.self=ss;out.ready=pass;out.state=averageRule?(pass?'Critical average meets 70%':'Critical average below 70%'):(pass?'Historical Critical requirements met':'Historical Critical requirements not met');return out;
 }
-function mdModel(team,all){
+function mdModel(team,all,invitations){
  var people=team.map(e=>{var rows=all.filter(r=>r.employee_id===e.employee_id),latest=latestOnly(rows),mgr=latest.filter(r=>r.type==='Manager'),self=latest.filter(r=>r.type==='Self');
  var m=mgr.length?calculateOverallScore(e.employee_id,'Manager',mdFormat(mgr)):null;
  var s=self.length?calculateOverallScore(e.employee_id,'Self',mdFormat(self)):null;
  return Object.assign({},e,{rows:rows,manager:m,self:s,combined:m!==null&&s!==null?Math.round(.7*m+.3*s):null,complete:mgr.length>0,prospective:mdProspective(rows,e.employee_id,e.competency_level)});});
- var complete=people.filter(e=>e.complete),pending=people.filter(e=>!e.complete),pool=people.filter(e=>e.prospective.ready);
+ var directIds=new Set(people.map(e=>String(e.employee_id)));
+ var pendingInvites=(invitations||[]).filter(function(r){return directIds.has(String(r.employee_id))&&['manager_current','manager_target'].includes(r.kind)&&r.state==='Pending'&&!r.submitted_at;});
+ var currentInviteIds=new Set(pendingInvites.filter(r=>r.kind==='manager_current').map(r=>String(r.employee_id)));
+ var prospectiveInviteIds=new Set(pendingInvites.filter(r=>r.kind==='manager_target').map(r=>String(r.employee_id)));
+ var complete=people.filter(e=>e.complete),pending=people.filter(e=>currentInviteIds.has(String(e.employee_id))),prospectivePending=people.filter(e=>prospectiveInviteIds.has(String(e.employee_id))),pool=people.filter(e=>e.prospective.ready);
  var gaps={};complete.forEach(e=>{APP.competencies.forEach(c=>{var x=calculateCompetencyScore(e.employee_id,c.code,'Manager',mdFormat(latestOnly(e.rows)));if(x.total){var pct=Math.round(x.score/5*100);if(pct<75){var g=gaps[c.code]||(gaps[c.code]={name:c.competency,sum:0,count:0});g.sum+=pct;g.count++;}}});});
- return {people:people,complete:complete,pending:pending,pool:pool,average:complete.length?Math.round(complete.reduce((n,e)=>n+e.manager,0)/complete.length):null,gaps:Object.values(gaps).map(g=>({name:g.name,score:Math.round(g.sum/g.count),count:g.count})).sort((a,b)=>a.score-b.score)};
+ return {people:people,complete:complete,pending:pending,prospectivePending:prospectivePending,pendingInvites:pendingInvites,pool:pool,average:complete.length?Math.round(complete.reduce((n,e)=>n+e.manager,0)/complete.length):null,gaps:Object.values(gaps).map(g=>({name:g.name,score:Math.round(g.sum/g.count),count:g.count})).sort((a,b)=>a.score-b.score)};
 }
 function mdHero(title,sub,back){return '<section class="md-hero"><div><h2>'+escapeHtml(title)+'</h2><p>'+escapeHtml(sub)+'</p></div>'+(back?mdButton('Back to Dashboard','mgr-dashboard'):'')+'</section>';}
 function mdMetric(value,title,page,color,explanation){return '<button type="button" class="md-metric '+color+'" onclick="navigateTo('+rcArg(page)+')"><strong>'+escapeHtml(value)+'</strong><span>'+escapeHtml(title)+'</span><small>'+escapeHtml(explanation)+'  to </small></button>';}
@@ -15503,7 +15508,7 @@ function mdV2Readiness(score){if(score===null||score===undefined)return {label:'
 function mdV2Model(d){
  var people=d.people||[],current=people.map(function(e){return e.combined;}).filter(function(v){return v!==null&&v!==undefined&&Number.isFinite(Number(v));}).map(Number),prospective=people.map(function(e){return e.prospective&&e.prospective.combined;}).filter(function(v){return v!==null&&v!==undefined&&Number.isFinite(Number(v));}).map(Number),readiness={ready:0,soon:0,later:0,notready:0};
  people.forEach(function(e){var r=mdV2Readiness(e.combined);readiness[r.kind]++;});
- var prospectivePending=people.filter(function(e){return !latestOnly(e.rows||[]).some(function(r){return r.type==='Prospective';});}).length;
+ var prospectivePending=(d.prospectivePending||[]).length;
  var activities=[];people.forEach(function(e){(e.rows||[]).forEach(function(r){var date=r.updated_at||r.created_at||r.submitted_at;if(date)activities.push({date:date,name:e.employee_name||'Employee',type:r.type||'Assessment',comp:r.comp_name||r.comp_code||''});});});
  activities.sort(function(a,b){return new Date(b.date)-new Date(a.date);});
  return {people:people,currentAvg:current.length?Math.round(current.reduce(function(a,b){return a+b;},0)/current.length):null,prospectiveAvg:prospective.length?Math.round(prospective.reduce(function(a,b){return a+b;},0)/prospective.length):null,readiness:readiness,prospectivePending:prospectivePending,activities:activities.slice(0,4)};
@@ -15516,13 +15521,13 @@ function mdV2Activity(d){var a=d.activities||[];if(!a.length)return '<div class=
 async function loadManagerDashboard(){
  if(!mdAllowed())return;var token=++MD.token,epoch=CN.epoch;setContent('<div class="es-progress" role="status" aria-label="Loading manager dashboard"><span></span><span></span><span></span></div>');
  try{
-  var d=await mdGet();if(token!==MD.token||epoch!==CN.epoch)return;MD.data=d;var v=mdV2Model(d),overdue=d.pending.length?Math.min(2,d.pending.length):0,today=d.pending.length>2?Math.min(3,d.pending.length):d.pending.length,week=d.pending.length+v.prospectivePending;
-  var h='<div class="md md-v2">';
-  h+='<section class="md-v2-hero"><div><h2>Manager Dashboard</h2><p>Your team\'s assessment progress, readiness, and development priorities.</p></div><div class="md-v2-hero-side"><div class="md-v2-chip">Scoring Model<strong>70% Manager + 30% Self</strong><small>Current and Prospective tracked separately</small></div><div class="md-v2-chip">Visibility<strong>Direct Reports Only</strong><small>'+d.people.length+' team member'+(d.people.length===1?'':'s')+'</small></div></div></section>';
-  h+='<div class="md-v2-alert"><div><strong>Action required:</strong> '+overdue+' overdue and '+today+' due today across your manager actions.</div>'+mdButton('View all actions','mgr-pending','btn btn-outline')+'</div>';
-  h+='<div class="md-v2-kpis">'+mdV2Kpi(d.people.length,'Direct Reports','Open My Team','mgr-team','teal','people')+mdV2Kpi(d.pending.length,'Pending Assessments',overdue+' overdue','mgr-pending','amber','calendar')+mdV2Kpi(d.complete.length,'Completed Assessments','Current role this cycle','mgr-completed','green','check')+mdV2Kpi(v.currentAvg===null?'--':v.currentAvg+'%','Current Role Team Average','Final score','mgr-score-details','purple','chart')+mdV2Kpi(v.prospectiveAvg===null?'--':v.prospectiveAvg+'%','Prospective Role Team Average','Final score','mgr-prompool','purple','chart')+mdV2Kpi('--','Development Plans','Open plan workspace','mgr-devplans','rose','calendar')+'</div>';
-  h+='<section class="md-v2-card"><div class="md-v2-card-head"><div><h3>Action Queue</h3><p>Prioritized work for current and prospective assessments.</p></div><span class="md-v2-badge high">'+(d.pending.length+v.prospectivePending)+' priorities</span></div><div class="md-v2-actions">';
-  h+=mdV2Action('Pending Assessments','Manager assessments not yet submitted.',overdue,today,week,'mgr-pending','high','View pending assessments');
+  var d=await mdGet();if(token!==MD.token||epoch!==CN.epoch)return;MD.data=d;var v=mdV2Model(d),inviteRows=d.pendingInvites||[],assessmentPending=inviteRows.length,overdue=inviteRows.filter(function(r){return r.status==='Overdue';}).length,today=inviteRows.filter(function(r){return r.status==='Due today';}).length,week=inviteRows.filter(function(r){var n=Number(r.days_remaining);return Number.isFinite(n)&&n>=0&&n<=7;}).length;
+ var h='<div class="md md-v2">';
+
+h+='<div class="md-v2-kpis">'+mdV2Kpi(d.people.length,'Direct Reports','Open My Team','mgr-team','teal','people')+mdV2Kpi(assessmentPending,'Pending Assessments','Invited current and prospective work','mgr-pending','amber','calendar')+mdV2Kpi(d.complete.length,'Completed Assessments','Current role this cycle','mgr-completed','green','check')+mdV2Kpi(v.currentAvg===null?'--':v.currentAvg+'%','Current Role Team Average','Final score','mgr-score-details','purple','chart')+mdV2Kpi(v.prospectiveAvg===null?'--':v.prospectiveAvg+'%','Prospective Role Team Average','Final score','mgr-prompool','purple','chart')+mdV2Kpi('--','Development Plans','Open plan workspace','mgr-devplans','rose','calendar')+'</div>';
+
+h+='<section class="md-v2-card"><div class="md-v2-card-head"><div><h3>Action Queue</h3><p>Prioritized work for current and prospective assessments.</p></div><span class="md-v2-badge high">'+assessmentPending+' priorities</span></div><div class="md-v2-actions">';
+h+=mdV2Action('Pending Assessments','Invited current and prospective Manager assessments not yet submitted.',overdue,today,week,'mgr-pending','high','View pending assessments');
   h+=mdV2Action('Returned Evidence','Evidence returned by HR needs revision.','--','--','--','mgr-returned-details','high','Review returned evidence');
   h+=mdV2Action('Setup Deadlines','Framework and competency setup deadlines.','--','--','--','mgr-setup-alerts','medium','View setup deadlines');
   h+=mdV2Action('Development Reports','Reports and development follow-up awaiting review.','--','--','--','mgr-repappr','low','Review reports');
@@ -15720,7 +15725,7 @@ mdDetailPage = async function(kind){
             '<span class="badge badge-warning">Returned by HR</span>'+
             '<div style="font-size:11px;color:var(--gray-500);margin-top:10px">HR comment</div>'+
             '<div style="padding:10px;background:#fff7ed;border:1px solid #fed7aa;border-radius:8px;font-size:12px;white-space:pre-wrap">'+escapeHtml(row.hr_comment || 'HR requested clearer evidence or correction.')+'</div>'+
-            '<button type="button" class="btn btn-primary" style="margin-top:12px" onclick="mdOpenPerson('+rcArg(person.employee_id)+')">Open assessment details</button>'+
+            '<button type="button" class="btn btn-primary" style="margin-top:12px" onclick="viewDetails('+rcArg(person.employee_id)+')">Open assessment details</button>'+
           '</div>'+
         '</div>'+
       '</article>';
@@ -30652,7 +30657,7 @@ var liveReturnedPatch=String.raw`<script>
           (r.prospective_role?'<p><strong>Target role:</strong> '+escapeHtml(r.prospective_role)+'</p>':'')+
           '<div class="exp-evidence mgr-evidence"><strong>Returned evidence</strong><div>'+evidence+'</div></div>'+
           '<div style="margin-top:10px;padding:10px;background:#fff7ed;border:1px solid #fed7aa;border-radius:8px"><strong>HR comment</strong><div style="white-space:pre-wrap">'+comment+'</div></div>'+
-          '<button type="button" class="btn btn-outline" style="margin-top:10px" onclick="mdOpenPerson('+rcArg(p.employee_id)+')">Open assessment details</button>'+
+          ''<button type="button" class="btn btn-outline" style="margin-top:10px" onclick="viewDetails('+rcArg(p.employee_id)+')">Open assessment details</button>'+
           '</article>';
       }
       var html='<div class="md"><h2>Evidence Returned by HR</h2><p>Live current data. Only returned Manager and Prospective experiences are shown.</p>'+
