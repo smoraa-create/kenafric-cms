@@ -8089,7 +8089,35 @@ function cmsReviewAttachmentHTML(row){
  var url;try{url=new URL(raw);if(url.protocol!=='https:'||url.username||url.password)throw new Error('Invalid URL');}catch(e){return '<div class="cms-review-file" style="margin:10px 0;font-size:12px;color:#b45309">Supporting-file link is invalid. '+escapeHtml(name)+'</div>';}
  return '<div class="cms-review-file" style="margin:10px 0;display:flex;gap:10px;align-items:center;flex-wrap:wrap"><a class="btn btn-outline" href="'+escapeHtml(url.href)+'" target="_blank" rel="noopener noreferrer" referrerpolicy="no-referrer" style="text-decoration:none;font-size:13px">View Supporting Evidence</a><span style="font-size:12px;color:#475569;overflow-wrap:anywhere">'+escapeHtml(name||'Supporting file')+'</span></div>';
 }
-
+function cmsReportEvidenceHTML(rows, title) {
+  var items = [];
+  var seen = new Set();
+  (rows || []).forEach(function(row) {
+    var label = [row.type, row.comp_name || row.comp_code,
+      row.experience_text || ('Experience ' + (Number(row.experience_index || 0) + 1))]
+      .filter(Boolean).join(' | ');
+    function add(raw, text) {
+      raw = String(raw || '').trim();
+      if (!raw || seen.has(raw)) return;
+      var href = /^https?:\/\//i.test(raw) ? raw : 'https://' + raw;
+      try {
+        var u = new URL(href);
+        if (!['http:', 'https:'].includes(u.protocol) || u.username || u.password) return;
+        seen.add(raw);
+        items.push('<li style="margin:5px 0"><strong>' + escapeHtml(label) +
+          '</strong>: <a href="' + escapeHtml(u.href) +
+          '" target="_blank" rel="noopener noreferrer" referrerpolicy="no-referrer">' +
+          escapeHtml(text) + '</a></li>');
+      } catch (e) {}
+    }
+    add(row.evidence_link, 'Open supporting link');
+    add(row.attachment_url, row.attachment_name || 'View supporting file');
+  });
+  if (!items.length) return '';
+  return '<div class="cms-report-evidence" style="margin:10px 0;padding:10px;background:var(--gray-50);border:1px solid var(--gray-200);border-radius:8px;font-size:12px">' +
+    '<strong>' + escapeHtml(title || 'Supporting evidence') + '</strong><ul style="margin:6px 0 0 18px">' +
+    items.join('') + '</ul></div>';
+}
 async function loadHRRevEmp(id) {
 id = id || window._hrRevLast || ((document.getElementById('hrRevEmp') || {}).value || '');
 window._hrRevLast = id;
@@ -8118,15 +8146,16 @@ if (locked) {
 var ok = exp.hr_status === 'Approved';
 html += '<div class="exp-item ' + (ok ? 'ticked' : 'disapproved') + '"><div class="exp-text">' + escapeHtml(exp.experience_text || ('Experience ' + (exp.experience_index+1))) + ' ' + getClassificationBadge(exp.classification) + (notDemo ? ' <span class="badge badge-warning">Not Yet Demonstrated</span>' : '') + '</div>';
 if (exp.ticked && hasEvidence) html += '<div class="exp-evidence mgr-evidence"><strong>Evidence:</strong> ' + cmsRichDisplayHTML(exp.evidence) + '</div>';
-html += cmsReviewAttachmentHTML(exp);
+ html += cmsReviewAttachmentHTML(exp);
+  html += cmsReviewEvidenceLinksHTML(exp);
 html += '<div style="margin-top:6px"><span class="badge ' + (ok ? 'badge-success' : 'badge-danger') + '">' + escapeHtml(exp.hr_status) + '</span> ' + aiNoteBadge(exp.ai_note) + '</div>';
 if (exp.hr_comment) html += '<div style="font-size:11px;color:var(--gray-500);margin-top:6px">Comment: ' + escapeHtml(exp.hr_comment) + '</div>';
 html += '</div>';
 } else {
 html += '<div class="exp-item ' + (returned ? 'returned' : (exp.ticked && hasEvidence ? 'ticked' : '')) + '"><div class="exp-text">' + escapeHtml(exp.experience_text || ('Experience ' + (exp.experience_index+1))) + ' ' + getClassificationBadge(exp.classification) + (notDemo ? ' <span class="badge badge-warning">Not Yet Demonstrated</span>' : '') + '</div>';
 if (exp.ticked && hasEvidence) html += '<div class="exp-evidence mgr-evidence"><strong>Evidence:</strong> ' + cmsRichDisplayHTML(exp.evidence) + '</div>';
-html += cmsReviewAttachmentHTML(exp);
-if (exp.ticked && !hasEvidence) html += '<div style="font-size:11px;color:var(--red);margin-top:4px">Ticked but no evidence: the new scoring rule applies rating 1 out of 5. Protected historical results remain unchanged.</div>';
+ html += cmsReviewAttachmentHTML(exp);
+  html += cmsReviewEvidenceLinksHTML(exp);if (exp.ticked && !hasEvidence) html += '<div style="font-size:11px;color:var(--red);margin-top:4px">Ticked but no evidence: the new scoring rule applies rating 1 out of 5. Protected historical results remain unchanged.</div>';
 if (exp.ticked && hasEvidence) {
 html += '<div style="margin-top:6px;display:flex;gap:6px;align-items:center;flex-wrap:wrap">' + aiNoteBadge(exp.ai_note) + '<button type="button" class="btn btn-sm btn-outline" onclick="aiValidateOne(' + rcArg(exp.id) + ')"> Validate</button><button type="button" class="btn btn-sm btn-outline" onclick="aiRefineOne(' + rcArg(exp.id) + ')"> Refine</button></div><div id="airef-' + exp.id + '"></div>';
 } else if (exp.ai_note) { html += '<div style="margin-top:4px">' + aiNoteBadge(exp.ai_note) + '</div>'; }
@@ -8607,7 +8636,7 @@ function sg(scope) {
 var cur = sg('Current'); var pros = sg('Prospective');
 const { data: chainRows } = await _supabase.from('report_chain').select('*').eq('employee_id', empId).order('id', { ascending: false }).limit(1);
 var ex = (chainRows && chainRows.length) ? chainRows[0] : null;
-return { assessedTargetRoles: [...new Set(latest.filter(r=>['Prospective Self','Prospective'].includes(r.type)).map(r=>String(r.prospective_role||'').trim()).filter(Boolean))], emp: emp, hasS: hasS, hasM: hasM, hasP: hasP, hasPS: hasPS, selfScore: selfScore, mgrScore: mgrScore, avgScore: avgScore, psScore: psScore, prospScore: prospScore, psAvg: psAvg, compRows: compRows, cur: cur, pros: pros, ex: ex };
+  return { assessedTargetRoles: [...new Set(latest.filter(r=>['Prospective Self','Prospective'].includes(r.type)).map(r=>String(r.prospective_role||'').trim()).filter(Boolean))], emp: emp, hasS: hasS, hasM: hasM, hasP: hasP, hasPS: hasPS, selfScore: selfScore, mgrScore: mgrScore, avgScore: avgScore, psScore: psScore, prospScore: prospScore, psAvg: psAvg, compRows: compRows, cur: cur, pros: pros, ex: ex };
 }
 function hohrDocHTML(d) {
 var NL = '\n'; var esc = escapeHtml;
@@ -8690,7 +8719,8 @@ html += '<div class="form-group"><label>HR ADMIN PROFESSIONAL OBSERVATIONS (HR A
 html += '<div class="form-group"><label>HR RECOMMENDATION (HR ADMIN ONLY)</label><select id="hohrRec" style="width:100%"><option value="">Select recommendation</option><option value="Promote">Promote</option><option value="Promotion Ready">Promotion Ready</option><option value="Develop">Develop</option><option value="Retain and Develop">Retain and Develop</option><option value="Not Recommended">Not Recommended</option></select><small>Formal HR conclusion from the assessment.</small></div>';
 html += '<div class="form-group"><label>SUGGESTED PLAN (HR ADMIN ONLY)</label><select id="hohrPath" style="width:100%"><option value="">Select suggested plan</option><option value="Promote when vacancy and process allow">Promote when vacancy and process allow</option><option value="Develop for 3 months, then reassess">Develop for 3 months, then reassess</option><option value="Develop for 6 months, then reassess">Develop for 6 months, then reassess</option><option value="Develop for 12 months, then reassess">Develop for 12 months, then reassess</option><option value="Develop for 24 months, then reassess">Develop for 24 months, then reassess</option><option value="Hold in progression-ready pool and develop">Hold in progression-ready pool and develop</option><option value="Retain in current role and develop">Retain in current role and develop</option><option value="Start a Performance Improvement Plan">Start a Performance Improvement Plan</option></select><small>Practical action and timeline that follows the recommendation.</small></div>';
 if (d.ex) html += '<p style="font-size:11px;color:var(--gray-500)">Existing report status: ' + escapeHtml(d.ex.status) + ' (' + escapeHtml(d.ex.stage) + ')</p>';
-html += '<div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap"><button class="btn btn-primary" onclick="saveHOHRReport(\'' + empId + '\',false)"> Submit to Head of HR</button> <button class="btn btn-outline" onclick="saveHOHRReport(\'' + empId + '\',true)"> Save Draft</button> <button class="btn btn-outline" onclick="printHOHRReport(\'' + empId + '\')"> Print / PDF</button> <button class="btn btn-success" onclick="downloadHOHRReportWord(\'' + empId + '\')"> Word</button> <button class="btn btn-outline" onclick="loadHRAllDetail(\'' + empId + '\')">Cancel</button></div>';
+  html += cmsReportEvidenceHTML(d.evidenceRows, 'Supporting evidence links and files');
+  html += '<div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap"><button class="btn btn-primary" onclick="saveHOHRReport(\'' + empId + '\',false)"> Submit to Head of HR</button> <button class="btn btn-outline" onclick="saveHOHRReport(\'' + empId + '\',true)"> Save Draft</button> <button class="btn btn-outline" onclick="printHOHRReport(\'' + empId + '\')"> Print / PDF</button> <button class="btn btn-success" onclick="downloadHOHRReportWord(\'' + empId + '\')"> Word</button> <button class="btn btn-outline" onclick="loadHRAllDetail(\'' + empId + '\')">Cancel</button></div>';
 html += '</div>';
 box.innerHTML = html;
 if (d.ex) {
@@ -8846,6 +8876,149 @@ card.style.borderColor = selected ? '#4338ca' : 'var(--gray-200)';
 card.style.background = selected ? '#eef2ff' : '#fff';
 });
 }
+function hohrAdminReportHTML(r) {
+  if (!(r.strengths_text || r.gaps_text || r.recommendation_text || r.suggested_path)) return '';
+  var h = '<div style="background:#f5f3ff;border:1px solid #ddd6fe;border-radius:12px;padding:14px;margin:0 0 12px">';
+  h += '<div style="font-size:12px;font-weight:800;letter-spacing:.1em;color:#5b21b6;margin-bottom:8px">HR ADMIN REPORT AND COMMENTS</div>';
+  [['Observations', r.strengths_text], ['Gaps and development needs', r.gaps_text], ['HR recommendation', r.recommendation_text], ['Suggested plan', r.suggested_path]].forEach(function(p) {
+    if (p[1]) h += '<div style="margin:8px 0 0"><div style="font-size:12px;font-weight:700;color:#475569">' + p[0] + '</div><div style="font-size:14px;line-height:1.55;color:#1e293b;white-space:pre-wrap">' + escapeHtml(p[1]) + '</div></div>';
+  });
+  return h + '</div>';
+}
+
+function hohrOfficialReportHTML(d) {
+  var esc = escapeHtml;
+  var css = [
+    '<style id="or-style">',
+    '.or-wrap{margin:0 0 12px}',
+    '.or-block{border:1px solid #dfe3f1;border-radius:14px;background:#fff;overflow:hidden;margin:0 0 14px}',
+    '.or-title{padding:10px 16px;font-size:12px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:#fff;background:var(--acc,#4338ca)}',
+    '.or-band{display:grid;grid-template-columns:1fr minmax(200px,260px) 1fr;gap:12px;align-items:center;padding:14px 16px;background:#f7f8fd}',
+    '.or-band .score-ring svg{width:96px;height:96px;display:block;margin:0 auto}',
+    '.or-band .score-ring .label{font-size:13px;font-weight:800;margin-top:4px}',
+    '.or-mid{text-align:center}',
+    '.or-k{font-size:12px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#475569}',
+    '.or-n{font-size:28px;font-weight:900;color:#92400e;line-height:1.1;margin:4px 0}',
+    '.or-t{font-size:13px;color:#334155}',
+    '.or-ready{margin:10px auto 0;padding:10px 12px;border-radius:12px;max-width:250px}',
+    '.or-ready b{display:block;font-size:18px;font-weight:900}',
+    '.or-ready span{font-size:13px;color:#334155}',
+    '.or-none{font-size:13px;color:#64748b;text-align:center;padding:16px 6px}',
+    '.or-sg{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:14px 16px}',
+    '.or-card{border:1px solid;border-radius:12px;padding:12px}',
+    '.or-card h4{font-size:14px;font-weight:900;margin:0 0 8px}',
+    '.or-card h4 span{font-size:12px;font-weight:600;color:#475569;margin-left:6px}',
+    '.or-li{display:flex;align-items:center;gap:10px;background:#fff;border-radius:10px;padding:8px 10px;margin:6px 0}',
+    '.or-li div{flex:1;min-width:0}',
+    '.or-li strong{display:block;font-size:14px;color:#0f172a}',
+    '.or-li small{font-size:12px;color:#475569}',
+    '.or-pill{min-width:50px;text-align:center;border-radius:999px;padding:3px 8px;font-size:14px;font-weight:900;color:#fff}',
+    '.or-empty{background:#fff;border-radius:10px;padding:10px;font-size:13px;color:#475569}',
+    '.or-rank{padding:4px 16px 14px}',
+    '.or-rank h4{font-size:12px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:#312e81;margin:6px 0 2px}',
+    '.or-row{display:grid;grid-template-columns:26px minmax(0,1.2fr) minmax(0,2fr);gap:12px;align-items:center;padding:10px 0;border-top:1px solid #eceff7}',
+    '.or-rk{width:24px;height:24px;border-radius:50%;background:#eef0fa;color:#312e81;font-size:12px;font-weight:900;display:grid;place-items:center}',
+    '.or-nm{font-size:14px;font-weight:700;color:#0f172a}',
+    '.or-tag{display:inline-block;margin-left:6px;padding:1px 8px;border-radius:999px;font-size:12px;font-weight:800}',
+    '.or-bar{display:flex;align-items:center;gap:8px;margin:3px 0}',
+    '.or-bl{width:66px;font-size:12px;font-weight:700;color:#475569}',
+    '.or-track{position:relative;flex:1;height:10px;border-radius:999px;background:#e9ecf5}',
+    '.or-track i{display:block;height:100%;border-radius:999px}',
+    '.or-track b{position:absolute;left:75%;top:-3px;bottom:-3px;width:2px;background:rgba(71,85,105,.6)}',
+    '.or-bv{width:42px;text-align:right;font-size:14px;font-weight:900}',
+    '.or-foot{padding:0 16px 12px;font-size:12px;color:#64748b}',
+    '@media(max-width:760px){.or-band{grid-template-columns:1fr}.or-sg{grid-template-columns:1fr}.or-row{grid-template-columns:26px 1fr}.or-row>div:last-child{grid-column:1/-1}}',
+    '</style>'
+  ].join('');
+
+  function readinessOf(kind, pct) {
+    if (pct === null || pct === undefined) return null;
+    if (kind === 'current') { var c = getCurrentRoleReadiness(pct); return { label: c.label, note: c.detail || '' }; }
+    var p = getProspectiveReadiness(pct), parts = String(p.label).split(':');
+    return { label: parts[0].trim(), note: parts.slice(1).join(':').trim() };
+  }
+  function tone(pct) {
+    return pct >= 80 ? { fg: '#047857', bg: '#ecfdf5' } : pct >= 70 ? { fg: '#1d4ed8', bg: '#eff6ff' } : pct >= 60 ? { fg: '#92400e', bg: '#fff8e6' } : { fg: '#b91c1c', bg: '#fef2f2' };
+  }
+  function bar(label, v, col) {
+    return '<div class="or-bar"><span class="or-bl">' + label + '</span><div class="or-track">' + (v === null ? '' : '<i style="width:' + v + '%;background:' + col + '"></i>') + '<b></b></div><span class="or-bv" style="color:' + col + '">' + (v === null ? '-' : v + '%') + '</span></div>';
+  }
+  function sgCard(kind, title, note, items, empty) {
+    var good = kind === 'good';
+    var h = '<div class="or-card" style="background:' + (good ? '#f0fbf5' : '#fff8ec') + ';border-color:' + (good ? '#bfe3d2' : '#f3d9a4') + '"><h4 style="color:' + (good ? '#047857' : '#92400e') + '">' + title + '<span>' + note + '</span></h4>';
+    if (!items.length) return h + '<div class="or-empty">' + empty + '</div></div>';
+    items.forEach(function(c) {
+      h += '<div class="or-li"><div><strong>' + esc(c.name) + '</strong><small>Employee ' + c.self + '% | Manager ' + c.mgr + '%</small></div><span class="or-pill" style="background:' + (good ? '#047857' : '#b45309') + '">' + c.avg + '%</span></div>';
+    });
+    return h + '</div>';
+  }
+  function block(title, accent, kind, has, selfScore, mgrScore, finalScore, rows) {
+    if (!has.self && !has.mgr) return '';
+    var comps = rows.filter(function(c) { return c.self !== null || c.mgr !== null; }).map(function(c) {
+      var both = c.self !== null && c.mgr !== null;
+      return { name: c.name, self: c.self, mgr: c.mgr, avg: both ? Math.round((c.self + c.mgr) / 2) : null };
+    });
+    var left = has.self ? makeRing(selfScore, '#2563eb', 'Employee') : '<div class="or-none">Employee assessment not submitted</div>';
+    var right = has.mgr ? makeRing(mgrScore, '#047857', 'Manager') : '<div class="or-none">Manager assessment not submitted</div>';
+    var mid = '<div class="or-mid">';
+    if (has.self && has.mgr) {
+      var gap = mgrScore - selfScore;
+      mid += '<div class="or-k">Manager vs employee</div><div class="or-n">' + (gap > 0 ? '+' : '') + gap + ' pts</div><div class="or-t">' + (gap === 0 ? 'Same score' : 'Manager scored ' + Math.abs(gap) + ' points ' + (gap < 0 ? 'lower' : 'higher')) + '</div>';
+    } else {
+      mid += '<div class="or-k">Comparison</div><div class="or-t">Both assessments are needed to show the gap.</div>';
+    }
+    var basis = (finalScore !== null && finalScore !== undefined) ? finalScore : (has.mgr ? mgrScore : null);
+    var rd = readinessOf(kind, basis);
+    if (rd) {
+      var tn = tone(basis);
+      mid += '<div class="or-ready" style="background:' + tn.bg + '"><div class="or-k" style="color:' + tn.fg + '">Readiness' + (finalScore !== null && finalScore !== undefined ? ' (final score ' + finalScore + '%)' : '') + '</div><b style="color:' + tn.fg + '">' + esc(rd.label) + '</b><span>' + esc(rd.note) + '</span></div>';
+    }
+    mid += '</div>';
+    var strengths = comps.filter(function(c) { return c.avg !== null && c.avg >= 75; }).sort(function(a, b) { return b.avg - a.avg; });
+    var gaps = comps.filter(function(c) { return c.avg !== null && c.avg < 75; }).sort(function(a, b) { return a.avg - b.avg; });
+    var one = comps.filter(function(c) { return c.avg === null; }).length;
+    var ranked = comps.slice().sort(function(a, b) { return (b.mgr === null ? -1 : b.mgr) - (a.mgr === null ? -1 : a.mgr); });
+    var withMgr = ranked.filter(function(c) { return c.mgr !== null; });
+    var rank = '<div class="or-rank"><h4>Competencies ranked, highest to lowest (manager score, line marks 75%)</h4>';
+    ranked.forEach(function(c, i) {
+      var tag = '';
+      if (withMgr.length > 1 && c.mgr !== null && c === withMgr[0]) tag = '<span class="or-tag" style="background:#ecfdf5;color:#047857">Highest</span>';
+      if (withMgr.length > 1 && c.mgr !== null && c === withMgr[withMgr.length - 1]) tag = '<span class="or-tag" style="background:#fef2f2;color:#b91c1c">Lowest</span>';
+      rank += '<div class="or-row"><span class="or-rk">' + (i + 1) + '</span><div class="or-nm">' + esc(c.name) + tag + '</div><div>' + bar('Employee', c.self, '#2563eb') + bar('Manager', c.mgr, '#047857') + '</div></div>';
+    });
+    rank += '</div>';
+    var foot = '<div class="or-foot">Strengths and gaps use the average of the employee and manager score for each competency.' + (one ? ' ' + one + ' competenc' + (one === 1 ? 'y has' : 'ies have') + ' only one assessment and ' + (one === 1 ? 'is' : 'are') + ' not classed.' : '') + '</div>';
+    return '<section class="or-block" style="--acc:' + accent + '"><header class="or-title">' + title + '</header><div class="or-band">' + left + mid + right + '</div><div class="or-sg">' +
+      sgCard('good', 'Strengths', '75% and above', strengths, 'No competency reached 75%.') + sgCard('warn', 'Gaps', 'Below 75%, lowest first', gaps, 'No gaps below 75%.') + '</div>' + rank + foot + '</section>';
+  }
+
+  var cur = d.compRows.map(function(r) { return { name: r.name, self: r.s, mgr: r.m }; });
+  var pro = d.compRows.map(function(r) { return { name: r.name, self: r.ps, mgr: r.pm }; });
+  var out = '<div class="or-wrap">' + css;
+  out += block('Current role', '#4338ca', 'current', { self: d.hasS, mgr: d.hasM }, d.selfScore, d.mgrScore, (d.hasS && d.hasM) ? d.avgScore : null, cur);
+  out += block('Prospective role', '#7c3aed', 'prospective', { self: d.hasPS, mgr: d.hasP }, d.psScore, d.prospScore, (d.hasPS && d.hasP) ? d.psAvg : null, pro);
+  if (!d.hasS && !d.hasM && !d.hasPS && !d.hasP) out += '<p class="or-none">No assessment scores are available for this employee yet.</p>';
+  return out + '</div>';
+}
+
+async function loadOfficialReport(id) {
+  var el = document.getElementById('or-' + id);
+  if (!el || el.getAttribute('data-loading') === '1') return;
+  var empId = el.getAttribute('data-emp');
+  if (!empId) return;
+  el.setAttribute('data-loading', '1');
+  el.innerHTML = '<div class="loading"><div class="spinner"></div>Loading report...</div>';
+  try {
+    var d = await hohrData(empId);
+    if (!el.isConnected) return;
+    el.innerHTML = hohrOfficialReportHTML(d);
+  } catch (e) {
+    if (!el.isConnected) return;
+    el.innerHTML = '<p style="font-size:13px;color:var(--red)">Could not load the full report: ' + escapeHtml(e.message || 'Unexpected error') + '</p><button type="button" class="btn btn-sm btn-outline" onclick="loadOfficialReport(' + rcArg(id) + ')">Retry</button>';
+  } finally {
+    el.removeAttribute('data-loading');
+  }
+}
 async function loadHOHRReports() {
 var __cmsRouteEpoch = typeof CN === 'undefined' ? null : CN.epoch;
 
@@ -8900,9 +9073,8 @@ html += '<span> Stage: ' + escapeHtml(r.stage || '') + '</span>';
 html += '<span> By: ' + escapeHtml(r.submitted_by || '') + '</span>';
 html += '</div>';
 if (r.hr_recommendation) html += '<div style="font-size:11px;color:var(--primary);margin-bottom:8px"><strong>HR Recommendation:</strong> ' + escapeHtml(r.hr_recommendation) + '</div>';
-if (r.strengths_text || r.gaps_text || r.recommendation_text) {
-html += '<div style="font-size:11px;background:var(--gray-50);border-radius:8px;padding:8px;margin-bottom:8px"><strong>HR Report:</strong> ' + escapeHtml((r.strengths_text || '').slice(0, 80)) + '...</div>';
-}
+html += '<div id="or-' + r.id + '" data-emp="' + r.employee_id + '"><button type="button" class="btn btn-sm btn-outline" onclick="loadOfficialReport(' + rcArg(r.id) + ')">Open full report</button></div>';
+html += hohrAdminReportHTML(r);
 html += '<div id="fa-' + r.id + '" data-emp="' + r.employee_id + '" style="display:none;margin:8px 0;border-top:1px solid var(--gray-200);padding-top:8px"></div>';
 html += '<div id="sb-' + r.id + '" style="display:none;margin:8px 0"></div>';
 html += '<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;border-top:1px solid var(--gray-100);padding-top:10px">';
@@ -8966,6 +9138,7 @@ html += '</div></div>';
 if (typeof CN === 'undefined' || __cmsRouteEpoch === CN.epoch) {
 rows.forEach(function(r){
 if (r.suggested_path) selectHOHRPlan(r.id, r.suggested_path);
+if (r.status === 'Pending' && r.stage === 'HOHR') loadOfficialReport(r.id);
 });
 }
 }
@@ -9428,39 +9601,145 @@ if (error) throw new Error(error.message);
 if (!allResults || !allResults.length) return '<p>No saved assessments were found for this employee. The report itself may still exist.</p>';
 var latest = latestOnly(allResults || []);
 var fr = latest.map(function(r){ return { 'Employee ID': r.employee_id, 'Competency Code': r.comp_code, 'Type': r.type, 'Ticked': r.ticked, 'Evidence': r.evidence, 'HR_Status': r.hr_status, 'Rating': r.proficiency_rating, 'Classification': r.classification , 'Scoring Rule': r.scoring_rule || 'legacy-zero', 'Weight Profile': r.weight_profile, 'Weight Policy': r.weight_policy}; });
-var html = cmsRatingLegendHTML()+cmsPolicyNote(allResults || [])+'<div class="score-rings">';
-if (fr.some(function(r){ return r['Type'] === 'Self'; })) html += makeRing(calculateOverallScore(empId, 'Self', fr), '#3b82f6', 'Self');
-if (fr.some(function(r){ return r['Type'] === 'Manager'; })) html += makeRing(calculateOverallScore(empId, 'Manager', fr), '#059669', 'Manager (Current)');
-if (fr.some(function(r){ return r['Type'] === 'Prospective'; })) html += makeRing(calculateOverallScore(empId, 'Prospective', fr), '#7c3aed', 'Prospective');
-html += '</div>';
-['Self', 'Manager', 'Prospective Self', 'Prospective'].forEach(function(type) {
-var rows = latest.filter(function(r){ return r.type === type; });
-if (!rows.length) return;
-html += '<div style="margin:8px 0"><div class="card-subtitle">' + type.toUpperCase() + ' ASSESSMENT - HOW EACH EXPERIENCE WAS REVIEWED</div>';
-for (var i = 0; i < APP.competencies.length; i++) {
-var comp = APP.competencies[i];
-var compRows = rows.filter(function(r){ return r.comp_code === comp.code; });
-if (!compRows.length) continue;
-html += '<div style="margin:6px 0"><strong style="font-size:12px;color:var(--primary-dark)">' + escapeHtml(comp.competency) + '</strong>';
-compRows.forEach(function(r) {
-var ticked = r.ticked === true || r.ticked === 'TRUE' || r.ticked === 1;
-html += '<div class="exp-item ' + (ticked ? (r.hr_status === 'Disapproved' ? 'disapproved' : r.hr_status === 'Returned' ? 'returned' : 'ticked') : '') + '" style="margin:4px 0">';
-html += '<div class="exp-text">' + (ticked ? 'Yes ' : 'No ') + escapeHtml(r.experience_text || '') + ' ' + getClassificationBadge(r.classification) + (ticked ? '' : ' <span class="badge badge-warning">Not Yet Demonstrated</span>') + '</div>';
-if (ticked && r.evidence) html += '<div class="exp-evidence mgr-evidence"><strong>Evidence:</strong> ' + cmsRichDisplayHTML(r.evidence) + '</div>';
+var esc = escapeHtml;
 
-if (r.attachment_url && /^https:\/\//i.test(r.attachment_url)) html += '<div style="font-size:12px;margin-top:4px"> <a href="' + escapeHtml(r.attachment_url) + '" target="_blank" rel="noopener noreferrer">' + escapeHtml(r.attachment_name || 'Attachment') + '</a></div>';
-if (r.evidence_link) html += cmsEvidenceLinkHTML(r);
-html += cmsRowRatingHTML(r);
-html += '<div style="margin-top:4px">' + hrStatusBadge(r.hr_status);
-if (r.hr_reviewer) html += ' <span style="font-size:11px;color:var(--gray-500)">by ' + escapeHtml(r.hr_reviewer) + (r.hr_review_date ? ' on ' + escapeHtml(r.hr_review_date) : '') + '</span>';
-html += '</div>';
-if (r.hr_comment) html += '<div style="font-size:11px;color:var(--gray-600);margin-top:2px"><strong>HR comment:</strong> ' + escapeHtml(r.hr_comment) + '</div>';
-html += '</div>';
-});
-html += '</div>';
+var css = [
+'<style id="cmp-style">',
+'.cmp-block{margin:16px 0 22px;border:1px solid #dfe3f1;border-radius:14px;background:#fff;overflow:hidden}',
+'.cmp-title{padding:12px 18px;font-size:13px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:#fff;background:var(--acc,#4338ca)}',
+'.cmp-band{display:grid;grid-template-columns:1fr minmax(180px,240px) 1fr;gap:12px;align-items:center;padding:14px 18px;background:#f7f8fd;border-bottom:1px solid #e6e9f3}',
+'.cmp-band .score-ring{text-align:center}',
+'.cmp-band .score-ring svg{width:96px;height:96px;display:block;margin:0 auto}',
+'.cmp-band .score-ring .label{font-size:13px;font-weight:800;margin-top:4px}',
+'.cmp-mid{text-align:center}',
+'.cmp-mid .k{font-size:12px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#475569}',
+'.cmp-mid .n{font-size:28px;font-weight:900;color:#92400e;line-height:1.1;margin:4px 0}',
+'.cmp-mid .t{font-size:12px;color:#334155}',
+'.cmp-mid .c{display:flex;gap:8px;justify-content:center;margin-top:8px}',
+'.cmp-mid .c span{padding:4px 10px;border-radius:999px;font-size:12px;font-weight:800}',
+'.cmp-mid .c .a{background:#ecfdf5;color:#047857}',
+'.cmp-mid .c .d{background:#fff8e6;color:#92400e}',
+'.cmp-none{font-size:13px;color:#64748b;padding:18px 8px;text-align:center}',
+'.cmp-comp{padding:10px 18px 2px;font-size:15px;font-weight:800;color:#7c2d12}',
+'.cmp-row{margin:8px 14px 14px;border:1px solid #e3e6f0;border-radius:12px;overflow:hidden}',
+'.cmp-exp{padding:10px 14px;background:#fafbfe;border-bottom:1px solid #e6e9f3;font-size:13px;line-height:1.5;color:#0f172a;font-weight:600}',
+'.cmp-exp .cmp-chip{margin-left:8px}',
+'.cmp-cols{display:grid;grid-template-columns:1fr 1fr}',
+'.cmp-col{padding:12px 14px;min-width:0}',
+'.cmp-col+.cmp-col{border-left:1px solid #e6e9f3}',
+'.cmp-colhead{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;margin-bottom:8px}',
+'.cmp-self .cmp-colhead{color:#1d4ed8}',
+'.cmp-mgr .cmp-colhead{color:#047857}',
+'.cmp-state{margin-left:auto;padding:3px 9px;border-radius:999px;font-size:12px;letter-spacing:0;text-transform:none;font-weight:700}',
+'.cmp-state.ok{background:#ecfdf5;color:#047857}',
+'.cmp-state.no{background:#fff1e6;color:#c2410c}',
+'.cmp-meter{display:flex;gap:4px}',
+'.cmp-meter span{height:9px;width:24px;border-radius:999px}',
+'.cmp-rating{margin-top:5px;font-size:14px;font-weight:800}',
+'.cmp-rating em{font-style:normal;font-weight:600;color:#475569;font-size:12px;margin-left:4px}',
+'.cmp-min{margin-top:6px;display:inline-block;padding:3px 9px;border-radius:8px;background:#fef2f2;color:#b91c1c;font-size:12px;font-weight:700}',
+'.cmp-sub{margin-top:4px;font-size:12px;color:#475569}',
+'.cmp-evidence{margin-top:10px;padding:9px 12px;border-left:4px solid #94a3b8;background:#f6f7fc;border-radius:8px;font-size:13px;line-height:1.55;color:#1e293b}',
+'.cmp-self .cmp-evidence{border-left-color:#2563eb}',
+'.cmp-mgr .cmp-evidence{border-left-color:#047857}',
+'.cmp-noev,.cmp-missing{margin-top:10px;padding:9px 12px;border:1px dashed #cbd5e1;border-radius:8px;font-size:12px;color:#64748b}',
+'.cmp-file{margin-top:8px;font-size:12px}',
+'.cmp-hr{margin-top:10px;font-size:12px;color:#475569}',
+'.cmp-hrc{margin-top:4px;font-size:12px;color:#475569}',
+'.cmp-chip{display:inline-block;padding:3px 10px;border-radius:999px;font-size:12px;font-weight:800;background:#eef0f6;color:#475569}',
+'.cmp-chip.aligned{background:#f0fbf5;color:#047857;border:1px solid #bfe3d2}',
+'.cmp-chip.differ{background:#fff8e6;color:#92400e;border:1px solid #f5d9a0}',
+'@media(max-width:760px){.cmp-band{grid-template-columns:1fr}.cmp-cols{grid-template-columns:1fr}.cmp-col+.cmp-col{border-left:0;border-top:1px solid #e6e9f3}}',
+'</style>'
+].join('');
+
+function isTicked(r){ return r.ticked === true || r.ticked === 'TRUE' || r.ticked === 1; }
+function expKey(r){
+  var t = String(r.experience_text || '').replace(/\s+/g, ' ').trim().toLowerCase();
+  return t ? 't:' + t : 'i:' + r.experience_index;
 }
-html += '</div>';
-});
+function fileHTML(r){
+  if (!(r.attachment_url && /^https:\/\//i.test(r.attachment_url))) return '';
+  return '<div class="cmp-file"><a href="' + esc(r.attachment_url) + '" target="_blank" rel="noopener noreferrer">' + esc(r.attachment_name || 'Attachment') + '</a></div>';
+}
+function meterHTML(r){
+  var v = cmsEffectiveRating(r);
+  var col = { 1: '#dc2626', 2: '#ea580c', 3: '#b45309', 4: '#2563eb', 5: '#059669' }[v] || '#94a3b8';
+  var h = '<div class="cmp-meter" title="Rating ' + v + ' of 5">';
+  for (var i = 1; i <= 5; i++) h += '<span style="background:' + (i <= v ? col : '#e3e6f0') + '"></span>';
+  h += '</div><div class="cmp-rating" style="color:' + col + '">' + (v > 0 ? v + ' / 5' : '0') + '<em>' + (v > 0 ? esc(cmsRatingLabel(v)) : 'Protected legacy rule') + '</em></div>';
+  if (!cmsRawUsable(r) && cmsFloor(r) === 1) h += '<div class="cmp-min">Minimum applied: no valid demonstrated evidence or rating</div>';
+  var submitted = Number(r.proficiency_rating);
+  if (submitted >= 1 && submitted <= 5 && submitted !== v) h += '<div class="cmp-sub">Submitted rating: ' + submitted + ' / 5</div>';
+  return h;
+}
+function sideHTML(r, side){
+  var cls = side === 'self' ? 'cmp-self' : 'cmp-mgr';
+  var label = side === 'self' ? 'Employee' : 'Manager';
+  if (!r) return '<div class="cmp-col ' + cls + '"><div class="cmp-colhead">' + label + '</div><div class="cmp-missing">No matching entry submitted.</div></div>';
+  var t = isTicked(r);
+  var h = '<div class="cmp-col ' + cls + '"><div class="cmp-colhead">' + label + '<span class="cmp-state ' + (t ? 'ok' : 'no') + '">' + (t ? 'Demonstrated' : 'Not yet demonstrated') + '</span></div>';
+  h += meterHTML(r);
+  if (t && String(r.evidence || '').trim()) h += '<div class="cmp-evidence">' + cmsRichDisplayHTML(r.evidence) + '</div>';
+  else if (t) h += '<div class="cmp-noev">Ticked but no evidence provided.</div>';
+  h += fileHTML(r);
+  if (r.evidence_link) h += cmsEvidenceLinkHTML(r);
+  h += '<div class="cmp-hr">' + hrStatusBadge(r.hr_status);
+  if (r.hr_reviewer) h += ' by ' + esc(r.hr_reviewer) + (r.hr_review_date ? ' on ' + esc(r.hr_review_date) : '');
+  h += '</div>';
+  if (r.hr_comment) h += '<div class="cmp-hrc"><strong>HR comment:</strong> ' + esc(r.hr_comment) + '</div>';
+  return h + '</div>';
+}
+function gapChip(a, b){
+  if (!a || !b) return '<span class="cmp-chip">One side only</span>';
+  var x = cmsEffectiveRating(a), y = cmsEffectiveRating(b);
+  if (!(x > 0 && y > 0)) return '';
+  var d = y - x;
+  if (d === 0) return '<span class="cmp-chip aligned">Aligned</span>';
+  return '<span class="cmp-chip differ">Manager ' + (d > 0 ? '+' : '') + d + ' vs employee</span>';
+}
+function pairBlock(title, selfType, mgrType, accent){
+  var sRows = latest.filter(function(r){ return r.type === selfType; });
+  var mRows = latest.filter(function(r){ return r.type === mgrType; });
+  if (!sRows.length && !mRows.length) return '';
+  var aligned = 0, differ = 0, body = '';
+  for (var i = 0; i < APP.competencies.length; i++) {
+    var comp = APP.competencies[i];
+    var cs = sRows.filter(function(r){ return r.comp_code === comp.code; }).sort(function(a, b){ return (a.experience_index || 0) - (b.experience_index || 0); });
+    var cm = mRows.filter(function(r){ return r.comp_code === comp.code; }).sort(function(a, b){ return (a.experience_index || 0) - (b.experience_index || 0); });
+    if (!cs.length && !cm.length) continue;
+    var mapM = {}; cm.forEach(function(r){ var k = expKey(r); if (!mapM[k]) mapM[k] = r; });
+    var used = {}, pairs = [];
+    cs.forEach(function(r){ var k = expKey(r), m = mapM[k] || null; if (m) used[k] = true; pairs.push([r, m]); });
+    cm.forEach(function(r){ if (!used[expKey(r)]) pairs.push([null, r]); });
+    body += '<div class="cmp-comp">' + esc(comp.competency) + '</div>';
+    pairs.forEach(function(p){
+      var base = p[0] || p[1];
+      if (p[0] && p[1]) {
+        var x = cmsEffectiveRating(p[0]), y = cmsEffectiveRating(p[1]);
+        if (x > 0 && y > 0) { if (x === y) aligned++; else differ++; }
+      }
+      body += '<div class="cmp-row"><div class="cmp-exp">' + esc(base.experience_text || ('Experience ' + ((base.experience_index || 0) + 1))) + ' ' + getClassificationBadge(base.classification) + gapChip(p[0], p[1]) + '</div>';
+      body += '<div class="cmp-cols">' + sideHTML(p[0], 'self') + sideHTML(p[1], 'mgr') + '</div></div>';
+    });
+  }
+  var sScore = sRows.length ? calculateOverallScore(empId, selfType, fr) : null;
+  var mScore = mRows.length ? calculateOverallScore(empId, mgrType, fr) : null;
+  var left = sScore === null ? '<div class="cmp-none">Employee assessment not submitted</div>' : makeRing(sScore, '#2563eb', 'Employee');
+  var right = mScore === null ? '<div class="cmp-none">Manager assessment not submitted</div>' : makeRing(mScore, '#047857', 'Manager');
+  var mid = '';
+  if (sScore !== null && mScore !== null) {
+    var gap = mScore - sScore;
+    mid = '<div class="cmp-mid"><div class="k">Score gap</div><div class="n">' + (gap > 0 ? '+' : '') + gap + ' pts</div><div class="t">' + (gap === 0 ? 'Manager and employee scored the same' : 'Manager scored ' + Math.abs(gap) + ' points ' + (gap < 0 ? 'lower' : 'higher') + ' than the employee') + '</div><div class="c"><span class="a">' + aligned + ' aligned</span><span class="d">' + differ + ' differ</span></div></div>';
+  } else {
+    mid = '<div class="cmp-mid"><div class="k">Comparison</div><div class="t">Both assessments are needed to show the gap.</div></div>';
+  }
+  return '<section class="cmp-block" style="--acc:' + accent + '"><header class="cmp-title">' + title + '</header><div class="cmp-band">' + left + mid + right + '</div>' + body + '</section>';
+}
+
+var html = css + cmsRatingLegendHTML() + cmsPolicyNote(allResults || []);
+html += pairBlock('Current role: employee vs manager', 'Self', 'Manager', '#4338ca');
+html += pairBlock('Prospective role: employee vs manager', 'Prospective Self', 'Prospective', '#7c3aed');
 return html;
 }
 function scoreBreakdownHTML(rows, type) {
@@ -24758,9 +25037,12 @@ biAddMode();
    var main=document.getElementById('mainContent');if(!main)return;
    var banner=document.createElement('aside');banner.id='ihDueBanner';banner.className='ih-due-banner';
    var text=document.createElement('span');text.textContent=due.length+' '+(IRS.authorPage()?'competency assignment(s)':APP.currentRole==='employee'?'self-assessment invitation(s)':'manager assignment(s)')+' due today or overdue.';
-   var button=document.createElement('button');button.type='button';button.textContent=IRS.authorPage()?'Open Assigned Competency Work':'Open My Invitations';
-   var destination=IRS.authorPage()?'cms-my-assignments':APP.currentRole==='manager'?'mgr-invitation-hub':'emp-invitation-hub';
-   button.onclick=()=>navigateTo(destination);banner.append(text,button);main.prepend(banner);
+ var button=document.createElement('button');button.type='button';var destination=IRS.authorPage()?'cms-my-assignments':APP.currentRole==='manager'?'mgr-invitation-hub':'emp-invitation-hub';button.textContent=IRS.authorPage()?'Open Assigned Competency Work':'Open My Invitations';
+   button.onclick=()=>navigateTo(destination);
+  try{
+    if(due.length===1&&typeof cmsActionUrl==='function'){button.textContent='Open assigned work';button.onclick=()=>{window.location.href=cmsActionUrl(destination,{invitation_id:due[0].id});};}
+  }catch{}
+   banner.append(text,button);main.prepend(banner);
   }catch{/* Optional invitation service failures must not interrupt saved work. */}
   finally{alertFlight=false;}
  };
