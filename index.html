@@ -5599,8 +5599,8 @@ async function requireReportPair(table,id) {
 try {
 var result = await _supabase.from(table).select('employee_id').eq('id',id).single();
 if (result.error || !result.data) throw new Error('Report unavailable');
-return await requireCurrentRolePair(result.data.employee_id);
-} catch (e) { showToast('Could not verify the report assessments. Please retry.'); return false; }
+return true;
+} catch (e) { showToast('Could not verify the report. Please retry.'); return false; }
 }
 function showToast(msg) {
 var t = document.getElementById('toast');
@@ -7062,8 +7062,17 @@ const { data: reps } = await _supabase.from('dp_reports').select('*').in('employ
 var lines = [];
 (reps || []).forEach(function(r){ if (r.emp_submitted && r.mgr_status === 'Pending') lines.push(' <strong>' + escapeHtml(r.employee_name) + '</strong> - Month ' + r.month_no + ' report awaiting your approval'); else if (!r.emp_submitted && r.mgr_status !== 'Returned') { var d = daysUntil(r.due_date); if (d < 0) lines.push(' <strong>' + escapeHtml(r.employee_name) + '</strong> - Month ' + r.month_no + ' report overdue by ' + (-d) + ' day(s)'); } });
 var html = countdownBanner(lines);
-html += '<div class="card"><div class="card-title">Development Plans</div><div class="form-group"><label>Employee</label><select id="dpEmp" onchange="loadDPEmp()"><option value="">-- Select --</option>';
-team.forEach(function(t) { html += '<option value="' + t.employee_id + '">' + escapeHtml(t.employee_name) + '</option>'; });
+html += '<div class="card"><div class="card-title">Development Plans</div>' +
+'<div class="form-group"><label>Plan role</label>' +
+'<select id="dpRoleScope" onchange="loadDPEmp()">' +
+'<option value="current">Current Role</option>' +
+'<option value="prospective">Prospective Role</option>' +
+'</select></div>' +
+'<div class="form-group"><label>Employee</label>' +
+'<select id="dpEmp" onchange="loadDPEmp()"><option value="">-- Select --</option>';
+team.forEach(function(t) {
+  html += '<option value="' + t.employee_id + '">' + escapeHtml(t.employee_name) + '</option>';
+});
 html += '</select></div></div><div id="dpContent"></div>';
 if (plans && plans.length) {
 html += '<div class="card"><div class="card-title">All Created Plans</div>';
@@ -7106,7 +7115,7 @@ var gaps = [];
 for (var i = 0; i < APP.competencies.length; i++) {
 var comp = APP.competencies[i];
 var cs = calculateCompetencyScore(id, comp.code, assessmentType, formattedResults);
-if (cs.total > 0 && Math.round((cs.score / 5) * 100) < 70) {
+if (cs.total > 0 && Math.round((cs.score / 5) * 100) < 100) {
 gaps.push({ code: comp.code, name: comp.competency, pct: Math.round((cs.score / 5) * 100) });
 }
 }
@@ -7116,7 +7125,7 @@ return;
 }
 var selectedCurrent = planScope === 'current' ? ' selected' : '';
 var selectedProspective = planScope === 'prospective' ? ' selected' : '';
-var html = '<div class="card"><div class="card-title">Create Development Plan</div><div class="form-group"><label>Plan role</label><select id="dpRoleScope" onchange="loadDPEmp()"><option value="current"' + selectedCurrent + '>Current Role</option><option value="prospective"' + selectedProspective + '>Prospective Role</option></select></div><div class="form-group"><label>Competency Gap</label><select id="dpComp"><option value="">-- Select --</option>';
+var html = '<div class="card"><div class="card-title">Create Development Plan</div><div class="form-group"><label>Competency Gap</label><select id="dpComp"><option value="">-- Select --</option>';
 gaps.forEach(function(g) {
 html += '<option value="' + g.code + '" data-name="' + escapeHtml(g.name) + '">' + escapeHtml(g.name) + ' (' + g.pct + '%)</option>';
 });
@@ -8391,7 +8400,7 @@ _supabase.from('dp_reports').update({ remind_sent: true }).eq('id', r.id);
 });
 }
 async function sendReportApproval(empId) {
-if (!await requireCurrentRolePair(empId)) return;
+/* A current-role Self + Manager pair is not required for this report workflow. */
 const { data: emp } = await _supabase.from('employees').select('*').eq('employee_id', empId).single();
 if (!emp) { showToast('Employee not found'); return; }
 const { data: dup } = await _supabase.from('report_approvals').select('id').eq('employee_id', empId).eq('status', 'Pending').limit(1);
@@ -8462,7 +8471,7 @@ showToast('Decision saved - notifications sent');
 loadReportApprovals();
 }
 async function sendReportApproval(empId) {
-if (!await requireCurrentRolePair(empId)) return;
+/* A current-role Self + Manager pair is not required for this report workflow. */
 const { data: emp } = await _supabase.from('employees').select('*').eq('employee_id', empId).single();
 if (!emp) { showToast('Employee not found'); return; }
 const { data: dup } = await _supabase.from('report_approvals').select('id').eq('employee_id', empId).eq('status', 'Pending').limit(1);
@@ -8659,7 +8668,7 @@ html += '<div class="card-subtitle" style="margin-top:10px">CURRENT ROLE</div><d
 if (d.hasS) html += makeRing(d.selfScore, '#2563eb', 'Self (Current)');
 if (d.hasM) html += makeRing(d.mgrScore, '#059669', 'Manager (Current)');
 if (d.avgScore !== null) html += makeRing(d.avgScore, '#ea580c', fsCopy('Current Role Final Score',"current"));
-else html += '<p>Awaiting complete, compatible Self and Manager submissions and required HR review.</p>';
+else html += '<p style="color:var(--gray-500)">No current-role assessment submitted. This report is based on the available prospective-role assessment.</p>';
 html += '</div>';
 if (d.hasPS || d.hasP) {
 html += '<div class="card-subtitle">PROSPECTIVE ROLE</div><div class="score-rings">';
@@ -8677,30 +8686,40 @@ if (d.hasP || d.hasPS) {
 html += '<div class="card-subtitle">PROSPECTIVE ROLE - SYSTEM-COMPUTED</div>';
 html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:6px 0 12px"><div style="background:var(--green-light);border-radius:8px;padding:10px"><div class="card-subtitle">STRENGTHS (75%+)</div><div style="font-size:12px;white-space:pre-wrap">' + (d.pros.st.join(NL) || 'None recorded') + '</div></div><div style="background:var(--orange-light);border-radius:8px;padding:10px"><div class="card-subtitle">GAPS (BELOW 75%)</div><div style="font-size:12px;white-space:pre-wrap">' + (d.pros.gp.join(NL) || 'None recorded') + '</div></div></div>';
 }
-html += '<div class="form-group"><label>1. STRENGTHS - your professional observations (editable)</label><textarea id="hohrStrengths" rows="4" style="width:100%">' + escapeHtml(d.ex && d.ex.strengths_text ? d.ex.strengths_text : d.cur.st.join(NL)) + '</textarea></div>';
-html += '<div class="form-group"><label>2. GAPS & DEVELOPMENT NEEDS (editable)</label><textarea id="hohrGaps" rows="4" style="width:100%">' + escapeHtml(d.ex && d.ex.gaps_text ? d.ex.gaps_text : d.cur.gp.join(NL)) + '</textarea></div>';
-html += '<div class="form-group"><label>3. HR RECOMMENDATION (editable)</label><textarea id="hohrRec" rows="3" style="width:100%">' + escapeHtml(d.ex && d.ex.recommendation_text ? d.ex.recommendation_text : '') + '</textarea></div>';
-html += '<div class="form-group"><label>Suggested path (your recommendation - HOHR makes the final decision)</label><select id="hohrPath" style="width:auto"><option value="Promote &#226;&#8364;&#8221; appoint now (subject to vacancy &amp; process)">Promote - appoint now (subject to vacancy & process)</option><option value="Promotion Ready &#226;&#8364;&#8221; hold in Progression-Ready Pool; develop to close remaining gaps">Promotion Ready - hold in Progression-Ready Pool; develop to close remaining gaps</option><option>Develop for 3 months, then reassess</option><option>Develop for 6 months, then reassess</option><option>Develop for 12 months, then reassess</option><option>Develop for 18 months, then reassess</option><option>Performance improvement plan required</option><option value="Retain &amp; develop &#226;&#8364;&#8221; no promotion path currently">Retain & develop - no promotion path currently</option></select></div>';
+html += '<div class="form-group"><label>HR ADMIN PROFESSIONAL OBSERVATIONS (HR ADMIN ONLY)</label><textarea id="hohrStrengths" rows="4" style="width:100%" placeholder="Summarize the assessment pattern, evidence quality, readiness and development priorities.">' + escapeHtml(d.ex && d.ex.strengths_text ? d.ex.strengths_text : '') + '</textarea><small>Written by HR Admin. The system-computed Strengths and Gaps above cannot be edited.</small></div>';
+html += '<div class="form-group"><label>HR RECOMMENDATION (HR ADMIN ONLY)</label><select id="hohrRec" style="width:100%"><option value="">Select recommendation</option><option value="Promote">Promote</option><option value="Promotion Ready">Promotion Ready</option><option value="Develop">Develop</option><option value="Retain and Develop">Retain and Develop</option><option value="Not Recommended">Not Recommended</option></select><small>Formal HR conclusion from the assessment.</small></div>';
+html += '<div class="form-group"><label>SUGGESTED PLAN (HR ADMIN ONLY)</label><select id="hohrPath" style="width:100%"><option value="">Select suggested plan</option><option value="Promote when vacancy and process allow">Promote when vacancy and process allow</option><option value="Develop for 3 months, then reassess">Develop for 3 months, then reassess</option><option value="Develop for 6 months, then reassess">Develop for 6 months, then reassess</option><option value="Develop for 12 months, then reassess">Develop for 12 months, then reassess</option><option value="Develop for 24 months, then reassess">Develop for 24 months, then reassess</option><option value="Hold in progression-ready pool and develop">Hold in progression-ready pool and develop</option><option value="Retain in current role and develop">Retain in current role and develop</option><option value="Start a Performance Improvement Plan">Start a Performance Improvement Plan</option></select><small>Practical action and timeline that follows the recommendation.</small></div>';
 if (d.ex) html += '<p style="font-size:11px;color:var(--gray-500)">Existing report status: ' + escapeHtml(d.ex.status) + ' (' + escapeHtml(d.ex.stage) + ')</p>';
 html += '<div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap"><button class="btn btn-primary" onclick="saveHOHRReport(\'' + empId + '\',false)"> Submit to Head of HR</button> <button class="btn btn-outline" onclick="saveHOHRReport(\'' + empId + '\',true)"> Save Draft</button> <button class="btn btn-outline" onclick="printHOHRReport(\'' + empId + '\')"> Print / PDF</button> <button class="btn btn-success" onclick="downloadHOHRReportWord(\'' + empId + '\')"> Word</button> <button class="btn btn-outline" onclick="loadHRAllDetail(\'' + empId + '\')">Cancel</button></div>';
 html += '</div>';
 box.innerHTML = html;
-if (d.ex && d.ex.suggested_path) { var psSel = document.getElementById('hohrPath'); var found = false; for (var oi = 0; oi < psSel.options.length; oi++) { if (psSel.options[oi].text === d.ex.suggested_path) { found = true; break; } } if (!found) { var no = document.createElement('option'); no.text = d.ex.suggested_path; psSel.add(no); } psSel.value = d.ex.suggested_path; }
+if (d.ex) {
+  var psSel = document.getElementById('hohrPath');
+  var recSel = document.getElementById('hohrRec');
+  if (psSel && d.ex.suggested_path) psSel.value = d.ex.suggested_path;
+  if (recSel && d.ex.recommendation_text) recSel.value = d.ex.recommendation_text;
+}
 }
 async function saveHOHRReport(empId, draftOnly) {
-if (!draftOnly && !await requireCurrentRolePair(empId)) return;
-var s = document.getElementById('hohrStrengths').value;
-var g = document.getElementById('hohrGaps').value;
-var rec = document.getElementById('hohrRec').value;
-var path = document.getElementById('hohrPath').value;
+/* Current-role Self + Manager assessments are not required for a report. */
+var sEl = document.getElementById('hohrStrengths');
+var recEl = document.getElementById('hohrRec');
+var pathEl = document.getElementById('hohrPath');
+var s = sEl ? sEl.value.trim() : '';
+var rec = recEl ? recEl.value.trim() : '';
+var path = pathEl ? pathEl.value.trim() : '';
+if (!draftOnly && !rec) { showToast('Select an HR Recommendation'); return; }
+if (!draftOnly && !path) { showToast('Select a Suggested Plan'); return; }
 const { data: emp } = await _supabase.from('employees').select('*').eq('employee_id', empId).single();
 const { data: allResults } = await _supabase.from('assessments').select('*').eq('employee_id', empId);
 var latest = latestOnly(allResults || []);
 var fr = latest.map(function(r){ return { 'Employee ID': r.employee_id, 'Competency Code': r.comp_code, 'Type': r.type, 'Ticked': r.ticked, 'Evidence': r.evidence, 'HR_Status': r.hr_status, 'Rating': r.proficiency_rating , 'Scoring Rule': r.scoring_rule || 'legacy-zero', 'Classification': r.scoring_rule === 'floor-one-v1' ? r.classification : undefined, 'Weight Profile': r.weight_profile, 'Weight Policy': r.weight_policy}; });
-var mgrScore = calculateOverallScore(empId, 'Manager', fr);
+var currentRows = latest.filter(function(r){ return r.type === 'Self' || r.type === 'Manager'; });
+var mgrScore = currentRows.some(function(r){ return r.type === 'Manager'; }) ? calculateOverallScore(empId, 'Manager', fr) : null;
 var pRows = latest.filter(function(r){ return r.type === 'Prospective'; });
-var prospScore = pRows.length ? calculateOverallScore(empId, 'Prospective', fr) : 0;
-const { data: chainRows } = await _supabase.from('report_chain').select('*').eq('employee_id', empId).order('id', { ascending: false }).limit(1);
+var prospScore = pRows.length ? calculateOverallScore(empId, 'Prospective', fr) : 0;const { data: chainRows } = await _supabase.from('report_chain').select('*').eq('employee_id', empId).order('id', { ascending: false }).limit(1);
+var reportData = await hohrData(empId);
+var g = reportData && reportData.cur ? reportData.cur.gp.join('\n') : '';
 var ex = (chainRows && chainRows.length) ? chainRows[0] : null;
 var payload = { employee_id: empId, employee_name: emp.employee_name, position: emp.position, mgr_score: mgrScore, prosp_score: prospScore, prosp_role: pRows.length ? (pRows[0].prospective_role || '') : '', strengths_text: s, gaps_text: g, recommendation_text: rec, suggested_path: path, submitted_by: APP.user.email, submitted_date: new Date().toISOString().slice(0,10) };
 if (draftOnly) payload.status = 'Draft';
@@ -8818,6 +8837,15 @@ html += '</div>';
 html += '</div>';
 ((typeof CN === 'undefined' || __cmsRouteEpoch === CN.epoch) ? setContent(html) : undefined);
 }
+function selectHOHRPlan(id, plan) {
+var select = document.getElementById('hohr-plan-' + id);
+if (select) select.value = plan;
+document.querySelectorAll('[data-hohr-plan="' + id + '"]').forEach(function(card) {
+var selected = card.getAttribute('data-plan') === plan;
+card.style.borderColor = selected ? '#4338ca' : 'var(--gray-200)';
+card.style.background = selected ? '#eef2ff' : '#fff';
+});
+}
 async function loadHOHRReports() {
 var __cmsRouteEpoch = typeof CN === 'undefined' ? null : CN.epoch;
 
@@ -8881,21 +8909,29 @@ html += '<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;bord
 html += '<button class="btn btn-sm btn-primary" onclick="toggleFullAssess(' + rcArg(r.id) + ')"> View Assessment</button>';
 html += '<button class="btn btn-sm btn-outline" onclick="toggleScoreBreakdown(' + rcArg(r.employee_id) + ',null,' + rcArg('sb-' + r.id) + ')"> Score Calculation</button>';
 if (r.status === 'Pending' && r.stage === 'HOHR') {
-html += '<input id="rcc-' + r.id + '" placeholder="Decision comment (required for Return)" style="flex:1;min-width:140px;padding:5px 8px;font-size:11px">';
-html += '<button class="btn btn-sm btn-success" onclick="decideReportChain(' + rcArg(r.id) + ',\'Approved: Development Plan\')">Approve to Dev Plan</button>';
+html += '<div style="width:100%;margin-top:8px;padding:10px;border:1px solid var(--gray-200);border-radius:8px;background:#fafbff">';
+html += '<div style="font-size:11px;font-weight:800;color:var(--primary-dark);letter-spacing:.4px">DEVELOPMENT TIMELINE - CHOOSE HORIZON</div>';
+html += '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:8px;margin-top:8px">';
+html += '<button type="button" data-hohr-plan="' + r.id + '" data-plan="Develop for 12 months, then reassess" onclick="selectHOHRPlan(' + rcArg(r.id) + ',\'Develop for 12 months, then reassess\')" style="text-align:left;padding:10px;border:1px solid var(--gray-200);border-radius:8px;background:#fff;color:var(--gray-800);cursor:pointer"><strong style="display:block;color:#166534;font-size:11px">12 MONTHS DEVELOPMENT</strong><span style="font-size:10px;color:var(--gray-600)">Focused development, reassess after 12 months.</span></button>';
+html += '<button type="button" data-hohr-plan="' + r.id + '" data-plan="Develop for 24 months, then reassess" onclick="selectHOHRPlan(' + rcArg(r.id) + ',\'Develop for 24 months, then reassess\')" style="text-align:left;padding:10px;border:1px solid var(--gray-200);border-radius:8px;background:#fff;color:var(--gray-800);cursor:pointer"><strong style="display:block;color:#3730a3;font-size:11px">24 MONTHS DEVELOPMENT</strong><span style="font-size:10px;color:var(--gray-600)">Extended development, reassess after 24 months.</span></button>';
+html += '</div>';
+html += '<div style="display:flex;gap:8px;align-items:center;margin-top:8px;flex-wrap:wrap"><label style="margin:0;font-size:11px">Selected development horizon</label><select id="hohr-plan-' + r.id + '" onchange="selectHOHRPlan(' + rcArg(r.id) + ',this.value)" style="max-width:360px;padding:6px 8px;font-size:11px"><option value="">Select development horizon</option><option value="Develop for 12 months, then reassess">Develop for 12 months, then reassess</option><option value="Develop for 24 months, then reassess">Develop for 24 months, then reassess</option></select></div>';
+html += '</div>';
+html += '<div style="width:100%;margin-top:8px"><label style="font-size:11px">HEAD OF HR COMMENTS</label><textarea id="rcc-' + r.id + '" rows="3" placeholder="Enter decision comments or escalation reason..." style="width:100%;padding:8px;font-size:11px;resize:vertical"></textarea></div>';
+html += '<div style="width:100%;display:flex;gap:18px;flex-wrap:wrap;margin-top:8px;padding:8px 10px;background:var(--gray-50);border:1px solid var(--gray-200);border-radius:8px;font-size:10px;color:var(--gray-600)"><span><strong>REPORT DONE BY:</strong> ' + escapeHtml(r.submitted_by || 'HR Admin') + ' | ' + escapeHtml(r.submitted_date || '-') + '</span><span><strong>DECISION BY:</strong> ' + escapeHtml(r.decided_by || 'Pending') + ' | ' + escapeHtml(r.decided_date || '-') + '</span><span><strong>STATUS:</strong> ' + escapeHtml(r.status || '-') + '</span></div>';
+html += '<button class="btn btn-sm btn-success" onclick="decideReportChain(' + rcArg(r.id) + ',\'Approved: Development Plan\')">Approve to Development Plan</button>';
 html += '<button class="btn btn-sm btn-primary" onclick="decideReportChain(' + rcArg(r.id) + ',\'Approved: Promotion\')">Approve to Promotion</button>';
 html += '<button class="btn btn-sm btn-outline" onclick="decideReportChain(' + rcArg(r.id) + ',\'Approved: Promotion (Hold - No Vacancy)\')">Hold</button>';
-html += '<button class="btn btn-sm btn-outline" onclick="decideReportChain(' + rcArg(r.id) + ',\'Escalated\')">Escalate</button>';
-html += '<button class="btn btn-sm btn-danger" onclick="decideReportChain(' + rcArg(r.id) + ',\'Returned\')">Return</button>';
+html += '<button class="btn btn-sm" style="background:#4c1d95;color:#fff" onclick="decideReportChain(' + rcArg(r.id) + ',\'Escalated\')">Escalate to C-Suite</button>';
+html += '<button class="btn btn-sm btn-danger" onclick="decideReportChain(' + rcArg(r.id) + ',\'Returned\')">Request Changes</button>';
 } else if (String(r.status).indexOf('Endorsed') === 0) {
 html += '<div style="font-size:11px;color:var(--gray-600);width:100%"> C-Suite decision: ' + escapeHtml(r.status) + (r.comment ? ' - "' + escapeHtml(r.comment) + '"' : '') + ' - review, add your final comment if needed, then finalize.</div>';
-html += '<input id="fin-' + r.id + '" placeholder="HOHR final comment (optional)" style="flex:1;min-width:140px;padding:5px 8px;font-size:11px">';
+html += '<textarea id="fin-' + r.id + '" rows="2" placeholder="HOHR final comment (optional)" style="flex:1;min-width:220px;padding:6px 8px;font-size:11px"></textarea>';
 html += '<button class="btn btn-sm btn-success" onclick="finalizeReport(' + rcArg(r.id) + ')"> Finalize & Notify</button>';
 } else {
 html += '<span style="font-size:11px;color:var(--gray-500)">' + escapeHtml(r.status) + (r.decided_by ? ' by ' + escapeHtml(r.decided_by) : '') + '</span>';
 if (r.comment) html += '<span style="font-size:11px;color:var(--gray-600)"> - ' + escapeHtml(r.comment) + '</span>';
 }
-html += '<span style="flex:1"></span><span style="font-size:10px;color:var(--gray-400)">' + escapeHtml(r.submitted_date || '') + '</span>';
 html += '</div></div>';
 });
 html += '</div>';
@@ -8927,46 +8963,43 @@ html += '<div style="display:flex;gap:8px;align-items:flex-start;padding:5px 0;f
 });
 html += '</div></div>';
 ((typeof CN === 'undefined' || __cmsRouteEpoch === CN.epoch) ? setContent(html) : undefined);
+if (typeof CN === 'undefined' || __cmsRouteEpoch === CN.epoch) {
+rows.forEach(function(r){
+if (r.suggested_path) selectHOHRPlan(r.id, r.suggested_path);
+});
+}
 }
 async function decideReportChain(id, decision) {
 if (!await requireReportPair('report_chain',id)) return;
-var c = document.getElementById('rcc-' + id); var comment = c ? c.value.trim() : '';
-if (decision === 'Returned' && !comment) { showToast('Comment required when returning'); return; }
+var c = document.getElementById('rcc-' + id);
+var comment = c ? c.value.trim() : '';
+var planEl = document.getElementById('hohr-plan-' + id);
+var plan = planEl ? planEl.value.trim() : '';
+if (decision === 'Returned' && !comment) { showToast('Comment required when requesting changes'); return; }
+if (decision === 'Escalated' && !comment) { showToast('Comment required when escalating to C-Suite'); return; }
+if (decision.indexOf('Development Plan') >= 0 && !plan) { showToast('Select 12 or 24 months before approving a development plan'); return; }
 const { data: r } = await _supabase.from('report_chain').select('*').eq('id', id).single();
 if (!r) return;
 var stage = decision === 'Escalated' ? 'CSUITE' : 'HOHR';
-const { error } = await _supabase.from('report_chain').update({ status: decision, stage: stage, comment: comment, decided_by: APP.user.email, decided_date: new Date().toISOString().slice(0,10) }).eq('id', id);
+var status = decision;
+var savedComment = r.comment && comment ? r.comment + '\nHOHR: ' + comment : (comment || r.comment || '');
+var updates = { status: status, stage: stage, comment: savedComment, decided_by: APP.user.email, decided_date: new Date().toISOString().slice(0,10) };
+if (plan) updates.suggested_path = plan;
+const { error } = await _supabase.from('report_chain').update(updates).eq('id', id);
 if (error) { showToast(error.message); return; }
-const { data: emp } = await _supabase.from('employees').select('*').eq('employee_id', r.employee_id).single();
-var mgrEmail = emp ? emp.manager_email : '';
 if (decision === 'Escalated') {
-const { data: emp2 } = await _supabase.from('employees').select('department, company').eq('employee_id', r.employee_id).single();
-var dept2 = emp2 ? (emp2.department || '').toString().toUpperCase().trim() : '';
-var comp2 = emp2 ? (emp2.company || '').toString().toUpperCase().trim() : '';
-const { data: maps } = await _supabase.from('csuite_mapping').select('*');
-var target = null;
-(maps || []).forEach(function(m){
-var md = (m.department || '').toString().toUpperCase().trim();
-var mc = (m.company || '').toString().toUpperCase().trim();
-if (md === dept2 && (!mc || !comp2 || mc === comp2)) target = m;
-});
-var toEmails = [];
-if (target) toEmails.push(target.csuite_email);
-else { const { data: csAll } = await _supabase.from('user_profiles').select('email').eq('role', 'C_SUITE'); (csAll || []).forEach(function(u){ toEmails.push(u.email); }); }
-await _supabase.from('report_chain').update({ assigned_to: toEmails[0] || '' }).eq('id', id);
-toEmails.forEach(function(em){ sendCMSemail(em, 'Executive Recommendation Needed: ' + r.employee_name, 'The Head of HR escalated the assessment report for ' + r.employee_name + ' (' + r.position + ', ' + (dept2 || 'department n/a') + ') for your recommendation. Log in: ' + APP_LINK, {page:'cs-reports',params:{employee_id:r.employee_id}}); });
-showToast(target ? 'Escalated to the C-Suite of ' + dept2 : 'No mapping for ' + dept2 + ' - sent to all C-Suite');
-} 
-else if (decision === 'Returned') {
-sendCMSemail(r.submitted_by, 'Report Returned: ' + r.employee_name, 'The Head of HR returned this report. Comment: ' + comment);
+const { data: cs } = await _supabase.from('user_profiles').select('email').eq('role', 'C_SUITE');
+(cs || []).forEach(function(u){ sendCMSemail(u.email, 'Executive Recommendation Needed: ' + r.employee_name, 'The Head of HR escalated the assessment report for ' + r.employee_name + ' (' + r.position + ') for your recommendation.' + (comment ? ' Escalation reason: ' + comment : '') + ' Log in: ' + APP_LINK, {page:'cs-reports',params:{employee_id:r.employee_id}}); });
+showToast('Escalated to C-Suite');
+} else if (decision === 'Returned') {
+sendCMSemail(r.submitted_by, 'Report Returned: ' + r.employee_name, 'The Head of HR returned the report for ' + r.employee_name + '. Comment: ' + comment);
 showToast('Returned to HR Admin');
-} 
-else {
-sendCMSemail(r.submitted_by, 'Decision: ' + decision + ' - ' + r.employee_name, 'Head of HR decision for ' + r.employee_name + ': ' + decision + '.' + (comment ? ' Comment: ' + comment : ''));
-if (mgrEmail) {
-if (decision.indexOf('Development Plan') >= 0) sendCMSemail(mgrEmail, 'Development Plan Directed: ' + r.employee_name, 'The Head of HR directed a DEVELOPMENT PLAN for ' + r.employee_name + '. Create the IDP from their gaps in the CMS: ' + APP_LINK,{page:'mgr-devplans',params:{employee_id:r.employee_id}});
-else if (decision.indexOf('Hold') >= 0) sendCMSemail(mgrEmail, 'Promotion Approved (Hold - No Vacancy): ' + r.employee_name, r.employee_name + ' is approved for promotion but held in the Progression-Ready Pool until a vacancy arises. Continue their development in the meantime.');
-else sendCMSemail(mgrEmail, 'Promotion Approved: ' + r.employee_name, r.employee_name + ' has been approved for promotion by the Head of HR (subject to company process).');
+} else {
+sendCMSemail(r.submitted_by, 'Report Approved: ' + r.employee_name, 'The Head of HR approved the report for ' + r.employee_name + ' - decision: ' + decision + '.' + (plan ? ' Development horizon: ' + plan + '.' : '') + (comment ? ' Comment: ' + comment : '') + ' Please proceed accordingly.');
+const { data: emp } = await _supabase.from('employees').select('manager_email').eq('employee_id', r.employee_id).single();
+if (emp && emp.manager_email) {
+if (decision.indexOf('Development Plan') >= 0) sendCMSemail(emp.manager_email, 'Development Plan Directed: ' + r.employee_name, 'The Head of HR directed a DEVELOPMENT PLAN for ' + r.employee_name + '.' + (plan ? ' Horizon: ' + plan + '.' : '') + ' Please create the IDP from their gaps in the CMS: ' + APP_LINK, {page:'mgr-devplans',params:{employee_id:r.employee_id}});
+else sendCMSemail(emp.manager_email, 'Promotion Approved: ' + r.employee_name, r.employee_name + ' has been approved for promotion by the Head of HR (subject to vacancy and company process).');
 }
 showToast('Decision saved - notifications sent');
 }
@@ -9161,7 +9194,8 @@ const { data: r } = await _supabase.from('report_chain').select('*').eq('id', id
 if (!r) return;
 var stage = decision === 'Escalated' ? 'CSUITE' : 'HOHR';
 var status = decision;
-const { error } = await _supabase.from('report_chain').update({ status: status, stage: stage, comment: comment, decided_by: APP.user.email, decided_date: new Date().toISOString().slice(0,10) }).eq('id', id);
+var combinedComment = (r.comment ? r.comment + '\n' : '') + (comment ? 'C-Suite: ' + comment : '');
+const { error } = await _supabase.from('report_chain').update({ status: status, stage: stage, comment: combinedComment, decided_by: APP.user.email, decided_date: new Date().toISOString().slice(0,10) }).eq('id', id);
 if (error) { showToast(error.message); return; }
 if (decision === 'Escalated') {
 const { data: cs } = await _supabase.from('user_profiles').select('email').eq('role', 'C_SUITE');
@@ -9355,7 +9389,9 @@ var comment = c ? c.value.trim() : '';
 const { data: r } = await _supabase.from('report_chain').select('*').eq('id', id).single();
 if (!r) return;
 var newStatus = String(r.status || '').replace('Endorsed', 'Finalized');
-const { error } = await _supabase.from('report_chain').update({ status: newStatus, stage: 'FINALIZED', comment: comment || r.comment, decided_by: APP.user.email, decided_date: new Date().toISOString().slice(0,10) }).eq('id', id);
+var finalComment = r.comment || '';
+if (comment) finalComment += (finalComment ? '\n' : '') + 'HOHR final: ' + comment;
+const { error } = await _supabase.from('report_chain').update({ status: newStatus, stage: 'FINALIZED', comment: finalComment, decided_by: APP.user.email, decided_date: new Date().toISOString().slice(0,10) }).eq('id', id);
 if (error) { showToast(error.message); return; }
 var decisionText = newStatus.replace('Finalized: ', '');
 var NL = String.fromCharCode(10);
@@ -34322,13 +34358,22 @@ const st=document.createElement('style');st.id='cms-manager-tabs-style-v1';st.te
   }
   emp.addEventListener('change',()=>{if(leaveDetail(s))draw();else emp.value=s.monthEmp||'';});status.addEventListener('change',()=>{if(leaveDetail(s))draw();else status.value=s.monthStatus??'Pending';});draw();
  }
- async function gaps(s,id){
+ async function gaps(s,id,scope){
   const results=await tableAll(s,()=>_supabase.from('assessments').select('*').eq('employee_id',id).order('id'));
-  const manager=latestOnly(results).filter(r=>r.type==='Manager');
+  const assessmentType=scope==='prospective'?'Prospective':'Manager';
+  const manager=latestOnly(results).filter(r=>r.type===assessmentType);
   const formatted=manager.map(r=>({'Employee ID':r.employee_id,'Competency Code':r.comp_code,'Type':r.type,'Ticked':r.ticked,'Evidence':r.evidence,'HR_Status':r.hr_status,'Rating':r.proficiency_rating,'Scoring Rule':r.scoring_rule||'legacy-zero','Classification':r.scoring_rule==='floor-one-v1'?r.classification:undefined,'Weight Profile':r.weight_profile,'Weight Policy':r.weight_policy}));
-  const out=[];for(const c of APP.competencies||[]){const score=calculateCompetencyScore(id,c.code,'Manager',formatted),pct=Math.round(score.score/5*100);if(score.total>0&&pct<70)out.push({code:c.code,name:c.competency,pct});}return out;
- }
- function draftScope(id){return {page:'mgr-devplans',role:'manager',editor:'manager-three-tabs-v1',employee:id};}
+  const out=[];
+  for(const c of APP.competencies||[]){
+    const score=calculateCompetencyScore(id,c.code,assessmentType,formatted);
+    const pct=Math.round(score.score/5*100);
+    if(score.total>0&&pct<100)out.push({code:c.code,name:c.competency,pct});
+  }
+  return out;
+}
+function draftScope(id,scope){
+  return {page:'mgr-devplans',role:'manager',editor:'manager-three-tabs-v1',employee:id,assessment_scope:scope};
+}
  function renderCreate(s){
   const p=s.panels.create;p.replaceChildren();node('h2','Create Development Plan',null,p);
   const steps=node('nav',null,'mt-steps',p);steps.setAttribute('aria-label','Plan preparation');
@@ -34338,21 +34383,43 @@ const st=document.createElement('style');st.id='cms-manager-tabs-style-v1';st.te
   notice(p,'Choose an assessed gap, define actions and measures, then review before sending to HR.');
   if(preview)notice(p,'Read-only layout preview. Create, draft and submission controls are disabled.');
   if(s.teamError){notice(p,'Employee list unavailable: '+s.teamError,'mt-error');return;}
+  const role=field(p,'Plan role','','select','mt-plan-role');
+role.dataset.mtPicker='1';
+option(role,'current','Current Role');
+option(role,'prospective','Prospective Role');
+role.value=s.createScope||'current';
+if(preview)role.disabled=true;
+s.scopeSelect=role;
   const emp=field(p,'Employee','','select','mt-create-employee');emp.dataset.mtPicker='1';option(emp,'','Select employee');s.team.forEach(e=>option(emp,e.employee_id,e.employee_name||e.employee_id));if(preview)emp.disabled=true;
   const body=node('div',null,null,p);
   s.empSelect=emp;s.createBody=body;
   emp.addEventListener('change',()=>{
-   const id=emp.value;
-   if(s.createDirty&&!window.confirm('Change employee and leave unsaved plan edits? Save draft first to keep them.')){emp.value=s.createEmployee||'';return;}
-   s.createEmployee=id;s.createDirty=false;
-   if(!id){body.replaceChildren();s.form=null;return;}
-   return busy(s,async()=>{
-    body.replaceChildren();notice(body,'Loading assessed gaps and saved draft...');
-    const available=await gaps(s,id);if(!current(s))return;
-    let saved=null,error='';try{saved=await checkpoint('get',{scope:draftScope(id)});}catch(e){error=e.message;}
-    if(!current(s))return;buildForm(s,body,available,saved,error);
-   });
+  const id=emp.value;
+  if(s.createDirty&&!window.confirm('Change employee or role and leave unsaved plan edits? Save draft first to keep them.')){
+    emp.value=s.createEmployee||'';
+    return;
+  }
+  s.createEmployee=id;
+  s.createScope=role.value;
+  s.createDirty=false;
+  if(!id){body.replaceChildren();s.form=null;return;}
+  return busy(s,async()=>{
+    body.replaceChildren();
+    notice(body,'Loading assessed gaps and saved draft...');
+    const available=await gaps(s,id,s.createScope);
+    if(!current(s))return;
+    let saved=null,error='';
+    try{saved=await checkpoint('get',{scope:draftScope(id,s.createScope)});}
+    catch(e){error=e.message;}
+    if(!current(s))return;
+    buildForm(s,body,available,saved,error);
   });
+});
+
+role.addEventListener('change',()=>{
+  s.createScope=role.value;
+  if(emp.value)emp.dispatchEvent(new Event('change'));
+});
   if(preview)buildForm(s,body,[],null,'');
  }
  function buildForm(s,p,available,saved,error){
@@ -34374,7 +34441,15 @@ const st=document.createElement('style');st.id='cms-manager-tabs-style-v1';st.te
    button(s,box,'Remove action',()=>{if(window.confirm('Remove this unsaved action?')){backed(s);box.remove();[...rows.children].forEach((c,j)=>c.querySelector('h3').textContent='Action '+(j+1));s.createDirty=true;}},'mt-text-button',true);
   }
   add();
-  form.read=()=>({employee_id:s.createEmployee,comp_code:gap.value,objective:objective.value.trim(),actions:[...rows.children].map(x=>x.read()),pending:form.pending,submitted:form.submitted});
+  form.read=()=>({
+  employee_id:s.createEmployee,
+  assessment_scope:s.createScope||'current',
+  comp_code:gap.value,
+  objective:objective.value.trim(),
+  actions:[...rows.children].map(x=>x.read()),
+  pending:form.pending,
+  submitted:form.submitted
+});
   function restore(data){
    if(!data||data.employee_id!==s.createEmployee||!Array.isArray(data.actions)||data.actions.length<1||data.actions.length>20)throw Error('This saved draft does not match the selected employee/form.');
    if(data.submitted)throw Error('This saved draft has already been submitted. Open the existing plan instead.');
@@ -34398,13 +34473,16 @@ const st=document.createElement('style');st.id='cms-manager-tabs-style-v1';st.te
   function lockForm(){gap.disabled=objective.disabled=addButton.disabled=saveButton.disabled=sendButton.disabled=true;rows.querySelectorAll('input,textarea,button').forEach(x=>x.disabled=true);empLock();}
   function empLock(){if(s.empSelect)s.empSelect.disabled=true;}
   if(preview)p.querySelectorAll('input,textarea,select,button').forEach(x=>x.disabled=true);
-  if(!available.length&&!preview){notice(p,'No eligible manager-assessed gaps below 70% were found. Existing plans remain in Existing Plans.','mt-warn');sendButton.disabled=true;}
+  if(!available.length&&!preview){
+  notice(p,'No eligible assessed gaps below 100% were found. Existing plans remain in Existing Plans.','mt-warn');
+  sendButton.disabled=true;
+}
   notice(p,'Save draft stores a private work backup. Sending creates plan actions with Pending Approval; HR approval remains required.');
  }
  async function savePlanDraft(s,form){
   if(!form.ready)throw Error('Server draft saving is unavailable. Keep the form open.');
   if(form.offer)throw Error('Choose Restore saved draft or Start new draft before saving.');
-  const data=form.read(),r=await checkpoint('save',{scope:draftScope(data.employee_id),version:form.version,body:{kind:'fields',signature:'manager-three-tabs-plan-v1',data}});
+  const data=form.read(),r=await checkpoint('save',{scope:draftScope(data.employee_id,data.assessment_scope||s.createScope||'current'),version:form.version,body:{kind:'fields',signature:'manager-three-tabs-plan-v1',data}});
   if(!current(s))return;
   if(!r.saved||!Number.isInteger(r.version))throw Error('Draft save was not confirmed.');
   form.version=r.version;s.createDirty=false;return r;
@@ -34414,7 +34492,7 @@ const st=document.createElement('style');st.id='cms-manager-tabs-style-v1';st.te
   if(!emp||!g)throw Error('Select a current team employee and an eligible competency gap.');
   if(!data.objective||!data.actions.length||data.actions.some(a=>!a.action||!a.measure||!a.responsible||!a.start||!a.end||a.end<a.start))throw Error('Complete the objective, each action, success measure, responsible person and valid start/due dates.');
   const today=new Date().toISOString().slice(0,10),plan='DP-'+crypto.randomUUID();
-  return data.actions.map(a=>({id:crypto.randomUUID(),plan_id:plan,employee_id:emp.employee_id,employee_name:emp.employee_name,position:emp.position,comp_code:g.code,comp_name:g.name,task:data.objective,action:a.action,measure:a.measure,responsible_party:a.responsible,period:a.period,start_date:a.start,end_date:a.end,status:'Pending Approval',progress_notes:'',hr_approved:'',created_date:today,created_by:APP.user.email}));
+  return data.actions.map(a=>({id:crypto.randomUUID(),plan_id:plan,employee_id:emp.employee_id,employee_name:emp.employee_name,position:emp.position,assessment_scope:data.assessment_scope||s.createScope||'current',comp_code:g.code,comp_name:g.name,task:data.objective,action:a.action,measure:a.measure,responsible_party:a.responsible,period:a.period,start_date:a.start,end_date:a.end,status:'Pending Approval',progress_notes:'',hr_approved:'',created_date:today,created_by:APP.user.email}));
  }
  async function submitPlan(s,form){
   return busy(s,async()=>{
