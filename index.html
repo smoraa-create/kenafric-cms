@@ -2748,6 +2748,15 @@ body.sb-mode:has(#sideNav.nv3-sidebar) #roleBanner{
 #ihRoot .ih-reminder p{font-size:13px!important;margin:6px 0 0}
 #ihRoot .ih-confirm{padding:22px;background:oklch(95% .025 276);border:1px solid oklch(82% .05 276);border-radius:9px;margin:24px 0}
 #ihRoot .ih-confirm .btn{margin:8px 8px 0 0}
+#ihRoot .cms-ih-problem{border:2px solid #dc2626!important;background:#fef2f2;border-radius:10px;padding:16px!important;margin:10px 0}
+#ihRoot .cms-ih-msg{background:#dc2626;color:#fff;border-radius:6px;padding:8px 12px;font-size:13px;font-weight:700;margin:8px 0}
+#ihRoot .cms-ih-field-bad{border-color:#dc2626!important;box-shadow:0 0 0 3px rgba(220,38,38,.2)!important;outline:none}
+#ihRoot .cms-ih-summary{background:#fef2f2;border:2px solid #dc2626;border-radius:10px;padding:18px;margin:20px 0}
+#ihRoot .cms-ih-summary h3{color:#991b1b;margin:0 0 8px}
+#ihRoot .cms-ih-summary li{margin:6px 0}
+#ihRoot .cms-ih-summary .btn{margin:8px 8px 0 0}
+#ihRoot .cms-ih-jump{background:none;border:none;color:#1d4ed8;text-decoration:underline;font-weight:700;cursor:pointer;padding:0;font:inherit}
+#ihRoot .cms-ih-status-bad{background:#fef2f2;border:2px solid #dc2626;color:#991b1b;border-radius:8px;padding:12px 14px;font-weight:600;margin-top:14px}
 #ihRoot .ih-list-tools{display:flex;align-items:end;gap:20px;flex-wrap:wrap}
 #ihRoot .ih-list-tools h2{margin:0 auto 0 0}
 #ihRoot .ih-list-tools label{min-width:180px}
@@ -5235,19 +5244,30 @@ if (!n) return { score: 0, total: 0 };
 return { score: sum / n, total: Math.max(s.total, m.total) };
 }
 
+// CMS notifications go through the Supabase function send-notification (Gmail, hr@kenafricind.com).
+// If that fails, the old EmailJS route is used as a backup so no notification is lost.
+function cmsEmailJsBackup(toEmail, subject, finalMessage) {
+  if (!window.emailjs || EMAILJS_SERVICE_ID.indexOf('PASTE') === 0) { showToast('Email failed: no sender is available'); return; }
+  emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, { to_email: toEmail, subject: subject, message: finalMessage })
+    .then(function () { showToast('Email sent to ' + toEmail); })
+    .catch(function (err) { showToast('Email failed: ' + (err && err.text ? err.text : 'check settings')); });
+}
+
 function sendCMSemail(toEmail, subject, message, action) {
-  if (!window.emailjs || EMAILJS_SERVICE_ID.indexOf('PASTE') === 0) {
-    console.log('EmailJS not configured yet');
+  var finalMessage = cmsEmailLink(message, action);
+  var call;
+  try {
+    call = _supabase.functions.invoke('send-notification', { body: { to: toEmail, subject: subject, message: finalMessage } });
+  } catch (e) {
+    cmsEmailJsBackup(toEmail, subject, finalMessage);
     return;
   }
-  var finalMessage = cmsEmailLink(message, action);
-  emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
-    to_email: toEmail,
-    subject: subject,
-    message: finalMessage
-  })
-  .then(function(){ showToast('Email sent to ' + toEmail); })
-  .catch(function(err){ showToast('Email failed: ' + (err && err.text ? err.text : 'check EmailJS settings')); });
+  return Promise.resolve(call).then(function (res) {
+    if (!res || res.error || !res.data || !res.data.ok) throw new Error('gmail route failed');
+    showToast('Email sent to ' + toEmail);
+  }).catch(function () {
+    cmsEmailJsBackup(toEmail, subject, finalMessage);
+  });
 }
 async function notifyHR(subject, message, action) {
   const { data } = await _supabase.from('user_profiles').select('email').eq('role', 'HR_ADMIN');
@@ -5524,6 +5544,284 @@ async function cmsFpSave() {
   await enterApp(CMS_FP.email);
 }
 /* ===== END FIRST-TIME LOGIN BLOCK ===== */
+/* PASTE FROM HERE (this line is a comment, harmless if pasted) */
+/* ===== MANAGER DECISION NOTICES (new block) ===== */
+
+// Builds the right email for the line manager. Fixes the Hold case (it used to say "Promotion Approved").
+function cmsManagerDecisionEmail(to, r, decisionText, plan, isFinal) {
+  var d = String(decisionText || '');
+  var tag = isFinal ? ' (FINAL)' : '';
+  var name = r.employee_name;
+  if (/development plan/i.test(d)) {
+    sendCMSemail(to, 'Development Plan Directed' + tag + ': ' + name,
+      'The Head of HR directed a DEVELOPMENT PLAN for ' + name + '.' + (plan ? ' Horizon: ' + plan + '.' : '') +
+      ' Please create the IDP from their gaps in the CMS: ' + APP_LINK,
+      { page: 'mgr-devplans', params: { employee_id: r.employee_id } });
+  } else if (/\bhold\b/i.test(d)) {
+    sendCMSemail(to, 'Promotion On Hold' + tag + ': ' + name,
+      'The Head of HR placed the promotion for ' + name + ' on HOLD (no vacancy). No action is needed from you now. ' +
+      'The decision will be revisited at the next review. You can see it in the CMS: ' + APP_LINK,
+      { page: 'mgr-dashboard' });
+  } else {
+    sendCMSemail(to, 'Promotion Approved' + tag + ': ' + name,
+      name + ' has been approved for promotion by the Head of HR (subject to vacancy and company process). ' +
+      'You can see it in the CMS: ' + APP_LINK,
+      { page: 'mgr-dashboard' });
+  }
+}
+
+async function cmsMgrDecisionsRPC(action, data) {
+  var r = await _supabase.rpc('cms_manager_decisions', { p_action: action, p_data: data || {} });
+  if (r.error) throw new Error(r.error.message);
+  return r.data;
+}
+
+// Draws the "Decisions for my team" card on the Manager dashboard.
+async function cmsMgrDecisionsRender() {
+  if (!document.querySelector('.md-v2') || APP.currentRole !== 'manager') return;
+  var rows;
+  try { rows = await cmsMgrDecisionsRPC('list'); }
+  catch (e) { console.warn('Manager decisions unavailable: ' + e.message); return; }
+  var root = document.querySelector('.md-v2');
+  if (!root || APP.currentRole !== 'manager') return;
+  var old = document.getElementById('cmsMgrDecisions'); if (old) old.remove();
+  rows = Array.isArray(rows) ? rows : [];
+  var fresh = rows.filter(function (x) { return !x.acknowledged_at; }).length;
+  var kindColor = { 'Development Plan': ['#ecfdf5', '#047857'], 'Promotion': ['#eef2ff', '#3730a3'], 'Hold': ['#fff7ed', '#b45309'] };
+  var h = '<div class="md-v2-card-head"><div><h3>Decisions for my team</h3><p>Outcomes from the Head of HR for your direct reports.</p></div>' +
+    (fresh ? '<span class="md-v2-badge high">' + fresh + ' new</span>' : '') + '</div>';
+  if (!rows.length) {
+    h += '<div class="md-v2-empty">No decisions yet. They appear here as soon as the Head of HR decides.</div>';
+  } else {
+    h += '<div style="display:grid;gap:10px">';
+    rows.slice(0, 8).forEach(function (x) {
+      var c = kindColor[x.kind] || kindColor['Promotion'];
+      var sub = [x.position, x.horizon, x.decided_date].filter(Boolean).map(escapeHtml).join(' | ');
+      var act = '';
+      if (x.kind === 'Development Plan') act += '<button type="button" class="btn btn-outline btn-sm" onclick="navigateTo(\'mgr-devplans\')">Open development plans</button> ';
+      if (!x.acknowledged_at) act += '<button type="button" class="btn btn-primary btn-sm" onclick="cmsMgrDecisionAck(' + Number(x.id) + ')">Acknowledge</button>';
+      else act += '<span style="font-size:12px;font-weight:700;color:#047857">Acknowledged</span>';
+      h += '<div style="display:flex;flex-wrap:wrap;align-items:center;gap:12px;padding:12px 14px;border:1px solid var(--gray-200);border-radius:10px;background:' + (x.acknowledged_at ? '#fff' : '#f8faff') + '">' +
+        '<div style="flex:1;min-width:200px"><div style="font-size:14px;font-weight:800;color:#0b1a4d">' + escapeHtml(x.employee_name || 'Employee') + '</div>' +
+        '<div style="font-size:12px;color:var(--gray-500)">' + sub + '</div></div>' +
+        '<span style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.04em;padding:4px 10px;border-radius:20px;background:' + c[0] + ';color:' + c[1] + '">' + escapeHtml(x.kind || 'Decision') + '</span>' +
+        '<div style="display:flex;gap:8px;align-items:center">' + act + '</div></div>';
+    });
+    h += '</div>';
+    if (rows.length > 8) h += '<p style="margin-top:8px;font-size:12px;color:var(--gray-500)">Showing the latest 8 of ' + rows.length + ' decisions.</p>';
+  }
+  var sec = document.createElement('section');
+  sec.id = 'cmsMgrDecisions';
+  sec.className = 'md-v2-card';
+  sec.style.marginBottom = '16px';
+  sec.innerHTML = h;
+  var kpis = root.querySelector('.md-v2-kpis');
+  if (kpis) kpis.insertAdjacentElement('afterend', sec); else root.insertBefore(sec, root.firstChild);
+}
+
+async function cmsMgrDecisionAck(id) {
+  try {
+    await cmsMgrDecisionsRPC('ack', { id: id });
+    showToast('Decision acknowledged');
+    await cmsMgrDecisionsRender();
+  } catch (e) { showToast(e.message); }
+}
+
+// Adds the card every time the Manager dashboard loads. The old dashboard code is not edited.
+// The dashboard is defined in a later script, so the wrapper is installed once the page has finished parsing.
+(function () {
+  function install() {
+    if (typeof loadManagerDashboard !== 'function' || loadManagerDashboard.cmsDecisionsWrapped) return;
+    var cmsOldLoadManagerDashboard = loadManagerDashboard;
+    loadManagerDashboard = async function () {
+      var out = await cmsOldLoadManagerDashboard.apply(this, arguments);
+      cmsMgrDecisionsRender();
+      return out;
+    };
+    loadManagerDashboard.cmsDecisionsWrapped = true;
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', install);
+  else install();
+})();
+/* ===== END MANAGER DECISION NOTICES ===== */
+/* PASTE FROM HERE (this line is a comment, harmless if pasted) */
+/* ===== EMAIL GREETING BY NAME (new block) ===== */
+// Gives every outgoing email a to_name value (the recipient's first name) so the EmailJS template can say
+// "Dear Sheila," instead of "Dear colleague,". It also removes a greeting the message already starts with,
+// so people never see two greetings in a row.
+(function () {
+  try {
+    if (!window.emailjs || window.emailjs.cmsNameWrapped || typeof window.emailjs.send !== 'function') return;
+    var originalSend = window.emailjs.send.bind(window.emailjs);
+    var nameCache = {};
+    function firstName(full) {
+      var w = String(full || '').trim().split(/\s+/)[0] || '';
+      return w ? w.charAt(0).toUpperCase() + w.slice(1).toLowerCase() : '';
+    }
+    async function nameFor(email) {
+      var key = String(email || '').trim().toLowerCase();
+      if (!key) return 'colleague';
+      if (nameCache[key]) return nameCache[key];
+      var name = '';
+      try {
+        var r = await _supabase.from('employees').select('employee_name').ilike('email', key.replace(/[\\%_]/g, '\\$&')).limit(1);
+        if (r && r.data && r.data[0]) name = firstName(r.data[0].employee_name);
+      } catch (e) {}
+      nameCache[key] = name || 'colleague';
+      return nameCache[key];
+    }
+    var wrapped = async function (serviceId, templateId, params, options) {
+      var p = Object.assign({}, params || {});
+      try {
+        if (!p.to_name) p.to_name = await nameFor(p.to_email);
+        if (typeof p.message === 'string') {
+          p.message = p.message.replace(/^\s*(Dear|Hi|Hello)\b[^,\n]{0,60},\s*/i, '');
+        }
+      } catch (e) {}
+      return originalSend(serviceId, templateId, p, options);
+    };
+    window.emailjs.send = wrapped;
+    if (window.emailjs.send === wrapped) window.emailjs.cmsNameWrapped = true;
+    else console.warn('Email greeting: could not attach to emailjs.send');
+  } catch (e) { console.warn('Email greeting not installed: ' + e.message); }
+})();
+/* ===== END EMAIL GREETING BY NAME ===== */
+/* ===== FINAL REPORT PDF TO C-SUITE, HOHR AND HR ADMIN ===== */
+// When a report reaches its final outcome, the CMS builds the official report and asks the
+// Supabase function send-report-pdf (Gmail) to email it as a PDF to: the HR Admin who submitted it, the Head of HR who
+// decided it, and the C-Suite executive involved (if any). Managers do not receive the PDF.
+var cmsFinalPdfSent = {};
+
+async function cmsMailerFirstName(email) {
+  try {
+    var key = String(email || '').trim().toLowerCase();
+    if (!key) return '';
+    var r = await _supabase.from('employees').select('employee_name').ilike('email', key.replace(/[\\%_]/g, '\\$&')).limit(1);
+    var full = r && r.data && r.data[0] ? String(r.data[0].employee_name || '').trim().split(/\s+/)[0] : '';
+    return full ? full.charAt(0).toUpperCase() + full.slice(1).toLowerCase() : '';
+  } catch (e) { return ''; }
+}
+
+// C-Suite executives who hold a private case for this employee's report.
+async function cmsExecutiveEmailsForReport(r) {
+  try {
+    var res = await _supabase.rpc('cms_executive_cases', { p_action: 'list', p_data: {} });
+    var norm = function (v) { return String(v || '').trim().toUpperCase(); };
+    return (res.data || [])
+      .filter(function (x) { return norm(x.employee_name) === norm(r.employee_name) && norm(x.position_name) === norm(r.position) && x.state !== 'Closed' && x.assigned_to; })
+      .map(function (x) { return x.assigned_to; });
+  } catch (e) { return []; }
+}
+
+function cmsLoadPdfLibrary() {
+  return new Promise(function (resolve, reject) {
+    if (window.html2pdf) { resolve(); return; }
+    var s = document.createElement('script');
+    s.src = 'https://cdn.jsdelivr.net/npm/html2pdf.js@0.10.1/dist/html2pdf.bundle.min.js';
+    s.onload = function () { window.html2pdf ? resolve() : reject(new Error('PDF library did not start')); };
+    s.onerror = function () { reject(new Error('Could not load the PDF library. Check the internet connection.')); };
+    document.head.appendChild(s);
+  });
+}
+
+async function cmsReportHtmlToPdfBase64(html) {
+  await cmsLoadPdfLibrary();
+  var doc = document.createElement('div');
+  doc.style.width = '720px';
+  doc.style.background = '#ffffff';
+  doc.style.color = '#111111';
+  doc.style.fontFamily = 'Arial, Helvetica, sans-serif';
+  doc.innerHTML = html;
+  var uri = await window.html2pdf().set({
+    margin: 10,
+    image: { type: 'jpeg', quality: 0.92 },
+    html2canvas: { scale: 1.5, useCORS: true, backgroundColor: '#ffffff' },
+    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+    pagebreak: { mode: ['css', 'legacy'], avoid: ['tr'] }
+  }).from(doc).outputPdf('datauristring');
+  var parts = String(uri).split(',');
+  return parts.length > 1 ? parts[1] : '';
+}
+
+async function cmsSendFinalReportPdf(reportId, extraEmails) {
+  var key = '';
+  try {
+    var q = await _supabase.from('report_chain').select('*').eq('id', reportId).single();
+    var r = q.data;
+    if (!r) return;
+    var status = String(r.status || '');
+    if (!/^(Approved|Finalized):/i.test(status)) return; // only final outcomes
+    key = r.id + '|' + status;
+    if (cmsFinalPdfSent[key]) return;
+    cmsFinalPdfSent[key] = true;
+    showToast('Building the final report PDF...');
+
+    var d = await hohrData(r.employee_id);
+    if (!d || !d.emp) throw new Error('Employee not found');
+    var outcome = status.replace(/^(Approved|Finalized):\s*/i, '');
+
+    var emails = [];
+    function add(e) { e = String(e || '').trim().toLowerCase(); if (e && emails.indexOf(e) < 0) emails.push(e); }
+    add(r.submitted_by);                                  // HR Admin who submitted the report
+    add(APP.user && APP.user.email);                      // Head of HR recording the outcome
+    (extraEmails || []).forEach(add);                     // C-Suite from the older route
+    (await cmsExecutiveEmailsForReport(r)).forEach(add); // C-Suite from private executive cases
+
+    var recipients = [];
+    for (var i = 0; i < emails.length; i++) recipients.push({ email: emails[i], name: await cmsMailerFirstName(emails[i]) });
+
+    var html = '<div style="border:2px solid #333;padding:8px;margin-bottom:12px;font-size:13px"><strong>FINAL DECISION:</strong> ' +
+      escapeHtml(outcome) + '</div>' + hohrDocHTML(d);
+    var pdf = await cmsReportHtmlToPdfBase64(html);
+    if (!pdf || pdf.length < 1000) throw new Error('The PDF could not be created');
+
+    var res = await _supabase.functions.invoke('send-report-pdf', {
+      body: {
+        recipients: recipients,
+        subject: 'FINAL report: ' + r.employee_name + ' - ' + outcome,
+        summary: 'The final decision for ' + r.employee_name + ' (' + (r.position || '') + ') has been recorded: ' + outcome + '.',
+        filename: 'Final_Report_' + r.employee_name,
+        pdf: pdf
+      }
+    });
+    if (res.error) {
+      var detail = res.error.message || 'Send failed';
+      try { if (res.error.context && res.error.context.json) { var j = await res.error.context.json(); if (j && j.error) detail = j.error; } } catch (e2) {}
+      throw new Error(detail);
+    }
+    var out = res.data || {};
+    if (!out.ok) throw new Error((out.failed && out.failed[0]) || out.error || 'Mailer error');
+    showToast('Final report PDF emailed to ' + out.sent + ' recipient(s)');
+  } catch (e) {
+    if (key) delete cmsFinalPdfSent[key];
+    showToast('Final report PDF not sent: ' + (e && e.message ? e.message : e));
+  }
+}
+
+// Hooks: run after the Head of HR approves, and after a C-Suite endorsement is finalized.
+// These functions are defined earlier in this same script, so they can be wrapped safely here.
+if (typeof decideReportChain === 'function') {
+  var cmsOldDecideChainForPdf = decideReportChain;
+  decideReportChain = async function (id, decision) {
+    var out = await cmsOldDecideChainForPdf.apply(this, arguments);
+    if (/^Approved:/i.test(String(decision))) cmsSendFinalReportPdf(id, []);
+    return out;
+  };
+}
+if (typeof finalizeReport === 'function') {
+  var cmsOldFinalizeReportForPdf = finalizeReport;
+  finalizeReport = async function (id) {
+    var extra = [];
+    try {
+      var q = await _supabase.from('report_chain').select('status,decided_by').eq('id', id).single();
+      if (q.data && /^Endorsed/i.test(String(q.data.status || '')) && q.data.decided_by) extra.push(q.data.decided_by);
+    } catch (e) {}
+    var out = await cmsOldFinalizeReportForPdf.apply(this, arguments);
+    cmsSendFinalReportPdf(id, extra);
+    return out;
+  };
+}
+/* ===== END FINAL REPORT PDF ===== */
 async function doLogout() {
 await _supabase.auth.signOut();
 APP.user = null;
@@ -9327,7 +9625,7 @@ sendCMSemail(r.submitted_by, 'Report Approved: ' + r.employee_name, 'The Head of
 const { data: emp } = await _supabase.from('employees').select('manager_email').eq('employee_id', r.employee_id).single();
 if (emp && emp.manager_email) {
 if (decision.indexOf('Development Plan') >= 0) sendCMSemail(emp.manager_email, 'Development Plan Directed: ' + r.employee_name, 'The Head of HR directed a DEVELOPMENT PLAN for ' + r.employee_name + '.' + (plan ? ' Horizon: ' + plan + '.' : '') + ' Please create the IDP from their gaps in the CMS: ' + APP_LINK, {page:'mgr-devplans',params:{employee_id:r.employee_id}});
-else sendCMSemail(emp.manager_email, 'Promotion Approved: ' + r.employee_name, r.employee_name + ' has been approved for promotion by the Head of HR (subject to vacancy and company process).');
+else cmsManagerDecisionEmail(emp.manager_email, r, decision, '', false);
 }
 showToast('Decision saved - notifications sent');
 }
@@ -9537,7 +9835,7 @@ sendCMSemail(r.submitted_by, 'Report Approved: ' + r.employee_name, 'The Head of
 const { data: emp } = await _supabase.from('employees').select('manager_email').eq('employee_id', r.employee_id).single();
 if (emp && emp.manager_email) {
 if (decision.indexOf('Development Plan') >= 0) sendCMSemail(emp.manager_email, 'Development Plan Directed: ' + r.employee_name, 'The Head of HR directed a DEVELOPMENT PLAN for ' + r.employee_name + '. Please create the IDP from their gaps in the CMS: ' + APP_LINK, {page:'mgr-devplans',params:{employee_id:r.employee_id}});
-else sendCMSemail(emp.manager_email, 'Promotion Approved: ' + r.employee_name, r.employee_name + ' has been approved for promotion by the Head of HR (subject to vacancy and company process).');
+else cmsManagerDecisionEmail(emp.manager_email, r, decision, '', false);
 }
 showToast('Decision saved - notifications sent');
 }
@@ -9729,7 +10027,7 @@ if (r.submitted_by) sendCMSemail(r.submitted_by, 'FINAL Decision: ' + r.employee
 const { data: emp } = await _supabase.from('employees').select('manager_email').eq('employee_id', r.employee_id).single();
 if (emp && emp.manager_email) {
 if (decisionText.indexOf('Development Plan') >= 0) sendCMSemail(emp.manager_email, 'Development Plan Directed (FINAL): ' + r.employee_name, 'The C-Suite endorsed and the Head of HR finalized a DEVELOPMENT PLAN for ' + r.employee_name + '. Create the IDP from their gaps in the CMS: ' + APP_LINK, {page:'mgr-devplans',params:{employee_id:r.employee_id}});
-else sendCMSemail(emp.manager_email, 'Promotion Approved (FINAL): ' + r.employee_name, r.employee_name + ' has been approved for promotion by the C-Suite and Head of HR (subject to vacancy and company process).');
+else cmsManagerDecisionEmail(emp.manager_email, r, decisionText, '', true);
 }
 showToast(' Finalized - HR Admin and Line Manager notified (employee not notified)');
 loadHOHRReports();
@@ -15985,6 +16283,14 @@ function mdV2Model(d){
 }
 function mdV2Kpi(value,label,note,page,kind,icon){return '<button type="button" class="md-v2-kpi '+kind+'" aria-label="'+escapeHtml(label)+'" onclick="navigateTo('+rcArg(page)+')"><span class="kpi-icon">'+edIcon(icon)+'</span><strong>'+escapeHtml(mdV2Num(value))+'</strong><span>'+escapeHtml(label)+'</span><small>'+escapeHtml(note)+'</small></button>';}
 function mdV2Action(title,desc,overdue,today,week,page,kind,button){return '<article class="md-v2-action '+kind+'"><div class="md-v2-action-top"><h4>'+escapeHtml(title)+'</h4><span class="md-v2-badge '+kind+'">'+escapeHtml(kind)+'</span></div><p>'+escapeHtml(desc)+'</p><dl><dt>Overdue</dt><dd>'+escapeHtml(mdV2Num(overdue))+'</dd><dt>Due today</dt><dd>'+escapeHtml(mdV2Num(today))+'</dd><dt>Due this week</dt><dd>'+escapeHtml(mdV2Num(week))+'</dd></dl>'+mdButton(button,page,'btn btn-primary')+'</article>';}
+// Real numbers for the Returned Evidence card: experiences HR returned for revision.
+function mdV2ReturnedCard(d){
+ var cur=0,pro=0,emps=0;
+ ((d&&d.people)||[]).forEach(function(p){var c=0,q=0;latestOnly(p.rows||[]).forEach(function(r){if(r.hr_status!=='Returned')return;if(r.type==='Manager')c++;else if(r.type==='Prospective')q++;});if(c||q)emps++;cur+=c;pro+=q;});
+ var total=cur+pro,level=total?'high':'low';
+ var text=total?'HR returned '+total+' experience'+(total===1?'':'s')+' for '+emps+' employee'+(emps===1?'':'s')+'. Open them to revise the evidence.':'Nothing has been returned by HR right now.';
+ return '<article class="md-v2-action '+level+'"><div class="md-v2-action-top"><h4>Returned Evidence</h4><span class="md-v2-badge '+level+'">'+level+'</span></div><p>'+escapeHtml(text)+'</p><dl><dt>Employees affected</dt><dd>'+emps+'</dd><dt>Current role</dt><dd>'+cur+'</dd><dt>Prospective role</dt><dd>'+pro+'</dd></dl>'+mdButton('Review returned evidence','mgr-returned-details','btn btn-primary')+'</article>';
+}
 function mdV2Severity(score){var gap=80-Number(score||0);return gap>=20?'high':gap>=10?'medium':'low';}
 function mdV2Gaps(d){var gaps=(d.gaps||[]).slice(0,5);if(!gaps.length)return '<div class="md-v2-empty">No manager-rated gaps found for the available current-role assessments.</div>';return '<div class="table-wrap"><table class="md-v2-gap-table"><thead><tr><th>#</th><th>Competency</th><th>Impact</th><th>Affected</th><th>Team Avg. (Mgr)</th></tr></thead><tbody>'+gaps.map(function(g,i){var sev=mdV2Severity(g.score);return '<tr><td>'+(i+1)+'</td><td class="gap-name">'+escapeHtml(g.name)+'</td><td><span class="md-v2-badge '+sev+'">'+sev+'</span></td><td>'+escapeHtml(String(g.count))+' / '+escapeHtml(String((d.people||[]).length))+'</td><td>'+escapeHtml(String(g.score))+'%</td></tr>';}).join('')+'</tbody></table></div>';}
 function mdV2Activity(d){var a=d.activities||[];if(!a.length)return '<div class="md-v2-empty">No recent activity is available yet.</div>';return '<ul class="md-v2-activity">'+a.map(function(x){var dt=new Date(x.date);return '<li><span class="activity-dot">'+edIcon('check')+'</span><div><strong>'+escapeHtml(x.name)+' submitted '+escapeHtml(x.type)+' assessment</strong><span>'+escapeHtml(x.comp||'Assessment activity')+' | '+escapeHtml(isNaN(dt.getTime())?'Date unavailable':dt.toLocaleString())+'</span></div></li>';}).join('')+'</ul>';}
@@ -15998,7 +16304,7 @@ h+='<div class="md-v2-kpis">'+mdV2Kpi(d.people.length,'Direct Reports','Open My 
 
 h+='<section class="md-v2-card"><div class="md-v2-card-head"><div><h3>Action Queue</h3><p>Prioritized work for current and prospective assessments.</p></div><span class="md-v2-badge high">'+assessmentPending+' priorities</span></div><div class="md-v2-actions">';
 h+=mdV2Action('Pending Assessments','Invited current and prospective Manager assessments not yet submitted.',overdue,today,week,'mgr-pending','high','View pending assessments');
-  h+=mdV2Action('Returned Evidence','Evidence returned by HR needs revision.','--','--','--','mgr-returned-details','high','Review returned evidence');
+  h+=mdV2ReturnedCard(d);
   h+=mdV2Action('Setup Deadlines','Framework and competency setup deadlines.','--','--','--','mgr-setup-alerts','medium','View setup deadlines');
   h+=mdV2Action('Development Reports','Reports and development follow-up awaiting review.','--','--','--','mgr-repappr','low','Review reports');
   h+='</div></section>';
@@ -16120,14 +16426,17 @@ mdDetailPage = async function(kind){
     if(epoch !== CN.epoch) return;
     MD.data = d;
 
+    var corr = await _supabase.rpc('cms_manager_corrections',{p_action:'list',p_data:{}});
+    if(epoch !== CN.epoch) return;
+    if(corr.error) throw new Error(corr.error.message);
+    window.MDFIX = {};
     var returned = [];
-    (d.people || []).forEach(function(person){
-      var latest = latestOnly(person.rows || []);
-      latest.forEach(function(row){
-        if(!['Manager','Prospective'].includes(row.type)) return;
-        if(row.hr_status !== 'Returned') return;
-        returned.push({person:person,row:row});
-      });
+    (corr.data || []).forEach(function(dbRow){
+      var person = (d.people || []).find(function(p){return String(p.employee_id) === String(dbRow.employee_id);}) || {employee_id:dbRow.employee_id,employee_name:dbRow.employee_id,position:''};
+      var full = latestOnly(person.rows || []).find(function(x){return String(x.id) === String(dbRow.id);}) || {};
+      var row = Object.assign({}, full, dbRow);
+      window.MDFIX[String(dbRow.id)] = {evidence:dbRow.evidence,ticked:dbRow.ticked,rating:dbRow.proficiency_rating,comment:dbRow.hr_comment};
+      returned.push({person:person,row:row});
     });
 
     returned.sort(function(a,b){
@@ -16195,7 +16504,16 @@ mdDetailPage = async function(kind){
             '<span class="badge badge-warning">Returned by HR</span>'+
             '<div style="font-size:11px;color:var(--gray-500);margin-top:10px">HR comment</div>'+
             '<div style="padding:10px;background:#fff7ed;border:1px solid #fed7aa;border-radius:8px;font-size:12px;white-space:pre-wrap">'+escapeHtml(row.hr_comment || 'HR requested clearer evidence or correction.')+'</div>'+
-            '<button type="button" class="btn btn-primary" style="margin-top:12px" onclick="viewDetails('+rcArg(person.employee_id)+')">Open assessment details</button>'+
+            '<div data-fix="'+escapeHtml(String(row.id))+'" style="margin-top:14px;border-top:1px solid #fed7aa;padding-top:12px">'+
+        '<label style="display:flex;gap:8px;align-items:center;font-size:12px;font-weight:700;margin-bottom:8px"><input type="checkbox" data-f="tick" style="width:auto" '+(row.ticked ? 'checked' : '')+'>The employee has demonstrated this experience (your assessment)</label>'+
+          '<label>Corrected manager evidence: what you observed (action, context and result)</label>'+
+              '<textarea data-f="ev" rows="5" maxlength="20000">'+escapeHtml(mdPlainEvidence(row.evidence))+'</textarea>'+
+              '<label style="margin-top:8px">Rating</label>'+
+              '<select data-f="rt"><option value="">Select a rating</option>'+[1,2,3,4,5].map(function(v){return '<option value="'+v+'"'+(Number(row.proficiency_rating) === v ? ' selected' : '')+'>'+v+' - '+escapeHtml(cmsRatingLabel(v))+'</option>';}).join('')+'</select>'+
+              '<div data-f="msg"></div>'+
+              '<button type="button" class="btn btn-primary" style="margin-top:10px" onclick="mdResubmitReturned(this)">Resubmit to HR</button> '+
+              '<button type="button" class="btn btn-outline" style="margin-top:10px" onclick="viewDetails('+rcArg(person.employee_id)+')">Open assessment details</button>'+
+            '</div>'+
           '</div>'+
         '</div>'+
       '</article>';
@@ -16216,7 +16534,7 @@ mdDetailPage = async function(kind){
           '</div>'+
         '</section>'+
         '<section>'+ (list.length ? list.map(card).join('') : '<div class="md-card"><p class="md-empty">No returned experiences match this role filter.</p></div>') +'</section>'+
-        '<aside class="md-card" style="margin-top:14px;background:#fff7ed;border-color:#fed7aa"><strong>What the manager should do</strong><p style="font-size:12px;margin:5px 0 0">Open the assessment details, review HR comments, correct only the returned evidence, then resubmit through the existing assessment or correction workflow.</p></aside>'+
+        '<aside class="md-card" style="margin-top:14px;background:#fff7ed;border-color:#fed7aa"><strong>What the manager should do</strong><p style="font-size:12px;margin:5px 0 0">Read the HR comment on each card, correct the evidence and rating in the form, then click Resubmit to HR. Only returned experiences can be changed; approved ones stay locked.</p></aside>'+
         '</div>';
       setContent(html);
       document.getElementById('mdReturnedAll').onclick=function(){activeRole='all';render();};
@@ -16229,6 +16547,54 @@ mdDetailPage = async function(kind){
     if(epoch === CN.epoch) setContent('<div class="card"><h2>Returned evidence unavailable</h2><p>'+escapeHtml(e.message || 'Unable to load returned evidence.')+'</p>'+mdButton('Back to Dashboard','mgr-dashboard')+'</div>');
   }
 };
+
+// Plain text for editing: strips rich-text markup so managers do not see tags in the box.
+function mdPlainEvidence(value){
+  var raw = String(value == null ? '' : value);
+  if(!/<\/?(strong|b|em|i|u|ul|ol|li|p|br|div)\b/i.test(raw)) return raw;
+  var box = document.createElement('div');
+  box.innerHTML = raw.replace(/<br\s*\/?>/gi, '\n').replace(/<\/(p|div|li)>/gi, '\n');
+  return String(box.textContent || '').replace(/\n{3,}/g, '\n\n').trim();
+}
+
+// Sends one corrected experience back to HR (status returns to Pending).
+async function mdResubmitReturned(btn){
+  var box = btn && btn.closest ? btn.closest('[data-fix]') : null;
+  if(!box) return;
+  var id = box.getAttribute('data-fix');
+  var base = (window.MDFIX || {})[id];
+  var msg = box.querySelector('[data-f="msg"]');
+  var tick = box.querySelector('[data-f="tick"]');
+  var ev = box.querySelector('[data-f="ev"]');
+  var rt = box.querySelector('[data-f="rt"]');
+  function say(text, bad){
+    msg.textContent = text;
+    msg.style.cssText = 'margin:8px 0;padding:8px 10px;border-radius:6px;font-size:12px;font-weight:600;' +
+      (bad ? 'background:#fef2f2;color:#991b1b;border:1px solid #fca5a5' : 'background:#ecfdf5;color:#065f46;border:1px solid #6ee7b7');
+  }
+  [ev, rt].forEach(function(f){ f.style.borderColor = ''; });
+  if(!base){ say('Reload this page and try again.', true); return; }
+  if(tick.checked && !ev.value.trim()){ ev.style.borderColor = '#dc2626'; say('Evidence is empty. Describe the action, context and result.', true); ev.focus(); return; }
+  if(tick.checked && !rt.value){ rt.style.borderColor = '#dc2626'; say('Select a rating from 1 to 5.', true); rt.focus(); return; }
+  if(!confirm('Send this corrected experience back to HR for review?')) return;
+  btn.disabled = true;
+  say('Sending to HR...', false);
+  try{
+    var res = await _supabase.rpc('cms_manager_corrections', {p_action:'resubmit', p_data:{id:id, expected:base, ticked:tick.checked, evidence:ev.value, rating:rt.value ? Number(rt.value) : null}});
+    if(res.error) throw new Error(res.error.message);
+    box.innerHTML = '<div style="padding:10px;border-radius:8px;background:#ecfdf5;border:1px solid #6ee7b7;color:#065f46;font-weight:700;font-size:13px">Resubmitted. Awaiting HR review.</div>';
+    delete window.MDFIX[id];
+    showToast('Correction sent to HR for review.');
+    try{
+      var who = APP.user.name || APP.user.email;
+      notifyHR('Corrected evidence resubmitted', who + ' corrected an experience that HR returned and sent it back for review. Open CMS to Assessment Review to approve or return it: ' + APP_LINK, {page:'hr-review'});
+      sendCMSemail(APP.user.email, 'Correction sent to HR', 'Your corrected evidence was sent to HR for review. You will be notified of the outcome. No further action is needed from you unless HR returns it again.', {page:'mgr-assess'});
+    }catch(e2){}
+  }catch(e){
+    say('Not resubmitted: ' + (e && e.message ? e.message : e), true);
+    btn.disabled = false;
+  }
+}
 function mdSwitchPendingTab(mode){
  var current=document.getElementById('mdCurrentPending'),prospective=document.getElementById('mdProspectivePending'),ct=document.getElementById('mdCurrentTab'),pt=document.getElementById('mdProspectiveTab');
  if(!current||!prospective||!ct||!pt)return;
@@ -20756,7 +21122,12 @@ function ihOptions(rows,value,label){return '<option value="">'+ihE(label)+'</op
 function ihLive(t){return t===IH.token&&IH.role===rptIdentity()&&!!document.getElementById('ihRoot')&&!!APP.user;}
 async function ihRPC(action,data={}){var q=await r4Timeout(_supabase.rpc('cms_invitation_hub',{p_action:action,p_data:data}),45000,'Invitation request');if(q.error)throw Error(q.error.message);return q.data;}
 async function ihAll(action,size){var out=[];for(var page=0;;page++){var rows=await ihRPC(action,{page});if(!Array.isArray(rows))throw Error('Unexpected invitation response');out.push(...rows);if(rows.length<size)return out;}}
-function ihNotice(s){var el=document.getElementById('ihStatus');if(el)el.textContent=s;else if(typeof showToast==='function')showToast(s);}
+function ihNotice(s){
+ var text=String(s==null?'':s),bad=/not submitted|stopped|failed|error|denied|expired/i.test(text),el=document.getElementById('ihStatus');
+ if(el){el.textContent=text;el.className=bad?'cms-ih-status-bad':'';if(bad&&el.scrollIntoView)el.scrollIntoView({behavior:'smooth',block:'center'});}
+ else if(typeof showToast==='function')showToast(text);
+ if(bad&&el&&typeof showToast==='function')showToast(text.slice(0,140));
+}
 function ihFresh(){return{company:'',department:'',employee:'',manager:'',kind:'current',task:'assessment',targetDepartment:'',position:'',due:'',instructions:''};}
 async function ihOpen(view){
  if(!APP.user)return;
@@ -20925,20 +21296,121 @@ async function ihOpenWork(id){
 function ihValues(){return Array.from(document.querySelectorAll('#ihRoot [data-item]')).map(el=>({id:el.dataset.item,ticked:el.querySelector('[data-field="ticked"]').checked,
  evidence:el.querySelector('[data-field="evidence"]').value.trim(),rating:Number(el.querySelector('[data-field="rating"]').value)||null}));}
 function ihSaveDraft(){var map={};ihValues().forEach(v=>map[v.id]=v);localStorage.setItem(IH.draftKey,JSON.stringify(map));ihNotice('Draft saved locally. Files must be reselected after reopening.');}
+function cmsIhClearMarks(){
+ document.querySelectorAll('#ihRoot .cms-ih-problem').forEach(function(a){a.classList.remove('cms-ih-problem');});
+ document.querySelectorAll('#ihRoot .cms-ih-msg').forEach(function(m){m.remove();});
+ document.querySelectorAll('#ihRoot .cms-ih-field-bad').forEach(function(f){f.classList.remove('cms-ih-field-bad');});
+ var s=document.getElementById('cmsIhSummary');if(s)s.remove();
+}
+// Looks at every experience on screen and lists what is missing or inconsistent.
+function cmsIhCheck(){
+ var issues=[],arts=Array.prototype.slice.call(document.querySelectorAll('#ihRoot [data-item]')),tickedCount=0;
+ arts.forEach(function(el,idx){
+  var tick=el.querySelector('[data-field="ticked"]').checked,ev=String(el.querySelector('[data-field="evidence"]').value||'').trim(),rt=el.querySelector('[data-field="rating"]').value;
+  var h=el.querySelector('h3'),name=h?h.textContent:'Experience '+(idx+1);
+  if(tick)tickedCount++;
+  if(tick&&!ev)issues.push({el:el,n:idx+1,name:name,field:'evidence',msg:'Evidence is empty. Describe the action, context and result, or this experience scores the minimum rating (1).'});
+  if(tick&&!rt)issues.push({el:el,n:idx+1,name:name,field:'rating',msg:'No rating selected. Choose a rating from 1 to 5.'});
+  if(!tick&&(ev||rt))issues.push({el:el,n:idx+1,name:name,field:'ticked',msg:'You added evidence or a rating but did not tick "I have demonstrated this experience". Tick the box or it will not count.'});
+ });
+ return {issues:issues,total:arts.length,ticked:tickedCount};
+}
+function cmsIhShowProblems(res){
+ cmsIhClearMarks();
+ var groups=[];
+ res.issues.forEach(function(i){
+  var g=null;for(var k=0;k<groups.length;k++){if(groups[k].el===i.el)g=groups[k];}
+  if(!g){g={el:i.el,n:i.n,name:i.name,items:[]};groups.push(g);}
+  g.items.push(i);
+ });
+ groups.forEach(function(g){
+  g.el.classList.add('cms-ih-problem');g.el.id='cmsIhItem'+g.n;
+  var box=document.createElement('div');box.className='cms-ih-msg';
+  box.innerHTML=g.items.map(function(i){return ihE(i.msg);}).join('<br>');
+  var h=g.el.querySelector('h3');
+  if(h&&h.insertAdjacentElement)h.insertAdjacentElement('afterend',box);else g.el.insertBefore(box,g.el.firstChild);
+  g.items.forEach(function(i){
+   var f=g.el.querySelector('[data-field="'+i.field+'"]');if(!f)return;
+   (i.field==='ticked'&&f.parentElement?f.parentElement:f).classList.add('cms-ih-field-bad');
+  });
+ });
+ var rows=groups.map(function(g){
+  return '<li><button type="button" class="cms-ih-jump" data-ih="jump" data-value="cmsIhItem'+g.n+'">Experience '+g.n+': '+ihE(g.name)+'</button><br>'+g.items.map(function(i){return ihE(i.msg);}).join('<br>')+'</li>';
+ }).join('');
+ var none=res.ticked===0&&res.total>0?'<p><strong>No experience is ticked.</strong> Tick every experience you have demonstrated, otherwise every experience scores the minimum rating (1).</p>':'';
+ var count=groups.length;
+ var html='<section id="cmsIhSummary" class="cms-ih-summary"><h3>'+(count?'Please check '+count+' experience'+(count===1?'':'s')+' before you submit':'Please check your answers before you submit')+'</h3>'+none+
+  (count?'<p>They are marked in red above. Click one to jump to it.</p><ul>'+rows+'</ul>':'')+
+  '<div>'+ihButton('jump','Fix these now',groups[0]?'cmsIhItem'+groups[0].n:'',true)+ihButton('force-submit','Submit anyway')+'</div></section>';
+ var host=document.getElementById('ihSubmitPreview');if(host)host.innerHTML=html;
+ var first=groups[0]?groups[0].el:document.querySelector('#ihRoot [data-item]');
+ if(first&&first.scrollIntoView)first.scrollIntoView({behavior:'smooth',block:'center'});
+ var bad=first&&first.querySelector?first.querySelector('.cms-ih-field-bad'):null;
+ if(bad&&bad.focus){try{bad.focus({preventScroll:true});}catch(e){}}
+}
+function cmsIhShowConfirm(){
+ IH.submitReady=true;
+ var host=document.getElementById('ihSubmitPreview');if(!host)return;
+ host.innerHTML='<section class="ih-confirm"><h3>Confirm submission</h3><p>Submit this assessment for HR review? Experiences marked in red will score the minimum rating. Your invitation will be marked submitted, not HR-approved.</p>'+ihButton('submit','Confirm and submit',null,true)+ihButton('cancel-preview','Keep editing')+'</section>';
+}
+function cmsIhJump(id){
+ var target=document.getElementById(id);if(!target)return;
+ target.scrollIntoView({behavior:'smooth',block:'center'});
+ var f=target.querySelector('.cms-ih-field-bad');if(f&&f.focus){try{f.focus({preventScroll:true});}catch(x){}}
+}
+// When someone fixes a flagged experience, its red marks clear straight away.
+function cmsIhLiveClear(e){
+ var art=e.target&&e.target.closest?e.target.closest('#ihRoot [data-item]'):null;
+ if(!art||!art.classList.contains('cms-ih-problem'))return;
+ var tick=art.querySelector('[data-field="ticked"]').checked,ev=String(art.querySelector('[data-field="evidence"]').value||'').trim(),rt=art.querySelector('[data-field="rating"]').value;
+ if((tick&&!ev)||(tick&&!rt)||(!tick&&(ev||rt)))return;
+ art.classList.remove('cms-ih-problem');
+ art.querySelectorAll('.cms-ih-msg').forEach(function(m){m.remove();});
+ art.querySelectorAll('.cms-ih-field-bad').forEach(function(f){f.classList.remove('cms-ih-field-bad');});
+}
+function cmsIhPlainReason(msg){
+ var l=String(msg||'').toLowerCase();
+ if(/upload/.test(l))return 'A supporting file could not be uploaded. Remove that file or pick a smaller one, then submit again.';
+ if(/deadline|overdue|expired|closed/.test(l))return 'The deadline for this assessment has passed or the invitation is closed. Ask HR to reopen or extend it.';
+ if(/already submitted|duplicate/.test(l))return 'This assessment was already submitted. Open My Invitations to confirm it shows as Submitted.';
+ if(/cancel/.test(l))return 'This invitation was cancelled by HR.';
+ if(/jwt|session|sign in|signed in|token/.test(l))return 'Your session has expired. Sign in again and reopen the invitation.';
+ if(/not authori|permission|row-level|policy|forbidden|not allowed|denied/.test(l))return 'Your account is not allowed to submit this assessment. Ask HR to check the invitation was issued to your email.';
+ if(/timed out|timeout|network|fetch/.test(l))return 'The connection was slow or dropped, so the submission may not have gone through. Check your internet and try again.';
+ return 'The system rejected the submission.';
+}
+// Confirmation email to the person who just submitted.
+function cmsIhSendConfirmation(r,ticked,total){
+ try{
+  if(typeof sendCMSemail!=='function'||!APP||!APP.user||!APP.user.email)return;
+  var NL=String.fromCharCode(10),work=ihWork(r),subject='Assessment submitted: '+work+(r.employee_name?' - '+r.employee_name:'');
+  var when=new Date().toLocaleString('en-GB',{dateStyle:'medium',timeStyle:'short',timeZone:'Africa/Nairobi'})+' (East Africa Time)';
+  var msg='Your '+work+(r.employee_name?' for '+r.employee_name:'')+' was submitted successfully.'+NL+NL+
+   (r.target_position?'Role: '+(r.target_department?r.target_department+' / ':'')+r.target_position+NL:'')+
+   'Submitted: '+when+NL+'Experiences marked as demonstrated: '+ticked+' of '+total+NL+(r.due_date?'Deadline was: '+r.due_date+NL:'')+NL+
+   'What happens next: HR will review your submission. Your deadline reminders have stopped. No further action is needed unless HR returns it for clarification.';
+  sendCMSemail(APP.user.email,subject,msg,{page:APP.currentRole==='employee'?'emp-selfassess':'mgr-assess'});
+ }catch(e){/* the submission itself already succeeded */}
+}
 async function ihSubmit(){
- if(IH.busy||!IH.submitReady||!IH.selected)return;IH.busy=true;var token=IH.token,id=IH.selected.id;ihNotice('Submitting your assigned assessment...');
+ if(IH.busy){ihNotice('Submission stopped: a submission is already in progress. Please wait a moment.');return;}
+ if(!IH.selected){ihNotice('Submission stopped: no assessment is open. Go back to My Invitations and open it again.');return;}
+ if(!IH.submitReady){ihNotice('Submission stopped: click Preview submission first, then confirm.');return;}
+ IH.busy=true;var token=IH.token,id=IH.selected.id,work=IH.selected;ihNotice('Submitting your assigned assessment...');
  try{
   var items=ihValues(),elements=Array.from(document.querySelectorAll('#ihRoot [data-item]'));
   for(var i=0;i<items.length;i++){
    var file=elements[i].querySelector('[data-field="file"]').files[0];if(!file||!items[i].ticked)continue;
    var path='ev/INV-'+id+'/'+items[i].id+'_'+Date.now()+'_'+file.name;
-   var upload=await _supabase.storage.from('evidence-files').upload(path,file,{upsert:false});if(upload.error)throw Error('Proof upload failed: '+upload.error.message);
+   var upload=await _supabase.storage.from('evidence-files').upload(path,file,{upsert:false});
+   if(upload.error){var h3=elements[i].querySelector('h3');throw Error('Proof upload failed for "'+(h3?h3.textContent:'an experience')+'" ('+file.name+'): '+upload.error.message);}
    items[i].attachment_name=file.name;items[i].attachment_url=_supabase.storage.from('evidence-files').getPublicUrl(path).data.publicUrl;
   }
   if(!ihLive(token))return;
   await ihRPC('submit',{id,items});localStorage.removeItem(IH.draftKey);IH.submitReady=false;
-  if(ihLive(token)){await ihOpen('mine');ihNotice('Submitted. Your countdown and deadline reminders have stopped. HR review is separate.');}
- }catch(e){ihNotice('Submission stopped: '+e.message);}finally{IH.busy=false;}
+  cmsIhSendConfirmation(work,items.filter(function(x){return x.ticked;}).length,items.length);
+  if(ihLive(token)){await ihOpen('mine');ihNotice('Submitted successfully. A confirmation email is on its way to you. Your countdown and deadline reminders have stopped. HR review is separate.');}
+ }catch(e){var m=e&&e.message?e.message:String(e);ihNotice('Not submitted: '+cmsIhPlainReason(m)+' (System message: '+m+')');}finally{IH.busy=false;}
 }
 function ihInvalidate(){IH.preview=null;document.getElementById('ihPreview')?.replaceChildren();IH.submitReady=false;document.getElementById('ihSubmitPreview')?.replaceChildren();}
 document.addEventListener('change',e=>{
@@ -20952,12 +21424,12 @@ document.addEventListener('change',e=>{
   if(k!=='due')ihRender();
  }
  if(e.target.id==='ihFilter')ihRegister();
- if(e.target.closest('#ihRoot [data-item]'))ihInvalidate();
+ if(e.target.closest('#ihRoot [data-item]')){cmsIhLiveClear(e);ihInvalidate();}
 });
 document.addEventListener('input',e=>{
  if(e.target.id==='ihInstructions'){IH.form.instructions=e.target.value;ihInvalidate();}
  if(e.target.id==='ihFind')ihRegister();
- if(e.target.closest('#ihRoot [data-item]'))ihInvalidate();
+ if(e.target.closest('#ihRoot [data-item]')){cmsIhLiveClear(e);ihInvalidate();}
 });
 document.addEventListener('click',async e=>{
  var b=e.target.closest('[data-ih]');if(!b||b.disabled||IH.busy)return;
@@ -20986,8 +21458,12 @@ if(a==='reassign')return ihReassignFromPreview();
  document.getElementById('ihRegister').after(panel);panel.scrollIntoView({block:'nearest'});return;}
  if(a==='close-detail'){document.getElementById('ihDetail')?.remove();return;}
  if(a==='save-draft')return ihSaveDraft();
+ if(a==='jump'){cmsIhJump(b.dataset.value);return;}
+ if(a==='force-submit')return cmsIhShowConfirm();
  if(a==='submit-preview'){
-  IH.submitReady=true;document.getElementById('ihSubmitPreview').innerHTML='<section class="ih-confirm"><h3>Confirm submission</h3><p>Submit this complete invited assessment for HR review? Missing or invalid evidence/rating follows the minimum-rating policy. Your invitation will be marked submitted, not HR-approved.</p>'+ihButton('submit','Confirm and submit',null,true)+ihButton('cancel-preview','Keep editing')+'</section>';return;
+  var cmsRes=cmsIhCheck();cmsIhClearMarks();
+  if(cmsRes.issues.length||(cmsRes.ticked===0&&cmsRes.total>0)){IH.submitReady=false;cmsIhShowProblems(cmsRes);return;}
+  return cmsIhShowConfirm();
  }
  if(a==='submit')return ihSubmit();
  }catch(e){ihNotice(e.message);}
@@ -22346,11 +22822,98 @@ adUpdateButtons=function(s){fpButtons(s);if(!adActive(s))return;document.querySe
  document.querySelectorAll('#adRoot [data-ad-item]').forEach(el=>{var no=el.querySelector('[data-fp-answer="no"]')?.checked;if(no)el.querySelectorAll('[data-sx-rating]').forEach(x=>x.disabled=true);});};
 document.addEventListener('change',e=>{if(!e.target.matches('[data-fp-answer]'))return;var s=AD.state;if(!s||!adActive(s))return;adQueue(s);fpRefreshAnswers(s);adUpdateButtons(s);});
 var fpPreview=adPreview;
-adPreview=async function(s){adCapture(s);var missing=s.items.filter(i=>!fpAnswer(s.values[i.id])),invalid=s.items.filter(i=>{var v=s.values[i.id];return fpAnswer(v)==='yes'&&(!String(v.evidence||'').trim()||![1,2,3,4,5].includes(Number(v.rating)));});
- if(missing.length||invalid.length){adNotice(s,'Before submitting: '+missing.length+' experience(s) need Yes/No; '+invalid.length+' Yes answer(s) need evidence and a rating. You can still save this draft.',true);var item=missing[0]||invalid[0];if(item)document.querySelector('[data-ad-item="'+CSS.escape(String(item.id))+'"]')?.scrollIntoView({block:'center'});return;}
+/* Pre-submit check: lists exactly what is missing, per experience, and blocks submission until fixed. */
+function fpPlain(html){var d=document.createElement('div');d.innerHTML=String(html||'');return String(d.textContent||'').replace(/\u00a0/g,' ').trim();}
+function fpMissingStyle(){
+ if(document.getElementById('fpMissingStyle'))return;
+ var st=document.createElement('style');st.id='fpMissingStyle';
+ st.textContent='#adRoot .fp-missing{outline:2px solid #dc2626;outline-offset:-2px;background:#fef2f2!important}'+
+ '#adRoot .fp-missing-msg{grid-column:1/-1;background:#fee2e2;border:1px solid #fca5a5;color:#991b1b;border-radius:6px;padding:8px 12px;font-size:14px;line-height:1.5}'+
+ '#adRoot .fp-missing-msg b{font-weight:700}'+
+ '#adRoot .fp-missing-box{background:#fff;border:2px solid #dc2626;border-radius:10px;padding:16px 18px;margin:14px 0;color:#7f1d1d}'+
+ '#adRoot .fp-missing-box h2{color:#991b1b!important;font-size:18px;margin:0 0 6px}'+
+ '#adRoot .fp-missing-box ul{margin:8px 0 12px 20px}'+
+ '#adRoot .fp-missing-box li{margin:8px 0;color:#3b1d1d}'+
+ '#adRoot .fp-missing-box button.fp-jump{background:none;border:0;padding:0;color:#1d4ed8;font-weight:700;text-decoration:underline;cursor:pointer;font-size:14px}';
+ document.head.appendChild(st);
+}
+function fpClearMissing(){
+ document.querySelectorAll('#adRoot .fp-missing').forEach(function(e){e.classList.remove('fp-missing');});
+ document.querySelectorAll('#adRoot .fp-missing-msg').forEach(function(e){e.remove();});
+ var b=document.getElementById('fpMissingBox');if(b)b.remove();
+}
+function fpFindMissing(s){
+ var out=[];
+ s.items.forEach(function(item){
+  var v=s.values[item.id]||{},el=document.querySelector('[data-ad-item="'+CSS.escape(String(item.id))+'"]');
+  var sec=el&&el.closest?el.closest('.fp-competency'):null,h=sec?sec.querySelector('h2'):null;
+  var comp=h?h.textContent.trim():String(item.code||'Competency');
+  var sibs=sec?Array.prototype.slice.call(sec.querySelectorAll('[data-ad-item]')):[];
+  var num=el?sibs.indexOf(el)+1:0;
+  var p=el?el.querySelector('.fp-experience-text p'):null,txt=p?p.textContent.trim():String(item.experience_text||item.text||'');
+  if(txt.length>110)txt=txt.slice(0,107)+'...';
+  var ans=fpAnswer(v),problems=[];
+  if(!ans)problems.push('Choose Yes or No (it is still blank).');
+  if(ans==='yes'){
+   if(!fpPlain(v.evidence))problems.push('Evidence is empty. Type the action, context and result.');
+   if(![1,2,3,4,5].includes(Number(v.rating)))problems.push('No proficiency rating selected. Pick a number from 1 to 5.');
+  }
+  if(problems.length)out.push({id:String(item.id),el:el,comp:comp,num:num,text:txt,problems:problems});
+ });
+ return out;
+}
+function fpShowMissing(s,list,general){
+ fpMissingStyle();fpClearMissing();
+ list.forEach(function(m){
+  if(!m.el)return;
+  m.el.classList.add('fp-missing');
+  var box=document.createElement('div');box.className='fp-missing-msg';box.setAttribute('role','alert');
+  box.innerHTML='<b>Missing:</b> '+m.problems.map(function(x){return adText(x);}).join(' ');
+  m.el.insertBefore(box,m.el.firstChild);
+ });
+ var rows=list.map(function(m){
+  return '<li><button type="button" class="fp-jump" data-fp-jump="'+adText(m.id)+'">'+adText(m.comp)+', experience '+m.num+'</button>: '+adText(m.text)+'<br>'+m.problems.map(function(x){return adText(x);}).join('<br>')+'</li>';
+ }).join('');
+ var gen=general.length?'<ul>'+general.map(function(x){return '<li>'+adText(x)+'</li>';}).join('')+'</ul>':'';
+ var total=list.length+general.length;
+ var holder=document.getElementById('adConfirm');
+ if(holder)holder.replaceChildren();
+ var box=document.createElement('section');box.id='fpMissingBox';box.className='fp-missing-box';box.setAttribute('role','alert');
+ box.innerHTML='<h2>Not submitted yet: '+total+' thing'+(total===1?'':'s')+' to fix</h2><p>This assessment cannot be submitted until the items below are completed. Click one to jump to it. Your answers are not lost; you can also save a draft.</p>'+gen+(list.length?'<ul>'+rows+'</ul>':'');
+ (holder||document.getElementById('adRoot')).appendChild(box);
+ adNotice(s,'Not submitted: '+total+' item'+(total===1?'':'s')+' still missing. See the red list.',true);
+ box.scrollIntoView({block:'center',behavior:'smooth'});
+}
+adPreview=async function(s){
+ adCapture(s);
+ var list=fpFindMissing(s),general=[];
+ if(s.uploads&&s.uploads.size)general.push('A proof file is still uploading. Wait for it to finish.');
+ if(s.uploadErrors&&s.uploadErrors.size)general.push('A proof file failed to upload. Remove it or attach it again.');
+ if(list.length||general.length){fpShowMissing(s,list,general);return;}
+ fpClearMissing();
  return fpPreview(s);
 };
-
+document.addEventListener('click',function(e){
+ var j=e.target.closest?e.target.closest('[data-fp-jump]'):null;if(!j)return;
+ var el=document.querySelector('[data-ad-item="'+CSS.escape(j.dataset.fpJump)+'"]');if(!el)return;
+ el.scrollIntoView({block:'center',behavior:'smooth'});
+ var f=el.querySelector('[data-fp-answer]:checked')||el.querySelector('.cms-rich-editor')||el.querySelector('[data-fp-answer]');
+ if(f&&f.focus){try{f.focus({preventScroll:true});}catch(x){}}
+});
+/* A red experience clears itself as soon as it is fixed. */
+function fpLiveClear(e){
+ var el=e.target&&e.target.closest?e.target.closest('#adRoot .fp-missing'):null;if(!el)return;
+ var s=AD.state;if(!s||!adActive(s))return;
+ setTimeout(function(){
+  adCapture(s);var m=fpFindMissing(s).filter(function(x){return x.el===el;});
+  if(m.length)return;
+  el.classList.remove('fp-missing');var msg=el.querySelector('.fp-missing-msg');if(msg)msg.remove();
+  var box=document.getElementById('fpMissingBox');
+  if(box&&!document.querySelector('#adRoot .fp-missing'))box.remove();
+ },700);
+}
+document.addEventListener('change',fpLiveClear);
+document.addEventListener('input',fpLiveClear);
 /* Destructive actions always preview exactly one chosen record and its owned dependencies. */
 var HD_DELETE_BUSY=false;
 function hdDeleteLabel(table){return ({
@@ -23470,6 +24033,13 @@ document.addEventListener('click',e=>{var b=e.target.closest('[data-hd-delete-in
   if(typeof adCapture!=='function'||typeof fpAnswer!=='function')return;
   window.cmsNotDemonstratedRatingOne=true;
 
+  // Not demonstrated (No): rating is set to 1 (Unsatisfactory) and the whole evidence area is locked.
+  // Yes again: the evidence area unlocks and the rating that was there before comes back.
+  var style=document.createElement('style');
+  style.textContent='#adRoot.fp-assessment .fp-evidence.fp-evidence-off{opacity:.45;pointer-events:none;user-select:none;filter:grayscale(.6)}'+
+    '#adRoot.fp-assessment .fp-evidence-lock-note{font-size:14px;font-weight:600;color:#677087;margin:0 0 8px}';
+  document.head.appendChild(style);
+
   function editable(s){
     return s&&adActive(s)&&s.canSave&&!s.submitting&&!s.conflict&&!s.recovery&&
       !(typeof sxExpired==='function'&&sxExpired(s.invitation));
@@ -23479,6 +24049,10 @@ document.addEventListener('click',e=>{var b=e.target.closest('[data-hd-delete-in
     document.querySelectorAll('#adRoot [data-ad-item]').forEach(function(el){
       var v=s.values[el.dataset.adItem];
       if(!v||fpAnswer(v)!=='no')return;
+      if(!el.dataset.cmsAuto){
+        el.dataset.cmsPrev=(v.rating&&Number(v.rating)!==1)?String(v.rating):'';
+        el.dataset.cmsAuto='1';
+      }
       v.ticked=false;
       v.rating=1;
       var select=el.querySelector('[data-ad-field="rating"]');
@@ -23490,6 +24064,38 @@ document.addEventListener('click',e=>{var b=e.target.closest('[data-hd-delete-in
       // Keep evidence and uploaded proof; only the rating changes.
     });
   }
+  // Locks or unlocks the typing box, formatting buttons, AI buttons, files and links for each experience.
+  function lockEvidence(s){
+    if(!s||!adActive(s))return;
+    document.querySelectorAll('#adRoot [data-ad-item]').forEach(function(el){
+      var box=el.querySelector('.fp-evidence');if(!box)return;
+      var no=!!el.querySelector('[data-fp-answer="no"]')?.checked;
+      box.inert=no;
+      box.setAttribute('aria-disabled',no?'true':'false');
+      box.classList.toggle('fp-evidence-off',no);
+      var note=box.querySelector('.fp-evidence-lock-note');
+      if(no&&!note){
+        note=document.createElement('p');note.className='fp-evidence-lock-note';
+        note.textContent='Not demonstrated: evidence is not needed. Choose Yes to type evidence again.';
+        box.prepend(note);
+      }
+      if(!no&&note)note.remove();
+    });
+  }
+  // Back to Yes: bring back the rating the person had chosen before No set it to 1.
+  function restoreAfterYes(s,el){
+    if(!el||!el.dataset.cmsAuto)return;
+    var v=s.values[el.dataset.adItem];
+    var prev=el.dataset.cmsPrev||'';
+    delete el.dataset.cmsAuto;delete el.dataset.cmsPrev;
+    if(!v)return;
+    v.rating=prev?Number(prev):null;
+    var select=el.querySelector('[data-ad-field="rating"]');
+    if(select)select.value=prev;
+    el.querySelectorAll('[data-sx-rating]').forEach(function(box){
+      box.checked=!!prev&&box.dataset.sxRating===prev;
+    });
+  }
   var capture=adCapture;
   adCapture=function(s){
     var result=capture.apply(this,arguments);
@@ -23498,6 +24104,7 @@ document.addEventListener('click',e=>{var b=e.target.closest('[data-hd-delete-in
   };
   function updateNote(s){
     if(!s||!adActive(s))return;
+    lockEvidence(s);
     document.querySelectorAll('#adRoot [data-ad-item]').forEach(function(el){
       var no=el.querySelector('[data-fp-answer="no"]')?.checked;
       var note=el.querySelector('.fp-no-note');
@@ -23517,6 +24124,7 @@ document.addEventListener('click',e=>{var b=e.target.closest('[data-hd-delete-in
     if(!e.target.matches('#adRoot [data-fp-answer]'))return;
     var s=AD.state;
     if(!editable(s))return;
+    if(e.target.value==='yes')restoreAfterYes(s,e.target.closest('[data-ad-item]'));
     adQueue(s);fpRefreshAnswers(s);adUpdateButtons(s);
   });
   var render=adRender;
@@ -23782,9 +24390,25 @@ h+='<nav class="aov-tabs" role="tablist" aria-label="Assessment pages">'+
  h+='<section class="ar-register"><header><span class="aov-register-title">Employee assessment register<small>Review self, manager, current-role, and prospective-role progress.</small></span></header>';
  h+='<div class="ar-tools"><label>Find employee<input id="arSearch" type="search" placeholder="Name, ID or position..." value="'+esc(AR.search)+'"></label><label>Assessment status<select id="arState">'+arOptions(rows.flatMap(function(r){return [r.current_self.state,r.current_manager.state,r.prospective_self.state,r.prospective_manager.state];}),AR.state,'All statuses')+'</select></label><label>HR review<select id="arReview">'+arOptions(rows.flatMap(function(r){return [r.current_self.review,r.current_manager.review,r.prospective_self.review,r.prospective_manager.review];}),AR.review,'All reviews')+'</select></label><label>Prospective role<select id="arTarget">'+arOptions(rows.flatMap(function(r){return r.targets;}),AR.target,'Automatic when only one target')+'</select></label></div>';
  h+='<p class="ar-note">Self and Manager scores are separate assessment components. Final role scores require both matching submissions and resolved HR review.</p>';
- h+='<div class="ar-table-wrap"><table class="ar-table aov-table"><thead><tr><th>Employee</th><th>Department</th><th>Current role score</th><th>Prospective role score</th><th>Assessment status</th><th>HR review</th><th>Actions</th></tr></thead><tbody>';
- rows.slice(AR.page*AR.size,(AR.page+1)*AR.size).forEach(function(r){var st=stateText(r),review=reviewText(r),target=r.target?arE(r.target):'Not invited';h+='<tr><td class="ar-person"><strong>'+esc(r.name)+'</strong><span>'+esc(r.position)+'</span><small>'+esc(r.employee_id)+'</small></td><td>'+esc(r.department||'Not assigned')+'</td><td>'+scoreCell(r.current_final,'current')+'<small>Self '+esc(score(r.current_self.score))+' | Manager '+esc(score(r.current_manager.score))+'</small></td><td>'+scoreCell(r.prospective_final,'prospective')+'<small>'+target+'</small></td><td><span class="aov-status '+stateClass(st)+'">'+esc(st)+'</span></td><td><span class="aov-review '+(review==='Reviewed'?'reviewed':'')+'">'+esc(review)+'</span></td><td><div class="ar-actions">'+arButton('view','View',r.employee_id,'ar-primary')+arButton('pdf','PDF',r.employee_id)+'</div></td></tr>';});
- h+='</tbody></table></div>'+(!rows.length?'<div class="ar-empty"><h3>'+(!AR.rows.length?(d.hohr_filtered?'No employees in the submitted-report scope':'No employees or assessments yet'):'No matching employees')+'</h3><p>Change the filters to see other records.</p></div>':'')+'<footer class="ar-pagination"><span>'+rows.length+' matching employees | Page '+(AR.page+1)+' of '+Math.max(1,Math.ceil(rows.length/AR.size))+'</span><div>'+arButton('prev','Previous')+arButton('next','Next')+'</div></footer><p id="arStatus" role="status"></p></section>';
+ h+='<div class="arx-wrap"><div class="arx" role="table" aria-label="Employee assessments"><div class="arx-head" role="row"><div>Employee</div><div>Current role score</div><div>Prospective</div><div>Progress</div><div class="arx-right">Actions</div></div>';
+var arxColors=['#4338ca','#0f766e','#9333ea','#b45309','#be185d'];
+function arxGot(x){return !!(x&&x.state&&x.state!=='Awaiting');}
+function arxNum(v){return v===null||v===undefined?'-':score(v);}
+function arxStep(done,label,full,next){return '<span class="arx-step'+(done?' done':next?' next':'')+'" title="'+full+(done?': done':': waiting')+'"><i>'+(done?'<svg viewBox="0 0 16 16" width="12" height="12" aria-hidden="true"><path d="M3.5 8.5l3 3 6-7" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>':'')+'</i><em>'+label+'</em></span>';}
+rows.slice(AR.page*AR.size,(AR.page+1)*AR.size).forEach(function(r,i){
+ var review=reviewText(r),sDone=arxGot(r.current_self),mDone=arxGot(r.current_manager),hDone=review==='Reviewed',open=!sDone?0:!mDone?1:!hDone?2:-1;
+ var fin=r.current_final,hasFin=fin!==null&&fin!==undefined,pf=r.prospective_final,hasPf=pf!==null&&pf!==undefined;
+ var parts=String(r.name||'?').trim().split(/\s+/).filter(Boolean),ini=((parts[0]||'?').charAt(0)+(parts.length>1?parts[parts.length-1].charAt(0):'')).toUpperCase();
+ var split='<small>Self '+esc(arxNum(r.current_self&&r.current_self.score))+' | Mgr '+esc(arxNum(r.current_manager&&r.current_manager.score))+'</small>';
+ var cur=hasFin?'<div class="arx-score"><strong>'+esc(score(fin))+'</strong><i><b style="width:'+(scoreNumber(fin)||0)+'%"></b></i></div>'+split:(sDone&&mDone)?'<div class="arx-wait">Awaiting HR review</div>'+split:'<div class="arx-none">Not scored yet</div>'+split;
+ var pros=hasPf?'<div class="arx-score pro"><strong>'+esc(score(pf))+'</strong><i><b style="width:'+(scoreNumber(pf)||0)+'%"></b></i></div><small>'+esc(r.target||'')+'</small>':r.target?'<span class="arx-chip violet">Invited</span><small>'+esc(r.target)+'</small>':'<span class="arx-chip">Not invited</span>';
+ var pipe='<div class="arx-pipe">'+arxStep(sDone,'Self','Self assessment',open===0)+'<s class="'+(sDone&&mDone?'on':sDone?'half':'')+'"></s>'+arxStep(mDone,'Mgr','Manager assessment',open===1)+'<s class="'+(mDone&&hDone?'on':mDone?'half':'')+'"></s>'+arxStep(hDone,'HR','HR review',open===2)+'</div>';
+ var del=(typeof sdAllowed==='function'&&sdAllowed())?arButton('delete','Delete',r.employee_id,'arx-del'):'';
+ h+='<div class="arx-row" role="row"><div class="arx-person"><span class="arx-av" style="background:'+arxColors[i%arxColors.length]+'">'+esc(ini)+'</span><div><strong title="'+esc(r.name)+'">'+esc(r.name)+'</strong><span class="sub" title="'+esc(r.position)+' | '+esc(r.department||'Not assigned')+'">'+esc(r.position)+' | '+esc(r.employee_id)+'</span></div></div>'+
+  '<div class="arx-cell">'+cur+'</div><div class="arx-cell">'+pros+'</div>'+pipe+
+  '<div class="arx-actions">'+arButton('view','View',r.employee_id,'ar-primary')+arButton('pdf','PDF',r.employee_id)+'<button type="button" class="ar-button" data-employee-excel="'+esc(r.employee_id)+'" title="Download this employee assessment workbook">Excel</button>'+del+'</div></div>';
+});
+ h+='</div></div>'+(!rows.length?'<div class="ar-empty"><h3>'+(!AR.rows.length?(d.hohr_filtered?'No employees in the submitted-report scope':'No employees or assessments yet'):'No matching employees')+'</h3><p>Change the filters to see other records.</p></div>':'')+'<footer class="ar-pagination"><span>'+rows.length+' matching employees | Page '+(AR.page+1)+' of '+Math.max(1,Math.ceil(rows.length/AR.size))+'</span><div>'+arButton('prev','Previous')+arButton('next','Next')+'</div></footer><p id="arStatus" role="status"></p></section>';
  root.innerHTML=h;root.querySelector('[data-ar="prev"]').disabled=AR.page===0;root.querySelector('[data-ar="next"]').disabled=(AR.page+1)*AR.size>=rows.length;
 }
 loadHRAll=async function(){
@@ -24050,6 +24674,48 @@ emailReport=function(id){return document.getElementById('arRoot')?arEmail(id):ar
  #arRoot .ar-company .ar-building{display:none}
  #arRoot .ar-company span:not(.ar-building),#arRoot .ar-company small{grid-column:1}
 }
+</style>
+<style id="arx-compact-register">
+#arRoot .arx-wrap{margin:8px 16px;border:1px solid #d9dcec;border-radius:14px;overflow-x:auto;background:#fff}
+#arRoot .arx{min-width:960px}
+#arRoot .arx-head,#arRoot .arx-row{display:grid;grid-template-columns:minmax(200px,2.2fr) minmax(150px,1.5fr) 124px 164px 214px;gap:10px;align-items:center;padding:10px 16px}
+#arRoot .arx-head{background:#f6f7fc;border-bottom:1px solid #e3e6f3;font:600 14px/1.3 system-ui,sans-serif;color:#4a5072}
+#arRoot .arx-row{border-bottom:1px solid #eceef7;transition:background .15s}
+#arRoot .arx-row:last-child{border-bottom:0}
+#arRoot .arx-row:hover{background:#f6f7fc}
+#arRoot .arx-right{text-align:right}
+#arRoot .arx-person{display:flex;align-items:center;gap:10px;min-width:0}
+#arRoot .arx-person>div{min-width:0}
+#arRoot .arx-av{flex:none;width:36px;height:36px;border-radius:10px;color:#fff;display:grid;place-items:center;font:600 14px/1 system-ui,sans-serif}
+#arRoot .arx-person strong{display:block;font:600 15px/1.25 system-ui,sans-serif;color:#1b1b3a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#arRoot .arx-person .sub{display:block;font:400 14px/1.3 system-ui,sans-serif;color:#5d6385;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#arRoot .arx-cell{min-width:0}
+#arRoot .arx-cell small{display:block;margin-top:3px;font:400 14px/1.2 ui-monospace,Menlo,Consolas,monospace;color:#5d6385;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#arRoot .arx-score{display:flex;align-items:center;gap:8px}
+#arRoot .arx-score strong{font:600 18px/1 ui-monospace,Menlo,Consolas,monospace;color:#1b1b3a}
+#arRoot .arx-score i{display:block;flex:1;max-width:80px;height:6px;border-radius:99px;background:#e3e6f3;overflow:hidden}
+#arRoot .arx-score i b{display:block;height:100%;background:#4338ca;border-radius:inherit}
+#arRoot .arx-score.pro i b{background:#7c3aed}
+#arRoot .arx-wait{font:600 15px/1.2 system-ui,sans-serif;color:#b45309}
+#arRoot .arx-none{font:600 15px/1.2 system-ui,sans-serif;color:#5d6385}
+#arRoot .arx-chip{display:inline-block;border-radius:99px;padding:2px 10px;font:600 14px/1.4 system-ui,sans-serif;background:#eceff7;color:#4a5072}
+#arRoot .arx-chip.violet{background:#ece4fb;color:#6b21a8}
+#arRoot .arx-pipe{display:flex;align-items:flex-start}
+#arRoot .arx-step{display:flex;flex-direction:column;align-items:center;gap:3px;width:44px}
+#arRoot .arx-step i{display:grid;place-items:center;width:20px;height:20px;border-radius:50%;border:2px solid #c4c9de;background:#fff;box-sizing:border-box}
+#arRoot .arx-step.done i{background:#059669;border-color:#059669}
+#arRoot .arx-step.next i{border-color:#b45309;box-shadow:0 0 0 3px rgba(180,83,9,.15)}
+#arRoot .arx-step em{font:500 14px/1 system-ui,sans-serif;font-style:normal;color:#5d6385}
+#arRoot .arx-step.done em{color:#1b1b3a;font-weight:600}
+#arRoot .arx-pipe s{display:block;width:20px;height:3px;border-radius:3px;background:#d9dcec;margin:8px -8px 0;text-decoration:none}
+#arRoot .arx-pipe s.on{background:#059669}
+#arRoot .arx-pipe s.half{background:linear-gradient(90deg,#059669,#d9dcec)}
+#arRoot .arx-actions{display:flex;gap:5px;justify-content:flex-end;flex-wrap:nowrap}
+#arRoot .arx-actions .ar-button{margin:0;min-height:34px;padding:6px 9px;font:600 14px/1.2 system-ui,sans-serif;border-radius:8px;white-space:nowrap;background:#fff;color:#312e81;border:1px solid #c9cdee}
+#arRoot .arx-actions .ar-primary{background:#4338ca;color:#fff;border-color:#4338ca;box-shadow:0 2px 6px rgba(67,56,202,.3)}
+#arRoot .arx-actions [data-employee-excel]{color:#047857;border-color:#8fd3b5}
+#arRoot .arx-actions .arx-del{color:#b91c1c;border-color:#f2b3b3;background:#fff}
+#arRoot .arx-actions .arx-del:hover{background:#fef2f2}
 </style>
 <script id="cms-compact-register-excel-behaviour">
 (function(){
@@ -38916,12 +39582,22 @@ body.cms-focus-editor-v1 #mainContent #fwScreen.cfu-screen #fwBody .cfe-footer {
 })();
 </script>
 <style id="cms-rich-text-toolbar-v2">
+(line 39452 in the file you sent me, or about 39449 to 39453 if you already pasted my bold edits).
+Select from that line down to the </script> that closes <script id="cms-rich-text-toolbar-v2"> (line 39548 in the file you sent, a little further down if you pasted the bold edits). The very next line after it starts with <style id="cms-rich-display-style-v1">.
+Delete the selection and paste everything between the two marker lines below. This one block replaces my earlier bold edits, so do not keep both.
+
+===== PASTE FROM NEXT LINE =====
+<style id="cms-rich-text-toolbar-v2">
 .cms-rich-wrap{width:100%;margin:6px 0 14px}
 .cms-rich-toolbar{display:flex;flex-wrap:wrap;gap:5px;margin:0 0 7px;padding:6px;background:#f4f6fb;border:1px solid #cbd5e1;border-radius:7px}
 .cms-rich-toolbar button{min-width:34px;min-height:32px;padding:5px 9px;border:1px solid #aebbd0;border-radius:5px;background:#fff;color:#203965;font:700 13px Arial,sans-serif;cursor:pointer}
 .cms-rich-toolbar button:hover{background:#e8edff}
+.cms-rich-toolbar button[aria-pressed="true"]{background:#4338ca;border-color:#4338ca;color:#fff}
 .cms-rich-toolbar button:focus-visible{outline:3px solid #847bf0;outline-offset:2px}
 .cms-rich-editor{min-height:90px;width:100%;padding:10px 12px;border:1px solid #b8c7dc;border-radius:6px;background:#fbfcff;color:#182b49;font:14px/1.5 system-ui,sans-serif;overflow-wrap:anywhere;white-space:normal}
+.cms-rich-editor,.cms-rich-editor *:not(b):not(strong){font-weight:400!important}
+.cms-rich-editor b,.cms-rich-editor strong{font-weight:700!important}
+.cms-rich-editor i,.cms-rich-editor em{font-style:italic}
 .cms-rich-editor:focus{outline:none;border-color:#4338ca;box-shadow:0 0 0 3px rgba(67,56,202,.12)}
 .cms-rich-editor p{margin:0 0 8px}
 .cms-rich-editor ul,.cms-rich-editor ol{margin:6px 0 8px 24px;padding:0}
@@ -38959,20 +39635,51 @@ body.cms-focus-editor-v1 #mainContent #fwScreen.cfu-screen #fwBody .cfe-footer {
   if(/<\/?(strong|b|em|i|u|ul|ol|li|p|br)\b/i.test(raw))return clean(raw);
   return esc(raw).replace(/\r?\n/g,'<br>');
  }
- function sync(source,editor){
-  source.value=clean(editor.innerHTML).trim();
+ /* Copy the editor into the hidden field. Typing is debounced so the page does not lag. */
+ function syncNow(source,editor){
+  clearTimeout(editor._cmsT);editor._cmsT=0;
+  var html=clean(editor.innerHTML).trim();
+  if(html===source.value)return;
+  source.value=html;
   source.dispatchEvent(new Event('input',{bubbles:true}));
   source.dispatchEvent(new Event('change',{bubbles:true}));
  }
+ function syncSoon(source,editor){
+  clearTimeout(editor._cmsT);
+  editor._cmsT=setTimeout(function(){syncNow(source,editor);},500);
+ }
+ function state(cmd){try{return document.queryCommandState(cmd);}catch(e){return false;}}
+ function inBold(editor){
+  var sel=window.getSelection();if(!sel||!sel.rangeCount)return false;
+  var n=sel.anchorNode;
+  while(n&&n!==editor){if(n.nodeType===1&&/^(B|STRONG)$/.test(n.tagName))return true;n=n.parentNode;}
+  return false;
+ }
+ /* Bold is OFF by default. It stays on only after the user presses B (or Ctrl+B). */
+ function plainGuard(editor){
+  var sel=window.getSelection();
+  if(!sel||!sel.rangeCount||!sel.isCollapsed)return;
+  if(editor.dataset.userBold==='1')return;
+  if(state('bold')&&!inBold(editor)){try{document.execCommand('bold',false,null);}catch(e){}}
+ }
+ function refresh(editor){
+  var bar=editor.previousElementSibling;if(!bar)return;
+  var map={Bold:'bold',Italic:'italic',Underline:'underline'};
+  bar.querySelectorAll('button').forEach(function(b){
+   var cmd=map[b.title];if(!cmd)return;
+   b.setAttribute('aria-pressed',state(cmd)?'true':'false');
+  });
+ }
  function format(editor,source,action){
   editor.focus();
-  if(action==='bold')document.execCommand('bold',false,null);
+  if(action==='bold'){document.execCommand('bold',false,null);editor.dataset.userBold=state('bold')?'1':'';}
   if(action==='italic')document.execCommand('italic',false,null);
   if(action==='underline')document.execCommand('underline',false,null);
   if(action==='bullet')document.execCommand('insertUnorderedList',false,null);
   if(action==='number')document.execCommand('insertOrderedList',false,null);
-  if(action==='clear')document.execCommand('removeFormat',false,null);
-  sync(source,editor);
+  if(action==='clear'){document.execCommand('removeFormat',false,null);editor.dataset.userBold='';}
+  refresh(editor);
+  syncNow(source,editor);
  }
  function addButton(toolbar,label,title,action,editor,source){
   var b=document.createElement('button');
@@ -38994,8 +39701,13 @@ body.cms-focus-editor-v1 #mainContent #fwScreen.cfu-screen #fwBody .cfe-footer {
   addButton(toolbar,'Numbers','Numbered list','number',editor,source);
   addButton(toolbar,'Clear','Clear formatting','clear',editor,source);
   source.parentNode.insertBefore(wrap,source);wrap.appendChild(toolbar);wrap.appendChild(editor);wrap.appendChild(source);
-  editor.addEventListener('input',function(){sync(source,editor);});
-  editor.addEventListener('blur',function(){sync(source,editor);});
+  editor.addEventListener('input',function(){syncSoon(source,editor);});
+  editor.addEventListener('blur',function(){syncNow(source,editor);});
+  editor.addEventListener('focus',function(){editor.dataset.userBold='';setTimeout(function(){plainGuard(editor);refresh(editor);},0);});
+  editor.addEventListener('mouseup',function(){setTimeout(function(){if(!inBold(editor))editor.dataset.userBold='';plainGuard(editor);refresh(editor);},0);});
+  editor.addEventListener('beforeinput',function(e){if(e.inputType==='insertText'||e.inputType==='insertParagraph')plainGuard(editor);});
+  editor.addEventListener('keyup',function(e){if(e.key==='Control'||e.key==='Meta')return;refresh(editor);});
+  editor.addEventListener('keydown',function(e){if((e.ctrlKey||e.metaKey)&&String(e.key).toLowerCase()==='b'){setTimeout(function(){editor.dataset.userBold=state('bold')?'1':'';refresh(editor);},0);}});
   source.cmsRichEditor=editor;
  }
  function scan(){
@@ -39007,7 +39719,11 @@ body.cms-focus-editor-v1 #mainContent #fwScreen.cfu-screen #fwBody .cfe-footer {
   ).forEach(enhance);
  }
  var queued=false;
- function schedule(){if(queued)return;queued=true;requestAnimationFrame(function(){queued=false;scan();});}
+ function schedule(records){
+  /* Ignore changes made while typing inside the editor, so scanning does not run on every key. */
+  if(records&&records.length&&records.every(function(r){var t=r.target;var el=t&&t.nodeType===1?t:(t&&t.parentElement);return el&&el.closest&&el.closest('.cms-rich-wrap');}))return;
+  if(queued)return;queued=true;requestAnimationFrame(function(){queued=false;scan();});
+ }
  function start(){scan();new MutationObserver(schedule).observe(document.body,{childList:true,subtree:true,attributes:true,attributeFilter:['disabled','readonly']});}
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start,{once:true});else start();
 })();
