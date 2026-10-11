@@ -5180,8 +5180,31 @@ function cmsActionUrl(page, params) {
   return APP_LINK + '?' + q.join('&') + '#' + encodeURIComponent(page);
 }
 function cmsInferEmailAction(subject, message) {
-  var s = String(subject || '') + ' ' + String(message || '');
-  s = s.toLowerCase();
+  var sub = String(subject || '').toLowerCase();
+  var msg = String(message || '').toLowerCase();
+  var s = sub + ' ' + msg;
+  /* Subject-first rules: each email type opens the exact page where the person acts. */
+  if (/evidence (returned|disapproved)/.test(sub)) return { page: /manager assessment|manager's assessment/.test(msg) ? 'mgr-returned-details' : 'emp-corrections' };
+  if (/redo request/.test(sub)) return { page: /redo the (manager|prospective)/.test(msg) ? 'mgr-assess' : 'emp-selfassess' };
+  if (/reassessment request/.test(sub)) return { page: 'mgr-requests' };
+  if (/^completed: .*set competencies/.test(sub)) return { page: 'hr-positions' };
+  if (/set competencies|^cc: .*competency framework/.test(sub)) return { page: 'mgr-setcomp' };
+  if (/approval needed: .*competency framework/.test(sub)) return { page: /head of hr/.test(msg) ? 'hohr-comp-approvals' : 'hr-comp-approvals' };
+  if (/competency framework (approved|changes requested)/.test(sub)) return { page: 'hr-comp-approvals' };
+  if (/competency library/.test(sub)) return { page: 'hr-comp-approvals' };
+  if (/development plan approved - monthly reports/.test(sub)) return { page: 'emp-devplans' };
+  if (/dp report filed by hr/.test(sub)) return { page: /^your /.test(msg.trim()) ? 'emp-devplans' : 'mgr-devplans' };
+  if (/dp report (overdue|due soon)/.test(sub)) return { page: /overdue: |due soon: /.test(sub) ? 'mgr-devplans' : 'emp-devplans' };
+  if (/dp (monthly )?report submitted/.test(sub)) return { page: 'mgr-repappr' };
+  if (/dp report returned/.test(sub)) return { page: 'emp-devplans' };
+  if (/assessment report (for approval|approval needed)|decision needed:/.test(sub)) return { page: 'hohr-reports' };
+  if (/executive recommendation needed/.test(sub)) return { page: 'cs-reports' };
+  if (/development plan directed|head of hr decision: development plan/.test(sub)) return { page: 'mgr-devplans' };
+  if (/promotion (on hold|approved)/.test(sub)) return { page: 'mgr-dashboard' };
+  if (/^c-suite decision/.test(sub)) return { page: /decided on/.test(msg) ? 'hohr-reports' : 'hr-reports' };
+  if (/^report (approved|returned|changes requested)|^final decision/.test(sub)) return { page: /has been approved for promotion/.test(msg) ? 'mgr-dashboard' : 'hr-reports' };
+  if (/assessments released/.test(sub)) return { page: 'emp-mgrview' };
+  /* Older message-based rules, kept as the fallback. */
   if (s.indexOf('set competencies') >= 0 || s.indexOf('competency framework') >= 0 || s.indexOf('competency library') >= 0) return { page: 'mgr-setcomp' };
   if (s.indexOf('self-assessment') >= 0 && s.indexOf('reminder') >= 0) return { page: 'emp-selfassess' };
   if (s.indexOf('manager assessment') >= 0) return { page: 'mgr-assess' };
@@ -5193,8 +5216,8 @@ function cmsInferEmailAction(subject, message) {
   if (s.indexOf('assessment') >= 0 || s.indexOf('redo') >= 0) return { page: 'hr-review' };
   return { page: 'emp-profile' };
 }
-function cmsEmailLink(message, action) {
-  var chosen = action && action.page ? action : cmsInferEmailAction('', message);
+function cmsEmailLink(message, action, subject) {
+  var chosen = action && action.page ? action : cmsInferEmailAction(subject, message);
   var link = cmsActionUrl(chosen.page, chosen.params || {});
   var text = String(message || '');
   if (text.indexOf(APP_LINK) >= 0) return text.split(APP_LINK).join(link);
@@ -5254,7 +5277,7 @@ function cmsEmailJsBackup(toEmail, subject, finalMessage) {
 }
 
 function sendCMSemail(toEmail, subject, message, action) {
-  var finalMessage = cmsEmailLink(message, action);
+  var finalMessage = cmsEmailLink(message, action, subject);
   var call;
   try {
     call = _supabase.functions.invoke('send-notification', { body: { to: toEmail, subject: subject, message: finalMessage } });
@@ -9485,6 +9508,7 @@ var mgrScore = currentRows.some(function(r){ return r.type === 'Manager'; }) ? c
 var pRows = latest.filter(function(r){ return r.type === 'Prospective'; });
 var prospScore = pRows.length ? calculateOverallScore(empId, 'Prospective', fr) : 0;const { data: chainRows } = await _supabase.from('report_chain').select('*').eq('employee_id', empId).order('id', { ascending: false }).limit(1);
 var reportData = await hohrData(empId);
+if (reportData) { if (reportData.avgScore != null) mgrScore = Math.round(reportData.avgScore); if (reportData.psAvg != null) prospScore = Math.round(reportData.psAvg); }
 var g = reportData && reportData.cur ? reportData.cur.gp.join('\n') : '';
 var ex = (chainRows && chainRows.length) ? chainRows[0] : null;
 var payload = { employee_id: empId, employee_name: emp.employee_name, position: emp.position, mgr_score: mgrScore, prosp_score: prospScore, prosp_role: pRows.length ? (pRows[0].prospective_role || '') : '', strengths_text: s, gaps_text: g, recommendation_text: rec, suggested_path: path, submitted_by: APP.user.email, submitted_date: new Date().toISOString().slice(0,10) };
@@ -9497,7 +9521,7 @@ if (err) { showToast(err.message); return; }
 if (!draftOnly) {
 const { data: hohrs } = await _supabase.from('user_profiles').select('email').eq('role', 'HEAD_HR');
 var list = (hohrs && hohrs.length) ? hohrs : [{ email: prompt('Head of HR email:') }];
-list.forEach(function(u){ if (u && u.email) sendCMSemail(u.email, 'Assessment Report for Approval: ' + emp.employee_name, 'HR Admin prepared the competency report for ' + emp.employee_name + ' (' + emp.position + '). Current role: ' + mgrScore + '%. Prospective: ' + (prospScore || '-') + '%. HR recommends: ' + path + '. Log in to review the full document and decide: ' + APP_LINK, {page:'hohr-reports',params:{employee_id:empId}}); });
+list.forEach(function(u){ if (u && u.email) sendCMSemail(u.email, 'Assessment Report for Approval: ' + emp.employee_name, 'HR Admin prepared the competency report for ' + emp.employee_name + ' (' + emp.position + '). Current role: ' + (mgrScore == null ? 'not assessed' : mgrScore + '%') + '. Prospective: ' + (prospScore ? prospScore + '%' : 'not assessed') + '. HR recommends: ' + path + '. Log in to review the full document and decide: ' + APP_LINK, {page:'hohr-reports',params:{employee_id:empId}}); });
 showToast('Report submitted to Head of HR');
 } else showToast('Draft saved');
 if (APP._reportReturn === 'hub') { APP._reportReturn = ''; loadHRReportsHub(); } else loadHRAllDetail(empId);
@@ -9513,6 +9537,7 @@ var fr = latest.map(function(r){ return { 'Employee ID': r.employee_id, 'Compete
 var mgrScore = calculateOverallScore(empId, 'Manager', fr);
 var pRows = latest.filter(function(r){ return r.type === 'Prospective'; });
 var prospScore = pRows.length ? calculateOverallScore(empId, 'Prospective', fr) : 0;
+var finalData = await hohrData(empId); if (finalData) { if (finalData.avgScore != null) mgrScore = Math.round(finalData.avgScore); if (finalData.psAvg != null) prospScore = Math.round(finalData.psAvg); }
 var rec = prompt('Optional - your HR recommendation to the Head of HR:\n(e.g. "Recommend promotion to HR Officer when vacancy arises" or "Recommend 6-month IDP on Analytical Thinking")', '');
 if (rec === null) rec = '';
 const { data: hohrs } = await _supabase.from('user_profiles').select('email').eq('role', 'HEAD_HR');
@@ -9520,7 +9545,7 @@ var to = (hohrs && hohrs[0]) ? hohrs[0].email : prompt('Head of HR email:');
 if (!to) return;
 const { error } = await _supabase.from('report_chain').insert({ employee_id: empId, employee_name: emp.employee_name, position: emp.position, mgr_score: mgrScore, prosp_score: prospScore, prosp_role: pRows.length ? (pRows[0].prospective_role || '') : '', hr_recommendation: rec, submitted_by: APP.user.email, submitted_date: new Date().toISOString().slice(0,10), created_date: new Date().toISOString().slice(0,10) });
 if (error) { showToast(error.message); return; }
-sendCMSemail(to, 'Decision Needed: ' + emp.employee_name + ' (' + mgrScore + '% current / ' + (prospScore || '-') + '% prospective)', 'HR Admin prepared this assessment report for your decision. HR recommendation: ' + (rec || '(none)') + '. Log in as Head of HR to decide: Approve to Development Plan, Approve to Promotion, Hold (no vacancy), Escalate to C-Suite, or Return to HR: ' + APP_LINK, {page:'hohr-reports',params:{employee_id:empId}});
+sendCMSemail(to, 'Decision Needed: ' + emp.employee_name + ' (' + (mgrScore == null ? '-' : mgrScore + '%') + ' current / ' + (prospScore ? prospScore + '%' : '-') + ' prospective)', 'HR Admin prepared this assessment report for your decision. HR recommendation: ' + (rec || '(none)') + '. Log in as Head of HR to decide: Approve to Development Plan, Approve to Promotion, Hold (no vacancy), Escalate to C-Suite, or Return to HR: ' + APP_LINK, {page:'hohr-reports',params:{employee_id:empId}});
 showToast('Report sent to Head of HR');
 loadHRAllDetail(empId);
 }
@@ -10884,7 +10909,7 @@ if (r.status === 'Pending' || r.status === 'Escalated') { showToast('Already wit
 const { error } = await _supabase.from('report_chain').update({ status: 'Pending', stage: 'HOHR', submitted_date: new Date().toISOString().slice(0,10) }).eq('id', id);
 if (error) { showToast(error.message); return; }
 const { data: hohrs } = await _supabase.from('user_profiles').select('email').eq('role', 'HEAD_HR');
-(hohrs || []).forEach(function(u){ sendCMSemail(u.email, 'Assessment Report for Approval: ' + r.employee_name, 'HR Admin submitted the competency report for ' + r.employee_name + ' (' + (r.position || '') + '). Current: ' + (r.mgr_score || 0) + '%. Prospective: ' + (r.prosp_score || '-') + '%. Recommended: ' + (r.suggested_path || '-') + '. Review and decide: ' + APP_LINK, {page:'hohr-reports',params:{employee_id:r.employee_id}}); });
+(hohrs || []).forEach(function(u){ sendCMSemail(u.email, 'Assessment Report for Approval: ' + r.employee_name, 'HR Admin submitted the competency report for ' + r.employee_name + ' (' + (r.position || '') + '). Current: ' + (r.mgr_score ? r.mgr_score + '%' : 'not assessed') + '. Prospective: ' + (r.prosp_score ? r.prosp_score + '%' : 'not assessed') + '. Recommended: ' + (r.suggested_path || '-') + '. Review and decide: ' + APP_LINK, {page:'hohr-reports',params:{employee_id:r.employee_id}}); });
 showToast('Report sent to Head of HR');
 loadHRReportsHub();
 }
