@@ -5765,7 +5765,725 @@ async function cmsReportHtmlToPdfBase64(html) {
   var parts = String(uri).split(',');
   return parts.length > 1 ? parts[1] : '';
 }
+function cmsBlobToBase64(blob) {
+  return new Promise(function (resolve, reject) {
+    var fr = new FileReader();
+    fr.onload = function () { resolve(String(fr.result).split(',')[1] || ''); };
+    fr.onerror = function () { reject(new Error('Could not read the PDF')); };
+    fr.readAsDataURL(blob);
+  });
+}
 
+/* Builds the final report as a small text PDF (no screenshots), so the browser never runs out of memory. */
+async function cmsFinalReportPdfBase64(r, d, outcome) {
+  var emp = d.emp || {};
+  var NLn = String.fromCharCode(10);
+  var pct = function (v) { return (v === null || v === undefined || v === '' || isNaN(Number(v))) ? 'Not available' : Number(v).toFixed(1) + '%'; };
+  var list = function (a, fallback) { return (a && a.length) ? a.join(NLn) : fallback; };
+  var name = r.employee_name || emp.employee_name || 'Employee';
+  var summary = { name: 'Final decision', head: ['Field', 'Value'], rows: [
+    ['Employee', name],
+    ['Position', r.position || emp.position],
+    ['Final decision', outcome],
+    ['Current role final score', pct(d.avgScore)],
+    ['Prospective role final score', pct(d.psAvg)],
+    ['Prospective role', r.prosp_role],
+    ['HR suggested path', r.suggested_path],
+    ['HR recommendation', r.recommendation_text],
+    ['Decision comments', r.comment],
+    ['Decided by', r.decided_by],
+    ['Decision date', r.decided_date],
+    ['Submitted by', r.submitted_by]
+  ] };
+  var comps = { name: 'Competency scores', head: ['Competency', 'Current (Self / Manager)', 'Current final', 'Target role (Self / Manager)', 'Target final'],
+    rows: (d.compRows || []).map(function (c) { return [c.name, pct(c.s) + ' / ' + pct(c.m), pct(c.a), pct(c.ps) + ' / ' + pct(c.pm), pct(c.pa)]; }) };
+  var notes = { name: 'Strengths and development needs', head: ['Section', 'Details'], rows: [
+    ['Strengths', r.strengths_text || list(d.cur && d.cur.st, 'Not recorded')],
+    ['Gaps and development needs', r.gaps_text || list(d.cur && d.cur.gp, 'Not recorded')]
+  ] };
+  var ranks = (d.compRows || []).filter(function (c) { return (c.a !== null && c.a !== undefined) || (c.pa !== null && c.pa !== undefined); })
+    .map(function (c) { return { name: c.name, combined: Number(c.a !== null && c.a !== undefined ? c.a : c.pa), n: 1 }; })
+    .sort(function (x, y) { return y.combined - x.combined; });
+  var blob = await r4BuildPdf([summary, comps, notes], 'Final report: ' + name, new Date().toISOString().slice(0, 10), ranks,
+    'Final decision report | ' + outcome, 'Official record of the final decision. Missing scores are not treated as zero.');
+  return cmsBlobToBase64(blob);
+}
+/* Everyone who must receive the final report: all HR Admins, all Head of HR, and the designated C-Suite. */
+async function cmsAllFinalReportEmails(r, d) {
+  var out = [];
+  function add(e) { e = String(e || '').trim().toLowerCase(); if (e && e.indexOf('@') > 0 && out.indexOf(e) < 0) out.push(e); }
+  try { (await cmsExecutiveEmailsForReport(r)).forEach(add); } catch (e1) {}
+  add(r.assigned_to);
+  try {
+    var hr = await _supabase.from('user_profiles').select('email').in('role', ['HR_ADMIN', 'HEAD_HR']);
+    (hr.data || []).forEach(function (u) { add(u.email); });
+  } catch (e2) {}
+  try {
+    var dept = String((d && d.emp && d.emp.department) || '').trim().toUpperCase();
+    if (dept) {
+      var mp = await _supabase.from('csuite_mapping').select('*');
+      (mp.data || []).forEach(function (m) { if (String(m.department || '').trim().toUpperCase() === dept) add(m.csuite_email); });
+    }
+  } catch (e3) {}
+  return out;
+}
+/* Resend the final report by email: pick who gets it, who is on Cc, add others, add a note. */
+function cmsReportPdfButton(r) {
+  if (!/^(Approved|Finalized):/i.test(String((r && r.status) || ''))) return '';
+  return '<button class="btn btn-sm btn-success" onclick="cmsDownloadReportPdf(' + rcArg(r.id) + ')"> Download PDF</button> ' +
+    '<button class="btn btn-sm btn-primary" onclick="cmsResendReportDialog(' + rcArg(r.id) + ')"> Resend by email</button>';
+}
+async function cmsBuildReportPdfBase64(id) {
+  var q = await _supabase.from('report_chain').select('*').eq('id', id).single();
+  var r = q.data;
+  if (!r) throw new Error('Report not found');
+  var status = String(r.status || '');
+  if (!/^(Approved|Finalized):/i.test(status)) throw new Error('The PDF is available once the final decision is recorded.');
+  var d = await r4Timeout(hohrData(r.employee_id), 45000, 'Loading the report data');
+  if (!d || !d.emp) throw new Error('Employee not found');
+  var outcome = status.replace(/^(Approved|Finalized):\s*/i, '');
+  var b64 = await r4Timeout(cmsFinalReportPdfPro(r, d, outcome), 60000, 'Building the PDF');
+  return { r: r, d: d, outcome: outcome, b64: b64 };
+}
+async function cmsDownloadReportPdf(id) {
+  try {
+    showToast('Building the PDF...');
+    var built = await cmsBuildReportPdfBase64(id);
+    var r = built.r, bin = atob(built.b64), bytes = new Uint8Array(bin.length);
+    for (var i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+    var url = URL.createObjectURL(new Blob([bytes], { type: 'application/pdf' }));
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = 'Final_Report_' + (r.prosp_role ? 'Prospective_' : 'Current_') + String(r.employee_name || 'Employee').replace(/[^A-Za-z0-9 _-]/g, '') + '.pdf';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(function () { URL.revokeObjectURL(url); }, 30000);
+    showToast('PDF downloaded');
+  } catch (e) {
+    console.error('Report PDF problem', e);
+    showToast('Could not build the PDF: ' + (e && e.message ? e.message : e));
+  }
+}
+async function cmsResendReportDialog(id) {
+  try {
+    showToast('Loading recipients...');
+    var q = await _supabase.from('report_chain').select('*').eq('id', id).single();
+    var r = q.data;
+    if (!r) throw new Error('Report not found');
+    if (!/^(Approved|Finalized):/i.test(String(r.status || ''))) throw new Error('The report can be sent once the final decision is recorded.');
+    var roleLabel = { HR_ADMIN: 'HR Admin', HEAD_HR: 'Head of HR', C_SUITE: 'C-Suite' };
+    var people = {}, order = [];
+    function add(e, tag, on) {
+      e = String(e || '').trim().toLowerCase();
+      if (!e || e.indexOf('@') < 1) return;
+      if (!people[e]) { people[e] = { email: e, name: '', tags: [], mode: 'off' }; order.push(e); }
+      if (tag && people[e].tags.indexOf(tag) < 0) people[e].tags.push(tag);
+      if (on) people[e].mode = 'to';
+    }
+    add(r.submitted_by, 'Submitted the report', true);
+    add(r.decided_by, 'Recorded the decision', true);
+    var prof = await _supabase.from('user_profiles').select('email,role').in('role', ['HR_ADMIN', 'HEAD_HR', 'C_SUITE']);
+    (prof.data || []).forEach(function (u) { add(u.email, roleLabel[u.role] || u.role, u.role !== 'C_SUITE'); });
+    var designated = [];
+    try { designated = designated.concat(await cmsExecutiveEmailsForReport(r)); } catch (e1) {}
+    designated.push(r.assigned_to);
+    try {
+      var d0 = await r4Timeout(hohrData(r.employee_id), 45000, 'Loading the report data');
+      var dept = String((d0 && d0.emp && d0.emp.department) || '').trim().toUpperCase();
+      if (dept) {
+        var mp = await _supabase.from('csuite_mapping').select('*');
+        (mp.data || []).forEach(function (m) { if (String(m.department || '').trim().toUpperCase() === dept) designated.push(m.csuite_email); });
+      }
+    } catch (e2) {}
+    designated.forEach(function (e) { add(e, 'Designated C-Suite', true); });
+    var names = await Promise.all(order.map(function (e) { return cmsMailerFirstName(e); }));
+    order.forEach(function (e, i) { people[e].name = names[i] || ''; });
+
+    var old = document.getElementById('cmsResendOverlay');
+    if (old) old.remove();
+    function el(tag, css, text) { var n = document.createElement(tag); if (css) n.style.cssText = css; if (text != null) n.textContent = text; return n; }
+    var overlay = el('div', 'position:fixed;inset:0;background:rgba(15,23,42,.55);z-index:5000;display:flex;align-items:center;justify-content:center;padding:16px');
+    overlay.id = 'cmsResendOverlay';
+    var box = el('div', 'background:#fff;border-radius:14px;width:720px;max-width:100%;max-height:90vh;overflow:auto;padding:22px 24px;box-shadow:0 20px 60px rgba(0,0,0,.35)');
+    overlay.appendChild(box);
+    var roleTxt = r.prosp_role ? 'Prospective Role - ' + r.prosp_role : 'Current Role - ' + (r.position || '');
+    box.appendChild(el('div', 'font-size:17px;font-weight:800;color:#1e2a78', 'Resend report by email'));
+    box.appendChild(el('div', 'font-size:12px;color:#64748b;margin:3px 0 14px', r.employee_name + ' | ' + roleTxt + ' | ' + String(r.status).replace(/^(Approved|Finalized):\s*/i, '')));
+    box.appendChild(el('div', 'font-size:11px;font-weight:800;letter-spacing:.8px;color:#64748b;margin-bottom:6px', 'WHO RECEIVES IT'));
+    var list = el('div', 'border:1px solid #e2e8f0;border-radius:10px;overflow:hidden;margin-bottom:10px');
+    box.appendChild(list);
+    function renderRow(p) {
+      var row = el('div', 'display:flex;align-items:center;gap:10px;padding:8px 12px;border-bottom:1px solid #eef1f7');
+      var sel = document.createElement('select');
+      sel.style.cssText = 'width:78px;flex:none;padding:5px 6px;font-size:12px;font-weight:700';
+      [['to', 'To'], ['cc', 'Cc'], ['off', 'Off']].forEach(function (o) { var op = new Option(o[1], o[0]); sel.add(op); });
+      sel.value = p.mode;
+      sel.onchange = function () { p.mode = sel.value; row.style.opacity = p.mode === 'off' ? '.5' : '1'; };
+      row.style.opacity = p.mode === 'off' ? '.5' : '1';
+      var info = el('div', 'flex:1;min-width:0');
+      info.appendChild(el('div', 'font-weight:700;font-size:13px', p.name || p.email));
+      info.appendChild(el('div', 'font-size:11px;color:#64748b;overflow:hidden;text-overflow:ellipsis', p.email + (p.tags.length ? '  |  ' + p.tags.join(', ') : '')));
+      row.appendChild(sel); row.appendChild(info);
+      list.appendChild(row);
+    }
+    order.forEach(function (e) { renderRow(people[e]); });
+    box.appendChild(el('div', 'font-size:11px;font-weight:800;letter-spacing:.8px;color:#64748b;margin:12px 0 6px', 'ADD ANOTHER EMAIL'));
+    var addRow = el('div', 'display:flex;gap:8px;margin-bottom:12px');
+    var addInput = document.createElement('input'); addInput.type = 'email'; addInput.placeholder = 'name@kenafricind.com'; addInput.style.cssText = 'flex:1';
+    var addMode = document.createElement('select'); addMode.style.cssText = 'width:78px;flex:none';
+    addMode.add(new Option('To', 'to')); addMode.add(new Option('Cc', 'cc'));
+    var addBtn = el('button', null, 'Add'); addBtn.type = 'button'; addBtn.className = 'btn btn-outline';
+    var msg = el('div', 'font-size:12px;min-height:16px;margin:4px 0 8px;color:#b91c1c');
+    addBtn.onclick = async function () {
+      var e = String(addInput.value || '').trim().toLowerCase();
+      if (!/^[^\s@<>",;]+@[^\s@<>",;]+\.[^\s@<>",;]+$/.test(e)) { msg.style.color = '#b91c1c'; msg.textContent = 'Enter a valid email address.'; return; }
+      if (people[e]) { people[e].mode = addMode.value; list.textContent = ''; order.forEach(function (x) { renderRow(people[x]); }); addInput.value = ''; msg.textContent = ''; return; }
+      people[e] = { email: e, name: await cmsMailerFirstName(e), tags: ['Added by you'], mode: addMode.value };
+      order.push(e); renderRow(people[e]); addInput.value = ''; msg.textContent = '';
+    };
+    addRow.appendChild(addInput); addRow.appendChild(addMode); addRow.appendChild(addBtn);
+    box.appendChild(addRow);
+    box.appendChild(el('div', 'font-size:11px;font-weight:800;letter-spacing:.8px;color:#64748b;margin-bottom:6px', 'NOTE (OPTIONAL)'));
+    var note = document.createElement('textarea'); note.rows = 3; note.placeholder = 'Add a short message to show in the email'; note.style.cssText = 'width:100%;margin-bottom:6px';
+    box.appendChild(note);
+    box.appendChild(msg);
+    var actions = el('div', 'display:flex;gap:10px;justify-content:flex-end;margin-top:6px');
+    var cancel = el('button', null, 'Cancel'); cancel.type = 'button'; cancel.className = 'btn btn-outline';
+    var send = el('button', null, 'Send report'); send.type = 'button'; send.className = 'btn btn-primary';
+    cancel.onclick = function () { overlay.remove(); };
+    send.onclick = async function () {
+      var to = [], cc = [];
+      order.forEach(function (e) { var p = people[e]; if (p.mode === 'to') to.push({ email: p.email, name: p.name }); else if (p.mode === 'cc') cc.push({ email: p.email, name: p.name }); });
+      if (!to.length) { msg.style.color = '#b91c1c'; msg.textContent = 'Pick at least one person in the To column.'; return; }
+      send.disabled = true; cancel.disabled = true; msg.style.color = '#334155'; msg.textContent = 'Building the PDF and sending...';
+      try {
+        var built = await cmsBuildReportPdfBase64(id);
+        var rr = built.r;
+        var res = await r4Timeout(_supabase.functions.invoke('send-report-pdf', {
+          body: {
+            recipients: to,
+            cc: cc,
+            single: true,
+            note: note.value.trim(),
+            subject: 'Final Decision Report: ' + (rr.prosp_role ? 'Prospective Role - ' + rr.prosp_role : 'Current Role - ' + (rr.position || '')) + ' | ' + rr.employee_name,
+            summary: 'The final decision report for the ' + (rr.prosp_role ? 'prospective role (' + rr.prosp_role + ')' : 'current role (' + (rr.position || '') + ')') + ' of ' + rr.employee_name + ' has been recorded: ' + built.outcome + '.',
+            filename: 'Final_Report_' + (rr.prosp_role ? 'Prospective_' : 'Current_') + rr.employee_name,
+            pdf: built.b64
+          }
+        }), 60000, 'The PDF mailer');
+        if (res.error) {
+          var detail = res.error.message || 'Send failed';
+          try { if (res.error.context && res.error.context.json) { var j = await res.error.context.json(); if (j && j.error) detail = j.error; } } catch (e3) {}
+          throw new Error(detail);
+        }
+        var out = res.data || {};
+        if (!out.ok) throw new Error((out.failed && out.failed[0]) || out.error || 'Mailer error');
+        overlay.remove();
+        showToast('Report emailed to ' + to.length + ' person(s)' + (cc.length ? ' and ' + cc.length + ' on Cc' : ''));
+      } catch (e) {
+        console.error('Resend report problem', e);
+        send.disabled = false; cancel.disabled = false;
+        msg.style.color = '#b91c1c'; msg.textContent = 'Not sent: ' + (e && e.message ? e.message : e);
+      }
+    };
+    actions.appendChild(cancel); actions.appendChild(send);
+    box.appendChild(actions);
+    overlay.addEventListener('click', function (ev) { if (ev.target === overlay) overlay.remove(); });
+    document.body.appendChild(overlay);
+  } catch (e) {
+    console.error('Resend dialog problem', e);
+    showToast('Could not open the resend window: ' + (e && e.message ? e.message : e));
+  }
+}
+var CMS_PDF_LOGO_RGB = 
+'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';
+var CMS_PDF_LOGO_A = 
+'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';
+/* Professional final decision report (text PDF, no screenshots, safe for the browser). */
+async function cmsFinalReportPdfPro(r, d, outcome) {
+  var F = R4_PDF_FONT, enc = new TextEncoder(), W = 595.28, H = 841.89, M = 42, CW = W - 2 * M;
+  var emp = d.emp || {}, NL = String.fromCharCode(10);
+  var pros = !!(r.prosp_role && String(r.prosp_role).trim());
+  var roleWord = pros ? 'Prospective Role' : 'Current Role';
+  var roleTitle = String(pros ? r.prosp_role : (r.position || emp.position || '')).trim();
+  var name = r.employee_name || emp.employee_name || 'Employee';
+  var today = new Date().toISOString().slice(0, 10);
+  var ref = 'CMS-FR-' + String(r.decided_date || today).slice(0, 4) + '-' + String(r.id == null ? '' : r.id).replace(/[^A-Za-z0-9]/g, '').slice(-6).padStart(4, '0');
+  var NAVY = '#08215d', GOLD = '#c9a227', INK = '#1e293b', GRAY = '#64748b', LINE = '#d6dcea', GREEN = '#0f9d6b', AMBER = '#d97706', RED = '#dc2626', INDIGO = '#3f51b5';
+  var pages = [], cur = '', y = 0, used = new Set(), objs = [null];
+  /* Show people as name and job title instead of an email address. */
+  var peopleCache = {};
+  async function whoIs(email) {
+    var key = String(email || '').trim().toLowerCase();
+    if (!key) return { name: '', title: '', email: '' };
+    if (peopleCache[key]) return peopleCache[key];
+    var out = { name: '', title: '', email: key };
+    try {
+      if (typeof _supabase !== 'undefined') {
+        var q = await _supabase.from('employees').select('employee_name,position').ilike('email', key.replace(/[\\%_]/g, '\\$&')).limit(1);
+        var row = q && q.data && q.data[0];
+        if (row) { out.name = String(row.employee_name || '').trim(); out.title = String(row.position || '').trim(); }
+      }
+    } catch (e) { /* fall back to the email address */ }
+    peopleCache[key] = out;
+    return out;
+  }
+  var decidedBy = await whoIs(r.decided_by), submittedBy = await whoIs(r.submitted_by), executive = await whoIs(r.assigned_to);
+  function shown(p) { return p.name || p.email || 'Not recorded'; }
+
+  function num(v) { return (v === null || v === undefined || v === '' || isNaN(Number(v))) ? null : Number(v); }
+  function pct(v) { v = num(v); return v === null ? 'Not available' : v.toFixed(1) + '%'; }
+  function pctS(v) { v = num(v); return v === null ? '-' : (Math.round(v) === v ? String(v) : v.toFixed(1)) + '%'; }
+  function rgb(h) { var n = parseInt(h.slice(1), 16); return ((n >> 16) / 255).toFixed(3) + ' ' + (((n >> 8) & 255) / 255).toFixed(3) + ' ' + ((n & 255) / 255).toFixed(3); }
+  function safe(s) { return String(s == null ? '' : s).normalize('NFC').replace(/[\x00-\x08\x0b\x0c\x0e-\x1f]/g, '').replace(/\t/g, '    ').replace(/\r\n?/g, NL); }
+  function chars(s) { return Array.from(safe(s)).map(function (c) { var n = c.codePointAt(0); return F.map[n] ? n : 63; }); }
+  function width(s, size) { var t = 0, a = chars(s); for (var i = 0; i < a.length; i++) t += F.map[a[i]][1] * size / 1000; return t; }
+  function hex(s) { return chars(s).map(function (n) { used.add(n); return n.toString(16).padStart(4, '0'); }).join(''); }
+  function wrap(s, size, maxW) {
+    var out = [];
+    safe(s).split(NL).forEach(function (part) {
+      var line = '';
+      part.split(/\s+/).forEach(function (word) {
+        if (!word) return;
+        if (width(word, size) > maxW) {
+          if (line) { out.push(line); line = ''; }
+          Array.from(word).forEach(function (c) { if (width(line + c, size) > maxW && line) { out.push(line); line = ''; } line += c; });
+        } else if (line && width(line + ' ' + word, size) > maxW) { out.push(line); line = word; }
+        else line += (line ? ' ' : '') + word;
+      });
+      out.push(line);
+    });
+    return out.length ? out : [''];
+  }
+  function fit(s, size, maxW) {
+    s = safe(s).replace(/\s+/g, ' ').trim();
+    if (width(s, size) <= maxW) return s;
+    while (s.length > 1 && width(s + '...', size) > maxW) s = s.slice(0, -1);
+    return s + '...';
+  }
+  function text(s, x, top, size, color, opt) {
+    opt = opt || {}; s = safe(s); if (!s) return;
+    var w = width(s, size);
+    if (opt.align === 'right') x = x - w; else if (opt.align === 'center') x = x - w / 2;
+    var c = rgb(color || INK);
+    cur += 'BT /F1 ' + size + ' Tf ' + c + ' rg ' + (opt.bold ? '2 Tr 0.3 w ' + c + ' RG ' : '') + '1 0 0 1 ' + x.toFixed(2) + ' ' + (H - top - size).toFixed(2) + ' Tm <' + hex(s) + '> Tj ' + (opt.bold ? '0 Tr ' : '') + 'ET' + NL;
+  }
+  function rect(x, top, w, h, fill) { cur += rgb(fill) + ' rg ' + x.toFixed(2) + ' ' + (H - top - h).toFixed(2) + ' ' + w.toFixed(2) + ' ' + h.toFixed(2) + ' re f' + NL; }
+  function rr(x, top, w, h, rad, fill, stroke) {
+    var yb = H - top - h, k, p;
+    rad = Math.min(rad, w / 2, h / 2); k = 0.5523 * rad;
+    p = [x + rad, yb, 'm', x + w - rad, yb, 'l', x + w - rad + k, yb, x + w, yb + rad - k, x + w, yb + rad, 'c', x + w, yb + h - rad, 'l',
+      x + w, yb + h - rad + k, x + w - rad + k, yb + h, x + w - rad, yb + h, 'c', x + rad, yb + h, 'l', x + rad - k, yb + h, x, yb + h - rad + k, x, yb + h - rad, 'c',
+      x, yb + rad, 'l', x, yb + rad - k, x + rad - k, yb, x + rad, yb, 'c', 'h'];
+    var path = '', buf = [];
+    p.forEach(function (t) { if (typeof t === 'number') buf.push(t.toFixed(2)); else { path += buf.join(' ') + ' ' + t + ' '; buf = []; } });
+    cur += (fill ? rgb(fill) + ' rg ' : '') + (stroke ? rgb(stroke) + ' RG 0.7 w ' : '') + path + (fill && stroke ? 'B' : fill ? 'f' : 'S') + NL;
+  }
+  function hline(x, top, w, color, th) { rect(x, top, w, th || 0.7, color); }
+  function header(first) {
+    rect(0, 0, W, 84, NAVY); rect(0, 84, W, 4, GOLD);
+    cur += 'q 110 0 0 40 ' + M + ' ' + (H - 22 - 40).toFixed(2) + ' cm /Im1 Do Q' + NL;
+    text('FINAL DECISION REPORT: ' + roleWord.toUpperCase(), W - M, 26, 9.5, '#ffffff', { align: 'right', bold: true });
+    text(first ? 'Confidential | Generated ' + today : fit(roleTitle + ' | ' + name, 8, 330), W - M, 42, 8, '#dbe4ff', { align: 'right' });
+    text('Ref: ' + ref, W - M, 55, 8, '#dbe4ff', { align: 'right' });
+    y = 108;
+  }
+  function newPage() { if (cur) pages.push(cur); cur = ''; header(false); }
+  function need(h) { if (y + h > H - 58) newPage(); }
+
+  header(true);
+  /* title block */
+  text('Final Decision Report: ' + roleWord, M, y, 19, NAVY, { bold: true }); y += 28;
+  var pill = roleWord.toUpperCase(), pw = width(pill, 6.8) + 16;
+  rr(M, y, pw, 15, 7.5, '#ede9fe'); text(pill, M + 8, y + 4, 6.8, '#6d28d9', { bold: true });
+  text(fit(roleTitle, 12, CW - pw - 14), M + pw + 10, y + 1, 12, '#1e2a78', { bold: true }); y += 24;
+  text('Competency assessment outcome recorded by the Head of HR', M, y, 8.8, GRAY); y += 20;
+  /* details grid */
+  var cells = [['Employee', name], ['Current position', r.position || emp.position], ['Company', emp.company || r.company],
+    [pros ? 'Prospective role' : 'Report for', pros ? r.prosp_role : 'Current role'], ['Decision date', r.decided_date], ['Decided by', shown(decidedBy), decidedBy.title]];
+  var cw3 = CW / 3, rh = 42;
+  rr(M, y, CW, rh * 2, 5, '#ffffff', LINE); hline(M, y + rh, CW, '#e5e9f3'); rect(M + cw3, y, 0.7, rh * 2, '#e5e9f3'); rect(M + 2 * cw3, y, 0.7, rh * 2, '#e5e9f3');
+  cells.forEach(function (c, i) {
+    var cx = M + (i % 3) * cw3 + 10, cy = y + Math.floor(i / 3) * rh + 8;
+    text(c[0].toUpperCase(), cx, cy, 6.2, '#7b869c'); text(fit(c[1] || 'Not recorded', 9, cw3 - 18), cx, cy + 12, 9, '#0f172a', { bold: true });
+    if (c[2]) text(fit(c[2], 7.2, cw3 - 18), cx, cy + 24, 7.2, GRAY);
+  });
+  y += rh * 2 + 14;
+  /* decision banner */
+  var detail = [];
+  if (r.suggested_path) detail.push('Suggested path: ' + r.suggested_path + '.');
+  if (r.recommendation_text) detail.push('HR recommendation: ' + r.recommendation_text);
+  var dl = wrap(detail.join(' ') || 'No further detail recorded.', 8.8, CW - 30).slice(0, 3), bh = 46 + dl.length * 12;
+  rr(M, y, CW, bh, 5, '#eef2ff', '#c7d2fe'); rect(M, y + 2, 5, bh - 4, INDIGO);
+  text('FINAL DECISION', M + 16, y + 9, 6.5, '#4c5a9e'); text(fit(outcome, 16, CW - 30), M + 16, y + 20, 16, '#1e2a78', { bold: true });
+  dl.forEach(function (l, i) { text(l, M + 16, y + 41 + i * 12, 8.8, '#334155'); });
+  y += bh + 14;
+  /* ranking data */
+  var rows = (d.compRows || []).map(function (c) { return { name: c.name, self: pros ? c.ps : c.s, mgr: pros ? c.pm : c.m, fin: num(pros ? c.pa : c.a) }; });
+  var ranked = rows.filter(function (x) { return x.fin !== null; }).sort(function (a, b) { return b.fin - a.fin; });
+  var unscored = rows.filter(function (x) { return x.fin === null; });
+  var hi = ranked.length ? ranked[0].fin : null, lo = ranked.length ? ranked[ranked.length - 1].fin : null;
+  var hiN = ranked.filter(function (x) { return x.fin === hi; }).map(function (x) { return x.name; });
+  var loN = ranked.filter(function (x) { return x.fin === lo; }).map(function (x) { return x.name; });
+  function names(a) { return a.length > 2 ? a[0] + ', ' + a[1] + ' +' + (a.length - 2) : a.join(', '); }
+  /* score cards */
+  var cards = [['Current role final score', pct(d.avgScore), num(d.avgScore) === null ? '#94a3b8' : INK, num(d.avgScore) === null ? 'No current role assessment on record' : '70% manager + 30% self'],
+    ['Prospective role final score', pct(d.psAvg), num(d.psAvg) === null ? '#94a3b8' : AMBER, num(d.psAvg) === null ? 'No prospective assessment on record' : '70% manager + 30% self'],
+    ['Highest competency', hi === null ? 'Not available' : pct(hi), GREEN, hi === null ? '' : names(hiN)],
+    ['Lowest competency', lo === null ? 'Not available' : pct(lo), RED, lo === null ? '' : names(loN)]];
+  var gap = 8, kw = (CW - 3 * gap) / 4;
+  cards.forEach(function (c, i) {
+    var x = M + i * (kw + gap);
+    rr(x, y, kw, 66, 5, '#ffffff', LINE);
+    wrap(c[0].toUpperCase(), 5.8, kw - 16).slice(0, 2).forEach(function (l, j) { text(l, x + 8, y + 7 + j * 8, 5.8, '#7b869c'); });
+    text(fit(c[1], c[1].length > 8 ? 11.5 : 16, kw - 14), x + 8, y + 25, c[1].length > 8 ? 11.5 : 16, c[2], { bold: true });
+    wrap(c[3], 6.6, kw - 16).slice(0, 2).forEach(function (l, j) { text(l, x + 8, y + 46 + j * 8.5, 6.6, GRAY); });
+  });
+  y += 66 + 16;
+  /* ranking table */
+  need(80);
+  text('Competencies ranked highest to lowest', M, y, 11.5, NAVY, { bold: true }); y += 16;
+  text((pros ? 'Prospective role' : 'Current role') + '. Final = 70% manager + 30% self. The vertical marker shows the 70% readiness line.', M, y, 7.4, GRAY); y += 14;
+  var cx = { rk: M + 6, nm: M + 26, self: M + 252, mgr: M + 296, bar: M + 330, fin: M + CW - 6 }, barW = 120;
+  function thead() {
+    rect(M, y, CW, 18, '#f4f6fb'); hline(M, y + 18, CW, NAVY, 1.2);
+    text('#', cx.rk, y + 6, 6.2, GRAY, { bold: true }); text('COMPETENCY', cx.nm, y + 6, 6.2, GRAY, { bold: true });
+    text('SELF', cx.self, y + 6, 6.2, GRAY, { bold: true, align: 'center' }); text('MANAGER', cx.mgr, y + 6, 6.2, GRAY, { bold: true, align: 'center' });
+    text('FINAL SCORE', cx.bar, y + 6, 6.2, GRAY, { bold: true }); text('FINAL', cx.fin, y + 6, 6.2, GRAY, { bold: true, align: 'right' });
+    y += 20;
+  }
+  thead();
+  var all = ranked.concat(unscored);
+  all.forEach(function (c, i) {
+    var lines = wrap(c.name, 8.4, 196 - 56).slice(0, 2), rh2 = lines.length > 1 ? 30 : 21;
+    if (y + rh2 > H - 60) { newPage(); thead(); }
+    var isTop = c.fin !== null && c.fin === hi && ranked.length > 1, isLow = c.fin !== null && c.fin === lo && ranked.length > 1 && lo !== hi;
+    var color = c.fin === null ? '#94a3b8' : (i < 2 ? GREEN : (isLow ? RED : (i >= ranked.length - 3 ? AMBER : INDIGO)));
+    if (c.fin !== null && ranked.length < 4) color = INDIGO;
+    var ty = y + (rh2 - 10) / 2;
+    text(String(i + 1), cx.rk, ty, 8, '#94a3b8', { bold: true });
+    lines.forEach(function (l, j) { text(l, cx.nm, lines.length > 1 ? y + 5 + j * 11 : ty, 8.4, INK); });
+    if (lines.length === 1 && (isTop || isLow)) {
+      var tg = isTop ? 'HIGHEST' : 'LOWEST', tx = cx.nm + width(lines[0], 8.4) + 6, tw = width(tg, 5.4) + 8;
+      rr(tx, ty + 0.5, tw, 9, 4.5, isTop ? '#d1fae5' : '#fee2e2'); text(tg, tx + 4, ty + 2.6, 5.4, isTop ? '#047857' : '#b91c1c', { bold: true });
+    }
+    text(pctS(c.self), cx.self, ty, 8.2, '#475569', { align: 'center' }); text(pctS(c.mgr), cx.mgr, ty, 8.2, '#475569', { align: 'center' });
+    rr(cx.bar, y + rh2 / 2 - 3.5, barW, 7, 3.5, '#e9edf7');
+    if (c.fin !== null) rr(cx.bar, y + rh2 / 2 - 3.5, Math.max(7, Math.min(barW, barW * c.fin / 100)), 7, 3.5, color);
+    rect(cx.bar + barW * 0.7, y + rh2 / 2 - 6, 0.9, 12, '#475569');
+    text(c.fin === null ? 'Not available' : c.fin.toFixed(1) + '%', cx.fin, ty, 8.4, color, { bold: true, align: 'right' });
+    hline(M, y + rh2, CW, '#e8ecf5'); y += rh2;
+  });
+  y += 8; text('Green: top two. Amber: bottom three. Red: lowest. Missing scores are never treated as zero.', M, y, 7, GRAY); y += 22;
+
+  /* strengths and development areas */
+  var k = Math.min(3, Math.floor(ranked.length / 2)); if (ranked.length === 1) k = 0;
+  var top3 = ranked.slice(0, k), low3 = k ? ranked.slice(-k).reverse() : [];
+  need(110);
+  var bw = (CW - 14) / 2, bh2 = 30 + Math.max(top3.length, low3.length, 1) * 20 + 4;
+  [['Key strengths', GREEN, '#047857', top3], ['Priority development areas', AMBER, '#b45309', low3]].forEach(function (b, i) {
+    var x = M + i * (bw + 14);
+    rr(x, y, bw, bh2, 5, '#ffffff', LINE); rect(x + 6, y, bw - 12, 3.4, b[1]);
+    text(b[0], x + 12, y + 12, 9.5, b[2], { bold: true });
+    if (!b[3].length) text('Not enough scored competencies', x + 12, y + 32, 8, GRAY);
+    b[3].forEach(function (c, j) {
+      var iy = y + 30 + j * 20;
+      text(fit(c.name, 8.4, bw - 70), x + 12, iy, 8.4, INK, { bold: true });
+      text(c.fin.toFixed(1) + '%', x + bw - 12, iy, 8.4, b[1] === GREEN ? GREEN : (c === low3[0] ? RED : AMBER), { bold: true, align: 'right' });
+      if (j < b[3].length - 1) hline(x + 12, iy + 14, bw - 24, '#eef1f7');
+    });
+  });
+  y += bh2 + 18;
+  /* saved HR notes */
+  [['Strengths (HR notes)', r.strengths_text], ['Gaps and development needs (HR notes)', r.gaps_text]].forEach(function (n) {
+    if (!n[1] || !String(n[1]).trim()) return;
+    var ls = wrap(n[1], 8.4, CW - 20); need(30);
+    text(n[0], M, y, 9.5, NAVY, { bold: true }); y += 15;
+    ls.forEach(function (l) { need(12); text(l, M + 10, y, 8.4, '#334155'); y += 11.5; }); y += 10;
+  });
+  /* decision summary */
+  var score = num(pros ? d.psAvg : d.avgScore), ready = null;
+  if (pros && score !== null) ready = score >= 90 ? 'Ready now' : score >= 80 ? 'Ready in 6 to 12 months' : score >= 70 ? 'Ready in 12 to 18 months' : 'Not ready at this time (below 70%), reassess after the development period';
+  var kv = [['Final decision', outcome]]; if (ready) kv.push(['Readiness (prospective role)', ready]);
+  kv.push(['HR suggested path', r.suggested_path || 'Not recorded'], ['HR recommendation', r.recommendation_text || 'Not recorded'], ['Decision comments', (r.comment && String(r.comment).trim()) || 'No additional comments recorded']);
+  need(40); text('Decision summary', M, y, 11.5, NAVY, { bold: true }); y += 18;
+  var kvTop = y; rr(M, y, CW, 2, 1, '#ffffff'); 
+  kv.forEach(function (row, i) {
+    var ls = wrap(row[1], 8.6, CW - 160).slice(0, 6), h = Math.max(24, ls.length * 11.5 + 12);
+    if (y + h > H - 60) { newPage(); }
+    rect(M, y, 150, h, '#f4f6fb'); hline(M, y + h, CW, '#e5e9f3');
+    text(row[0], M + 10, y + 8, 8, GRAY, { bold: true });
+    ls.forEach(function (l, j) { text(l, M + 160, y + 8 + j * 11.5, 8.6, INK, { bold: i === 0 }); });
+    y += h;
+  });
+  hline(M, kvTop, CW, LINE); y += 20;
+  /* approval trail */
+  var steps = [['Report submitted', shown(submittedBy), submittedBy.title, r.submitted_date]];
+  if (r.assigned_to) steps.push(['Executive review', shown(executive), executive.title, '']);
+  steps.push(['Final decision', shown(decidedBy), decidedBy.title, r.decided_date]);
+  need(70); text('Approval trail', M, y, 11.5, NAVY, { bold: true }); y += 18;
+  var sw = CW / steps.length;
+  steps.forEach(function (s, i) {
+    var x = M + i * sw;
+    rr(x, y, sw - (i < steps.length - 1 ? 4 : 0), 64, 4, '#ffffff', LINE); rect(x + 4, y, sw - 12, 3, GREEN);
+    text('STEP ' + (i + 1), x + 10, y + 10, 5.8, '#7b869c'); text(s[0], x + 10, y + 20, 8.8, INK, { bold: true });
+    text(fit(s[1] || 'Not recorded', 8, sw - 24), x + 10, y + 32, 8, '#0f172a', { bold: true }); if (s[2]) text(fit(s[2], 7, sw - 24), x + 10, y + 42, 7, GRAY); if (s[3]) text(String(s[3]), x + 10, y + 52, 7, GRAY);
+  });
+  y += 64 + 26;
+  /* signatures */
+  need(72);
+  var sg = (CW - 36) / 3;
+  [['Head of HR', decidedBy], ['HR Admin', submittedBy], ['Executive', executive]].forEach(function (t, i) {
+    var x = M + i * (sg + 18), p = t[1];
+    hline(x, y + 22, sg, '#334155', 0.8); text(t[0], x, y + 27, 8, INK, { bold: true });
+    text(fit(p.name || 'Name', 7.6, sg), x, y + 38, 7.6, p.name ? INK : GRAY, { bold: !!p.name });
+    if (p.title) text(fit(p.title, 7, sg), x, y + 48, 7, GRAY);
+    text('Signature and date', x, y + 58, 7, GRAY);
+  });
+  y += 70;
+  pages.push(cur); cur = '';
+
+  /* footers */
+  var total = pages.length;
+  pages = pages.map(function (p, i) {
+    cur = ''; hline(M, H - 44, CW, LINE);
+    text('Kenafric CMS', M, H - 34, 7, NAVY, { bold: true }); text('| Confidential, for authorised recipients only', M + width('Kenafric CMS', 7) + 5, H - 34, 7, GRAY);
+    text('Page ' + (i + 1) + ' of ' + total, W - M, H - 34, 7, GRAY, { align: 'right' });
+    return p + cur;
+  });
+
+  /* ---- assemble the PDF ---- */
+  function bytes(s) { return typeof s === 'string' ? enc.encode(s) : s; }
+  function obj(data) { objs.push(bytes(data)); return objs.length - 1; }
+  function reserve() { objs.push(null); return objs.length - 1; }
+  function stream(data, extra) {
+    data = bytes(data); var pre = bytes('<< /Length ' + data.length + ' ' + (extra || '') + ' >>' + NL + 'stream' + NL), post = bytes(NL + 'endstream');
+    var all = new Uint8Array(pre.length + data.length + post.length); all.set(pre); all.set(data, pre.length); all.set(post, pre.length + data.length); return obj(all);
+  }
+  function dec(s) { var b = atob(s), o = new Uint8Array(b.length); for (var i = 0; i < b.length; i++) o[i] = b.charCodeAt(i); return o; }
+  var catalog = reserve(), pageTree = reserve(), font = reserve();
+  var mask = stream(dec(CMS_PDF_LOGO_A), '/Type /XObject /Subtype /Image /Width 402 /Height 146 /ColorSpace /DeviceGray /BitsPerComponent 8 /Filter /FlateDecode'), img = stream(dec(CMS_PDF_LOGO_RGB), '/Type /XObject /Subtype /Image /Width 402 /Height 146 /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /FlateDecode /SMask ' + mask + ' 0 R');
+  var pageIds = pages.map(function (p) {
+    var c = stream(p);
+    return obj('<< /Type /Page /Parent ' + pageTree + ' 0 R /MediaBox [0 0 ' + W.toFixed(2) + ' ' + H.toFixed(2) + '] /Resources << /Font << /F1 ' + font + ' 0 R >> /XObject << /Im1 ' + img + ' 0 R >> >> /Contents ' + c + ' 0 R >>');
+  });
+  var ttf = dec(F.data), fontFile = stream(ttf, '/Length1 ' + ttf.length);
+  var descriptor = obj('<< /Type /FontDescriptor /FontName /DejaVuSans /Flags 32 /FontBBox [-1021 -463 1793 1232] /ItalicAngle 0 /Ascent 928 /Descent -236 /CapHeight 729 /StemV 80 /FontFile2 ' + fontFile + ' 0 R >>');
+  var codes = Array.from(used).sort(function (a, b) { return a - b; }), max = codes.length ? codes[codes.length - 1] : 63, gids = new Uint8Array((max + 1) * 2);
+  codes.forEach(function (n) { gids[n * 2] = F.map[n][0] >> 8; gids[n * 2 + 1] = F.map[n][0] & 255; });
+  var gidMap = stream(gids), widthArray = codes.map(function (n) { return n + ' [' + F.map[n][1] + ']'; }).join(' ');
+  var cidFont = obj('<< /Type /Font /Subtype /CIDFontType2 /BaseFont /DejaVuSans /CIDSystemInfo << /Registry (Adobe) /Ordering (Identity) /Supplement 0 >> /FontDescriptor ' + descriptor + ' 0 R /DW 600 /W [' + widthArray + '] /CIDToGIDMap ' + gidMap + ' 0 R >>');
+  var cmap = '/CIDInit /ProcSet findresource begin' + NL + '12 dict begin' + NL + 'begincmap' + NL + '/CIDSystemInfo << /Registry (Adobe) /Ordering (UCS) /Supplement 0 >> def' + NL + '/CMapName /CMSUnicode def' + NL + '/CMapType 2 def' + NL + '1 begincodespacerange' + NL + '<0000> <FFFF>' + NL + 'endcodespacerange' + NL;
+  for (var a = 0; a < codes.length; a += 100) { var part = codes.slice(a, a + 100); cmap += part.length + ' beginbfchar' + NL + part.map(function (n) { return '<' + n.toString(16).padStart(4, '0') + '> <' + n.toString(16).padStart(4, '0') + '>'; }).join(NL) + NL + 'endbfchar' + NL; }
+  cmap += 'endcmap' + NL + 'CMapName currentdict /CMap defineresource pop' + NL + 'end' + NL + 'end';
+  var unicode = stream(cmap);
+  objs[font] = bytes('<< /Type /Font /Subtype /Type0 /BaseFont /DejaVuSans /Encoding /Identity-H /DescendantFonts [' + cidFont + ' 0 R] /ToUnicode ' + unicode + ' 0 R >>');
+  objs[pageTree] = bytes('<< /Type /Pages /Kids [' + pageIds.map(function (n) { return n + ' 0 R'; }).join(' ') + '] /Count ' + pageIds.length + ' >>');
+  objs[catalog] = bytes('<< /Type /Catalog /Pages ' + pageTree + ' 0 R >>');
+  var chunks = [bytes('%PDF-1.7' + NL + '%CMSREPORT' + NL)], offsets = [0], length = chunks[0].length;
+  for (var i = 1; i < objs.length; i++) { offsets[i] = length; var hd = bytes(i + ' 0 obj' + NL), ed = bytes(NL + 'endobj' + NL); chunks.push(hd, objs[i], ed); length += hd.length + objs[i].length + ed.length; }
+  var xref = 'xref' + NL + '0 ' + objs.length + NL + '0000000000 65535 f ' + NL + offsets.slice(1).map(function (n) { return String(n).padStart(10, '0') + ' 00000 n ' + NL; }).join('');
+  xref += 'trailer' + NL + '<< /Size ' + objs.length + ' /Root ' + catalog + ' 0 R >>' + NL + 'startxref' + NL + length + NL + '%%EOF' + NL; chunks.push(bytes(xref));
+    return cmsBlobToBase64(new Blob(chunks, { type: 'application/pdf' }));
+}
+/* Show people as "Name, Job title" instead of an email address. */
+var CMS_PEOPLE = {};
+async function cmsPreloadPeople(emails) {
+  var list = [];
+  (emails || []).forEach(function (e) {
+    e = String(e || '').trim().toLowerCase();
+    if (e && e.indexOf('@') > 0 && !(e in CMS_PEOPLE) && list.indexOf(e) < 0) list.push(e);
+  });
+  await Promise.all(list.map(async function (e) {
+    try {
+      var q = await _supabase.from('employees').select('employee_name,position').ilike('email', e.replace(/[\\%_]/g, '\\$&')).limit(1);
+      var row = q && q.data && q.data[0];
+      CMS_PEOPLE[e] = row ? String(row.employee_name || '').trim() + (row.position ? ', ' + String(row.position).trim() : '') : '';
+    } catch (x) { CMS_PEOPLE[e] = ''; }
+  }));
+}
+function cmsPerson(email) {
+  var e = String(email || '').trim().toLowerCase();
+  return (e && CMS_PEOPLE[e]) || String(email || '');
+}
+/* ===== Simple escalation of a report to the C-Suite (one box, one click) ===== */
+var CMS_ESC = { members: null, rows: null, at: 0 };
+
+async function cmsEscMembers() {
+  if (!CMS_ESC.members) CMS_ESC.members = await dkRPC('members');
+  DK.members = CMS_ESC.members;
+  return CMS_ESC.members;
+}
+async function cmsEscRows(force) {
+  if (force || !CMS_ESC.rows || Date.now() - CMS_ESC.at > 5000) {
+    CMS_ESC.rows = await dkAll('mine');
+    CMS_ESC.at = Date.now();
+  }
+  return CMS_ESC.rows;
+}
+/* Latest submitted assessment of each kind. Target-role results are only included when both exist. */
+function cmsEscPickLinks(options) {
+  var pick = function (type) {
+    var list = (options || []).filter(function (x) { return x.type === type; });
+    list.sort(function (a, b) { return (Number(b.round) - Number(a.round)) || String(b.date).localeCompare(String(a.date)); });
+    return list[0] || null;
+  };
+  var self = pick('Self'), mgr = pick('Manager'), ps = pick('Prospective Self'), pm = pick('Prospective');
+  var links = [];
+  if (self) links.push(self);
+  if (mgr) links.push(mgr);
+  if (ps && pm) { links.push(ps); links.push(pm); }
+  return { links: links, hasCurrent: !!(self && mgr), hasTarget: !!(ps && pm) };
+}
+
+async function cmsEscalateDialog(id) {
+  try {
+    showToast('Opening the escalation box...');
+    var q = await _supabase.from('report_chain').select('*').eq('id', id).single();
+    var r = q.data;
+    if (!r) throw new Error('Report not found');
+    var members = await cmsEscMembers();
+    DK.options = await dkRPC('release_options', { report_id: Number(id) });
+    var picked = cmsEscPickLinks(DK.options);
+    if (!picked.hasCurrent) throw new Error('Both current-role assessments (Self and Manager) must be submitted before this report can go to an executive.');
+    /* default executive: the C-Suite mapped to this employee's department */
+    var defaultId = '';
+    try {
+      var emp = await _supabase.from('employees').select('department').eq('employee_id', r.employee_id).single();
+      var dept = String((emp.data && emp.data.department) || '').trim().toUpperCase();
+      var mp = await _supabase.from('csuite_mapping').select('*');
+      var hit = (mp.data || []).filter(function (m) { return String(m.department || '').trim().toUpperCase() === dept; })[0];
+      if (hit) {
+        var mem = members.filter(function (m) { return String(m.email || '').toLowerCase() === String(hit.csuite_email || '').toLowerCase(); })[0];
+        if (mem) defaultId = mem.id;
+      }
+    } catch (e1) {}
+
+    var old = document.getElementById('cmsEscOverlay');
+    if (old) old.remove();
+    function el(tag, css, text) { var n = document.createElement(tag); if (css) n.style.cssText = css; if (text != null) n.textContent = text; return n; }
+    var overlay = el('div', 'position:fixed;inset:0;background:rgba(15,23,42,.55);z-index:5000;display:flex;align-items:center;justify-content:center;padding:16px');
+    overlay.id = 'cmsEscOverlay';
+    var box = el('div', 'background:#fff;border-radius:14px;width:640px;max-width:100%;max-height:90vh;overflow:auto;padding:22px 24px;box-shadow:0 20px 60px rgba(0,0,0,.35)');
+    overlay.appendChild(box);
+    var roleTxt = r.prosp_role ? 'Prospective Role - ' + r.prosp_role : 'Current Role - ' + (r.position || '');
+    box.appendChild(el('div', 'font-size:17px;font-weight:800;color:#4c1d95', 'Escalate to C-Suite'));
+    box.appendChild(el('div', 'font-size:12px;color:#64748b;margin:3px 0 14px', r.employee_name + ' | ' + roleTxt));
+    box.appendChild(el('div', 'font-size:11px;font-weight:800;letter-spacing:.8px;color:#64748b;margin-bottom:6px', 'EXECUTIVE'));
+    var sel = document.createElement('select'); sel.style.cssText = 'margin-bottom:12px';
+    sel.add(new Option('Choose an executive', ''));
+    members.forEach(function (m) { sel.add(new Option(m.email, m.id)); });
+    sel.value = defaultId;
+    box.appendChild(sel);
+    box.appendChild(el('div', 'font-size:11px;font-weight:800;letter-spacing:.8px;color:#64748b;margin-bottom:6px', 'PURPOSE'));
+    var purpose = document.createElement('select'); purpose.style.cssText = 'margin-bottom:12px';
+    ['Promotion', 'Succession', 'Talent pipeline', 'Development'].forEach(function (p) { purpose.add(new Option(p, p)); });
+    purpose.value = r.prosp_role ? 'Promotion' : 'Development';
+    box.appendChild(purpose);
+    box.appendChild(el('div', 'font-size:11px;font-weight:800;letter-spacing:.8px;color:#64748b;margin-bottom:6px', 'YOUR BRIEF (REQUIRED)'));
+    var brief = document.createElement('textarea'); brief.rows = 5; brief.maxLength = 20000;
+    brief.placeholder = 'Why this report needs the executive, the facts that matter and your HR recommendation.';
+    brief.style.cssText = 'width:100%;margin-bottom:6px';
+    box.appendChild(brief);
+    var shared = picked.links.map(function (l) { return l.type + ' (round ' + l.round + ')'; }).join(', ');
+    box.appendChild(el('div', 'font-size:12px;color:#475569;background:#f5f7ff;border:1px solid #c7d2fe;border-radius:8px;padding:8px 10px;margin:6px 0 10px',
+      'Only the executive you choose will see the report and your brief. Results shared: ' + shared + '.' + (picked.hasTarget ? '' : ' Target-role results are not included because both target-role assessments are not submitted yet.') + ' The employee is not notified.'));
+    var msg = el('div', 'font-size:12px;min-height:16px;margin-bottom:8px;color:#b91c1c');
+    box.appendChild(msg);
+    var actions = el('div', 'display:flex;gap:10px;justify-content:flex-end');
+    var cancel = el('button', null, 'Cancel'); cancel.type = 'button'; cancel.className = 'btn btn-outline';
+    var send = el('button', 'background:#4c1d95', 'Send to executive'); send.type = 'button'; send.className = 'btn btn-primary';
+    cancel.onclick = function () { overlay.remove(); };
+    send.onclick = async function () {
+      var text = brief.value.trim();
+      if (!sel.value) { msg.textContent = 'Choose the executive.'; return; }
+      if (text.length < 10) { msg.textContent = 'Write the brief (at least 10 characters).'; return; }
+      send.disabled = true; cancel.disabled = true; msg.style.color = '#334155'; msg.textContent = 'Sending...';
+      try {
+        var p = { id: crypto.randomUUID(), report_id: Number(id), executive_id: sel.value, purpose: purpose.value,
+          hohr_outcome: 'Escalated by the Head of HR for executive recommendation', shared_note: text.slice(0, 600),
+          needs_recommendation: true, case_id: null, links: picked.links, brief: text };
+        await dkRPC('release', p);
+        var up = await _supabase.from('report_chain').update({ status: 'Escalated', stage: 'CSUITE',
+          comment: (r.comment ? r.comment + '\nHOHR: ' : '') + text, decided_by: APP.user.email, decided_date: new Date().toISOString().slice(0, 10) }).eq('id', id);
+        if (up && up.error) throw new Error('The executive has the report, but the status could not be updated: ' + up.error.message);
+        overlay.remove();
+        CMS_ESC.rows = null;
+        showToast('Sent to the executive');
+        loadHOHRReports();
+      } catch (e) {
+        console.error('Escalation problem', e);
+        send.disabled = false; cancel.disabled = false;
+        msg.style.color = '#b91c1c'; msg.textContent = 'Not sent: ' + (e && e.message ? e.message : e);
+      }
+    };
+    actions.appendChild(cancel); actions.appendChild(send);
+    box.appendChild(actions);
+    overlay.addEventListener('click', function (ev) { if (ev.target === overlay) overlay.remove(); });
+    document.body.appendChild(overlay);
+  } catch (e) {
+    console.error('Escalation dialog problem', e);
+    showToast('Could not open the escalation box: ' + (e && e.message ? e.message : e));
+  }
+}
+
+/* Executive answer and the Finalize controls, shown on the same report card. */
+async function cmsFillEscalationSlot(r) {
+  var slot = document.getElementById('esc-' + r.id);
+  if (!slot) return;
+  function el(tag, css, text) { var n = document.createElement(tag); if (css) n.style.cssText = css; if (text != null) n.textContent = text; return n; }
+  slot.textContent = '';
+  slot.style.cssText = 'width:100%;margin-top:6px;padding:10px 12px;border:1px solid #ddd6fe;background:#f5f3ff;border-radius:10px;font-size:12px';
+  slot.appendChild(el('div', 'font-weight:800;color:#4c1d95;letter-spacing:.5px', 'EXECUTIVE RESPONSE'));
+  var line = el('div', 'margin:6px 0', 'Checking...');
+  slot.appendChild(line);
+  try {
+    var rows = (await cmsEscRows()).filter(function (x) { return String(x.employee_id) === String(r.employee_id); });
+    rows.sort(function (a, b) { return String(b.released_at || '').localeCompare(String(a.released_at || '')); });
+    var rel = rows[0];
+    if (!rel) {
+      line.textContent = 'No executive has been given this report yet.';
+      var again = el('button', 'background:#4c1d95;color:#fff', 'Send to executive'); again.type = 'button'; again.className = 'btn btn-sm';
+      again.onclick = function () { cmsEscalateDialog(r.id); };
+      slot.appendChild(again);
+      return;
+    }
+    var done = !!rel.final_outcome;
+    line.textContent = done ? 'Final outcome recorded: ' + rel.final_outcome
+      : (rel.recommendation ? 'Executive recommendation: ' + rel.recommendation : 'Waiting for the executive to give a recommendation. (' + (rel.stage || 'Awaiting review') + ')');
+    if (done || !rel.recommendation) return;
+    var fin = el('div', 'margin-top:8px;display:grid;gap:8px');
+    var outcome = document.createElement('select');
+    [['Approved: Promotion', 'Promotion'], ['Approved: Development Plan', 'Development Plan'], ['Approved: Promotion (Hold - No Vacancy)', 'Hold (no vacancy)']].forEach(function (o) { outcome.add(new Option(o[1], o[0])); });
+    var plan = document.createElement('select'); plan.id = 'hohr-plan-' + r.id;
+    plan.add(new Option('Choose 12 or 24 months', ''));
+    plan.add(new Option('Develop for 12 months, then reassess', 'Develop for 12 months, then reassess'));
+    plan.add(new Option('Develop for 24 months, then reassess', 'Develop for 24 months, then reassess'));
+    plan.style.display = 'none';
+    outcome.onchange = function () { plan.style.display = outcome.value.indexOf('Development Plan') >= 0 ? '' : 'none'; };
+    var note = document.createElement('textarea'); note.id = 'rcc-' + r.id; note.rows = 2; note.placeholder = 'Final comment (optional)';
+    var go = el('button', null, 'Finalize and notify'); go.type = 'button'; go.className = 'btn btn-sm btn-success';
+    go.onclick = async function () {
+      if (outcome.value.indexOf('Development Plan') >= 0 && !plan.value) { showToast('Select 12 or 24 months first'); return; }
+      go.disabled = true;
+      try {
+        var full = await dkRPC('released', { id: rel.id });
+        if (!full.finalized_at) await dkRPC('finalize', { id: full.id, version: full.version, outcome: outcome.options[outcome.selectedIndex].text, note: note.value.trim() || 'Finalized by the Head of HR' });
+        CMS_ESC.rows = null;
+        await decideReportChain(r.id, outcome.value);
+      } catch (e) {
+        console.error('Finalize problem', e);
+        go.disabled = false;
+        showToast('Could not finalize: ' + (e && e.message ? e.message : e));
+      }
+    };
+    fin.appendChild(outcome); fin.appendChild(plan); fin.appendChild(note); fin.appendChild(go);
+    slot.appendChild(fin);
+  } catch (e) {
+    line.textContent = 'Could not load the executive response: ' + (e && e.message ? e.message : e);
+  }
+}
 async function cmsSendFinalReportPdf(reportId, extraEmails) {
   var key = '';
   try {
@@ -5779,7 +6497,7 @@ async function cmsSendFinalReportPdf(reportId, extraEmails) {
     cmsFinalPdfSent[key] = true;
     showToast('Building the final report PDF...');
 
-    var d = await hohrData(r.employee_id);
+    var d = await r4Timeout(hohrData(r.employee_id), 45000, 'Loading the report data');
     if (!d || !d.emp) throw new Error('Employee not found');
     var outcome = status.replace(/^(Approved|Finalized):\s*/i, '');
 
@@ -5788,25 +6506,26 @@ async function cmsSendFinalReportPdf(reportId, extraEmails) {
     add(r.submitted_by);                                  // HR Admin who submitted the report
     add(APP.user && APP.user.email);                      // Head of HR recording the outcome
     (extraEmails || []).forEach(add);                     // C-Suite from the older route
-    (await cmsExecutiveEmailsForReport(r)).forEach(add); // C-Suite from private executive cases
+    (await r4Timeout(cmsAllFinalReportEmails(r, d), 25000, 'Finding the recipients')).forEach(add); // HR Admins, Head of HR and designated C-Suite
 
     var recipients = [];
     for (var i = 0; i < emails.length; i++) recipients.push({ email: emails[i], name: await cmsMailerFirstName(emails[i]) });
 
-    var html = '<div style="border:2px solid #333;padding:8px;margin-bottom:12px;font-size:13px"><strong>FINAL DECISION:</strong> ' +
-      escapeHtml(outcome) + '</div>' + hohrDocHTML(d);
-    var pdf = await cmsReportHtmlToPdfBase64(html);
+     showToast('Report data loaded. Creating the PDF...');
+    var pdf = await r4Timeout(cmsFinalReportPdfPro(r, d, outcome).catch(function (e) { console.warn('Professional PDF failed, using the simple one', e); return cmsFinalReportPdfBase64(r, d, outcome); }), 60000, 'Building the PDF');
     if (!pdf || pdf.length < 1000) throw new Error('The PDF could not be created');
+    showToast('PDF built (' + Math.round(pdf.length / 1024) + ' KB). Sending to the mailer...');
 
-    var res = await _supabase.functions.invoke('send-report-pdf', {
+    var res = await r4Timeout(_supabase.functions.invoke('send-report-pdf', {
       body: {
         recipients: recipients,
-        subject: 'FINAL report: ' + r.employee_name + ' - ' + outcome,
-        summary: 'The final decision for ' + r.employee_name + ' (' + (r.position || '') + ') has been recorded: ' + outcome + '.',
-        filename: 'Final_Report_' + r.employee_name,
-        pdf: pdf
+         subject: 'Final Decision Report: ' + (r.prosp_role ? 'Prospective Role - ' + r.prosp_role : 'Current Role - ' + (r.position || '')) + ' | ' + r.employee_name,
+        summary: 'The final decision report for the ' + (r.prosp_role ? 'prospective role (' + r.prosp_role + ')' : 'current role (' + (r.position || '') + ')') + ' of ' + r.employee_name + ' has been recorded: ' + outcome + '.',
+        filename: 'Final_Report_' + (r.prosp_role ? 'Prospective_' : 'Current_') + r.employee_name,
+         pdf: pdf
       }
-    });
+    }), 60000, 'The PDF mailer');
+    console.log('send-report-pdf reply', res);
     if (res.error) {
       var detail = res.error.message || 'Send failed';
       try { if (res.error.context && res.error.context.json) { var j = await res.error.context.json(); if (j && j.error) detail = j.error; } } catch (e2) {}
@@ -5817,7 +6536,8 @@ async function cmsSendFinalReportPdf(reportId, extraEmails) {
     showToast('Final report PDF emailed to ' + out.sent + ' recipient(s)');
   } catch (e) {
     if (key) delete cmsFinalPdfSent[key];
-    showToast('Final report PDF not sent: ' + (e && e.message ? e.message : e));
+    console.error('Final report PDF problem', e);
+    alert('Final report PDF not sent: ' + (e && e.message ? e.message : e));
   }
 }
 
@@ -6303,7 +7023,7 @@ case 'hr-devplans': return loadHRDevPlans();
 case 'hr-redo': return loadHRRedoRequests();
 case 'hr-all': return loadHRAll();
 case 'hr-reports': return loadHRReportsHub();
-case 'hr-repappr': return loadReportApprovals();
+case 'hr-repappr': return loadHRReportApprovals();
 case 'hr-positions': return loadHRPositions();
 case 'hr-comp': return loadHRComp();
 case 'hr-comp-approvals': return loadHRCompApprovals();
@@ -9209,6 +9929,41 @@ sendCMSemail(who, 'Assessment Report Approval Needed: ' + emp.employee_name, 'HR
 showToast('Report sent to Head of HR for approval');
 loadHRAllDetail(empId);
 }
+/* HR Admin: Report Approvals now reads the live report chain (the same reports the Head of HR decides on). */
+async function loadHRReportApprovals() {
+var __cmsRouteEpoch = typeof CN === 'undefined' ? null : CN.epoch;
+APP._reportReturn = 'hub';
+((typeof CN === 'undefined' || __cmsRouteEpoch === CN.epoch) ? setContent('<div class="loading"><div class="spinner"></div>Loading...</div>') : undefined);
+const { data: chains, error } = await _supabase.from('report_chain').select('*').order('id', { ascending: false });
+var list = (chains || []).filter(function(r){ return String(r.status || 'Draft') !== 'Draft'; });
+await cmsPreloadPeople(list.map(function(r){ return r.decided_by; }));
+var n = function(f){ return list.filter(f).length; };
+var isDone = function(r){ return /^(Approved|Endorsed|Finalized)/i.test(String(r.status || '')); };
+var html = '<div class="card"><div class="card-title"> Assessment Report Approvals</div>';
+if (error) html += '<p style="color:var(--red)">Could not load reports: ' + escapeHtml(error.message) + '</p>';
+html += '<p style="font-size:12px;color:var(--gray-500);margin-bottom:10px">Reports sent to the Head of HR and their outcome. Pending: ' + n(function(r){ return r.status === 'Pending'; }) + ' | Escalated: ' + n(function(r){ return r.status === 'Escalated'; }) + ' | Approved: ' + n(isDone) + ' | Returned: ' + n(function(r){ return r.status === 'Returned'; }) + '</p>';
+if (!list.length) html += '<p style="color:var(--gray-500)">No report approvals yet.</p>';
+else {
+html += '<div class="table-wrap"><table class="staff-table"><thead><tr><th>Employee</th><th>Position</th><th>Report for</th><th>Current</th><th>Prospective</th><th>Stage</th><th>Status</th><th>Decided by</th><th>Date</th><th></th></tr></thead><tbody>';
+list.forEach(function(r){
+var st = r.status || '-';
+var badge = st === 'Pending' ? 'warning' : (isDone(r) ? 'success' : 'danger');
+html += '<tr><td><strong>' + escapeHtml(r.employee_name) + '</strong></td>';
+html += '<td style="font-size:11px">' + escapeHtml(r.position || '') + '</td>';
+html += '<td style="font-size:11px">' + (r.prosp_role ? 'Prospective: ' + escapeHtml(r.prosp_role) : 'Current role') + '</td>';
+html += '<td>' + (r.mgr_score == null ? '-' : r.mgr_score + '%') + '</td>';
+html += '<td>' + (r.prosp_score ? r.prosp_score + '%' : '-') + '</td>';
+html += '<td>' + escapeHtml(r.stage || '-') + '</td>';
+html += '<td><span class="badge badge-' + badge + '">' + escapeHtml(st) + '</span></td>';
+html += '<td style="font-size:11px">' + escapeHtml(cmsPerson(r.decided_by) || '-') + '</td>';
+html += '<td style="font-size:11px">' + escapeHtml(r.decided_date || r.submitted_date || '') + '</td>';
+html += '<td style="white-space:nowrap"><button class="btn btn-sm btn-outline" onclick="viewReportDoc(' + rcArg(r.id) + ')"> View</button> ' + cmsReportPdfButton(r) + '</td></tr>';
+});
+html += '</tbody></table></div>';
+}
+html += '</div>';
+((typeof CN === 'undefined' || __cmsRouteEpoch === CN.epoch) ? setContent('<div id="hrReportsContent">' + html + '</div>') : undefined);
+}
 async function loadReportApprovals() {
 var __cmsRouteEpoch = typeof CN === 'undefined' ? null : CN.epoch;
 
@@ -9800,6 +10555,8 @@ if (r.status === 'Pending' || String(r.status).indexOf('Endorsed') === 0) return
 if (String(r.status).indexOf('Approved') === 0 || String(r.status).indexOf('Finalized') === 0) return 'approved';
 return 'returned';
 }
+await cmsPreloadPeople(rows.reduce(function(a, r){ return a.concat([r.submitted_by, r.decided_by]); }, []));
+rows = rows.map(function(r){ return Object.assign({}, r, { submitted_by: cmsPerson(r.submitted_by), decided_by: cmsPerson(r.decided_by) }); });
 var counts = { all: rows.length, escalated: 0, pending: 0, approved: 0 };
 rows.forEach(function(r){ var g = groupOf(r); if (counts[g] !== undefined) counts[g]++; });
 var avatarColors = ['#8b5cf6','#ef4444','#f59e0b','#10b981','#3b82f6','#ec4899','#14b8a6','#a16207'];
@@ -9841,6 +10598,7 @@ html += '<div id="sb-' + r.id + '" style="display:none;margin:8px 0"></div>';
 html += '<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;border-top:1px solid var(--gray-100);padding-top:10px">';
 html += '<button class="btn btn-sm btn-primary" onclick="toggleFullAssess(' + rcArg(r.id) + ')"> View Assessment</button>';
 html += '<button class="btn btn-sm btn-outline" onclick="toggleScoreBreakdown(' + rcArg(r.employee_id) + ',null,' + rcArg('sb-' + r.id) + ')"> Score Calculation</button>';
+html += cmsReportPdfButton(r);
 if (r.status === 'Pending' && r.stage === 'HOHR') {
 html += '<div style="width:100%;margin-top:8px;padding:10px;border:1px solid var(--gray-200);border-radius:8px;background:#fafbff">';
 html += '<div style="font-size:11px;font-weight:800;color:var(--primary-dark);letter-spacing:.4px">DEVELOPMENT TIMELINE - CHOOSE HORIZON</div>';
@@ -9855,7 +10613,7 @@ html += '<div style="width:100%;display:flex;gap:18px;flex-wrap:wrap;margin-top:
 html += '<button class="btn btn-sm btn-success" onclick="decideReportChain(' + rcArg(r.id) + ',\'Approved: Development Plan\')">Approve to Development Plan</button>';
 html += '<button class="btn btn-sm btn-primary" onclick="decideReportChain(' + rcArg(r.id) + ',\'Approved: Promotion\')">Approve to Promotion</button>';
 html += '<button class="btn btn-sm btn-outline" onclick="decideReportChain(' + rcArg(r.id) + ',\'Approved: Promotion (Hold - No Vacancy)\')">Hold</button>';
-html += '<button class="btn btn-sm" style="background:#4c1d95;color:#fff" onclick="decideReportChain(' + rcArg(r.id) + ',\'Escalated\')">Escalate to C-Suite</button>';
+html += '<button class="btn btn-sm" style="background:#4c1d95;color:#fff" onclick="cmsEscalateDialog(' + rcArg(r.id) + ')">Escalate to C-Suite</button>';
 html += '<button class="btn btn-sm btn-danger" onclick="decideReportChain(' + rcArg(r.id) + ',\'Returned\')">Request Changes</button>';
 } else if (String(r.status).indexOf('Endorsed') === 0) {
 html += '<div style="font-size:11px;color:var(--gray-600);width:100%"> C-Suite decision: ' + escapeHtml(r.status) + (r.comment ? ' - "' + escapeHtml(r.comment) + '"' : '') + ' - review, add your final comment if needed, then finalize.</div>';
@@ -9863,6 +10621,7 @@ html += '<textarea id="fin-' + r.id + '" rows="2" placeholder="HOHR final commen
 html += '<button class="btn btn-sm btn-success" onclick="finalizeReport(' + rcArg(r.id) + ')"> Finalize & Notify</button>';
 } else {
 html += '<span style="font-size:11px;color:var(--gray-500)">' + escapeHtml(r.status) + (r.decided_by ? ' by ' + escapeHtml(r.decided_by) : '') + '</span>';
+if (r.status === 'Escalated') html += '<div id="esc-' + r.id + '"></div>';
 if (r.comment) html += '<span style="font-size:11px;color:var(--gray-600)"> - ' + escapeHtml(r.comment) + '</span>';
 }
 html += '</div></div>';
@@ -9900,6 +10659,7 @@ if (typeof CN === 'undefined' || __cmsRouteEpoch === CN.epoch) {
 rows.forEach(function(r){
 if (r.suggested_path) selectHOHRPlan(r.id, r.suggested_path);
 if (r.status === 'Pending' && r.stage === 'HOHR') loadOfficialReport(r.id);
+if (r.status === 'Escalated') cmsFillEscalationSlot(r);
 });
 }
 }
@@ -14601,7 +15361,7 @@ function exShell(title){
  document.getElementById('exTitle').textContent=title;
  var actions=document.getElementById('exActions');
  actions.appendChild(exButton('Executive Overview',exOverview));
- actions.appendChild(exButton(exHR()?'Private Executive Reviews':'C-Suite',exCases));
+ actions.appendChild(exButton(exHR()?'Executive responses':'C-Suite',exCases));
  return document.getElementById('exRoot');
 }
 async function exOverview(){
@@ -14639,13 +15399,13 @@ async function exOverview(){
  }catch(e){metrics.textContent='Could not load Executive Overview: '+e.message;}
 }
 async function exCases(){
- var token=++EX.token,root=exShell(exHR()?'Private Executive Reviews':'C-Suite'),role=APP.currentRole;
+ var token=++EX.token,root=exShell(exHR()?'Executive responses':'C-Suite'),role=APP.currentRole;
  var host=root.querySelector('#exContent');
  try{
   var list=await exRPC('list');if(token!==EX.token||document.getElementById('exRoot')!==root||role!==APP.currentRole)return;
   host.innerHTML='';
   var note=document.createElement('p');note.className='ex-note';note.textContent=exHR()?'Only trusted HR/HOHR and each assigned executive can read that executive\u2019s case. Original reports are not shared automatically.':'Only cases explicitly assigned to your signed-in account appear here. Other executives\u2019 cases and decisions are not downloaded.';host.appendChild(note);
-  if(exHR())host.appendChild(exButton('Assign a new private case',()=>exAssign()));
+  if(exHR())host.appendChild(exButton('Send a report to an executive',()=>exAssign()));
   if(!list.length)host.appendChild(exPanel('No assigned cases','Existing reports remain with HR/HOHR until explicitly assigned.'));
   list.forEach(function(c){
    var card=exPanel(c.employee_name,c.position_name+' | '+c.state);
@@ -14678,6 +15438,7 @@ async function exOpenCase(id){
  }catch(e){host.textContent='Case unavailable: '+e.message;}
 }
 async function exAssign(reportId){
+ if(APP.currentRole==='hohr'){DK.pendingReport=reportId?String(reportId):'';showToast('Private briefs are now written in the release form.');return navigateTo('hohr-executive-release');}
  if(!exHR()){showToast('HR Admin or HOHR mode required.');return;}
  var token=++EX.token,root=exShell('Assign a private executive case'),host=root.querySelector('#exContent');
  try{
@@ -14707,7 +15468,7 @@ setupNav=function(role){
   exOldSetupNav(role);
   if(role==='hr'||role==='hohr'){
    var side=document.getElementById('sideNav');
-   if(side){var b=exButton('Private Executive Reviews',()=>navigateTo('ex-private'));b.style.margin='12px';side.appendChild(b);}
+   if(side){var b=exButton('Executive responses',()=>navigateTo('ex-private'));b.style.margin='12px';side.appendChild(b);}
   }
   return;
  }
@@ -14726,7 +15487,7 @@ loadPage=function(id){
  EX.token++;return exOldLoadPage(id);
 };
 var exOldPageLabel=getPageLabel;
-getPageLabel=function(id){return id==='ex-overview'?'Executive Overview':id==='ex-private'?'C-Suite':exOldPageLabel(id);};
+getPageLabel=function(id){return id==='ex-overview'?'Executive Overview':id==='ex-private'?(exHR()?'Executive responses':'C-Suite'):exOldPageLabel(id);};
 loadCSReports=exCases;
 // Stop the old all-C-Suite notification route when escalating.
 var exOldDecideChain=decideReportChain;
@@ -14841,7 +15602,7 @@ function xmEmpty(host){
  card.appendChild(process);host.appendChild(card);
 }
 exCases=async function(){
- var token=++EX.token,role=APP.currentRole,root=exShell(exHR()?'Private Executive Reviews':'C-Suite'),host=root.querySelector('#exContent');
+ var token=++EX.token,role=APP.currentRole,root=exShell(exHR()?'Executive responses':'C-Suite'),host=root.querySelector('#exContent');
  try{
   var list=await exRPC('list');
   if(token!==EX.token||document.getElementById('exRoot')!==root||role!==APP.currentRole)return;
@@ -19549,7 +20310,28 @@ function dkE(x){return escapeHtml(x==null?'':String(x));}
 function dkBtn(action,text,attrs,primary){return '<button type="button" class="btn '+(primary?'btn-primary':'btn-outline')+'" data-dk="'+action+'" '+(attrs||'')+'>'+dkE(text)+'</button>';}
 function dkLive(epoch){return epoch===DK.epoch&&!!APP.user&&!!document.getElementById('dkRoot');}
 async function dkRPC(action,data={}){
- if(!APP.user)throw Error('Sign in first.');
+ if(action==='release'&&data.brief){
+  var payload=Object.assign({},data);var brief=payload.brief;delete payload.brief;
+  var made=await exRPC('assign',{report_id:String(payload.report_id),assigned_to:payload.executive_id,brief:brief});
+  payload.case_id=made.id;
+  try{var out=await dkRPCBase(action,payload);dkTellExecutive(payload);return out;}
+  catch(err){try{await exRPC('close',{id:made.id,version:made.version});}catch(x){}throw err;}
+ }
+ var result=await dkRPCBase(action,data);
+ if(action==='release')dkTellExecutive(data);
+ return result;
+}
+function dkTellExecutive(p){
+ try{
+  var m=(DK.members||[]).find(function(x){return x.id===p.executive_id;});
+  if(!m||!m.email)return;
+  var NL=String.fromCharCode(10);
+  var msg='A report has been shared with you on your Decision Desk.'+NL+(p.needs_recommendation?'Your recommendation has been requested.':'It is for your information only.')+NL+'For privacy, the details are only visible after you sign in.';
+  sendCMSemail(m.email,'Report waiting on your Decision Desk',msg,{page:'csuite-decision-desk'});
+ }catch(e){}
+}
+async function dkRPCBase(action,data={}){
+	if(!APP.user)throw Error('Sign in first.');
  var r=await _supabase.rpc('cms_executive_docket',{p_action:action,p_data:{...data,view_role:APP.currentRole}});
  if(r.error)throw Error(r.error.message);return r.data;
 }
@@ -19644,18 +20426,19 @@ async function dkReport(id){
  }catch(e){if(dkLive(epoch))showToast(e.message);}
 }
 function dkAdmin(){
- var h='<header class="dk-header"><h1>Executive access &amp; report release</h1><p>Department scope permits progress only. HOHR separately releases each result snapshot.</p></header>'+
+ var h='<header class="dk-header"><h1>Send a report to an executive</h1><p>Department scope permits progress only. HOHR separately releases each result snapshot.</p></header>'+
  '<section class="card"><h2>1. Authorize a company and department</h2><label>Executive<select id="dkExecutive"><option value="">Choose verified executive</option>'+DK.members.map(m=>'<option value="'+m.id+'">'+dkE(m.email)+'</option>').join('')+'</select></label>'+
  '<label>Company / department<select id="dkScopeEdit"><option value="">Choose scope</option>'+DK.scopeOptions.map((s,i)=>'<option value="'+i+'">'+dkE(s.company+' / '+s.department)+'</option>').join('')+'</select></label>'+
  '<label>Access<select id="dkEnable"><option value="true">Enable progress overview</option><option value="false">Revoke progress overview</option></select></label><label>Reason<textarea id="dkScopeReason"></textarea></label>'+dkBtn('save-scope','Preview access change')+
  '<details><summary>Current scope permissions</summary>'+DK.scopes.map(s=>'<p>'+dkE(s.email)+' | '+dkE(s.company+' / '+s.department)+' | '+(s.enabled?'Enabled':'Revoked')+'</p>').join('')+'</details></section>';
  if(DK.access.can_release){
-  h+='<section class="card"><h2>2. Submit a report to an executive</h2><p>A report may be for information only. It does not need a C-Suite recommendation first. Only this named recipient receives its results.</p>'+
+  h+='<section class="card"><h2>2. Send a report to an executive</h2><p>A report may be for information only. It does not need a C-Suite recommendation first. Only this named recipient receives its results.</p>'+
   '<label>Submitted HR report<select id="dkReleaseReport"><option value="">Choose report</option>'+DK.reports.map(r=>'<option value="'+r.id+'">'+dkE(r.employee_name)+' | '+dkE(r.position)+' | '+dkE(r.status)+' | Report '+r.id+'</option>').join('')+'</select></label>'+
   '<div id="dkReleaseForm"></div></section>'+
-  '<section class="card"><h2>3. Follow up released reports</h2>'+DK.rows.map(r=>'<div class="dk-admin-row"><span>'+dkE(r.employee)+' | '+dkE(r.stage)+'</span>'+dkBtn('report','Open / finalize','data-id="'+r.id+'"')+'</div>').join('')+'</section>';
+  '<section class="card"><h2>3. Executive responses</h2>'+DK.rows.map(r=>'<div class="dk-admin-row"><span>'+dkE(r.employee)+' | '+dkE(r.stage)+'</span>'+dkBtn('report','Open / finalize','data-id="'+r.id+'"')+'</div>').join('')+'</section>';
  }else h+='<section class="card"><p>Only a trusted Head of HR account can submit result reports or finalize outcomes. Viewing the HOHR interface does not itself grant this authority.</p></section>';
  h+='<div id="dkPreview"></div>';document.getElementById('dkRoot').innerHTML=h;
+ if(DK.pendingReport){var pr=document.getElementById('dkReleaseReport');if(pr){pr.value=DK.pendingReport;if(pr.value===DK.pendingReport)dkReleaseForm(DK.pendingReport);}DK.pendingReport='';}
 }
 async function dkReleaseForm(id){
  if(!id)return;
@@ -19666,6 +20449,7 @@ async function dkReleaseForm(id){
   '<label>Purpose<select id="dkPurpose">'+['Promotion','Succession','Talent pipeline','Development'].map(p=>'<option>'+p+'</option>').join('')+'</select></label>'+
   '<label>HOHR recommendation / decision<input id="dkOutcome" placeholder="Record the outcome being communicated"></label><label>Fresh executive-facing report note<textarea id="dkSharedNote" placeholder="Do not copy another executive\u2019s private comments"></textarea></label>'+
   '<label>Executive action<select id="dkNeeds"><option value="false">For information only</option><option value="true">Request executive recommendation</option></select></label>'+
+  '<label id="dkBriefBox" style="display:none">Private brief for the executive (only this executive and HR/HOHR can read it)<textarea id="dkBrief" rows="6" maxlength="20000" placeholder="Write a fresh brief with the relevant facts and your HR recommendation. Do not paste another executive\u2019s private comments."></textarea></label>'+
   '<label>Link existing private case (optional)<select id="dkExistingCase"><option value="">No existing case</option>'+DK.cases.filter(c=>String(c.report_id)===String(id)).map(c=>'<option value="'+c.id+'">'+dkE(c.name)+' | '+dkE(c.state)+'</option>').join('')+'</select></label>'+
   '<h3>Choose exact reviewed submissions</h3>'+['Self','Manager','Prospective Self','Prospective'].map(t=>'<label>'+dkE(t)+'<select data-dk-link="'+t+'"><option value="">Not included</option>'+DK.options.map((x,i)=>({x,i})).filter(o=>o.x.type===t).map(({x,i})=>'<option value="'+i+'">Round '+x.round+' | '+dkE(x.date)+' | '+dkE(x.target||'Current role')+'</option>').join('')+'</select></label>').join('')+
   '<p>Both current-role assessments are required. Include both target-role assessments when releasing target results. These snapshots do not change scores, award promotion or notify the employee.</p>'+dkBtn('release','Preview report release');
@@ -19681,6 +20465,7 @@ document.addEventListener('change',e=>{
  if(e.target.id==='dkScope'){DK.scope=e.target.value;DK.dirty=false;dkOpen('department');}
  else if(e.target.id==='dkSearch'){DK.search=e.target.value;DK.page=0;DK.dirty=false;dkRender();}
  else if(e.target.id==='dkReleaseReport'){DK.dirty=false;dkReleaseForm(e.target.value);}
+ else if(e.target.id==='dkNeeds'){var bb=document.getElementById('dkBriefBox');if(bb)bb.style.display=e.target.value==='true'?'block':'none';DK.preview=null;document.getElementById('dkPreview')?.replaceChildren();}
  else {DK.preview=null;document.getElementById('dkPreview')?.replaceChildren();}
 });
 document.addEventListener('click',async e=>{
@@ -19704,6 +20489,7 @@ document.addEventListener('click',async e=>{
   var links=Array.from(document.querySelectorAll('[data-dk-link]')).filter(s=>s.value!=='').map(s=>DK.options[Number(s.value)]);
   var p={id:crypto.randomUUID(),report_id:Number(get('dkReleaseReport')),executive_id:get('dkReleaseExecutive'),purpose:get('dkPurpose'),hohr_outcome:get('dkOutcome').trim(),shared_note:get('dkSharedNote').trim(),needs_recommendation:get('dkNeeds')==='true',case_id:get('dkExistingCase')||null,links};
   if(!p.executive_id||p.hohr_outcome.length<3||p.shared_note.length<10)throw Error('Select the recipient and explain the HOHR outcome.');
+  p.brief=get('dkBrief').trim();if(p.needs_recommendation&&!p.case_id){if(p.brief.length<10)throw Error('Write the private brief for the executive (at least 10 characters), or link an existing private case.');}else delete p.brief;
   dkPreview('release',p,'Confirm release of assessment results',DK.reports.find(r=>r.id===p.report_id)?.employee_name+' to '+DK.members.find(m=>m.id===p.executive_id)?.email+' | '+p.purpose+' | '+p.hohr_outcome+'. '+links.map(l=>l.type+' round '+l.round).join('; ')+'. '+(p.needs_recommendation?'Executive recommendation requested.':'For information; no executive recommendation required.')+' Shared note: '+p.shared_note);
  }
  if(action==='recommend'){
@@ -19753,13 +20539,13 @@ setupNav=function(role){
  var result=dkPreviousNav.apply(this,arguments);var side=document.getElementById('sideNav');
  if(side&&['hr','hohr'].includes(role)){
   var id=role==='hohr'?'hohr-executive-release':'hr-executive-access';
-  if(!side.querySelector('[data-page="'+id+'"]')){var b=document.createElement('button');b.type='button';b.className='sb-item';b.dataset.page=id;b.textContent='Executive access & release';b.onclick=()=>navigateTo(id);side.appendChild(b);}
+  if(!side.querySelector('[data-page="'+id+'"]')){var b=document.createElement('button');b.type='button';b.className='sb-item';b.dataset.page=id;b.textContent='Send to executive';b.onclick=()=>navigateTo(id);side.appendChild(b);}
  }return result;
 };
 var dkPreviousRole=cnPageRole;
 cnPageRole=function(page,preferred){if(page==='hr-executive-access')return 'hr';if(page==='hohr-executive-release')return 'hohr';return dkPreviousRole.apply(this,arguments);};
 var dkPreviousLabel=getPageLabel;
-getPageLabel=function(page){return ['hr-executive-access','hohr-executive-release'].includes(page)?'Executive access & release':dkPreviousLabel.apply(this,arguments);};
+getPageLabel=function(page){return ['hr-executive-access','hohr-executive-release'].includes(page)?'Send to executive':dkPreviousLabel.apply(this,arguments);};
 var dkPreviousNavigate=navigateTo;
 navigateTo=function(page){if(document.getElementById('dkRoot')&&(DK.busy||!dkDiscard()))return;DK.epoch++;DK.dirty=false;return dkPreviousNavigate.apply(this,arguments);};
 window.addEventListener('beforeunload',e=>{if(document.getElementById('dkRoot')&&(DK.dirty||DK.busy)){e.preventDefault();e.returnValue='';}});
@@ -20469,7 +21255,7 @@ var R4_PDF_FONT={"map":{"32":[3,318],"33":[4,401],"34":[5,460],"35":[6,838],"36"
 <script id="cms-direct-pdf">
 /* Small, self-contained PDF renderer with an embedded Unicode font.
    Uses report data already authorized by the server. No CDN, pop-up or external upload. */
-async function r4BuildPdf(tables,title,generated,ranks){
+async function r4BuildPdf(tables,title,generated,ranks,subtitle,intro){
  var F=R4_PDF_FONT,utf8=new TextEncoder(),objects=[null],pages=[],content='',pageNo=0,y=0,used=new Set(),W=842,H=595,M=36;
  function bytes(s){return typeof s==='string'?utf8.encode(s):s;}
  function obj(data){objects.push(bytes(data));return objects.length-1;}
@@ -20500,8 +21286,8 @@ async function r4BuildPdf(tables,title,generated,ranks){
   lines.forEach(l=>{need(size*1.45,section);text(l,M,y,size,color);y+=size*1.45;});y+=6;
  }
  newPage();
- para(title,23);para('Executive report | Selected report sections',12,'0.27 0.23 0.69');
- para('Includes the reports selected in Executive Reports. Missing scores are not treated as zero.',10);
+ para(title,23);para(subtitle||'Executive report | Selected report sections',12,'0.27 0.23 0.69');
+ para(intro||'Includes the reports selected in Executive Reports. Missing scores are not treated as zero.',10);
  var basis=tables.find(t=>t.name==='Report basis');if(basis)basis.rows.filter(r=>['Data basis','Privacy','Employees','Both selected assessments submitted',fsCopy('Combined results available',"report"),rptFinalLabel()].includes(r[0])).forEach(r=>para(r[0]+': '+(r[1]??'Not available'),10));
  var ranked=(ranks||[]).filter(r=>r.combined!==null);
  if(ranked.length){
