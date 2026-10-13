@@ -2653,7 +2653,9 @@ body.es-executive #sideNav.nv3-sidebar .es-split-brand p{display:none!important}
 #eiRoot th,#eiRoot td{font:13px/1.5 system-ui!important;text-align:left;padding:13px 10px!important;vertical-align:top;white-space:normal!important;overflow-wrap:anywhere;border-bottom:1px solid var(--ei-line)}
 #eiRoot th{font-weight:700!important;background:oklch(94% .025 265);color:var(--ei-ink);text-transform:none!important}
 #eiRoot .ei-table th:first-child{width:19%}
-#eiRoot .ei-table th:nth-child(6){width:16%}
+#eiRoot .ei-table th:nth-child(10){width:14%}
+@container(min-width:781px){#eiRoot .ei-table table{min-width:1250px!important}}
+#eiRoot .ei-table{overflow-x:auto}
 #eiRoot td small{display:block;font:11px/1.5 system-ui;color:var(--ei-muted);margin-top:5px}
 #eiRoot tbody tr:nth-child(even){background:var(--ei-wash)}
 #eiRoot .ei-table .btn{padding:8px 10px!important;font-size:12px!important;min-height:40px}
@@ -9312,12 +9314,13 @@ async function loadHRReview() {
   allEmps.forEach(function (e) { var d = (e.department || '').trim() || '(No department)'; deps[d] = (deps[d] || 0) + 1; });
   var html = '<div class="card"><div class="card-title">Assessment Review & Approval</div>';
   html += '<p style="font-size:12px;color:var(--gray-500);margin-bottom:12px">Pick a department to see its staff and each person\'s review status, then open anyone to approve, return or disapprove experiences. Staff are shown a page at a time.</p>';
-  html += '<div class="form-group"><label>Department</label><select id="hrRevDep" onchange="loadHRRevDep()"><option value="">-- Select department --</option>' + Object.keys(deps).sort().map(function (d) { return '<option value="' + escapeHtml(d) + '">' + escapeHtml(d) + ' (' + deps[d] + ')</option>'; }).join('') + '</select></div></div>';
+  html += '<div class="form-group"><label>Company</label><select id="hrRevCo" onchange="hrRevCompany()"><option value="">All companies</option>' + Object.keys(allEmps.reduce(function (m, e) { m[(e.company || '').trim() || '(No company)'] = 1; return m; }, {})).sort().map(function (c) { return '<option value="' + escapeHtml(c) + '">' + escapeHtml(c) + '</option>'; }).join('') + '</select></div><div class="form-group"><label>Department</label><select id="hrRevDep" onchange="loadHRRevDep()"><option value="">-- Select department --</option>' +Object.keys(deps).sort().map(function (d) { return '<option value="' + escapeHtml(d) + '">' + escapeHtml(d) + ' (' + deps[d] + ')</option>'; }).join('') + '</select></div></div>';
   html += '<div id="hrRevStaff"></div><div id="hrRevContent"></div>';
   ((typeof CN === 'undefined' || __cmsRouteEpoch === CN.epoch) ? setContent(html) : undefined);
   if (APP.reviewTarget) {
     var emp0 = null; allEmps.forEach(function (e) { if (e.employee_id === APP.reviewTarget) emp0 = e; });
     if (emp0) {
+      document.getElementById('hrRevCo').value = (emp0.company || '').trim() || '(No company)'; hrRevCompany();
       document.getElementById('hrRevDep').value = (emp0.department || '').trim() || '(No department)';
       loadHRRevDep();
       loadHRRevEmp(APP.reviewTarget);
@@ -9382,7 +9385,17 @@ function hrxTracks(st) {
   if (!out.length) out.push({ kind: '', types: [], pend: 0, ret: 0, dec: 0, status: 'none' });
   return out;
 }
-
+function hrRevCompany() {
+  var coSel = document.getElementById('hrRevCo'), depSel = document.getElementById('hrRevDep');
+  if (!coSel || !depSel) return;
+  var co = coSel.value, deps = {};
+  ((window._hrRevAll && window._hrRevAll.emps) || []).forEach(function (e) {
+    if (co && ((e.company || '').trim() || '(No company)') !== co) return;
+    var d = (e.department || '').trim() || '(No department)'; deps[d] = (deps[d] || 0) + 1;
+  });
+  depSel.innerHTML = '<option value="">-- Select department --</option>' + Object.keys(deps).sort().map(function (d) { return '<option value="' + escapeHtml(d) + '">' + escapeHtml(d) + ' (' + deps[d] + ')</option>'; }).join('');
+  loadHRRevDep();
+}
 function loadHRRevDep() {
   var sel = document.getElementById('hrRevDep');
   var dep = sel ? sel.value : '';
@@ -9394,7 +9407,8 @@ function loadHRRevDep() {
   var token = ++HRX.token;
   if (!dep) { box.innerHTML = ''; return; }
   box.innerHTML = '<div class="card"><div class="loading"><div class="spinner"></div>Loading ' + escapeHtml(dep) + ' review status...</div></div>';
-  var list = (window._hrRevAll.emps || []).filter(function (e) { return ((e.department || '').trim() || '(No department)') === dep; });
+  var coSel = document.getElementById('hrRevCo'), co = coSel ? coSel.value : '';
+  var list = (window._hrRevAll.emps || []).filter(function (e) { return ((e.department || '').trim() || '(No department)') === dep && (!co || ((e.company || '').trim() || '(No company)') === co); });
   hrxLoadStats(list.map(function (e) { return e.employee_id; })).then(function (stats) {
     if (token !== HRX.token) return;
     HRX.rows = list.map(function (e) {
@@ -9558,6 +9572,12 @@ function cmsReportEvidenceHTML(rows, title) {
     '<strong>' + escapeHtml(title || 'Supporting evidence') + '</strong><ul style="margin:6px 0 0 18px">' +
     items.join('') + '</ul></div>';
 }
+function hrRedoBar(id, hasDecided) {
+  if (window._hrRevRedoId === id) return '<div style="margin-top:10px;padding:10px 12px;border:2px solid #d97706;background:#fffbeb;border-radius:8px;font-size:12px;color:#78350f"><b>Redo mode.</b> Every earlier decision is kept. Change only what needs changing, then click Submit Review. Only the decisions you change are saved. Reports already shared with executives keep the scores they had when shared. <button type="button" class="btn btn-sm btn-outline" style="margin-left:8px" onclick="hrRedoSet(\'' + id + '\', false)">Cancel redo</button></div>';
+  if (!hasDecided) return '';
+  return '<div style="margin-top:10px"><button type="button" class="btn btn-sm btn-primary" onclick="hrRedoSet(\'' + id + '\', true)">Redo review</button> <span style="font-size:11px;color:var(--gray-500)">Reopens approved and disapproved decisions so you can change them. Nothing is cleared.</span></div>';
+}
+function hrRedoSet(id, on) { window._hrRevRedoId = on ? id : ''; loadHRRevEmp(id); }
 async function loadHRRevEmp(id) {
 id = id || window._hrRevLast || ((document.getElementById('hrRevEmp') || {}).value || '');
 window._hrRevLast = id;
@@ -9566,7 +9586,7 @@ document.getElementById('hrRevContent').innerHTML = '<div class="loading"><div c
 const { data: allResultsRaw } = await _supabase.from('assessments').select('*').eq('employee_id', id).in('type', ['Self', 'Manager', 'Prospective Self', 'Prospective']);
 var allResults = latestOnly(allResultsRaw || []);
 var html = roundTable(allResultsRaw || [], 'Self') + roundTable(allResultsRaw || [], 'Manager') + roundTable(allResultsRaw || [], 'Prospective Self') + roundTable(allResultsRaw || [], 'Prospective');
-html += '<div class="card"><div style="font-size:13px;margin-bottom:4px"><strong>' + escapeHtml(emp.employee_name) + '</strong> | ' + escapeHtml(emp.position) + ' | ' + escapeHtml(emp.company) + '</div><div style="font-size:11px;color:var(--gray-500)"> Per-experience AI: press <strong>Validate</strong> to check ONE evidence for relevance, or <strong>Refine</strong> to get an improved wording (facts unchanged) you can copy into a return comment. The AI chip on each row shows its status.</div></div>';
+html += '<div class="card"><div style="font-size:13px;margin-bottom:4px"><strong>' + escapeHtml(emp.employee_name) + '</strong> | ' + escapeHtml(emp.position) + ' | ' + escapeHtml(emp.company) + '</div><div style="font-size:11px;color:var(--gray-500)"> Per-experience AI: press <strong>Validate</strong> to check ONE evidence for relevance, or <strong>Refine</strong> to get an improved wording (facts unchanged) you can copy into a return comment. The The AI chip on each row shows its status.</div>' + hrRedoBar(id, allResults.some(function (r) { return r.hr_status === 'Approved' || r.hr_status === 'Disapproved'; })) + '</div>';
 ['Self', 'Manager', 'Prospective Self', 'Prospective'].forEach(function(type) {
 var typeRows = allResults.filter(function(r){ return r.type === type; });
 if (!typeRows.length) return;
@@ -9578,7 +9598,7 @@ if (compRows.length === 0) continue;
 html += '<div class="competency-block"><div class="competency-name" style="margin-bottom:8px">' + escapeHtml(comp.competency) + '</div>';
 compRows.forEach(function(exp, ei) {
 html += cmsRowRatingHTML(exp);
-var locked = exp.hr_status === 'Approved' || exp.hr_status === 'Disapproved';
+var redo = (window._hrRevRedoId === id); var locked = !redo && (exp.hr_status === 'Approved' || exp.hr_status === 'Disapproved');
 var returned = exp.hr_status === 'Returned';
 var hasEvidence = !!(exp.evidence || '').trim();
 var notDemo = !exp.ticked || !hasEvidence;
@@ -9600,8 +9620,8 @@ if (exp.ticked && hasEvidence) {
 html += '<div style="margin-top:6px;display:flex;gap:6px;align-items:center;flex-wrap:wrap">' + aiNoteBadge(exp.ai_note) + '<button type="button" class="btn btn-sm btn-outline" onclick="aiValidateOne(' + rcArg(exp.id) + ')"> Validate</button><button type="button" class="btn btn-sm btn-outline" onclick="aiRefineOne(' + rcArg(exp.id) + ')"> Refine</button></div><div id="airef-' + exp.id + '"></div>';
 } else if (exp.ai_note) { html += '<div style="margin-top:4px">' + aiNoteBadge(exp.ai_note) + '</div>'; }
 if (exp.ticked) {
-html += '<div class="review-actions"><select id="hrs-' + type + '-' + i + '-' + ei + '" onchange="toggleHRComment(this,\'hrc-' + type + '-' + i + '-' + ei + '\')" style="width:auto;padding:4px 8px;font-size:11px"><option value="Approved">Approve</option><option value="Disapproved">Disapprove</option>' + ('<option value="Returned"' + (returned ? ' selected' : '') + '>Return for Correction</option>') + '</select>';
-html += '<input id="hrc-' + type + '-' + i + '-' + ei + '" placeholder="Comment required for Disapprove/Return" style="width:auto;flex:1;padding:4px 8px;font-size:11px;' + (returned ? '' : 'display:none') + '" value="' + escapeHtml(returned ? exp.hr_comment : '') + '"></div>';
+html += (redo && (exp.hr_status === 'Approved' || exp.hr_status === 'Disapproved') ? '<div style="font-size:11px;color:var(--gray-500);margin-top:6px">Current decision: <b>' + escapeHtml(exp.hr_status) + '</b></div>' : '') + '<div class="review-actions"><select id="hrs-' + type + '-' + i + '-' + ei + '" onchange="toggleHRComment(this,\'hrc-' + type + '-' + i + '-' + ei + '\')" style="width:auto;padding:4px 8px;font-size:11px"><option value="Approved"' + (redo && exp.hr_status === 'Approved' ? ' selected' : '') + '>Approve</option><option value="Disapproved"' + (redo && exp.hr_status === 'Disapproved' ? ' selected' : '') + '>Disapprove</option>' + ('<option value="Returned"' + (returned ? ' selected' : '') + '>Return for Correction</option>') + '</select>';
+html += '<input id="hrc-' + type + '-' + i + '-' + ei + '" placeholder="Comment required for Disapprove/Return" style="width:auto;flex:1;padding:4px 8px;font-size:11px;' + ((returned || (redo && exp.hr_status === 'Disapproved')) ? '' : 'display:none') + '" value="' + escapeHtml((returned || (redo && exp.hr_status === 'Disapproved')) ? exp.hr_comment : '') + '"></div>';
 }
 html += '</div>';
 }
@@ -9654,15 +9674,15 @@ async function doHRReview(empId,confirmed) {
    var comp = APP.competencies[i];
    var compRows = (data.results || []).filter(function(r){ return r.type === type && r.comp_code === comp.code; });
    compRows.forEach(function(exp, ei) {
-    if (!exp.ticked || exp.hr_status === 'Approved' || exp.hr_status === 'Disapproved') return;
+    var redoOn = (window._hrRevRedoId === empId); if (!exp.ticked || (!redoOn && (exp.hr_status === 'Approved' || exp.hr_status === 'Disapproved'))) return;
     var s = document.getElementById('hrs-' + type + '-' + i + '-' + ei);
     var c = document.getElementById('hrc-' + type + '-' + i + '-' + ei);
     if (!s) return;
     var comment = c ? c.value.trim() : '';
     var label = (type === 'Self' ? 'Employee self assessment' : type + ' assessment') + ' | ' + comp.competency + ' | ' + (exp.experience_text || ('Experience ' + (exp.experience_index + 1)));
     if (label.length > 150) label = label.slice(0, 147) + '...';
-    var rec = { id: exp.id, hr_status: s.value, hr_comment: comment, hr_reviewer: APP.user.name, hr_review_date: today, type: type, comp: comp.competency, text: exp.experience_text || ('Experience ' + (exp.experience_index + 1)), label: label, input: c, select: s, prev: exp.hr_status || '', prevComment: exp.hr_comment || '' };
-    rec.changed = !(rec.prev === rec.hr_status && rec.prevComment === rec.hr_comment);
+    var rec = { id: exp.id, hr_status: s.value, hr_comment: (redoOn && s.value === 'Approved') ? '' : comment, hr_reviewer: APP.user.name, hr_review_date: today, type: type, comp: comp.competency, text: exp.experience_text || ('Experience ' + (exp.experience_index + 1)), label: label, input: c, select: s, prev: exp.hr_status || '', prevComment: exp.hr_comment || '' };
+    rec.changed = !(rec.prev === rec.hr_status && rec.prevComment === rec.hr_comment); if (redoOn && !rec.changed) return;
     rd.push(rec);
     if ((s.value === 'Disapproved' || s.value === 'Returned') && !comment) missing.push(rec);
     else if ((s.value === 'Disapproved' || s.value === 'Returned') && comment.length < 15) warn.push('The reason for "' + rec.comp + '" is very short ("' + comment + '"). Say clearly what must be corrected so ' + hrRevWho(type, emp).name + ' can fix it first time.');
@@ -9670,7 +9690,7 @@ async function doHRReview(empId,confirmed) {
    });
   }
  });
- if (!rd.length) { showToast('Nothing to review: every ticked experience is already Approved or Disapproved.'); return; }
+ if (!rd.length) { showToast(window._hrRevRedoId === empId ? 'No decisions were changed. Change at least one, or cancel the redo.' : 'Nothing to review: every ticked experience is already Approved or Disapproved.'); return; }
  if (missing.length) {
   missing.forEach(function(m) {
    var verb = m.hr_status === 'Returned' ? 'return' : 'disapprove';
@@ -9687,7 +9707,7 @@ async function doHRReview(empId,confirmed) {
   return;
  }
  var ret = rd.filter(function(r){ return r.changed && r.hr_status === 'Returned'; }), dis = rd.filter(function(r){ return r.changed && r.hr_status === 'Disapproved'; }), app = rd.filter(function(r){ return r.hr_status === 'Approved'; });
- if (!confirmed && (ret.length || dis.length || warn.length)) {
+ if (!confirmed && (ret.length || dis.length || warn.length || window._hrRevRedoId === empId)) {
   var lines = [];
   var tos = {};
   ret.concat(dis).forEach(function(r){ var w = hrRevWho(r.type, emp); tos[w.name + ' (' + w.role + ')'] = true; });
@@ -9735,8 +9755,7 @@ async function doHRReview(empId,confirmed) {
    if (empR.manager_email) sendCMSemail(empR.manager_email, 'Assessments Released: ' + empR.employee_name, 'HR Admin has approved both the self-assessment and your manager assessment for ' + empR.employee_name + '. The employee\'s self-assessment is now visible to you in the CMS: ' + APP_LINK, { page: 'mgr-details', params: { employee_id: empR.employee_id } });
    sendCMSemail(empR.email, 'Assessments Released: ' + empR.employee_name, 'HR Admin has approved both assessments. Your manager\'s assessment is now visible to you in the CMS: ' + APP_LINK, { page: 'emp-mgrview', params: { employee_id: empR.employee_id } });
   }
-  var msg = 'Review saved! ' + saved + ' updated.';
-  if (notified.length) msg += ' Emailed: ' + notified.filter(function(v, i, a){ return a.indexOf(v) === i; }).join(', ') + '.';
+  window._hrRevRedoId = ''; var msg = 'Review saved! ' + saved + ' updated.';  if (notified.length) msg += ' Emailed: ' + notified.filter(function(v, i, a){ return a.indexOf(v) === i; }).join(', ') + '.';
   if (failed.length) msg = 'Only ' + saved + ' of ' + rd.length + ' saved. ' + failed.length + ' failed: ' + failed[0].msg;
   showToast(msg);
   if (document.getElementById('hrRevDep') && document.getElementById('hrRevDep').value) loadHRRevDep();
@@ -20662,16 +20681,16 @@ async function dkReport(id){
  }catch(e){if(dkLive(epoch))showToast(e.message);}
 }
 function dkAdmin(){
- var h='<header class="dk-header"><h1>Send a report to an executive</h1><p>Department scope permits progress only. HOHR separately releases each result snapshot.</p></header>'+
+ var h='<header class="dk-header"><h1>Executive access and responses</h1><p>Completed reports reach every C-Suite member automatically. Use this page to set department access and open executive responses.</p></header>'+
  '<section class="card"><h2>1. Authorize a company and department</h2><label>Executive<select id="dkExecutive"><option value="">Choose verified executive</option>'+DK.members.map(m=>'<option value="'+m.id+'">'+dkE(m.email)+'</option>').join('')+'</select></label>'+
  '<label>Company / department<select id="dkScopeEdit"><option value="">Choose scope</option>'+DK.scopeOptions.map((s,i)=>'<option value="'+i+'">'+dkE(s.company+' / '+s.department)+'</option>').join('')+'</select></label>'+
  '<label>Access<select id="dkEnable"><option value="true">Enable progress overview</option><option value="false">Revoke progress overview</option></select></label><label>Reason<textarea id="dkScopeReason"></textarea></label>'+dkBtn('save-scope','Preview access change')+
  '<details><summary>Current scope permissions</summary>'+DK.scopes.map(s=>'<p>'+dkE(s.email)+' | '+dkE(s.company+' / '+s.department)+' | '+(s.enabled?'Enabled':'Revoked')+'</p>').join('')+'</details></section>';
  if(DK.access.can_release){
-  h+='<section class="card"><h2>2. Send a report to an executive</h2><p>A report may be for information only. It does not need a C-Suite recommendation first. Only this named recipient receives its results.</p>'+
-  '<label>Submitted HR report<select id="dkReleaseReport"><option value="">Choose report</option>'+DK.reports.map(r=>'<option value="'+r.id+'">'+dkE(r.employee_name)+' | '+dkE(r.position)+' | '+dkE(r.status)+' | Report '+r.id+'</option>').join('')+'</select></label>'+
-  '<div id="dkReleaseForm"></div></section>'+
-  '<section class="card"><h2>3. Executive responses</h2>'+DK.rows.map(r=>'<div class="dk-admin-row"><span>'+dkE(r.employee)+' | '+dkE(r.stage)+'</span>'+dkBtn('report','Open / finalize','data-id="'+r.id+'"')+'</div>').join('')+'</section>';
+ h+=''+
+ ''+
+  ''+
+  '<section class="card"><h2>2. Executive responses</h2>'+DK.rows.map(r=>'<div class="dk-admin-row"><span>'+dkE(r.employee)+' | '+dkE(r.stage)+'</span>'+dkBtn('report','Open / finalize','data-id="'+r.id+'"')+'</div>').join('')+'</section>';
  }else h+='<section class="card"><p>Only a trusted Head of HR account can submit result reports or finalize outcomes. Viewing the HOHR interface does not itself grant this authority.</p></section>';
  h+='<div id="dkPreview"></div>';document.getElementById('dkRoot').innerHTML=h;
  if(DK.pendingReport){var pr=document.getElementById('dkReleaseReport');if(pr){pr.value=DK.pendingReport;if(pr.value===DK.pendingReport)dkReleaseForm(DK.pendingReport);}DK.pendingReport='';}
@@ -20775,13 +20794,13 @@ setupNav=function(role){
  var result=dkPreviousNav.apply(this,arguments);var side=document.getElementById('sideNav');
  if(side&&['hr','hohr'].includes(role)){
   var id=role==='hohr'?'hohr-executive-release':'hr-executive-access';
-  if(!side.querySelector('[data-page="'+id+'"]')){var b=document.createElement('button');b.type='button';b.className='sb-item';b.dataset.page=id;b.textContent='Send to executive';b.onclick=()=>navigateTo(id);side.appendChild(b);}
+  if(!side.querySelector('[data-page="'+id+'"]')){var b=document.createElement('button');b.type='button';b.className='sb-item';b.dataset.page=id;b.textContent='Executive access';b.onclick=()=>navigateTo(id);side.appendChild(b);}
  }return result;
 };
 var dkPreviousRole=cnPageRole;
 cnPageRole=function(page,preferred){if(page==='hr-executive-access')return 'hr';if(page==='hohr-executive-release')return 'hohr';return dkPreviousRole.apply(this,arguments);};
 var dkPreviousLabel=getPageLabel;
-getPageLabel=function(page){return ['hr-executive-access','hohr-executive-release'].includes(page)?'Send to executive':dkPreviousLabel.apply(this,arguments);};
+getPageLabel=function(page){return ['hr-executive-access','hohr-executive-release'].includes(page)?'Executive access':dkPreviousLabel.apply(this,arguments);};
 var dkPreviousNavigate=navigateTo;
 navigateTo=function(page){if(document.getElementById('dkRoot')&&(DK.busy||!dkDiscard()))return;DK.epoch++;DK.dirty=false;return dkPreviousNavigate.apply(this,arguments);};
 window.addEventListener('beforeunload',e=>{if(document.getElementById('dkRoot')&&(DK.dirty||DK.busy)){e.preventDefault();e.returnValue='';}});
@@ -21886,7 +21905,7 @@ function eiPercent(v){return eiNum(v)===null?'Not available':Number(v).toFixed(1
 function eiText(x){return escapeHtml(x==null?'':String(x));}
 function eiBtn(action,label,value,primary){return '<button type="button" class="btn '+(primary?'btn-primary':'btn-outline')+'" data-ei="'+action+'" '+(value==null?'':'data-value="'+eiText(value)+'"')+'>'+eiText(label)+'</button>';}
 function eiActive(t){return t===EI.token&&!!APP.user&&!!document.getElementById('eiRoot');}
-function eiFinal(p){return(p.decisions||[])[0]||null;}
+function eiFinal(p){var d=(p.decisions||[])[0];if(d)return d;var pro=(typeof EI_PRO!=='undefined'&&EI_PRO.byEmp&&EI_PRO.byEmp[p.employee_id])||[];for(var k=0;k<pro.length;k++){if(pro[k].decisions&&pro[k].decisions[0])return pro[k].decisions[0];}var all=(p.released_outcomes||[]).concat(pro.reduce(function(a,x){return a.concat(x.outcomes||[]);},[]));var o=all.filter(function(x){return x.final_outcome||x.hohr_outcome;})[0];return o?{decision:o.final_outcome||o.hohr_outcome,purpose:o.purpose,target_role:o.target_role,decided_by:o.decided_by||'Head of HR',decision_date:o.final_at||o.released_at,from_report:true}:null;}
 function eiResult(p){return p.approved_pair&&p.released?p.released:null;}
 function eiStrengths(p){
  var result=eiResult(p),type=RPT.report?.assessment==='prospective'?'Prospective':'Manager';
@@ -22100,20 +22119,20 @@ function eiRenderDecisions(){
   h+='<div class="ei-section-title"><h2>'+eiText(EI.company)+' departments</h2>'+eiBtn('unit-report','Generate company report','company')+'</div><section class="ei-department-grid">';
   departments.forEach(dep=>{var c=eiCounts(list.filter(p=>p.department===dep));h+='<button class="ei-unit ei-department" data-ei="department" data-value="'+eiText(dep)+'"><span class="ei-unit-icon">'+rptIcon('department')+'</span><h3>'+eiText(dep)+'</h3><p>'+c.n+' employees</p><div class="ei-unit-status"><span>'+c.approved+' approved pairs</span><span>'+c.pending+' decisions pending</span></div><span class="ei-open">View employees '+rptIcon('arrow')+'</span></button>';});h+='</section>';
  }else if(EI.level==='employees'){
-  var list=people.filter(p=>p.company===EI.company&&p.department===EI.department),filtered=list.filter(p=>[p.name,p.position,p.employee_id].join(' ').toLowerCase().includes(EI.search.toLowerCase()));
+  eiLoadPro();var list=people.filter(p=>p.company===EI.company&&p.department===EI.department),filtered=list.filter(p=>[p.name,p.position,p.employee_id].join(' ').toLowerCase().includes(EI.search.toLowerCase()));
   h+='<div class="ei-section-title"><div><h2>'+eiText(EI.department)+'</h2><p>'+list.length+' employees | '+list.filter(p=>p.approved_pair).length+' approved pairs</p></div>'+eiBtn('unit-report','Generate department report','department')+'</div>'+
-   '<div class="ei-tools"><label>Find employee<input id="eiSearch" type="search" value="'+eiText(EI.search)+'" placeholder="Name, employee ID or position"></label><label>Assessment<select id="eiAssessment"><option value="current" '+(RPT.assessment==='current'?'selected':'')+'>Current role</option><option value="prospective" '+(RPT.assessment==='prospective'?'selected':'')+'>Target role</option></select></label>'+
-   (RPT.assessment==='prospective'?'<label>Target role<select id="eiTarget">'+rptOptions(RPT.access.targets||[],RPT.target,'Choose one target role')+'</select></label>':'')+'</div>'+
+   '<div class="ei-tools"><label>Find employee<input id="eiSearch" type="search" value="'+eiText(EI.search)+'" placeholder="Name, employee ID or position"></label>'+
+   '</div>'+
    '<p class="ei-note">Strengths / Gaps = share of assessed Manager competencies at or above / below 75%, not 100 minus the overall score. The decision column shows the latest recorded outcome with its own purpose and target; use View details for all decisions.</p>'+
-   '<div class="ei-table"><table><thead><tr>'+['Employee','Purpose','Score %','Strengths %','Gaps %','Decision','Decided by','Details'].map(x=>'<th>'+x+'</th>').join('')+'</tr></thead><tbody>';
+   '<div class="ei-table"><table><thead><tr>'+['Employee','Purpose','Current score %','Current strengths %','Current gaps %','Target role','Target score %','Readiness','Target strengths / gaps','Decision','Decided by','Details'].map(x=>'<th>'+x+'</th>').join('')+'</tr></thead><tbody>';
   filtered.slice(EI.pageNumber*15,EI.pageNumber*15+15).forEach(p=>{
    var s=eiResult(p),a=eiStrengths(p),d=eiFinal(p);
    h+='<tr><td data-label="Employee"><strong>'+eiText(p.name)+'</strong><small>'+eiText(p.position)+' | '+eiText(p.employee_id)+'</small></td>'+
-    '<td data-label="Purpose">'+eiText(p.case_purposes.map(c=>RPT_NAMES[c.purpose]||c.purpose).join(' / ')||'Not recorded')+'</td>'+
+    '<td data-label="Purpose">'+eiText(p.case_purposes.map(c=>RPT_NAMES[c.purpose]||c.purpose).join(' / ')||(p.released_outcomes||[]).map(o=>RPT_NAMES[o.purpose]||o.purpose).filter(Boolean).join(' / ')||'Not recorded')+'</td>'+
     '<td data-label="Score %"><b>'+eiPercent(s?.combined_score)+'</b><small>'+eiText(p.approved_pair?'HR-approved pair':'Awaiting approved pair')+'</small></td>'+
     '<td data-label="Strengths %">'+eiPercent(a.strengthPct)+'<small>'+(a.rows.length?a.strong.length+' of '+a.rows.length+' competencies':'Awaiting assessed competencies')+'</small></td>'+
     '<td data-label="Gaps %">'+eiPercent(a.gapPct)+'<small>'+(a.rows.length?a.gaps.length+' of '+a.rows.length+' competencies':'Awaiting assessed competencies')+'</small></td>'+
-    '<td data-label="Decision">'+eiText(d?eiDecision(d.decision):'Awaiting final decision')+(d?'<small>Latest recorded: '+eiText(RPT_NAMES[d.purpose]||d.purpose)+' | '+eiText(d.target_role||'Current role')+'</small>':'')+'</td><td data-label="Decided by">'+eiText(d?.decided_by||'Not recorded')+'</td>'+
+    eiProCells(p.employee_id)+'<td data-label="Decision">'+eiText(d?eiDecision(d.decision):'Awaiting final decision')+(d?'<small>Latest recorded: '+eiText(RPT_NAMES[d.purpose]||d.purpose)+' | '+eiText(d.target_role||'Current role')+'</small>':'')+'</td><td data-label="Decided by">'+eiText(d?.decided_by||'Not recorded')+'</td>'+
     '<td data-label="Details">'+eiBtn('employee','View details',p.employee_id)+'</td></tr>';
   });
   h+='</tbody></table></div>'+(!filtered.length?'<p>No employees match your search.</p>':'')+
@@ -22122,6 +22141,58 @@ function eiRenderDecisions(){
  root.innerHTML=h;
  eiSyncNav();
  if(EI.level==='employees'){root.querySelector('[data-ei="prev"]').disabled=EI.pageNumber===0;root.querySelector('[data-ei="next"]').disabled=(EI.pageNumber+1)*15>=filtered.length;}
+}
+var EI_PRO={key:'',state:'idle',byEmp:{}};
+function eiBand(n){return n>=90?['Ready now','#d9f3e6','#0d7a46']:n>=80?['Ready in 6-12 months','#e0e6ff','#2f3fb0']:n>=70?['Ready in 12-18 months','#ffefd6','#a65d00']:['Not ready','#fde0e0','#b02323'];}
+function eiPill(label,bg,fg){return '<span style="display:inline-block;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:700;background:'+bg+';color:'+fg+'">'+eiText(label)+'</span>';}
+function eiTargetsInUse(people){
+ var set={};
+ (people||[]).forEach(p=>{
+  (p.invitation_stages||[]).forEach(i=>{var t=String(i.target_role||'').trim();if(t)set[t.toUpperCase()]=t;});
+  (p.all_assessment_stages||[]).forEach(a=>{if(/Prospective/.test(a.type||'')){var t=String(a.target_role||'').trim();if(t)set[t.toUpperCase()]=t;}});
+ });
+ return Object.keys(set).map(k=>set[k]).slice(0,15);
+}
+async function eiLoadPro(){
+ if(!RPT.report||!RPT.model||RPT.assessment!=='current')return;
+ var key=String(RPT.report.generated_at||'')+'|'+(RPT.model.people||[]).length;
+ if(EI_PRO.key===key)return;
+ EI_PRO={key:key,state:'loading',byEmp:{}};
+ var targets=eiTargetsInUse(RPT.model.people);
+ for(var i=0;i<targets.length;i++){
+  try{
+   var d=await rptRPC('generate',{scope:'group',company:'',department:'',assessment:'prospective',target:targets[i]});
+   if(EI_PRO.key!==key)return;
+   (d.people||[]).forEach(p=>{
+    var hasStage=(p.stages||[]).some(s=>/Prospective/.test(s.type||''));
+    var hasRes=p.released&&(p.released.competencies||[]).some(c=>/Prospective/.test(c.type||''));
+    if(!hasStage&&!hasRes)return;
+    (EI_PRO.byEmp[p.employee_id]=EI_PRO.byEmp[p.employee_id]||[]).push({target:targets[i],approved:!!p.approved_pair,rel:p.released||null,stages:(p.stages||[]).filter(s=>/Prospective/.test(s.type||'')),decisions:p.decisions||[],outcomes:p.released_outcomes||[]});
+   });
+  }catch(e){}
+ }
+ if(EI_PRO.key!==key)return;
+ EI_PRO.state='ready';
+ if(EI.level==='employees'&&document.getElementById('eiRoot'))eiRenderDecisions();
+}
+function eiProCells(empId){
+ var bg=' style="background:#faf6ff"',L=['Target role','Target score %','Readiness','Target strengths / gaps'],c;
+ var list=EI_PRO.byEmp[empId]||[];
+ if(EI_PRO.state!=='ready')c=['Loading...','-','-','-'];
+ else if(!list.length)c=[eiPill('Not assessed','#edf2fa','#6a7595')+'<small>No target-role assessment</small>','-','-','-'];
+ else{
+  var e=list.filter(x=>x.approved&&x.rel&&eiNum(x.rel.combined_score)!==null)[0]||list[0];
+  var more=list.length>1?'<small>+'+(list.length-1)+' more target role'+(list.length>2?'s':'')+'</small>':'';
+  var t='<strong>'+eiText(e.target)+'</strong>'+more;
+  if(!(e.approved&&e.rel&&eiNum(e.rel.combined_score)!==null))c=[t,'Not available<small>Awaiting approved pair</small>',eiPill('Not available','#edf2fa','#6a7595')+'<small>'+eiText(e.stages.length?(e.stages[0].stage||'In progress'):'Awaiting assessment')+'</small>','Not available'];
+  else{
+   var score=eiNum(e.rel.combined_score),b=eiBand(score);
+   var rows=(e.rel.competencies||[]).filter(x=>x.type==='Prospective'&&eiNum(x.percent)!==null);
+   var strong=rows.filter(x=>Number(x.percent)>=75).length,gaps=rows.length-strong;
+   c=[t,'<b>'+eiPercent(score)+'</b><small>HR-approved pair</small>',eiPill(b[0],b[1],b[2]),rows.length?eiPercent(strong/rows.length*100)+' / '+eiPercent(gaps/rows.length*100)+'<small>'+strong+' strengths, '+gaps+' gaps of '+rows.length+'</small>':'Not available<small>Awaiting assessed competencies</small>'];
+  }
+ }
+ return c.map((x,i)=>'<td data-label="'+L[i]+'"'+bg+'>'+x+'</td>').join('');
 }
 function eiCalculation(p){
  var s=eiResult(p);if(!s)return '<p>Both assessments must be complete with HR review resolved before score calculations appear here.</p>';
@@ -22138,11 +22209,62 @@ function eiCalculation(p){
 }
 function eiTier(t){return /Critical|Must-Have/.test(t||'')?'c':/Important|Performance/.test(t||'')?'i':'v';}
 function eiAllocation(t,set){var c=set.has('c'),i=set.has('i'),v=set.has('v');return t==='c'?(i&&v?3:i?3.75:v?4.25:5):t==='i'?(c?1.25:v?4.25:5):((c||i)?0.75:5);}
+function eiProList(p){return (typeof EI_PRO!=='undefined'&&EI_PRO.byEmp&&EI_PRO.byEmp[p.employee_id])||[];}
+function eiProRows(e){return ((e.rel&&e.rel.competencies)||[]).filter(x=>x.type==='Prospective'&&eiNum(x.percent)!==null);}
+function eiProBadge(p){
+ var list=eiProList(p);if(!list.length)return '<span class="ei-badge muted">Target role: not assessed</span>';
+ var ok=list.some(x=>x.approved&&x.rel&&eiNum(x.rel.combined_score)!==null);
+ return '<span class="ei-badge">'+eiText(ok?'Target role: HR-approved':'Target role: awaiting approved pair')+'</span>';
+}
+function eiProStrip(p){
+ var list=eiProList(p),h='';
+ if(!list.length)return '<h3>Target role</h3><p>No target-role assessment yet.</p>';
+ list.forEach(e=>{
+  h+='<h3>Target role: '+eiText(e.target)+'</h3>';
+  if(!(e.approved&&e.rel&&eiNum(e.rel.combined_score)!==null)){h+='<p>Awaiting approved pair'+(e.stages.length?' | '+eiText(e.stages[0].stage||'In progress'):'')+'.</p>';return;}
+  var rows=eiProRows(e),strong=rows.filter(x=>Number(x.percent)>=75).length,gaps=rows.length-strong,b=eiBand(Number(e.rel.combined_score));
+  h+='<dl class="ei-score-strip">'+[['Self',eiPercent(e.rel.self_score)],['Manager',eiPercent(e.rel.manager_score)],['Combined',eiPercent(e.rel.combined_score)],['Strength share',rows.length?eiPercent(strong/rows.length*100):'Not available'],['Gap share',rows.length?eiPercent(gaps/rows.length*100):'Not available']].map(x=>'<div><dt>'+x[0]+'</dt><dd>'+x[1]+'</dd></div>').join('')+'</dl><p>Readiness: '+eiPill(b[0],b[1],b[2])+'</p>';
+ });
+ return h;
+}
+function eiProSG(p,tab){
+ var list=eiProList(p),h='';
+ list.forEach(e=>{
+  if(!(e.approved&&e.rel))return;
+  var rows=eiProRows(e),pick=rows.filter(x=>tab==='strengths'?Number(x.percent)>=75:Number(x.percent)<75).sort((x,y)=>Number(y.percent)-Number(x.percent));
+  h+='<h3>Target role: '+eiText(e.target)+' | '+(tab==='strengths'?'Strengths: Manager score >=75%':'Gaps: Manager score <75%')+'</h3><p>'+pick.length+' of '+rows.length+' assessed competencies</p>'+rptTable(['Competency','Manager score','Weight'],pick.map(c=>[c.name,eiPercent(c.percent),eiPercent(c.weight)]));
+ });
+ return h;
+}
+function eiProExperiences(p){
+ var h='';
+ eiProList(p).forEach(e=>{
+  if(!(e.approved&&e.rel))return;
+  h+='<h3>Target role: '+eiText(e.target)+' | Experience-level ratings</h3>'+rptTable(['Assessment','Competency','Experience','Tier','Submitted / 5','Effective / 5','HR review','Round'],(e.rel.experiences||[]).map(x=>[x.type,x.name,x.experience,x.classification,x.submitted_rating,x.effective_rating,x.review_status,x.round]));
+ });
+ return h;
+}
+function eiProDecisions(p){
+ var list=eiProList(p),rows=[];
+ list.forEach(e=>{(e.decisions||[]).forEach(d=>rows.push([e.target,eiDecision(d.decision),d.decided_by||'Not recorded',d.decision_date||'Not recorded',d.next_action||'']));
+  (e.outcomes||[]).forEach(o=>rows.push([e.target,o.final_outcome||o.hohr_outcome||'',o.decided_by||'Head of HR',o.final_at||o.released_at||'',o.shared_note||'']));});
+ return '<h3>Target-role decisions</h3>'+rptTable(['Target role','Decision','Decided by','Date','Next action / note'],rows);
+}
+function eiProCalc(p){
+ var h='';
+ eiProList(p).forEach(e=>{
+  if(!(e.approved&&e.rel))return;
+  var r=e.rel,rows=eiProRows(e).map(c=>[c.type,c.name,c.score,eiPercent(c.percent),eiPercent(c.weight)]);
+  h+='<h3>Target role: '+eiText(e.target)+' | How scored</h3>'+rptTable(['Assessment','Competency','Score / 5','Competency %','Weight %'],rows)+
+   '<div class="ei-formula"><b>Target combined score</b><p>Manager '+eiPercent(r.manager_score)+' x 70% + Self '+eiPercent(r.self_score)+' x 30% = <strong>'+eiPercent(r.combined_score)+'</strong></p></div>';
+ });
+ return h;
+}
 function eiEmployeeDetail(p){
- var s=eiResult(p),a=eiStrengths(p),d=eiFinal(p),h='<section class="ei-profile"><div class="ei-avatar">'+eiText(p.name.split(/\s+/).map(x=>x[0]).slice(0,2).join(''))+'</div><div><h2>'+eiText(p.name)+'</h2><p>'+eiText(p.position)+' | '+eiText(p.employee_id)+'</p><span class="ei-badge">'+eiText(p.approved_pair?'HR-approved assessment':'Awaiting approved assessment pair')+'</span><span class="ei-badge muted">'+eiText(d?'Final decision recorded':'Final decision pending')+'</span></div></section>'+
+ var s=eiResult(p),a=eiStrengths(p),d=eiFinal(p),h='<section class="ei-profile"><div class="ei-avatar">'+eiText(p.name.split(/\s+/).map(x=>x[0]).slice(0,2).join(''))+'</div><div><h2>'+eiText(p.name)+'</h2><p>'+eiText(p.position)+' | '+eiText(p.employee_id)+'</p><span class="ei-badge">'+eiText(p.approved_pair?'Current role: HR-approved':'Current role: awaiting approved pair')+'</span>'+eiProBadge(p)+'<span class="ei-badge muted">'+eiText(d?'Final decision recorded':'Final decision pending')+'</span></div></section>'+
  '<nav class="ei-tabs">'+[['overview','Overview'],['strengths','Strengths'],['gaps','Gaps'],['calculation','How scored'],['experiences','Experience ratings'],['decisions','Final decisions'],['development','Development']].map(([k,l])=>eiBtn('tab',l,k,EI.tab===k)).join('')+'</nav>';
  if(EI.tab==='overview'){
-  h+='<dl class="ei-score-strip">'+[['Self',s?.self_score],['Manager',s?.manager_score],[fsCopy('Combined',"report"),s?.combined_score],['Strength share',a.strengthPct],['Gap share',a.gapPct]].map(([l,v])=>'<div><dt>'+l+'</dt><dd>'+eiPercent(v)+'</dd></div>').join('')+'</dl>'+
+  h+='<h3>Current role</h3><dl class="ei-score-strip">'+[['Self',s?.self_score],['Manager',s?.manager_score],[fsCopy('Combined',"report"),s?.combined_score],['Strength share',a.strengthPct],['Gap share',a.gapPct]].map(([l,v])=>'<div><dt>'+l+'</dt><dd>'+eiPercent(v)+'</dd></div>').join('')+'</dl>'+eiProStrip(p)+
    '<h3>Assessment purpose</h3>'+rptTable(['Purpose','Case stage','Target'],p.case_purposes.map(c=>[RPT_NAMES[c.purpose]||c.purpose,c.status,c.target_role||'Current role']))+
    '<h3>Assessment stages</h3>'+rptTable(['Assessment','Stage'],[['Current Self',eiStage(p,'Self')],['Current Manager',eiStage(p,'Manager')],...(p.invitation_stages||[]).map(i=>['Target invitation: '+i.target_role,i.state])])+
    '<p class="ei-note">Scores are assessment results, not promotion approval. A final decision can remain pending after HR approves the paired assessments.</p>';
@@ -22150,12 +22272,12 @@ function eiEmployeeDetail(p){
  if(EI.tab==='strengths'||EI.tab==='gaps'){
   var entries=EI.tab==='strengths'?a.strong:a.gaps;h+='<h3>'+ (EI.tab==='strengths'?'Strengths: Manager score >=75%':'Gaps: Manager score <75%')+'</h3><p>'+entries.length+' of '+a.rows.length+' assessed competencies | '+eiPercent(EI.tab==='strengths'?a.strengthPct:a.gapPct)+'</p>'+
    rptTable(['Competency','Manager score','Weight'],entries.sort((x,y)=>Number(y.percent)-Number(x.percent)).map(c=>[c.name,eiPercent(c.percent),eiPercent(c.weight)]));
-  if(!s)h+='<p>Not available until both assessments and HR review are complete.</p>';
+  if(!s)h+='<p>Not available until both assessments and HR review are complete.</p>';h+=eiProSG(p,EI.tab);
  }
- if(EI.tab==='calculation')h+=eiCalculation(p);
+ if(EI.tab==='calculation')h+=eiCalculation(p)+eiProCalc(p);
  if(EI.tab==='experiences')h+='<h3>Experience-level ratings</h3><p>No raw evidence or private HR comments are exposed in this shared view. Invalid/disapproved evidence follows the saved effective-rating rule.</p>'+
   rptTable(['Assessment','Competency','Experience','Tier','Submitted / 5','Effective / 5','HR review','Round'],(s?.experiences||[]).map(x=>[x.type,x.name,x.experience,x.classification,x.submitted_rating,x.effective_rating,x.review_status,x.round]));
- if(EI.tab==='decisions'){
+ if(EI.tab==='experiences')h+=eiProExperiences(p);if(EI.tab==='decisions')h+=eiProDecisions(p);if(EI.tab==='decisions'){
   h+='<h3>Final decisions</h3>'+rptTable(['Employee','Company','Department','Purpose','Target','Decision','Decided by','Email','Role at decision','Date','Next action'],eiDecisionRows([p]))+
    '<h3>Scores recorded with those decisions</h3><p>These are historical decision scores, separate from the approved assessment results above.</p>'+
    rptTable(['Decision','Recorded date',fsCopy('Current combined',"report"),fsCopy('Target combined',"report"),'Legacy current Manager','Legacy target Manager'],(p.decisions||[]).map(x=>[eiDecision(x.decision),x.decision_date,eiPercent(x.scores?.current_combined),eiPercent(x.scores?.prospective_combined),eiPercent(x.legacy_manager),eiPercent(x.legacy_prospective)]));
@@ -42105,6 +42227,475 @@ body.cms-focus-editor-v1 #mainContent #fwScreen.cfu-screen #fwBody .cfe-footer {
   if(b.dataset.hrcSave==='cancel'){clearMarks();return;}
   s.hrcAck=true;var w=document.getElementById('hrcSaveWarn');if(w)w.remove();srSave(s,!!s.hrcClose);
  });
+})();
+</script>
+<script id="cms-assessment-queries-v1">
+/* Assessment queries: HOHR and C-Suite question specific parts of an assessment, the assessor answers, HOHR decides.
+   Needs the report_queries table. Adds one page (Assessment Queries) and "Question" buttons. Nothing existing is deleted. */
+(function(){
+ var PAGE='assessment-queries';
+ var ROLES=['manager','hohr','hr'];
+ var TYPE_LABEL={'Self':'Self assessment','Manager':'Manager assessment','Prospective Self':'Target-role self','Prospective':'Target-role manager'};
+ var RESP_LABEL={'Stands':'Assessment stands','Revise':'Will revise this item','Redo':'Needs a full redo'};
+ var STATUS_CLASS={'Open':'o','Answered':'b','Resolved':'g','Withdrawn':'n'};
+ function me(){return String((window.APP&&APP.user&&APP.user.email)||'').toLowerCase();}
+ function myName(){var u=(window.APP&&APP.user)||{};return u.name||u.employee_name||u.full_name||u.email||'';}
+ function myRoleLabel(){return APP.currentRole==='csuite'?'C-Suite':APP.currentRole==='hohr'?'Head of HR':'';}
+ function el(tag,cls,text){var e=document.createElement(tag);if(cls)e.className=cls;if(text!==undefined&&text!==null)e.textContent=text;return e;}
+ function fd(s){var d=s?new Date(s):null;return d&&!isNaN(d.getTime())?d.toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}):'';}
+ function toast(m){if(typeof showToast==='function')showToast(m);}
+ function css(){
+  if(document.getElementById('cq-style'))return;
+  var s=document.createElement('style');s.id='cq-style';
+  s.textContent=[
+   '.cq-btn{border:1px solid #4b4fd8;background:#fff;color:#4b4fd8;border-radius:14px;padding:3px 10px;font-size:11px;font-weight:700;cursor:pointer;margin-left:8px}',
+   '.cq-btn:hover{background:#eef0ff}',
+   '.cq-over{position:fixed;left:0;top:0;right:0;bottom:0;background:rgba(10,20,50,.5);z-index:99999;display:flex;align-items:center;justify-content:center;padding:16px}',
+   '.cq-modal{background:#fff;border-radius:14px;width:100%;max-width:540px;max-height:92vh;overflow:auto;padding:20px 22px;box-shadow:0 20px 60px rgba(0,0,0,.35)}',
+   '.cq-modal h3{margin:0 0 4px;font-size:18px;color:#2a1a6b}',
+   '.cq-modal label{display:block;font-size:12px;font-weight:700;color:#44506b;margin:12px 0 4px}',
+   '.cq-modal select,.cq-modal input,.cq-modal textarea,.cq-card textarea,.cq-card select{width:100%;box-sizing:border-box;border:1px solid #bdcce0;border-radius:8px;padding:9px;font:14px/1.4 system-ui}',
+   '.cq-modal textarea,.cq-card textarea{min-height:84px;resize:vertical}',
+   '.cq-sub{font-size:13px;color:#536984;margin:0}',
+   '.cq-err{color:#b02323;font-size:13px;margin-top:8px;min-height:16px}',
+   '.cq-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:12px;flex-wrap:wrap}',
+   '.cq-card{background:#fff;border:1px solid #dfe5f3;border-radius:12px;padding:14px 16px;margin-bottom:12px}',
+   '.cq-card.open{border-color:#e6a100;background:#fffaf0}',
+   '.cq-head{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:4px}',
+   '.cq-pill{display:inline-block;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:700}',
+   '.cq-pill.o{background:#ffefd6;color:#a65d00}.cq-pill.b{background:#e0e6ff;color:#2f3fb0}.cq-pill.g{background:#d9f3e6;color:#0d7a46}.cq-pill.n{background:#edf2fa;color:#3c5880}.cq-pill.r{background:#fde0e0;color:#b02323}',
+   '.cq-meta{font-size:12px;color:#6a7595;margin:0 0 8px}',
+   '.cq-q{background:#fff7e6;border-left:4px solid #e6a100;border-radius:6px;padding:9px 12px;font-size:14px;white-space:pre-wrap;overflow-wrap:anywhere;margin:6px 0}',
+   '.cq-a{background:#eef3ff;border-left:4px solid #4b6bdc;border-radius:6px;padding:9px 12px;font-size:14px;white-space:pre-wrap;overflow-wrap:anywhere;margin:6px 0}',
+   '.cq-d{background:#eefaf3;border-left:4px solid #16a34a;border-radius:6px;padding:9px 12px;font-size:14px;white-space:pre-wrap;overflow-wrap:anywhere;margin:6px 0}',
+   '.cq-d.rej{background:#fff0f0;border-left-color:#dc2626}',
+   '.cq-chips{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0 14px}',
+   '.cq-chip{border:1px solid #bdcce0;background:#fff;color:#2a3b66;border-radius:18px;padding:7px 14px;font-size:13px;font-weight:700;cursor:pointer}',
+   '.cq-chip.on{background:#4b4fd8;border-color:#4b4fd8;color:#fff}',
+   '.cq-hint{font-size:12px;color:#6a7595;margin:6px 0}',
+   '.cq-panel h2{margin:0 0 6px}'
+  ].join('\n');
+  document.head.appendChild(s);
+ }
+ async function listForReport(id){
+  var q=await _supabase.from('report_queries').select('*').eq('report_id',String(id)).order('id',{ascending:true});
+  if(q.error)throw Error(q.error.message);
+  return q.data||[];
+ }
+ async function openCount(id){
+  var q=await _supabase.from('report_queries').select('id').eq('report_id',String(id)).in('status',['Open','Answered']);
+  if(q.error)return 0;
+  return (q.data||[]).length;
+ }
+ async function emailsOf(role){
+  try{var q=await _supabase.from('user_profiles').select('email').eq('role',role);return (q.data||[]).map(function(x){return x.email;}).filter(Boolean);}catch(e){return [];}
+ }
+ async function mailRole(role,subject,body){
+  try{var list=await emailsOf(role);list.forEach(function(a){mail(a,subject,body);});}catch(e){}
+ }
+ function mail(to,subject,body){
+  try{if(to&&typeof sendCMSemail==='function')sendCMSemail(to,subject,body,{page:PAGE});}catch(e){}
+ }
+ function card(row,extra){
+  var c=el('div','cq-card'+(row.status==='Open'?' open':''));
+  var h=el('div','cq-head');
+  h.appendChild(el('b',null,row.comp_name||'Whole assessment'));
+  if(row.assessment_type)h.appendChild(el('span','cq-pill n',TYPE_LABEL[row.assessment_type]||row.assessment_type));
+  h.appendChild(el('span','cq-pill '+(STATUS_CLASS[row.status]||'n'),row.status==='Open'&&row.hohr_decision==='Rejected'?'Open (sent back)':row.status));
+  c.appendChild(h);
+  c.appendChild(el('p','cq-meta',(row.employee_name?row.employee_name+' | ':'')+'Asked by '+(row.raised_by_name||row.raised_by_email)+(row.raised_by_role?' ('+row.raised_by_role+')':'')+' on '+fd(row.created_at)));
+  if(row.experience)c.appendChild(el('p','cq-meta','Experience: '+row.experience));
+  c.appendChild(el('div','cq-q',row.question));
+  if(row.response_text){
+   var a=el('div','cq-a');a.appendChild(el('b',null,(RESP_LABEL[row.response_type]||'Answer')+' | '+(row.responded_by||'')+' | '+fd(row.responded_at)+': '));
+   a.appendChild(document.createTextNode(row.response_text));c.appendChild(a);
+  }
+  if(row.hohr_decision){
+   var d=el('div','cq-d'+(row.hohr_decision==='Rejected'?' rej':''));
+   d.appendChild(el('b',null,'Head of HR '+(row.hohr_decision==='Accepted'?'accepted the answer':'sent it back')+(row.decided_at?' on '+fd(row.decided_at):'')+(row.hohr_note?': ':'')));
+   if(row.hohr_note)d.appendChild(document.createTextNode(row.hohr_note));c.appendChild(d);
+  }
+  if(extra)extra(c);
+  return c;
+ }
+ /* ---------- Ask dialog ---------- */
+ function ask(ctx){
+  css();
+  var over=el('div','cq-over'),m=el('div','cq-modal');over.appendChild(m);
+  m.appendChild(el('h3',null,'Question this assessment'));
+  m.appendChild(el('p','cq-sub',(ctx.employeeName||'')+' | Only the assessor and the Head of HR will see this.'));
+  var typeSel=el('select');
+  (ctx.types||[]).forEach(function(t){var o=el('option',null,TYPE_LABEL[t]||t);o.value=t;typeSel.appendChild(o);});
+  if(ctx.type)typeSel.value=ctx.type;
+  var lt=el('label',null,'Which assessment');m.appendChild(lt);m.appendChild(typeSel);
+  var lc=el('label',null,'Competency');m.appendChild(lc);
+  var comp;
+  if(ctx.comps&&ctx.comps.length){comp=el('select');ctx.comps.forEach(function(n){var o=el('option',null,n);o.value=n;comp.appendChild(o);});if(ctx.comp)comp.value=ctx.comp;}
+  else{comp=el('input');comp.value=ctx.comp||'';comp.placeholder='Competency name';}
+  m.appendChild(comp);
+  var le=el('label',null,'Experience (optional)');m.appendChild(le);
+  var exp=el('input');exp.placeholder='Which experience or evidence are you questioning?';m.appendChild(exp);
+  var lq=el('label',null,'Your question (required)');m.appendChild(lq);
+  var qt=el('textarea');qt.placeholder='What do you doubt, and what would you like the assessor to confirm?';m.appendChild(qt);
+  var to=el('p','cq-hint','Finding the line manager...');m.appendChild(to);
+  var err=el('div','cq-err');m.appendChild(err);
+  var acts=el('div','cq-actions'),cancel=el('button','btn btn-outline','Cancel'),send=el('button','btn btn-primary','Send query');
+  cancel.type='button';send.type='button';acts.appendChild(cancel);acts.appendChild(send);m.appendChild(acts);
+  document.body.appendChild(over);
+  var mgr=null;
+  function close(){over.remove();}
+  cancel.onclick=close;
+  (async function(){
+   try{
+    if(!ctx.employeeId)throw Error('Could not identify the employee for this report.');
+    var q=await _supabase.from('employees').select('employee_name,manager_email').eq('employee_id',ctx.employeeId).limit(1);
+    var e=q.data&&q.data[0];
+    if(!e||!e.manager_email)throw Error('No line manager email is on record for this employee, so the query cannot be routed.');
+    mgr=e;ctx.employeeName=ctx.employeeName||e.employee_name;
+    to.textContent='Goes to the line manager: '+e.manager_email;
+   }catch(x){to.textContent='';err.textContent=x.message;send.disabled=true;}
+  })();
+  send.onclick=async function(){
+   err.textContent='';
+   if(!mgr){err.textContent='The line manager could not be found.';return;}
+   if(!comp.value.trim()){err.textContent='Choose or type the competency.';return;}
+   if(qt.value.trim().length<5){err.textContent='Write your question first.';return;}
+   send.disabled=true;send.textContent='Sending...';
+   var row={report_id:String(ctx.reportId),employee_id:String(ctx.employeeId),employee_name:ctx.employeeName||mgr.employee_name||'',assessment_type:typeSel.value,comp_name:comp.value.trim(),experience:exp.value.trim()||null,question:qt.value.trim(),raised_by_email:me(),raised_by_name:myName(),raised_by_role:myRoleLabel(),assessor_email:String(mgr.manager_email).toLowerCase(),status:'Open'};
+   var r=await _supabase.from('report_queries').insert(row);
+   if(r.error){err.textContent='Not sent: '+r.error.message;send.disabled=false;send.textContent='Send query';return;}
+   mail(row.assessor_email,'Question on an assessment: '+row.employee_name,myName()+' ('+myRoleLabel()+') has a question about '+row.comp_name+' ('+(TYPE_LABEL[row.assessment_type]||row.assessment_type)+') for '+row.employee_name+': '+row.question+' Please open Assessment Queries to answer.');
+   if(APP.currentRole==='csuite')mailRole('HEAD_HR','C-Suite question on an assessment: '+row.employee_name,myName()+' asked the line manager about '+row.comp_name+' for '+row.employee_name+'. You will be asked to accept or send back the answer.');
+   close();toast('Query sent to the line manager.');
+   if(ctx.onDone)ctx.onDone();
+  };
+  qt.focus();
+ }
+ /* ---------- C-Suite: decision desk report ---------- */
+ var TAB_TYPE={'Self assessment':'Self','Manager assessment':'Manager','Target-role self':'Prospective Self','Target-role manager':'Prospective'};
+ function execContext(){
+  var r=DK.selected;if(!r)return null;
+  var comps=(r.scores&&r.scores.competencies)||[];
+  var names=[],types=[];
+  comps.forEach(function(x){if(names.indexOf(x.name)<0)names.push(x.name);if(types.indexOf(x.type)<0)types.push(x.type);});
+  var row=(DK.rows||[]).find(function(x){return String(x.id)===String(r.id);})||{};
+  return {reportId:r.id,employeeId:r.employee_id||row.employee_id,employeeName:r.employee,types:types.length?types:['Manager'],comps:names,r:r};
+ }
+ async function execPanel(){
+  var root=document.getElementById('dkRoot');if(!root||!DK.selected)return;
+  css();
+  var old=root.querySelector('.cq-panel');if(old)old.remove();
+  var ctx=execContext();if(!ctx)return;
+  var panel=el('section','card cq-panel');
+  panel.appendChild(el('h2',null,'Questions on this assessment'));
+  panel.appendChild(el('p','cq-sub','Doubt a score? Question that part. The line manager answers and the Head of HR decides.'));
+  var b=el('button','btn btn-primary','Question a competency');b.type='button';b.style.margin='10px 0';
+  b.onclick=function(){ask({reportId:ctx.reportId,employeeId:ctx.employeeId,employeeName:ctx.employeeName,types:ctx.types,type:ctx.types.indexOf('Manager')>=0?'Manager':ctx.types[0],comps:ctx.comps,onDone:execPanel});};
+  panel.appendChild(b);
+  var list=el('div');panel.appendChild(list);
+  var side=root.querySelector('.cxd-side');
+  if(side)side.appendChild(panel);else root.appendChild(panel);
+  try{
+   var rows=(await listForReport(ctx.reportId)).filter(function(x){return String(x.raised_by_email).toLowerCase()===me();});
+   if(!rows.length)list.appendChild(el('p','cq-hint','No questions raised yet.'));
+   rows.forEach(function(x){list.appendChild(card(x));});
+  }catch(e){list.appendChild(el('p','cq-hint','Questions could not be loaded: '+e.message));}
+  decorateExecRows();
+ }
+ function decorateExecRows(){
+  var root=document.getElementById('dkRoot');if(!root||!DK.selected)return;
+  var ctx=execContext();if(!ctx)return;
+  var on=root.querySelector('.cxd-tab.on');
+  var type=on?TAB_TYPE[Object.keys(TAB_TYPE).find(function(k){return on.textContent.indexOf(k)===0;})]:null;
+  root.querySelectorAll('.cxd-row').forEach(function(row){
+   if(row.querySelector('.cq-btn'))return;
+   var nb=row.querySelector('.cxd-head b');if(!nb)return;
+   var name=nb.textContent.replace(/^\d+\.\s*/,'').trim();
+   var btn=el('button','cq-btn','Question this');btn.type='button';
+   btn.onclick=function(){ask({reportId:ctx.reportId,employeeId:ctx.employeeId,employeeName:ctx.employeeName,types:ctx.types,type:type||ctx.types[0],comps:ctx.comps,comp:name,onDone:execPanel});};
+   nb.parentNode.appendChild(btn);
+  });
+ }
+ /* ---------- HOHR: official report ---------- */
+ async function officialPanel(id){
+  var host=document.getElementById('or-'+id);if(!host)return;
+  var old=host.querySelector('.cq-panel');if(old)old.remove();
+  var rows;try{rows=await listForReport(id);}catch(e){return;}
+  if(!rows.length)return;
+  var openN=rows.filter(function(x){return x.status==='Open'||x.status==='Answered';}).length;
+  var p=el('div','cq-panel');p.style.margin='0 0 12px';
+  var t=el('h2',null,'Assessment queries');t.style.fontSize='16px';p.appendChild(t);
+  p.appendChild(el('p','cq-hint',openN?openN+' still open. Approvals are blocked until they are resolved.':'All queries on this report are resolved.'));
+  rows.forEach(function(x){p.appendChild(card(x));});
+  host.insertBefore(p,host.firstChild);
+ }
+ async function decorateOfficial(id){
+  css();
+  var host=document.getElementById('or-'+id);if(!host)return;
+  var empId=host.getAttribute('data-emp');
+  host.querySelectorAll('.or-block').forEach(function(block){
+   var title=(block.querySelector('.or-title')||{}).textContent||'';
+   var pro=/prospective/i.test(title);
+   var types=pro?['Prospective Self','Prospective']:['Self','Manager'];
+   var comps=Array.prototype.map.call(block.querySelectorAll('.or-row .or-nm'),function(n){return (n.firstChild&&n.firstChild.textContent||'').trim();}).filter(Boolean);
+   block.querySelectorAll('.or-row').forEach(function(row){
+    var nm=row.querySelector('.or-nm');if(!nm||nm.querySelector('.cq-btn'))return;
+    var name=(nm.firstChild&&nm.firstChild.textContent||'').trim();
+    var btn=el('button','cq-btn','Question');btn.type='button';
+    btn.onclick=async function(){
+     var emp='';
+     try{var q=await _supabase.from('report_chain').select('employee_name').eq('id',id).single();emp=(q.data&&q.data.employee_name)||'';}catch(e){}
+     ask({reportId:id,employeeId:empId,employeeName:emp,types:types,type:pro?'Prospective':'Manager',comps:comps,comp:name,onDone:function(){officialPanel(id);}});
+    };
+    nm.appendChild(btn);
+   });
+  });
+  await officialPanel(id);
+ }
+ /* ---------- Page: manager answers, HOHR decides ---------- */
+ async function answer(row,type,text,reload){
+  var r=await _supabase.from('report_queries').update({status:'Answered',response_type:type,response_text:text,responded_by:myName()||me(),responded_at:new Date().toISOString()}).eq('id',row.id);
+  if(r.error)throw Error(r.error.message);
+  mail(row.raised_by_email,'Answer to your assessment question: '+(row.employee_name||''),(myName()||'The line manager')+' answered your question about '+row.comp_name+': '+(RESP_LABEL[type]||type)+'. '+text);
+  mailRole('HEAD_HR','Assessment query answered: '+(row.employee_name||''),(myName()||'The line manager')+' answered a question about '+row.comp_name+'. Open Assessment Queries to accept the answer or send it back.');
+  toast('Answer sent.');reload();
+ }
+ async function decide(row,decision,note,reload){
+  var accepted=decision==='Accepted';
+  var r=await _supabase.from('report_queries').update({status:accepted?'Resolved':'Open',hohr_decision:decision,hohr_note:note||null,decided_by:myName()||me(),decided_at:new Date().toISOString()}).eq('id',row.id);
+  if(r.error)throw Error(r.error.message);
+  var msg='The Head of HR '+(accepted?'accepted':'sent back')+' the answer on '+row.comp_name+(note?': '+note:'.');
+  mail(row.assessor_email,'Assessment query '+(accepted?'resolved':'sent back'),msg+(accepted?'':' Please answer again in Assessment Queries.'));
+  mail(row.raised_by_email,'Assessment query '+(accepted?'resolved':'sent back'),msg);
+  toast(accepted?'Query resolved.':'Sent back to the assessor.');reload();
+ }
+ async function withdraw(row,reload){
+  var r=await _supabase.from('report_queries').update({status:'Withdrawn'}).eq('id',row.id);
+  if(r.error)throw Error(r.error.message);
+  toast('Query withdrawn.');reload();
+ }
+ async function renderPage(){
+  css();
+  setContent('<div id="cqRoot"></div>');
+  var root=document.getElementById('cqRoot');if(!root)return;
+  var role=APP.currentRole,isHohr=role==='hohr',state={filter:isHohr?'Answered':'Open'};
+  var title=el('h2',null,isHohr?'Assessment Queries':role==='hr'?'Assessment Queries':'Assessment Queries for you');
+  root.appendChild(title);
+  root.appendChild(el('p','cq-sub',isHohr?'Questions raised by C-Suite and by you. Accept the answer or send it back. Approvals stay blocked while a query is open.':role==='hr'?'Read only. The Head of HR decides on answers.':'Questions about your assessments. Answer each one with your evidence. Nothing else is reopened.'));
+  var chips=el('div','cq-chips'),list=el('div');root.appendChild(chips);root.appendChild(list);
+  var rows=[];
+  async function load(){
+   list.replaceChildren(el('p','cq-hint','Loading...'));
+   var q=_supabase.from('report_queries').select('*').order('id',{ascending:false});
+   if(role==='manager')q=q.eq('assessor_email',me());
+   var res=await q;
+   if(!root.isConnected)return;
+   if(res.error){list.replaceChildren(el('p','cq-hint','Could not load queries: '+res.error.message));return;}
+   rows=res.data||[];draw();
+  }
+  function draw(){
+   chips.replaceChildren();
+   var defs=isHohr?[['Answered','Needs my decision'],['Open','Waiting for assessor'],['Resolved','Resolved'],['all','All']]:[['Open','To answer'],['Answered','Answered'],['Resolved','Resolved'],['all','All']];
+   defs.forEach(function(d){
+    var n=d[0]==='all'?rows.length:rows.filter(function(x){return x.status===d[0];}).length;
+    var b=el('button','cq-chip'+(state.filter===d[0]?' on':''),d[1]+' ('+n+')');b.type='button';
+    b.onclick=function(){state.filter=d[0];draw();};chips.appendChild(b);
+   });
+   list.replaceChildren();
+   var shown=rows.filter(function(x){return state.filter==='all'||x.status===state.filter;});
+   if(!shown.length)list.appendChild(el('p','cq-hint','Nothing here.'));
+   shown.forEach(function(x){
+    list.appendChild(card(x,function(c){
+     if(role==='manager'&&x.status==='Open'){
+      var sel=el('select');Object.keys(RESP_LABEL).forEach(function(k){var o=el('option',null,RESP_LABEL[k]);o.value=k;sel.appendChild(o);});
+      var tx=el('textarea');tx.placeholder='Your answer and evidence...';
+      var hint=el('p','cq-hint','If you revise or redo, also send a redo request for this employee so HR can approve it.');
+      var er=el('div','cq-err'),bt=el('button','btn btn-primary','Send answer');bt.type='button';
+      bt.onclick=async function(){
+       er.textContent='';
+       if(tx.value.trim().length<5){er.textContent='Write your answer and evidence first.';return;}
+       bt.disabled=true;
+       try{await answer(x,sel.value,tx.value.trim(),load);}catch(e){er.textContent='Not sent: '+e.message;bt.disabled=false;}
+      };
+      c.appendChild(el('label',null,'Your response'));c.appendChild(sel);c.appendChild(tx);c.appendChild(hint);c.appendChild(er);c.appendChild(bt);
+     }
+     if(isHohr&&x.status==='Answered'){
+      var nt=el('textarea');nt.placeholder='Note to the assessor and the person who asked (optional)';
+      var er2=el('div','cq-err'),acts=el('div','cq-actions');
+      var ac=el('button','btn btn-success','Accept answer'),rj=el('button','btn btn-outline','Send back'),wd=el('button','btn btn-outline','Withdraw query');
+      [ac,rj,wd].forEach(function(b){b.type='button';acts.appendChild(b);});
+      function run(fn){return async function(){er2.textContent='';[ac,rj,wd].forEach(function(b){b.disabled=true;});try{await fn();}catch(e){er2.textContent='Not saved: '+e.message;[ac,rj,wd].forEach(function(b){b.disabled=false;});}};}
+      ac.onclick=run(function(){return decide(x,'Accepted',nt.value.trim(),load);});
+      rj.onclick=run(function(){if(nt.value.trim().length<3)throw Error('Say what is missing so the assessor can answer again.');return decide(x,'Rejected',nt.value.trim(),load);});
+      wd.onclick=run(function(){return withdraw(x,load);});
+      if(x.response_type==='Revise'||x.response_type==='Redo')c.appendChild(el('p','cq-hint','The assessor asked for a '+(x.response_type==='Redo'?'full redo':'revision')+'. After you accept, approve the redo in Redo Requests.'));
+      c.appendChild(nt);c.appendChild(er2);c.appendChild(acts);
+     }
+     if(isHohr&&x.status==='Open'){
+      var acts2=el('div','cq-actions'),wd2=el('button','btn btn-outline','Withdraw query');wd2.type='button';
+      wd2.onclick=function(){wd2.disabled=true;withdraw(x,load).catch(function(e){toast('Not saved: '+e.message);wd2.disabled=false;});};
+      acts2.appendChild(wd2);c.appendChild(acts2);
+     }
+    }));
+   });
+  }
+  await load();
+ }
+ /* ---------- Navigation ---------- */
+ function selected(){
+  if(APP.currentPage!==PAGE)return;
+  document.querySelectorAll('#sideNav .nv3-link,#sideNav .sb-item').forEach(function(b){
+   var on=b.dataset.page===PAGE||b.dataset.nvPage===PAGE;
+   b.classList.toggle('active',on);b.classList.toggle('nv3-current',on);
+   if(on)b.setAttribute('aria-current','page');else b.removeAttribute('aria-current');
+  });
+ }
+ function addNav(){
+  var side=document.getElementById('sideNav');if(!side||ROLES.indexOf(APP.currentRole)<0)return;
+  var b=side.querySelector('[data-page="'+PAGE+'"],[data-nv-page="'+PAGE+'"]');
+  if(!b){
+   b=document.createElement('button');b.type='button';b.className='sb-item';b.dataset.page=PAGE;b.textContent='Assessment Queries';
+   b.onclick=function(){navigateTo(PAGE);};side.appendChild(b);
+   if(typeof cmsPolishNavigation==='function')cmsPolishNavigation();
+  }
+  selected();
+ }
+ if(typeof setupNav==='function'){var oldSetup=setupNav;setupNav=function(){var r=oldSetup.apply(this,arguments);try{addNav();}catch(e){}return r;};}
+ if(typeof cnPageRole==='function'){var oldRole=cnPageRole;cnPageRole=function(id,preferred){if(id===PAGE){return ROLES.indexOf(preferred)>=0?preferred:(ROLES.indexOf(APP.currentRole)>=0?APP.currentRole:null);}return oldRole.apply(this,arguments);};}
+ if(typeof getPageLabel==='function'){var oldLabel=getPageLabel;getPageLabel=function(id){return id===PAGE?'Assessment Queries':oldLabel.apply(this,arguments);};}
+ if(typeof loadPage==='function'){var oldLoadPage=loadPage;loadPage=function(id){if(id!==PAGE)return oldLoadPage.apply(this,arguments);if(ROLES.indexOf(APP.currentRole)<0)return;var r=renderPage();if(r&&r.then)r.then(selected,function(e){toast(e.message);});return r;};}
+ if(typeof navigateTo==='function'){var oldNav=navigateTo;navigateTo=function(){var r=oldNav.apply(this,arguments);selected();if(r&&typeof r.then==='function')r.then(selected,function(){});return r;};}
+ /* ---------- Hooks ---------- */
+ if(typeof dkReport==='function'){var oldDk=dkReport;dkReport=async function(){var out=await oldDk.apply(this,arguments);try{await execPanel();}catch(e){if(window.console)console.error(e);}return out;};}
+ if(typeof loadOfficialReport==='function'){var oldOr=loadOfficialReport;loadOfficialReport=async function(id){var out=await oldOr.apply(this,arguments);try{await decorateOfficial(id);}catch(e){if(window.console)console.error(e);}return out;};}
+ document.addEventListener('click',function(e){if(e.target&&e.target.closest&&e.target.closest('.cxd-tab'))setTimeout(decorateExecRows,0);});
+ /* ---------- Block approvals while a query is open ---------- */
+ async function blocked(id){
+  var n=await openCount(id);
+  if(n>0){toast(n+' assessment '+(n===1?'query is':'queries are')+' still open on this report. Resolve '+(n===1?'it':'them')+' in Assessment Queries first.');return true;}
+  return false;
+ }
+ if(typeof decideReportChain==='function'){var oldChain=decideReportChain;decideReportChain=async function(id,decision){if(/^Approved/.test(String(decision))&&await blocked(id))return;return oldChain.apply(this,arguments);};}
+ if(typeof finalizeReport==='function'){var oldFinal=finalizeReport;finalizeReport=async function(id){if(await blocked(id))return;return oldFinal.apply(this,arguments);};}
+ if(typeof decideReportApproval==='function'){var oldAppr=decideReportApproval;decideReportApproval=async function(id,decision){if(String(decision)!=='Changes'&&await blocked(id))return;return oldAppr.apply(this,arguments);};}
+ if(window.APP&&APP.user)try{addNav();}catch(e){}
+})();
+</script>
+<script id="cms-auto-publish-csuite-v1">
+/* Auto-publish completed reports to every C-Suite member as "For information".
+   A report is complete when the Head of HR has approved or finalized it and no assessment query is still open.
+   Uses the same release step as the manual Executive Release page. Needs the report_autopublish table. */
+(function(){
+ var running={};
+ function toast(m){if(typeof showToast==='function')showToast(m);}
+ function purposeOf(status){
+  var s=String(status||'');
+  if(/Development/i.test(s))return 'Development';
+  if(/Succession/i.test(s))return 'Succession';
+  if(/Promotion/i.test(s))return 'Promotion';
+  return 'Talent pipeline';
+ }
+ function latestLinks(options){
+  var best={};
+  (options||[]).forEach(function(o){
+   var cur=best[o.type];
+   if(!cur||Number(o.round)>Number(cur.round)||(Number(o.round)===Number(cur.round)&&String(o.date)>String(cur.date)))best[o.type]=o;
+  });
+  return ['Self','Manager','Prospective Self','Prospective'].map(function(t){return best[t];}).filter(Boolean);
+ }
+ async function openQueries(id){
+  try{var q=await _supabase.from('report_queries').select('id').eq('report_id',String(id)).in('status',['Open','Answered']);return q.error?0:(q.data||[]).length;}catch(e){return 0;}
+ }
+ /* Returns {state:'published'|'skipped'|'failed', sent, failed, message} */
+ async function publish(reportId,status){
+  var key=String(reportId);
+  if(running[key])return {state:'skipped',message:'Already publishing.'};
+  running[key]=true;
+  try{
+   var access=await dkRPCBase('access');
+   if(!access||!access.can_release)return {state:'skipped',message:'Only a trusted Head of HR account can publish.'};
+   if(await openQueries(reportId)>0)return {state:'skipped',message:'An assessment query is still open.'};
+   var members=await dkRPCBase('members');
+   if(!members||!members.length)return {state:'skipped',message:'No C-Suite members found.'};
+   DK.members=members;
+   var done=await _supabase.from('report_autopublish').select('executive_id').eq('report_id',key);
+   if(done.error)throw Error('Publish log unavailable: '+done.error.message);
+   var already={};(done.data||[]).forEach(function(x){already[String(x.executive_id)]=true;});
+   var cases=[];try{cases=await dkRPCBase('existing_cases');}catch(e){}
+   (cases||[]).forEach(function(c){if(String(c.report_id)===key){var who=c.assigned_to||c.executive_id;if(who)already[String(who)]=true;}});
+   var todo=members.filter(function(m){return !already[String(m.id)];});
+   if(!todo.length)return {state:'skipped',message:'Every executive already has this report.'};
+   var options=await dkRPCBase('release_options',{report_id:Number(reportId)});
+   var links=latestLinks(options);
+   if(!links.length)return {state:'skipped',message:'No reviewed assessments to share yet.'};
+   var outcome=String(status||'').replace(/^Finalized: /,'Final: ');
+   var sent=0,failed=0,msg='';
+   for(var i=0;i<todo.length;i++){
+    var m=todo[i];
+    try{
+     await dkRPCBase('release',{id:crypto.randomUUID(),report_id:Number(reportId),executive_id:m.id,purpose:purposeOf(status),hohr_outcome:outcome,shared_note:'Completed report shared automatically for information. Decision: '+outcome,needs_recommendation:false,case_id:null,links:links});
+     await _supabase.from('report_autopublish').insert({report_id:key,executive_id:String(m.id),outcome:outcome,published_by:(APP.user&&APP.user.email)||''});
+     sent++;
+    }catch(e){failed++;msg=e.message;}
+   }
+   return {state:sent?'published':'failed',sent:sent,failed:failed,message:msg};
+  }catch(e){return {state:'failed',sent:0,failed:0,message:e.message};}
+  finally{delete running[key];}
+ }
+ async function statusOf(id){
+  try{var q=await _supabase.from('report_chain').select('status').eq('id',id).single();return q.data?String(q.data.status||''):'';}catch(e){return '';}
+ }
+ function report(res){
+  if(res.state==='published')toast('Shared with '+res.sent+' C-Suite member'+(res.sent===1?'':'s')+' for information.'+(res.failed?' '+res.failed+' could not be sent: '+res.message:''));
+  else if(res.state==='failed')toast('Decision saved, but sharing with C-Suite failed: '+res.message);
+ }
+ if(typeof decideReportChain==='function'){
+  var oldChain=decideReportChain;
+  decideReportChain=async function(id,decision){
+   var out=await oldChain.apply(this,arguments);
+   if(/^Approved/.test(String(decision))){var s=await statusOf(id);if(/^(Approved|Finalized)/.test(s))report(await publish(id,s));}
+   return out;
+  };
+ }
+ if(typeof finalizeReport==='function'){
+  var oldFinal=finalizeReport;
+  finalizeReport=async function(id){
+   var out=await oldFinal.apply(this,arguments);
+   var s=await statusOf(id);if(/^Finalized/.test(s))report(await publish(id,s));
+   return out;
+  };
+ }
+ /* One-off: share everything already completed. */
+ function backfillCard(){
+  var root=document.getElementById('dkRoot');
+  if(!root||root.querySelector('.ap-card')||!DK.access||!DK.access.can_release)return;
+  var c=document.createElement('section');c.className='card ap-card';
+  var h=document.createElement('h2');h.textContent='Share completed reports with C-Suite';c.appendChild(h);
+  var p=document.createElement('p');p.textContent='New decisions are shared automatically. Use this once to share reports that were completed before this was switched on. Each executive receives each report only once, as information only.';c.appendChild(p);
+  var b=document.createElement('button');b.type='button';b.className='btn btn-primary';b.textContent='Share all completed reports now';c.appendChild(b);
+  var st=document.createElement('p');st.style.marginTop='10px';c.appendChild(st);
+  b.onclick=async function(){
+   b.disabled=true;st.textContent='Looking for completed reports...';
+   try{
+    var q=await _supabase.from('report_chain').select('id,status,employee_name').order('id',{ascending:true});
+    if(q.error)throw Error(q.error.message);
+    var rows=(q.data||[]).filter(function(r){return /^(Approved|Finalized)/.test(String(r.status||''));});
+    var sent=0,skipped=0,failed=0,last='',notes=[];
+    for(var i=0;i<rows.length;i++){
+     st.textContent='Sharing '+(i+1)+' of '+rows.length+': '+(rows[i].employee_name||'')+'...';
+     var res=await publish(rows[i].id,rows[i].status);
+     var who=(rows[i].employee_name||rows[i].id);if(res.state==='published')sent++;else if(res.state==='skipped'){skipped++;notes.push(who+': '+res.message);}else{failed++;last=res.message;notes.push(who+': '+res.message);}
+    }
+    st.textContent='Found '+rows.length+' completed report'+(rows.length===1?'':'s')+'. Shared '+sent+', skipped '+skipped+', failed '+failed+'. '+notes.join(' | ');
+   }catch(e){st.textContent='Could not finish: '+e.message;}
+   b.disabled=false;
+  };
+  root.appendChild(c);
+ }
+ if(typeof dkAdmin==='function'){
+  var oldAdmin=dkAdmin;
+  dkAdmin=function(){var r=oldAdmin.apply(this,arguments);try{backfillCard();}catch(e){}return r;};
+ }
 })();
 </script>
 </body>
