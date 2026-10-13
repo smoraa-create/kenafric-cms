@@ -869,6 +869,9 @@ html body #mainContent .dept-info-note strong svg{
   display:block!important;
 }
 /* Departments Registry: high-visibility summary cards */
+html body #mainContent .dept-summary-card[onclick]{cursor:pointer!important;transition:transform .15s,box-shadow .15s}
+html body #mainContent .dept-summary-card[onclick]:hover{transform:translateY(-3px);box-shadow:0 8px 20px rgba(15,23,42,.18)!important}
+html body #mainContent .dept-summary-card[onclick]:focus-visible{outline:3px solid #4338ca;outline-offset:2px}
 html body #mainContent .dept-summary-grid{
   gap:14px!important;
   margin:18px 0!important;
@@ -6685,13 +6688,13 @@ pages = [{id:'emp-profile',label:'My Profile'},{id:'emp-selfassess',label:'Self 
 } else if (role === 'manager') {
 pages = [{id:'mgr-dashboard',label:'Dashboard'},{id:'mgr-team',label:'My Team'},{id:'mgr-prompool',label:'Progression-Ready Pool'},{id:'mgr-assess',label:'Assessment'},{id:'mgr-details',label:'All Assessment Details & Reviews'},{id:'mgr-requests',label:'Requests'},{id:'mgr-gaps',label:'Team Gaps'},{id:'mgr-devplans',label:'Development Plans'},{id:'mgr-setcomp',label:'Set Competencies'},{id:'mgr-repappr',label:'Report Approvals'},{id:'mgr-comp',label:'Competency Library (View)'}];
 } else if (role === 'hohr') {
-pages = [{id:'hohr-dash',label:'Dashboard'},{id:'hohr-kpi',label:'Critical Roles'},{id:'hohr-positions',label:'Positions & Criticality'},{id:'hohr-assessed',label:'Assessed'},{id:'hohr-pool',label:'Talent Pool'},{id:'hohr-reports',label:'All Reports'},{id:'hohr-assess',label:'All Assessments'},{id:'hohr-devplans',label:'Approved Dev Plans'},{id:'hohr-staff',label:'All Staff'},{id:'hohr-gaps',label:'All Gaps'},{id:'hohr-strengths',label:'All Strengths'},{id:'hohr-comp',label:'Competency Library'}];
+pages = [{id:'hohr-dash',label:'Dashboard'},{id:'hohr-kpi',label:'Critical Roles'},{id:'hohr-positions',label:'Critical Positions Registry'},{id:'hohr-assessed',label:'Assessed'},{id:'hohr-pool',label:'Talent Pool'},{id:'hohr-reports',label:'All Reports'},{id:'hohr-assess',label:'All Assessments'},{id:'hohr-devplans',label:'Approved Dev Plans'},{id:'hohr-staff',label:'All Staff'},{id:'hohr-gaps',label:'All Gaps'},{id:'hohr-strengths',label:'All Strengths'},{id:'hohr-comp',label:'Competency Library'}];
 }
 else if (role === 'csuite') {
 pages = [{id:'cs-reports',label:'Executive Recommendations'}];
 } 
 else if (role === 'hr') {
-pages = [{id:'hr-dashboard',label:'Dashboard'},{id:'hr-kpi',label:'KPI Dashboard'},{id:'hr-managers',label:'Line Managers'},{id:'hr-departments',label:'Departments'},{id:'hr-companies',label:'Companies'},{id:'hr-prompool',label:'Progression-Ready Pool'},{id:'hr-staff',label:'All Employees'},{id:'hr-review',label:'Assessment Review'},{id:'hr-gaps',label:'Employee Gaps'},{id:'hr-devplans',label:'Development Plans'},{id:'hr-all',label:'All Assessments'},{id:'hr-reports',label:'Reports'},{id:'hr-repappr',label:'Report Approvals'},{id:'hr-positions',label:'Positions & Criticality'},{id:'hr-comp',label:'Competency Library'},{id:'hr-redo',label:'Redo Requests'}];
+pages = [{id:'hr-dashboard',label:'Dashboard'},{id:'hr-kpi',label:'KPI Dashboard'},{id:'hr-managers',label:'Line Managers'},{id:'hr-departments',label:'Departments'},{id:'hr-companies',label:'Companies'},{id:'hr-prompool',label:'Progression-Ready Pool'},{id:'hr-staff',label:'All Employees'},{id:'hr-review',label:'Assessment Review'},{id:'hr-gaps',label:'Employee Gaps'},{id:'hr-devplans',label:'Development Plans'},{id:'hr-all',label:'All Assessments'},{id:'hr-reports',label:'Reports'},{id:'hr-repappr',label:'Report Approvals'},{id:'hr-positions',label:'Critical Positions Registry'},{id:'hr-comp',label:'Competency Library'},{id:'hr-redo',label:'Redo Requests'}];
 }
 if (role === 'hr') pages.push({id:'hr-comp-approvals',label:'Competency Approvals & Validation'});
 if (role === 'hohr') pages.push({id:'hohr-comp-approvals',label:'Competency Approvals & Validation'});
@@ -6793,7 +6796,7 @@ return loading;
 function getPageLabel(id) {
 if (id === 'hohr-comp-approvals') return 'Competency Approvals & Validation';
 if (id === 'hr-comp-approvals') return 'Competency Approvals & Validation';
-var map = {'emp-profile':'My Profile','emp-selfassess':'Self Assessment','emp-mgrview':'Assessment Results','emp-gaps':'My Gaps','emp-strengths':'My Strengths','emp-devplans':'Development Plans','mgr-dashboard':'Dashboard','mgr-team':'My Team','mgr-prompool':'Progression-Ready Pool','mgr-assess':'Assessment','mgr-details':'All Assessment Details & Reviews','mgr-gaps':'Team Gaps','mgr-devplans':'Development Plans','mgr-requests':'Requests','mgr-repappr':'Report Approvals','mgr-setcomp':'Set Competencies','mgr-comp':'Competency Library (View)','hohr-reports':'Report Approvals','hohr-comp':'Competency Library','cs-reports':'Executive Recommendations','hr-dashboard':'Dashboard','hr-kpi':'KPI Dashboard','hr-departments':'Departments','hr-companies':'Companies','hr-prompool':'Progression-Ready Pool','hr-staff':'All Employees','hr-managers':'Line Managers','hr-review':'Assessment Review','hr-gaps':'Employee Gaps','hr-devplans':'Development Plans','hr-all':'All Assessments','hr-reports':'Reports','hr-repappr':'Report Approvals','hr-comp':'Competency Library','hr-redo':'Redo Requests','hr-positions':'Positions & Criticality'}
+var map = {'emp-profile':'My Profile','emp-selfassess':'Self Assessment','emp-mgrview':'Assessment Results','emp-gaps':'My Gaps','emp-strengths':'My Strengths','emp-devplans':'Development Plans','mgr-dashboard':'Dashboard','mgr-team':'My Team','mgr-prompool':'Progression-Ready Pool','mgr-assess':'Assessment','mgr-details':'All Assessment Details & Reviews','mgr-gaps':'Team Gaps','mgr-devplans':'Development Plans','mgr-requests':'Requests','mgr-repappr':'Report Approvals','mgr-setcomp':'Set Competencies','mgr-comp':'Competency Library (View)','hohr-reports':'Report Approvals','hohr-comp':'Competency Library','cs-reports':'Executive Recommendations','hr-dashboard':'Dashboard','hr-kpi':'KPI Dashboard','hr-departments':'Departments','hr-companies':'Companies','hr-prompool':'Progression-Ready Pool','hr-staff':'All Employees','hr-managers':'Line Managers','hr-review':'Assessment Review','hr-gaps':'Employee Gaps','hr-devplans':'Development Plans','hr-all':'All Assessments','hr-reports':'Reports','hr-repappr':'Report Approvals','hr-comp':'Competency Library','hr-redo':'Redo Requests','hr-positions':'Critical Positions Registry'}
 return map[id] || '';
 }
 // Current-role decisions require both submissions; zero is a valid score.
@@ -8741,7 +8744,7 @@ var companies = {}; (window._aeEmps || []).forEach(function(e){ if (e.company) c
 var html = '';
 if (!isHOHRonly) {
 html += '<div class="card"><div class="card-title"> Add Employee</div>';
-html += '<p style="font-size:11px;color:var(--gray-500);margin-bottom:10px">Type only the name, email and line manager - department, position and level come from the Positions & Criticality Registry.</p>';
+html += '<p style="font-size:11px;color:var(--gray-500);margin-bottom:10px">Type only the name, email and line manager - department, position and level come from the Critical Positions Registry.</p>';
 html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px"><div class="form-group"><label>Full Name</label><input id="aeName" placeholder="e.g. Jane Wanjiku"></div><div class="form-group"><label>Email</label><input id="aeEmail" placeholder="jane@kenafricind.com"></div></div>';
 html += '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px"><div class="form-group"><label>Department</label><select id="aeDept" onchange="aeFillPositions()"><option value="">-- Select --</option>' + Object.keys(regDeps).sort().map(function(d){ return '<option>' + escapeHtml(d) + '</option>'; }).join('') + '</select></div><div class="form-group"><label>Position</label><select id="aePos"><option value="">-- Select department first --</option></select></div><div class="form-group"><label>Competency Level</label><select id="aeLevel"><option>Foundational</option><option selected>Intermediate</option><option>Advanced</option><option>Master</option></select></div></div>';
 html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px"><div class="form-group"><label>Company</label><input id="aeCompany" list="aeCompanyList" placeholder="e.g. Kenafric Industries"><datalist id="aeCompanyList">' + Object.keys(companies).sort().map(function(c){ return '<option value="' + escapeHtml(c) + '">'; }).join('') + '</datalist></div><div class="form-group"><label>Line Manager</label><select id="aeMgr"><option value="">-- Select --</option>' + aeMgrOptions() + '</select></div></div>';
@@ -8926,7 +8929,7 @@ var __cmsRouteEpoch = typeof CN === 'undefined' ? null : CN.epoch;
 var dq = await Promise.all([
 _supabase.from('departments').select('*').order('company').order('name'),
 _supabase.from('employees').select('company, department, position'),
-_supabase.from('critical_positions').select('department').eq('is_active', true)
+_supabase.from('critical_positions').select('department, position_name, company').eq('is_active', true),_supabase.from('positions').select('position_name, department_id')
 ]);
 var regs = dq[0].data || [];
 var regOf = {};
@@ -8936,8 +8939,10 @@ var posOf = {};
 (dq[1].data || []).forEach(function(e){
 var c = (e.company || '').trim(), d = (e.department || '').trim(), p = (e.position || '').trim();
 if (d) { var k = c.toUpperCase() + '|' + d.toUpperCase(); staffOf[k] = (staffOf[k] || 0) + 1; }
-if (d && p) { var k2 = c.toUpperCase() + '|' + d.toUpperCase(); if (!posOf[k2]) posOf[k2] = {}; posOf[k2][p] = true; }
+if (d && p) { var k2 = c.toUpperCase() + '|' + d.toUpperCase(); if (!posOf[k2]) posOf[k2] = {}; posOf[k2][p.toUpperCase().replace(/\s+/g,' ')] = true; }
 });
+(dq[3].data || []).forEach(function(p){ var nm = (p.position_name || '').trim().toUpperCase().replace(/\s+/g,' '); if (!nm) return; regs.forEach(function(d){ if (d.department_id && String(d.department_id).trim().toUpperCase() === String(p.department_id || '').trim().toUpperCase()) { var k = (d.company || '').toUpperCase().trim() + '|' + (d.name || '').toUpperCase().trim(); if (!posOf[k]) posOf[k] = {}; posOf[k][nm] = true; } }); });
+(dq[2].data || []).forEach(function(g){ var nm = (g.position_name || '').trim().toUpperCase().replace(/\s+/g,' '), dn = (g.department || '').trim().toUpperCase(); if (!nm || !dn) return; regs.forEach(function(d){ if ((d.name || '').toUpperCase().trim() === dn && (!g.company || (d.company || '').toUpperCase().trim() === String(g.company).toUpperCase().trim())) { var k = (d.company || '').toUpperCase().trim() + '|' + (d.name || '').toUpperCase().trim(); if (!posOf[k]) posOf[k] = {}; posOf[k][nm] = true; } }); });
 var keys = {};
 regs.forEach(function(d){ keys[((d.company || '').toUpperCase().trim()) + '|' + ((d.name || '').toUpperCase().trim())] = { company: d.company || '', name: d.name }; });
 (dq[1].data || []).forEach(function(e){ var c = (e.company || '').trim(), d = (e.department || '').trim(); if (d) { var k = c.toUpperCase() + '|' + d.toUpperCase(); if (!keys[k]) keys[k] = { company: c, name: d }; } });
@@ -8950,7 +8955,7 @@ var deptCompanies = Object.keys(companies).sort(function(a,b){ return a.localeCo
 var deptCompanyCounts = {};
 list.forEach(function(d){ var co = d.company || 'Other'; deptCompanyCounts[co] = (deptCompanyCounts[co] || 0) + 1; });
 var deptTotalStaff = list.reduce(function(total,d){ var k=(d.company||'').toUpperCase().trim()+'|'+(d.name||'').toUpperCase().trim(); return total+(staffOf[k]||0); },0);
-var deptTotalPositions = list.reduce(function(total,d){ var k=(d.company||'').toUpperCase().trim()+'|'+(d.name||'').toUpperCase().trim(); return total+(posOf[k]?Object.keys(posOf[k]).length:0); },0);
+var deptTotalPositions = (function(){ var seen = {}; list.forEach(function(d){ var k=(d.company||'').toUpperCase().trim()+'|'+(d.name||'').toUpperCase().trim(); Object.keys(posOf[k]||{}).forEach(function(p){ seen[(d.name||'').toUpperCase().trim()+'|'+p] = 1; }); }); return Object.keys(seen).length; })();
 function deptIcon(kind){
 var paths={
 company:'<path d="M4 21V5a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v16M8 7h2M14 7h2M8 11h2M14 11h2M10 21v-4h4v4"/>',
@@ -8977,13 +8982,13 @@ var start=(deptState.page-1)*deptState.pageSize,rows=filtered.slice(start,start+
 var optionCompanies=deptCompanies.map(function(c){return '<option value="'+escapeHtml(c)+'" '+(deptState.company===c?'selected':'')+'>'+escapeHtml(c)+'</option>';}).join('');
 var tabs='<button class="dept-tab '+(!deptState.company?'active':'')+'" data-company="" onclick="cmsDeptRegistryCompany(this.getAttribute(\'data-company\'))">All Companies <b>'+list.length+'</b></button>';
 tabs+=deptCompanies.map(function(c){return '<button class="dept-tab '+(deptState.company===c?'active':'')+'" data-company="'+escapeHtml(c)+'" onclick="cmsDeptRegistryCompany(this.getAttribute(\'data-company\'))">'+escapeHtml(c)+' <b>'+(deptCompanyCounts[c]||0)+'</b></button>';}).join('');
-var rowsHtml=rows.map(function(d){var k=(d.company||'').toUpperCase().trim()+'|'+(d.name||'').toUpperCase().trim(),reg=regOf[k],del=JSON.stringify((d.company||'')+' - '+d.name),co=JSON.stringify(d.company||''),nm=JSON.stringify(d.name||'');return '<tr><td>'+escapeHtml(d.company||'-')+'</td><td><strong>'+escapeHtml(d.name)+'</strong></td><td>'+ (staffOf[k]||0)+'</td><td>'+(posOf[k]?Object.keys(posOf[k]).length:0)+'</td><td>'+(reg?'<span class="badge badge-success">Registered</span>':'<span class="badge badge-warning">From staff records</span>')+'</td><td>'+(reg?'<button class="dept-delete-button" aria-label="Delete department" title="Delete department" onclick="deleteDepartment('+rcArg(reg.id)+','+del+')"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 7h14M9 7V5h6v2M7 7l1 12h8l1-12M10 10v6M14 10v6"/></svg></button>':'<button class="btn btn-sm btn-outline" onclick="registerDepartment('+co+','+nm+')">Register</button>')+'</td></tr>';}).join('');
+var rowsHtml=rows.map(function(d){var k=(d.company||'').toUpperCase().trim()+'|'+(d.name||'').toUpperCase().trim(),reg=regOf[k],del=rcArg((d.company||'')+' - '+d.name),co=rcArg(d.company||''),nm=rcArg(d.name||'');return '<tr><td>'+escapeHtml(d.company||'-')+'</td><td><strong>'+escapeHtml(d.name)+'</strong></td><td>'+ (staffOf[k]||0)+'</td><td>'+(posOf[k]?Object.keys(posOf[k]).length:0)+'</td><td>'+(reg?'<span class="badge badge-success">Registered</span>':'<span class="badge badge-warning">From staff records</span>')+'</td><td>'+(reg?'<button class="dept-delete-button" aria-label="Delete department" title="Delete department" onclick="deleteDepartment('+rcArg(reg.id)+','+del+')"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 7h14M9 7V5h6v2M7 7l1 12h8l1-12M10 10v6M14 10v6"/></svg></button>':'<button class="btn btn-sm btn-outline" onclick="registerDepartment('+co+','+nm+')">Register</button>')+'</td></tr>';}).join('');
 if(!rowsHtml)rowsHtml='<tr><td colspan="6" class="dept-empty">No departments match the selected filters.</td></tr>';
 var nums='';for(var pg=1;pg<=pages&&pg<=5;pg++)nums+='<button class="'+(pg===deptState.page?'active':'')+'" onclick="cmsDeptRegistryPage('+pg+')">'+pg+'</button>';if(pages>6)nums+='<span class="dept-ellipsis">...</span><button onclick="cmsDeptRegistryPage('+pages+')">'+pages+'</button>';
 var shownStart=filtered.length?start+1:0,shownEnd=Math.min(start+deptState.pageSize,filtered.length);
 var html='<div class="card dept-registry-card"><div class="dept-registry-heading"><div><div class="dept-title-line"><span class="dept-heading-icon">'+deptIcon('department')+'</span><span class="card-title">Departments Registry</span></div><p class="dept-subtitle">Register every department <strong>per company</strong> - two companies can share the same department name.</p></div><button class="dept-add-toggle" onclick="cmsDeptRegistryToggleAdd()">'+deptIcon('plus')+'<span>Add Department</span></button></div>';
 html+='<div id="deptAddPanel" class="dept-add-panel" style="display:none"><div class="form-group" style="margin:0"><label>Company</label><input id="newDeptCompany" list="deptCompanyList" placeholder="e.g. Kenafric Industries"><datalist id="deptCompanyList">'+deptCompanies.map(function(c){return '<option value="'+escapeHtml(c)+'">';}).join('')+'</datalist></div><div class="form-group" style="margin:0"><label>Department</label><input id="newDeptName" placeholder="e.g. HUMAN RESOURCE"></div><button class="btn btn-primary" onclick="addDepartment()">Add Department</button></div>';
-html+='<div class="dept-summary-grid"><div class="dept-summary-card green"><span class="dept-summary-icon">'+deptIcon('department')+'</span><div><span>Total Departments</span><strong>'+list.length+'</strong><small>Registered and staff records</small></div></div><div class="dept-summary-card purple"><span class="dept-summary-icon">'+deptIcon('company')+'</span><div><span>Total Companies</span><strong>'+deptCompanies.length+'</strong><small>Active companies</small></div></div><div class="dept-summary-card blue"><span class="dept-summary-icon">'+deptIcon('people')+'</span><div><span>Total Staff</span><strong>'+deptTotalStaff+'</strong><small>Across departments</small></div></div><div class="dept-summary-card orange"><span class="dept-summary-icon">'+deptIcon('position')+'</span><div><span>Total Positions</span><strong>'+deptTotalPositions+'</strong><small>Across departments</small></div></div></div>';
+html+='<div class="dept-summary-grid"><div class="dept-summary-card green" role="link" tabindex="0" onkeydown="if(event.key===&quot;Enter&quot;)this.click()" title="Go to the department list" onclick="document.querySelector(&quot;#mainContent table&quot;).scrollIntoView({behavior:&quot;smooth&quot;})"><span class="dept-summary-icon">'+deptIcon('department')+'</span><div><span>Total Departments</span><strong>'+list.length+'</strong><small>Registered and staff records</small></div></div><div class="dept-summary-card purple" role="link" tabindex="0" onkeydown="if(event.key===&quot;Enter&quot;)this.click()" title="Open Companies" onclick="navigateTo(&quot;hr-companies&quot;)"<span class="dept-summary-icon">'+deptIcon('company')+'</span><div><span>Total Companies</span><strong>'+deptCompanies.length+'</strong><small>Active companies</small></div></div><div class="dept-summary-card blue" role="link" tabindex="0" onkeydown="if(event.key===&quot;Enter&quot;)this.click()" title="Open All Employees" onclick="navigateTo(APP.currentRole===&quot;hohr&quot;?&quot;hohr-staff&quot;:&quot;hr-staff&quot;)"><span class="dept-summary-icon">'+deptIcon('people')+'</span><div><span>Total Staff</span><strong>'+deptTotalStaff+'</strong><small>Across departments</small></div></div><div class="dept-summary-card orange" role="link" tabindex="0" onkeydown="if(event.key===&quot;Enter&quot;)this.click()" title="Open All Positions" onclick="navigateTo(&quot;all-positions&quot;)"><span class="dept-summary-icon">'+deptIcon('position')+'</span><div><span>Total Positions</span><strong>'+deptTotalPositions+'</strong><small>Across departments</small></div></div></div>';
 html+='<div class="dept-filter-card"><div><label>Search Departments</label><div class="dept-search-wrap"><input id="deptSearch" value="'+escapeHtml(deptState.query)+'" placeholder="Search by department name..." oninput="cmsDeptRegistryQuery(this.value)"><span class="dept-search-icon">'+deptIcon('search')+'</span></div></div><div><label>Company</label><select onchange="cmsDeptRegistryCompany(this.value)"><option value="">All Companies</option>'+optionCompanies+'</select></div><div><label>Department Status</label><select onchange="cmsDeptRegistryStatus(this.value)"><option value="all">All Statuses</option><option value="registered" '+(deptState.status==='registered'?'selected':'')+'>Registered</option><option value="staff" '+(deptState.status==='staff'?'selected':'')+'>From staff records</option></select></div><div class="dept-result-count"><strong>'+filtered.length+' departments found</strong><span>Showing '+shownStart+'-'+shownEnd+'</span></div></div>';
 html+='<div class="dept-company-tabs">'+tabs+'</div><div class="table-wrap dept-table-wrap"><table class="dept-registry-table"><thead><tr><th>Company</th><th>Department</th><th>Staff</th><th>Positions</th><th>Status</th><th>Actions</th></tr></thead><tbody>'+rowsHtml+'</tbody></table></div>';
 html+='<div class="dept-pagination"><span>Showing '+shownStart+' to '+shownEnd+' of '+filtered.length+' departments</span><div><button onclick="cmsDeptRegistryPage('+Math.max(1,deptState.page-1)+')" '+(deptState.page===1?'disabled':'')+'>Previous</button>'+nums+'<button onclick="cmsDeptRegistryPage('+Math.min(pages,deptState.page+1)+')" '+(deptState.page===pages?'disabled':'')+'>Next</button></div></div><div class="dept-info-note"><strong>'+deptIcon('info')+'</strong><span>Departments are grouped by company for clarity and can be searched instantly by name.</span></div></div>';
@@ -11991,7 +11996,7 @@ var ui={department:'',query:'',criticality:''};
 window.cmsPosRegistryToggleAdd=function(){var p=document.getElementById('prAddPanel');if(p)p.style.display=p.style.display==='none'?'grid':'none';};
 function filteredRows(rows){return rows.filter(function(r){var dep=(r.department||'').toUpperCase(),pos=(r.position_name||'').toUpperCase(),lv=r.criticality||'Critical Role';return (!ui.department||r.department===ui.department)&&(!ui.query||dep.indexOf(ui.query)>=0||pos.indexOf(ui.query)>=0)&&(!ui.criticality||lv===ui.criticality);});}
 function registryRows(rows){
-return filteredRows(rows).map(function(r){var lv=r.criticality||'Critical Role';return '<tr><td><strong>'+escapeHtml(r.position_name||'')+'</strong></td><td>'+escapeHtml(r.department||'')+'</td><td><select onchange="setRegistryCriticality('+rcArg(r.id)+',this.value)"><option'+(lv==='Absolutely Critical Role'?' selected':'')+'>Absolutely Critical Role</option><option'+(lv==='Critical Role'?' selected':'')+'>Critical Role</option><option'+(lv==='Relatively Critical Role'?' selected':'')+'>Relatively Critical Role</option><option'+(lv==='Non-Critical Role'?' selected':'')+'>Non-Critical Role</option></select></td><td><button class="pr-delete" title="Delete position" aria-label="Delete position" onclick="deletePositionRegistry('+rcArg(r.id)+')">'+posIcon('trash')+'</button></td></tr>';}).join('')||'<tr><td colspan="4" class="pr-empty">No positions match these filters.</td></tr>';
+return filteredRows(rows).map(function(r){var lv=r.criticality||'Critical Role';return '<tr><td style="white-space:nowrap">'+escapeHtml(r.position_no||'-')+'</td><td><strong>'+escapeHtml(r.position_name||'')+'</strong></td><td>'+escapeHtml(r.department||'')+'</td><td><select onchange="setRegistryCriticality('+rcArg(r.id)+',this.value)"><option'+(lv==='Absolutely Critical Role'?' selected':'')+'>Absolutely Critical Role</option><option'+(lv==='Critical Role'?' selected':'')+'>Critical Role</option><option'+(lv==='Relatively Critical Role'?' selected':'')+'>Relatively Critical Role</option><option'+(lv==='Non-Critical Role'?' selected':'')+'>Non-Critical Role</option></select></td><td><button class="pr-delete" title="Delete position" aria-label="Delete position" onclick="deletePositionRegistry('+rcArg(r.id)+')">'+posIcon('trash')+'</button></td></tr>';}).join('')||'<tr><td colspan="4" class="pr-empty">No positions match these filters.</td></tr>';
 }
 function accordion(cls,icon,title,count,summary,rows){return '<details class="pr-accordion '+cls+'"><summary><span class="pr-acc-icon">'+posIcon(icon)+'</span><span class="pr-acc-copy"><strong>'+title+'</strong><span class="pr-count">'+count+'</span><small>'+summary+'</small></span><span class="pr-chevron" aria-hidden="true"></span></summary>'+rows+'</details>';}
 function trackerRows(){
@@ -12002,11 +12007,11 @@ window.cmsPosRegistryRender=function(){
 var active=document.activeElement?document.activeElement.id:'';var cursor=document.activeElement&&typeof document.activeElement.selectionStart==='number'?document.activeElement.selectionStart:null;
 ui.department=(document.getElementById('prDepartment')||{}).value||'';ui.query=((document.getElementById('prSearch')||{}).value||'').toUpperCase().trim();ui.criticality=(document.getElementById('prCriticality')||{}).value||'';
 var abs=filteredRows(absolute),rel=filteredRows(relative),non=filteredRows(nonCritical),critStaff=trackerEmployees.length;
-var h='<section class="pr-page"><div class="pr-title-row"><div><h1>Positions &amp; Criticality Registry</h1><p>Register every position and classify its criticality level. This supports succession planning, risk management, and talent strategy.</p></div></div>';
+var h='<section class="pr-page"><div class="pr-title-row"><div><h1>Critical Positions Registry</h1><p>Register every position and classify its criticality level. This supports succession planning, risk management, and talent strategy.</p></div></div>';
 h+='<div class="pr-kpis"><div class="pr-kpi blue"><span>'+posIcon('briefcase')+'</span><div><small>Total Positions</small><strong>'+regs.length+'</strong><em>All positions in the registry</em></div></div><div class="pr-kpi red"><span>'+posIcon('shield')+'</span><div><small>Critical Roles</small><strong>'+criticalRegs.length+'</strong><em>Absolutely &amp; relatively critical</em></div></div><div class="pr-kpi purple"><span>'+posIcon('people')+'</span><div><small>Critical Staff</small><strong>'+critStaff+'</strong><em>Staff in critical roles</em></div></div><div class="pr-kpi orange"><span>'+posIcon('question')+'</span><div><small>Not Assessed</small><strong>'+notAssessed+'</strong><em>Critical staff pending review</em></div></div></div>';
 h+='<div class="pr-toolbar"><div><label>Department</label><select id="prDepartment" onchange="cmsPosRegistryRender()"><option value="">All Departments</option>'+Object.keys(deps).sort().map(function(d){return '<option'+(ui.department===d?' selected':'')+'>'+escapeHtml(d)+'</option>';}).join('')+'</select></div><div><label>Search Position</label><input id="prSearch" value="'+escapeHtml(ui.query)+'" oninput="cmsPosRegistryRender()" placeholder="Search by position name..."></div><div><label>Criticality</label><select id="prCriticality" onchange="cmsPosRegistryRender()"><option value="">All Criticality Levels</option><option'+(ui.criticality==='Absolutely Critical Role'?' selected':'')+'>Absolutely Critical Role</option><option'+(ui.criticality==='Critical Role'?' selected':'')+'>Critical Role</option><option'+(ui.criticality==='Relatively Critical Role'?' selected':'')+'>Relatively Critical Role</option><option'+(ui.criticality==='Non-Critical Role'?' selected':'')+'>Non-Critical Role</option></select></div><button class="btn btn-primary pr-add" onclick="cmsPosRegistryToggleAdd()">+ Add Position</button></div>';
 h+='<div id="prAddPanel" class="pr-add-panel" style="display:none"><div><label>Department</label><input id="regDept" list="regDeptList" placeholder="e.g. HUMAN RESOURCE"><datalist id="regDeptList">'+Object.keys(deps).sort().map(function(d){return '<option value="'+escapeHtml(d)+'">';}).join('')+'</datalist></div><div><label>Position</label><input id="regPos" placeholder="e.g. Human Resource Officer"></div><div><label>Criticality</label><select id="regCrit"><option>Absolutely Critical Role</option><option selected>Critical Role</option><option>Relatively Critical Role</option><option>Non-Critical Role</option></select></div><button class="btn btn-primary" onclick="addPositionRegistry()">Save Position</button></div>';
-h+=accordion('absolute','shield','Absolutely Critical Roles',abs.length,'Roles vital to business continuity and high impact if vacant','<div class="pr-detail"><table><thead><tr><th>Position</th><th>Department</th><th>Criticality</th><th>Actions</th></tr></thead><tbody>'+registryRows(absolute)+'</tbody></table></div>');
+h+=accordion('absolute','shield','Absolutely Critical Roles',abs.length,'Roles vital to business continuity and high impact if vacant','<div class="pr-detail"><table><thead><tr><th>No.</th><th>Position</th><th>Department</th><th>Criticality</th><th>Actions</th></tr></thead><tbody>'+registryRows(absolute)+'</tbody></table></div>');
 h+=accordion('relative','people','Relatively Critical Roles',rel.length,'Important operational roles with moderate to high impact if vacant','<div class="pr-detail"><table><thead><tr><th>Position</th><th>Department</th><th>Criticality</th><th>Actions</th></tr></thead><tbody>'+registryRows(relative)+'</tbody></table></div>');
 h+=accordion('non','check','Non-Critical Roles',non.length,'Roles with lower business continuity impact if vacant','<div class="pr-detail"><table><thead><tr><th>Position</th><th>Department</th><th>Criticality</th><th>Actions</th></tr></thead><tbody>'+registryRows(nonCritical)+'</tbody></table></div>');
 h+='<details class="pr-accordion tracker"><summary><span class="pr-acc-icon">'+posIcon('list')+'</span><span class="pr-acc-copy"><strong>Critical Roles Tracker</strong><span class="pr-count">'+trackerEmployees.length+'</span><small>Summary of staff assessments, IDP status, and readiness tracking.</small></span><span class="pr-chevron" aria-hidden="true"></span></summary><div class="pr-detail"><table><thead><tr><th>Employee</th><th>Position</th><th>Department</th><th>Criticality</th><th>Assessment</th><th>IDP</th><th>Readiness</th></tr></thead><tbody>'+trackerRows()+'</tbody></table></div></details></section>';
@@ -12583,7 +12588,7 @@ async function kaiFast(prompt) {
   return await callAI(prompt, false);
 }
 async function loadPositionsRegistry() {
-if (window._posRegByDep) return window._posRegByDep;
+if (window._posRegByDep) { await cmsMergeRegisteredPositions(window._posRegByDep); return window._posRegByDep; }
 var rs = await Promise.all([
 _supabase.from('positions').select('*'),
 _supabase.from('departments').select('*')
@@ -13980,6 +13985,18 @@ map[dn][p.position_name] = true;
 window._posRegByDep = map;
 return map;
 }
+async function cmsMergeRegisteredPositions(map) {
+try {
+var r = await _supabase.from('critical_positions').select('department, position_name').eq('is_active', true);
+(r.data || []).forEach(function (x) {
+var dn = String(x.department || '').trim();
+if (!dn || !x.position_name) return;
+var key = Object.keys(map).filter(function (k) { return sameText(k, dn); })[0] || dn;
+if (!map[key]) map[key] = {};
+map[key][x.position_name] = true;
+});
+} catch (e) {}
+}
 function posRegFor(dep) {
 var m = window._posRegByDep || {}; var out = {};
 Object.keys(m).forEach(function(k){ if (sameText(k, dep)) out = m[k]; });
@@ -14712,7 +14729,7 @@ var roleRules = {
 'HR Admin': 'CAN: all assessments, approve/return/disapprove, redo management, staff add/delete, competency library, registry, exports, company stats. CANNOT: HOHR decision-queue details, C-Suite dashboard data. If asked: "That information is available to the Head of HR and C-Suite roles."',
 'Head of HR': 'CAN: everything HR Admin can + decision queue, oversight, cross-company gaps. CANNOT: C-Suite succession summaries; never reveal queue outcomes to non-HOHR.',
 'C-Suite Executive': 'CAN: executive averages, succession pipeline, company comparison, critical gaps, dev-plan summaries, promotion-ready pool. CANNOT: modify assessments, individual evidence details.' }[role] || '';
-var pageHints = { 'emp-profile': 'Page: My Profile - help with score rings, readiness, gaps/strengths meaning.', 'emp-selfassess': 'Page: Self Assessment - ticking, evidence tips, 1-5 rating, proof, submission rules.', 'mgr-assess': 'Page: Manager Assessment - assessing a report, tiers, redo requests.', 'mgr-devplans': 'Page: Development Plans - creating plans, approvals, progress tracking.', 'hr-review': 'Page: Assessment Review - approve/return/disapprove workflow, release rules.', 'hr-all': 'Page: All Assessments - columns, search, exports.', 'hr-staff': 'Page: All Staff - staff table, add employee, reminders.', 'hohr-reports': 'Page: HOHR Report Approvals - decision queue, promote vs hold, escalation.', 'cs-reports': 'Page: C-Suite Dashboard - executive metrics, succession pipeline, company comparison.', 'hr-comp': 'Page: Competency Library - competencies, tiers, weights.', 'hr-positions': 'Page: Positions & Criticality - registry, criticality levels.' };
+var pageHints = { 'emp-profile': 'Page: My Profile - help with score rings, readiness, gaps/strengths meaning.', 'emp-selfassess': 'Page: Self Assessment - ticking, evidence tips, 1-5 rating, proof, submission rules.', 'mgr-assess': 'Page: Manager Assessment - assessing a report, tiers, redo requests.', 'mgr-devplans': 'Page: Development Plans - creating plans, approvals, progress tracking.', 'hr-review': 'Page: Assessment Review - approve/return/disapprove workflow, release rules.', 'hr-all': 'Page: All Assessments - columns, search, exports.', 'hr-staff': 'Page: All Staff - staff table, add employee, reminders.', 'hohr-reports': 'Page: HOHR Report Approvals - decision queue, promote vs hold, escalation.', 'cs-reports': 'Page: C-Suite Dashboard - executive metrics, succession pipeline, company comparison.', 'hr-comp': 'Page: Competency Library - competencies, tiers, weights.', 'hr-positions': 'Page: Critical Positions Registry - registry, criticality levels.' };
 var prompt = 'You are KAI (Kenafric Artificial Intelligence), the friendly in-app assistant for Kenafric CMS - warm, professional, like a knowledgeable HR colleague. Current user role: ' + role + '. Current page: ' + page + '. ' + (pageHints[page] || '') + '\nAnswer concisely (max 160 words), plain text, step-by-step for how-to, English only. If asked outside the CMS: "Great question, but I only know about Kenafric CMS!"\n' + security + '\nROLE RULES (' + role + '): ' + roleRules + fsCopy('\nSYSTEM KNOWLEDGE:\nROLES & THEMES: Employee (blue), Line Manager (teal), HR Admin (indigo), Head of HR (gold), C-Suite (navy/gold).\nSELF ASSESSMENT: tick experiences, evidence, rate 1-5, attach proof; one submission; redo needs HR approval.\nMANAGER ASSESSMENT: assess current role; redo via request when HR approves.\nPROSPECTIVE: unlocks at Current Role Final Score >=80%; same/higher level only; 80%+ joins Progression-Ready Pool.\nSCORING: tiers Critical/Important/Value-Add; points = rating/5 x tier weight; Core 5% each, Functional 14/14/14/14/8/8/8. Readiness: 80%+ Strong Performer; 71-80 Proficient; 61-70 Developing; 51-60 Below Expectations; <51 Critical Gap. Strengths >=70%; Gaps <70%.\nVISIBILITY: scores locked until HR Admin approves/disapproves ALL Self + Manager experiences.\nHR ADMIN: Review, Redo Requests, staff, library, registry, exports.\nHOHR: decision queue (Promote/Dev Plan/Hold/Escalate/Return), oversight.\nC-SUITE: executive dashboard, succession, company comparison, gaps.\nDEV PLANS: manager builds from gaps, HR approves, monthly reports.\nEXTRAS: chat, profile photo, global search, All Staff/All Assessments tables.\nCONVERSATION SO FAR:\n',"current") + hist + '\nUser: ' + q + '\nKAI:';
 try {
 var out = await Promise.race([ callAI(prompt, false), new Promise(function(res){ setTimeout(function(){ res(''); }, 9000); }) ]);
@@ -16439,7 +16456,7 @@ if (typeof loadAssessEmp === 'function') {
    var h = cgPanel(g, ' Current role - critical experience check (' + CG.current + '%)');
    h += '<div class="card"><div class="card-title">Succession route</div>';
    if (g.state !== 'pass') h += '<p style="font-size:12px;color:var(--orange)">A prospective role assessment needs every critical experience at ' + CG.current + '%+ on the current role first.</p>';
-   else if (!crit.length) h += '<p style="font-size:12px;color:var(--orange)">No critical roles are registered yet. HR must mark target roles in Positions &amp; Criticality before succession assessment.</p>';
+   else if (!crit.length) h += '<p style="font-size:12px;color:var(--orange)">No critical roles are registered yet. HR must mark target roles in the Critical Positions Registry before succession assessment.</p>';
    else h += '<p style="font-size:12px;color:var(--gray-600)">Succession starts from critical roles: only target roles registered as critical can be assessed. Readiness is a recommendation for consideration, not a promotion.</p>';
    h += '</div>';
    note.innerHTML = h;
@@ -18105,7 +18122,7 @@ async function hdDetail(kind){if(!hdAllowed())return;var epoch=CN.epoch;setConte
  }else{
  if(!data.positions)throw new Error('Position registry data unavailable: '+data.errors.positions);
  var list=kind==='critical'?m.critical:m.positions;
- h+='<p>Unique department/position pairs from the registry and employee records. Company-scoped results cover occupied positions only. Conflicting criticality entries are flagged, not guessed.</p>'+hdButton('Manage Positions & Criticality','hr-positions')+'<div class="table-wrap"><table><thead><tr><th>Department</th><th>Position</th><th>Criticality</th><th>Employees</th><th>Assessed</th><th>Coverage</th></tr></thead><tbody>';
+ h+='<p>Unique department/position pairs from the registry and employee records. Company-scoped results cover occupied positions only. Conflicting criticality entries are flagged, not guessed.</p>'+hdButton('Manage Critical Positions Registry','hr-positions')+'<div class="table-wrap"><table><thead><tr><th>Department</th><th>Position</th><th>Criticality</th><th>Employees</th><th>Assessed</th><th>Coverage</th></tr></thead><tbody>';
  h+=list.map(p=>'<tr><td>'+escapeHtml(p.department)+'</td><td>'+escapeHtml(p.position)+'</td><td>'+escapeHtml(p.conflict?'Conflicting registry entries':p.criticality||'Not recorded')+'</td><td>'+p.people.length+'</td><td>'+(data.assessments?p.assessed:'Unavailable')+'</td><td>'+(data.assessments&&p.people.length?Math.round(p.assessed/p.people.length*100)+'%':'--')+'</td></tr>').join('');h+='</tbody></table></div>';
  }setContent(h+'</section></div>');}catch(e){if(epoch===CN.epoch)setContent('<div class="card"><p>'+escapeHtml(e.message)+'</p>'+hdButton('Back to Dashboard','hr-dashboard')+'</div>');}}
 async function hdActionPage(kind){if(!hdAllowed())return;var epoch=CN.epoch;setContent('<div class="card">Loading action queue...</div>');
@@ -18285,7 +18302,7 @@ async function hhDetail(kind){
  h+=m.plans.map(p=>'<tr><td>'+escapeHtml(p.employee_name||p.employee_id)+'</td><td>'+escapeHtml(p.comp_name||'')+'<br>'+escapeHtml(p.task||'')+'</td><td>'+escapeHtml(p.start_date||'')+' to '+escapeHtml(p.end_date||'')+'</td><td>'+escapeHtml(p.status||'Not recorded')+'</td></tr>').join('');h+='</tbody></table></div>';
  }else{
  if(!d.positions)throw new Error(d.errors.positions);var rows=kind==='critical'?m.critical:m.positions;
- h+='<p>One row per department/position pair. Non-Critical roles are excluded from Critical Positions; conflicting registry classifications are flagged. Company filtering includes occupied positions only.</p>'+hhButton('Manage Positions & Criticality','hohr-positions')+'<div class="table-wrap"><table><thead><tr><th>Department</th><th>Position</th><th>Criticality</th><th>Staff</th><th>Assessed</th><th>Coverage</th></tr></thead><tbody>';
+ h+='<p>One row per department/position pair. Non-Critical roles are excluded from Critical Positions; conflicting registry classifications are flagged. Company filtering includes occupied positions only.</p>'+hhButton('Manage Critical Positions Registry','hohr-positions')+'<div class="table-wrap"><table><thead><tr><th>Department</th><th>Position</th><th>Criticality</th><th>Staff</th><th>Assessed</th><th>Coverage</th></tr></thead><tbody>';
  h+=rows.map(p=>'<tr><td>'+escapeHtml(p.department)+'</td><td>'+escapeHtml(p.position)+'</td><td>'+escapeHtml(p.conflict?'Conflicting registry entries':p.criticality||'Not recorded')+'</td><td>'+p.people.length+'</td><td>'+(d.assessments?p.assessed:'Unavailable')+'</td><td>'+(d.assessments&&p.people.length?Math.round(p.assessed/p.people.length*100)+'%':'--')+'</td></tr>').join('');h+='</tbody></table></div>';
  }setContent(h+'</section></div>');
  }catch(e){if(epoch===CN.epoch)setContent('<section class="card"><p>'+escapeHtml(e.message)+'</p>'+hhButton('Back to Dashboard','hohr-dash')+'</section>');}
@@ -22786,7 +22803,7 @@ function ihRender(){
   }
   if(f.task==='assessment')h+='<div class="ih-readonly"><small>Core level (automatic from selected role)</small><strong>'+ihE(pos?.level||'Not available until valid role configuration is linked')+'</strong></div>';
   h+='<div class="ih-grid"><label>Deadline<input id="ihDue" type="date" min="'+ihToday()+'" value="'+ihE(f.due)+'"></label><label>Optional instructions<textarea id="ihInstructions" rows="3" maxlength="2000">'+ihE(f.instructions)+'</textarea></label></div>'+
-   '<p class="ih-note">An invitation does not grant new assessment or framework permissions. For a manager prospective assessment, first issue the employee invitation for the same target role and level. Unlinked role configuration is flagged, not guessed.</p>'+
+   '<p class="ih-note ih-warn">Prospective assessments need the employee invitation for the same target role first.</p>'+
    ihButton('preview','Preview invitation',null,true)+'<div id="ihPreview"></div></section>';
  }
  h+='<aside class="ih-reminder"><strong>Invitation emails and 24-hour reminders</strong><p>Email is queued on issue, then every 24 hours until submission or expiry. The deadline locks unfinished work until HR renews authorization. The EmailJS worker and scheduler must be configured.</p></aside><p id="ihStatus" role="status"></p>';
@@ -23156,7 +23173,7 @@ function irForm(){
  var timing=controls.filter(g=>g.querySelector('#ihDue'));
  var readonly=Array.from(panel.querySelectorAll(':scope > .ih-readonly'));
  var form=document.createElement('div');form.className='ir-form';
- irAddStep(form,IH.view==='manager'?'Manager & assigned employee':'Employee','01',recipient);
+ irAddStep(form,IH.view==='manager'?'Who is being invited':'Employee','01',recipient);
  irAddStep(form,f.task==='framework'?'Framework':'Assessment','02',[...assessment,...readonly]);
  irAddStep(form,'Deadline & instructions','03',timing);
  var name=form.querySelector('#ihEmployee');
@@ -23252,10 +23269,23 @@ function irRedoContent(){
  (!IR.history.length?'<p>No matching historical role records were found for your current assessor access. Ask HR to review missing legacy framework links, not to bypass the lock.</p>':'')+'</section>';
  h+='<h3>Redo requests & approvals</h3>'+IR.redos.map(r=>'<article class="ir-redo-item"><h3>'+ihE(r.employee_name)+' | '+ihE(ihWork(r))+'</h3><p>'+ihE(r.target_department)+' / '+ihE(r.position)+'</p><p>'+ihE(r.reason)+'</p>'+
  '<small>Requested '+irSentDate(r.requested_at)+' | '+ihE(r.requester_email)+'</small><p><span class="ih-status">'+ihE(r.state)+'</span> '+ihE(r.review_note||'')+'</p>'+
- (r.can_review?'<label>Review note<input id="irReview-'+r.id+'" minlength="5"></label><button class="btn" data-ir="redo-review" data-id="'+r.id+'" data-value="Approved">Approve</button><button class="btn" data-ir="redo-review" data-id="'+r.id+'" data-value="Rejected">Reject</button>':'')+'</article>').join('')+
+ (r.can_review?'<label>Review note<input id="irReview-'+r.id+'" minlength="5"></label>'+irDueField(r)+'<button class="btn" data-ir="redo-review" data-id="'+r.id+'" data-value="Approved">Approve</button><button class="btn" data-ir="redo-review" data-id="'+r.id+'" data-value="Rejected">Reject</button>':'')+irSendField(r)+'</article>').join('')+
  (!IR.redos.length?'<p>No redo requests in this view.</p>':'')+
- '<p class="ir-footnote">Current Self redo: line manager approval. Manager and prospective redo: HR/HOHR approval. No self-approval. HR issues a fresh, single-use invitation after approval.</p>';
+ '<p class="ir-footnote">All redo requests are approved by HR Admin or HOHR. No self-approval. HR issues a fresh, single-use invitation after approval.</p>';
  return h;
+}
+function irIsHR(){return ['hr','hohr'].includes(APP.currentRole);}
+function irPlusDays(n){var d=new Date(ihToday()+'T12:00:00');d.setDate(d.getDate()+n);return d.toISOString().slice(0,10);}
+function irDueField(r){return irIsHR()?'<label>Deadline for the fresh invitation<input type="date" id="irDue-'+r.id+'" min="'+ihToday()+'" value="'+irPlusDays(7)+'"></label>':'';}
+function irSendField(r){return irIsHR()&&r.state==='Approved'?irDueField(r)+'<button class="btn btn-primary" type="button" data-ir="redo-send-invite" data-id="'+r.id+'">Send fresh invitation now</button>':'';}
+async function irRedoIssue(id,due){
+ var r=IR.redos.find(function(x){return String(x.id)===String(id);});if(!r)throw Error('Redo request not found.');
+ if(!due||due<ihToday())throw Error('Choose today or a future deadline.');
+ var dir=await ihAll('directory',500),emp=dir.find(function(e){return e.employee_id===r.employee_id;});
+ if(!emp)throw Error('Employee record not found.');
+ var mgr=null;
+ if(String(r.kind).indexOf('manager_')===0){var ms=await ihRPC('managers');mgr=ms.find(function(m){return String(m.email).trim().toLowerCase()===String(r.requester_email).trim().toLowerCase();});if(!mgr)throw Error('The requesting manager has no verified login.');}
+ return ihRPC('issue',{id:crypto.randomUUID(),kind:r.kind,employee_row_id:emp.id,expected_company:emp.company||'',expected_department:emp.department||'',manager_id:mgr?mgr.id:null,position_id:r.position_id,due_date:due,instructions:'Redo approved. Reason: '+String(r.reason||'').slice(0,500)});
 }
 function irRedos(){
  var root=document.getElementById('ihRoot');if(root){root.classList.add('ir-compact');root.innerHTML=ihHeader()+'<section class="ih-panel">'+irRedoContent()+'</section><p id="ihStatus" role="status"></p>';}
@@ -23302,10 +23332,11 @@ document.addEventListener('click',async e=>{
   document.getElementById('irRedoConfirm').innerHTML='<div class="ih-confirm"><h3>Confirm redo request</h3><p>'+ihE(r.employee_name)+' | '+ihE(r.position)+'</p><p>'+ihE(reason)+'</p><button class="btn btn-primary" data-ir="redo-send">Send request for approval</button></div>';
  }
  if(a==='redo-send'&&IR.redoSelection){IR.busy=true;await ihRPC('request_redo',IR.redoSelection);if(!stillHere())return;IR.redoSelection=null;var rows=await ihRPC('redos');if(!stillHere())return;IR.redos=rows;irRegisterLayout();ihNotice('Redo requested. Wait for approval and a fresh HR invitation.');}
+if(a==='redo-send-invite'){IR.busy=true;await irRedoIssue(b.dataset.id,(document.getElementById('irDue-'+b.dataset.id)||{}).value);if(!stillHere())return;IR.redos=await ihRPC('redos');if(IH.view==='redos')irRedos();else irRegisterLayout();ihNotice('Fresh invitation sent.');}
  if(a==='redo-review'){
   var note=document.getElementById('irReview-'+b.dataset.id).value.trim();if(note.length<5)throw Error('Give a review note of at least five characters.');
-  if(!confirm(b.dataset.value+' this redo request? A new HR invitation is still required.'))return;
-  IR.busy=true;await ihRPC('review_redo',{id:b.dataset.id,decision:b.dataset.value,note});if(!stillHere())return;var rows=await ihRPC('redos');if(!stillHere())return;IR.redos=rows;if(IH.view==='redos')irRedos();else irRegisterLayout();
+  if(!confirm(b.dataset.value+' this redo request?'+(b.dataset.value==='Approved'&&irIsHR()?' A fresh invitation will be sent automatically with the deadline you chose.':' HR will then send the fresh invitation.')))return;
+  IR.busy=true;await ihRPC('review_redo',{id:b.dataset.id,decision:b.dataset.value,note});var autoMsg='';if(b.dataset.value==='Approved'&&irIsHR()){IR.redos=await ihRPC('redos');try{await irRedoIssue(b.dataset.id,(document.getElementById('irDue-'+b.dataset.id)||{}).value);autoMsg=' Fresh invitation sent.';}catch(er){autoMsg=' Approved, but the invitation was not sent: '+er.message+' Use Send fresh invitation now.';}}if(!stillHere())return;var rows=await ihRPC('redos');if(!stillHere())return;IR.redos=rows;if(IH.view==='redos')irRedos();else irRegisterLayout();if(autoMsg)ihNotice('Redo approved.'+autoMsg);
  }
  }catch(e){if(stillHere())ihNotice(e.message);}finally{IR.busy=false;}
 });
@@ -23504,6 +23535,7 @@ ihOpenWork=async function(id){
   values:{},savedSignature:'',key:adKey(id),timer:null,pending:null,uploads:new Map(),uploadErrors:new Set(),submitting:false,conflict:false,recovery:null};
   AD.state=s;IH.selected=s.invitation;
   adMerge(s,data.draft?.content);s.savedSignature=adStable(adItems(s));
+  if(!data.draft&&s.canSave){try{var pfK=function(c,t,k){return [c,t,k].map(function(x){return String(x==null?'':x).trim().toLowerCase();}).join('|');};var pre=await _supabase.rpc('cms_redo_prefill',{p_request_id:id});var pfMap=new Map(((pre&&pre.data)||[]).map(function(x){return [pfK(x.code,x.text,x.classification),x];}));var pfRecs=s.items.map(function(i){var p=pfMap.get(pfK(i.code,i.text,i.classification));return p?{id:String(i.id),ticked:!!p.ticked,evidence:p.evidence||'',rating:p.rating||null,evidence_items:p.evidence_items||[],attachment_name:p.attachment_name||'',attachment_url:p.attachment_url||''}:null;}).filter(Boolean);if(pfRecs.length){adMerge(s,{items:pfRecs});s.message='Answers from the previous assessment were filled in ('+pfRecs.length+' experiences). Review each one and change what has changed.';}}catch(pfErr){}}
   var raw=null,legacy=null;
   try{raw=JSON.parse(localStorage.getItem(s.key)||'null');legacy=JSON.parse(localStorage.getItem('cms-invite-hub:'+APP.user.email+':'+id)||'null');}catch{ s.message='A browser draft could not be read. Server draft is unchanged.'; }
   if(data.draft&&data.draft.framework_hash!==s.hash){
@@ -25864,7 +25896,8 @@ ebSummary=async function(force){
  var map=new Map([...original].map(([k,c])=>[k,{...c,departments:new Map(c.departments)}]));
  CR.companies.forEach(c=>{if(!map.has(c.name))map.set(c.name,{key:c.name,name:c.name,count:0,departments:new Map()});});
  CR.departments.forEach(d=>{var c=map.get(d.company);if(c&&!c.departments.has(d.department))c.departments.set(d.department,{key:d.department,name:d.department,count:0});});
- return map;
+ await cmsMergeRegisteredPositions(map);
+return map;
 };
 rptGroups=function(){
  var level=arguments[0]||(RPT.report.scope==='group'?'company':'department');
@@ -26743,7 +26776,7 @@ function explain(){
   if(isHR&&IH.view==='manager'&&IH.form?.task==='framework'){
    var label=root.querySelector('#ihManager')?.closest('label');
    if(label?.firstChild?.nodeType===Node.TEXT_NODE)label.firstChild.textContent='Invited competency author';
-   root.querySelectorAll('.ih-note').forEach(n=>{if(n.textContent.includes('An invitation does not grant'))n.textContent='HR may invite any verified login to write this specific role framework, including their own role. This does not grant manager assessment rights, HR approval or publication rights.';});
+   root.querySelectorAll('.ih-note').forEach(n=>{if(n.textContent.includes('Prospective assessments need'))n.textContent='HR may invite any verified login to write this specific role framework, including their own role. This does not grant manager assessment rights, HR approval or publication rights.';});
   }
   if(isHR&&!root.querySelector('[data-fwi-mine]')){
    var nav=root.querySelector('.ih-tabs');if(nav){var b=document.createElement('button');b.type='button';b.className='btn btn-outline';b.dataset.fwiMine='true';b.textContent='My assigned work';b.onclick=()=>ihOpen('mine');nav.append(b);}
@@ -27318,10 +27351,45 @@ document.addEventListener('click',async e=>{
   if(a==='open-batch'){await biGet(b.dataset.id);biRender();}
  }catch(e){biStatus(e.message);}finally{if(b.isConnected)b.disabled=false;}
 });
-function biAddMode(){
+function ihManagerSearch(){
+ var sel=document.getElementById('ihManager');
+ if(!sel||document.getElementById('ihManagerFind'))return;
+ var all=(IH.managers||[]).map(function(m){return {id:String(m.id),name:String(m.name||'').toLowerCase(),email:String(m.email||'').toLowerCase(),label:m.name+' | '+m.email};});
+ if(all.length<6)return;
+ var box=document.createElement('input');box.type='search';box.id='ihManagerFind';box.autocomplete='off';
+ box.placeholder='Start typing a name, the matches list as you type ('+all.length+' people)';box.value=IH.mq||'';
+ box.style.marginBottom='6px';
+ var ph=sel.options[0]?sel.options[0].cloneNode(true):null;
+ function rank(m,q){
+  if(m.name.indexOf(q)===0)return 0;
+  if(m.name.split(/[\s.\-]+/).some(function(w){return w.indexOf(q)===0;}))return 1;
+  if(m.email.indexOf(q)===0)return 2;
+  return 9;
+ }
+ function fill(open){
+  var q=box.value.trim().toLowerCase(),keep=sel.value;IH.mq=box.value;
+  var hits=all.filter(function(m){return !q||rank(m,q)<9||m.id===keep;});
+  if(q)hits.sort(function(a,b){return rank(a,q)-rank(b,q)||a.name.localeCompare(b.name);});
+  sel.replaceChildren();if(ph)sel.appendChild(ph.cloneNode(true));
+  hits.forEach(function(m){var o=document.createElement('option');o.value=m.id;o.textContent=m.label;sel.appendChild(o);});
+  if(!hits.length){var n=document.createElement('option');n.value='';n.textContent='No name starts with that';sel.appendChild(n);}
+  sel.value=keep;
+  sel.size=(open&&q)?Math.min(sel.options.length,8):1;
+ }
+ box.addEventListener('input',function(){fill(true);});
+ box.addEventListener('keydown',function(e){
+  if(e.key==='ArrowDown'){e.preventDefault();sel.focus();if(sel.selectedIndex<1&&sel.options.length>1)sel.selectedIndex=1;return;}
+  if(e.key!=='Enter')return;e.preventDefault();
+  var first=Array.prototype.filter.call(sel.options,function(o){return o.value;})[0];
+  if(first){sel.value=first.value;sel.size=1;sel.dispatchEvent(new Event('change',{bubbles:true}));}
+ });
+ sel.parentNode.insertBefore(box,sel);
+ if(box.value)fill(false);
+}
+function biAddMode(){ihManagerSearch();
  var root=document.getElementById('ihRoot');if(!root||!['hr','hohr'].includes(APP.currentRole)||document.getElementById('adRoot'))return;
- if(root.querySelector('.bi-mode'))return;
- var nav=document.createElement('nav');nav.className='bi-mode';nav.innerHTML='<span>Invitation mode</span>'+biButton('single','Single invitation','',true)+'<button type="button" class="btn btn-outline" data-open-bulk>Bulk invitations</button>';root.querySelector('.ih-header')?.after(nav);
+ if(root.querySelector('.bi-mode,[data-open-bulk]'))return;
+ var tabs=root.querySelector('.ih-tabs');if(tabs){var bb=document.createElement('button');bb.type='button';bb.className='btn btn-outline';bb.setAttribute('data-open-bulk','');bb.innerHTML='<span>Bulk invitations</span>';tabs.insertBefore(bb,tabs.querySelector('[data-value="sent"]'));return;}var nav=document.createElement('nav');nav.className='bi-mode';nav.innerHTML='<span>Invitation mode</span>'+biButton('single','Single invitation','',true)+'<button type="button" class="btn btn-outline" data-open-bulk>Bulk invitations</button>';root.querySelector('.ih-header')?.after(nav);
 }
 var biOldRender=ihRender;ihRender=function(){var r=biOldRender.apply(this,arguments);biAddMode();return r;};
 document.addEventListener('click',e=>{if(e.target.closest('[data-open-bulk]'))biOpen();});
@@ -33899,6 +33967,17 @@ body #hrApprovalHub .hap-links button:nth-child(3){color:#744595!important;borde
 body #hrApprovalHub .hap-count{border-radius:6px;background:#e8edf8;padding:2px 8px;font-variant-numeric:tabular-nums}
 body #hrApprovalHub button:focus-visible{outline:3px solid #6c86c5;outline-offset:3px}
 body #hrApprovalHub button:disabled{opacity:.55;cursor:not-allowed}
+body :is(#ihRoot,#biRoot) #hrApprovalHub{display:flex!important;flex-wrap:wrap;align-items:center;gap:10px 14px;padding:10px 16px!important;margin:12px 0!important;border-radius:10px!important}
+body #hrApprovalHub .hap-title{font-size:13px;font-weight:800}
+body #hrApprovalHub .hap-links{margin:0!important;gap:8px!important}
+body #hrApprovalHub .hap-links button{min-height:32px!important;padding:4px 12px!important;border-radius:20px!important;font-size:12px!important}
+body #hrApprovalHub .hap-count{background:#4338ca!important;color:#fff!important;border-radius:10px!important;padding:1px 8px!important;font-size:11px!important}
+body #hrApprovalHub [data-hap-status]{margin:0 0 0 auto!important;font-size:12px!important;color:#64748b}
+html body #ihRoot#ihRoot .ih-tabs{display:flex!important;gap:6px!important;flex-wrap:wrap;margin:16px 0 14px!important;border-bottom:2px solid #d5dce8;padding:0}
+html body #ihRoot#ihRoot .ih-tabs button.btn{background-image:none!important;background:transparent!important;border:0!important;border-bottom:3px solid transparent!important;border-radius:0!important;box-shadow:none!important;color:#64748b!important;font-size:13px!important;font-weight:700!important;min-height:0!important;padding:10px 18px!important;margin-bottom:-2px}
+html body #ihRoot#ihRoot .ih-tabs button.btn.btn-primary{background-image:none!important;color:#4338ca!important;border-bottom-color:#4338ca!important;background:transparent!important}
+html body #ihRoot#ihRoot .ih-tabs button.btn svg{display:none}
+html body #ihRoot#ihRoot .ih-note.ih-warn{background:#fff7ed;border:1px solid #fed7aa;color:#9a3412;border-radius:8px;padding:8px 12px;font-size:12px!important}
 body .hap-self-note{padding:9px 12px;border-left:3px solid #ac7626;background:#fff7e7;color:#78511c;font-size:14px;margin-top:10px}
 </style>
 <script id="cms-hr-pending-approvals">
@@ -33917,8 +33996,8 @@ body .hap-self-note{padding:9px 12px;border-left:3px solid #ac7626;background:#f
   });
   var errors=state.data.filter(x=>!x.ok).map(x=>x.label+' could not be loaded');
   var msg=hub.querySelector('[data-hap-status]');
-  if(msg)msg.textContent=errors.length?errors.join('. ')+'. Click Refresh counts to retry.':
-   'Pending requests, including any that require a different reviewer. Opening a queue does not approve it.';
+  if(msg)msg.textContent=errors.length?errors.join('. ')+'. Click Refresh to retry.':
+   'Opening a queue does not approve it.';
  }
  async function counts(force){
   if(!permitted())return;
@@ -33943,17 +34022,17 @@ body .hap-self-note{padding:9px 12px;border-left:3px solid #ac7626;background:#f
   if(!permitted()){document.getElementById('hrApprovalHub')?.remove();return;}
   var root=currentRoot();if(!root||document.getElementById('hrApprovalHub'))return;
   var hub=document.createElement('section');hub.id='hrApprovalHub';hub.setAttribute('aria-label','Pending approvals');
-  hub.innerHTML='<h2>Pending approvals</h2><p>Choose a request queue below. Requests you submitted must be approved by another authorized reviewer.</p>'+
+  hub.innerHTML='<strong class="hap-title">Waiting for your approval</strong>'+
    '<div class="hap-links"><button type="button" data-hap="renewal"> Deadline extensions <span class="hap-count" data-hap-count="renewal">...</span></button>'+
    '<button type="button" data-hap="redo"> Assessment redos <span class="hap-count" data-hap-count="redo">...</span></button>'+
    '<button type="button" data-hap="deleted"> Deleted-work permissions <span class="hap-count" data-hap-count="deleted">...</span></button></div>'+
-   '<button type="button" class="btn btn-outline" data-hap="refresh">Refresh counts</button><p data-hap-status role="status">Reading pending requests...</p>';
+   '<p data-hap-status role="status">Reading pending requests...</p>';
   var heading=root.querySelector('.ih-header,.bi-heading');if(heading)heading.after(hub);else root.prepend(hub);
   counts(false).catch(()=>{var n=hub.querySelector('[data-hap-status]');if(n)n.textContent='Counts unavailable. Use the queue buttons to inspect requests.';});
  }
  function scrollTo(el){if(!el)return;el.scrollIntoView({block:'center',behavior:'smooth'});var focus=el.querySelector('input,textarea,button');if(focus)focus.focus({preventScroll:true});}
  document.addEventListener('click',async function(event){
-  var b=event.target.closest('[data-hap]');if(!b||b.disabled||!permitted())return;
+  if(event.target.closest('#ihRoot .ih-header [data-ih="reload"]'))state.at=0;var b=event.target.closest('[data-hap]');if(!b||b.disabled||!permitted())return;
   var action=b.dataset.hap,key=identity();b.disabled=true;
   try{
    if(action==='refresh'){await counts(true);return;}
@@ -42696,6 +42775,420 @@ body.cms-focus-editor-v1 #mainContent #fwScreen.cfu-screen #fwBody .cfe-footer {
   var oldAdmin=dkAdmin;
   dkAdmin=function(){var r=oldAdmin.apply(this,arguments);try{backfillCard();}catch(e){}return r;};
  }
+})();
+</script>
+<script id="cms-all-positions-v1">
+
+/* All Positions: every position in the company in one place, filled or vacant, with company and department filters.
+   Reads the Critical Positions Registry, the positions list and employee records. Row checkboxes let HR assign a department to many positions at once. */
+(function(){
+ var PAGE='all-positions';
+ var ROLES=['hr','hohr'];
+ var S={q:'',company:'',department:'',crit:'',status:'',page:0,rows:[],open:{},sel:{},assign:false};
+ var PER=10;
+ function el(tag,cls,text){var e=document.createElement(tag);if(cls)e.className=cls;if(text!==undefined&&text!==null)e.textContent=text;return e;}
+ function norm(x){return String(x==null?'':x).trim().replace(/\s+/g,' ').toUpperCase();}
+ function toast(m){if(typeof showToast==='function')showToast(m);}
+ function css(){
+  if(document.getElementById('apos-style'))return;
+  var s=document.createElement('style');s.id='apos-style';
+  s.textContent=[
+   '.apos-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap}',
+   '.apos-head h2{margin:0 0 4px;font-size:22px}',
+   '.apos-sub{font-size:13px;color:#536984;margin:0}',
+   '.apos-form{background:#fff;border:2px solid #4338ca;border-radius:12px;padding:14px 16px;margin:12px 0}.apos-form h3{margin:0 0 4px}',
+   '.apos-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin:14px 0}',
+   '.apos-kpi{background:#fff;border:1px solid #dfe5f3;border-radius:12px;padding:12px 14px}',
+   '.apos-kpi b{display:block;font-size:24px}.apos-kpi span{font-size:12px;color:#536984}',
+   '.apos-tools{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin:10px 0 14px}',
+   '.apos-tools label{font-size:12px;font-weight:700;color:#334155}',
+   '.apos-tools select,.apos-tools input{margin-top:4px}',
+   '.apos-table{background:#fff;border:1px solid #dfe5f3;border-radius:12px;overflow-x:auto}',
+   '.apos-table table{width:100%;min-width:900px;border-collapse:collapse;font-size:13px}',
+   '.apos-table th{background:#eef2fb;text-align:left;padding:10px 12px;font-size:12px;color:#334155}',
+   '.apos-table td{padding:10px 12px;border-top:1px solid #e8edf7;vertical-align:top}',
+   '.apos-pill{display:inline-block;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:700}',
+   '.apos-pill.g{background:#d9f3e6;color:#0d7a46}.apos-pill.r{background:#fde0e0;color:#b02323}.apos-pill.o{background:#ffefd6;color:#a65d00}.apos-pill.b{background:#e0e6ff;color:#2f3fb0}.apos-pill.n{background:#edf2fa;color:#6a7595}',
+   '.apos-who{font-size:12px;color:#536984;margin-top:4px}',
+   '.apos-link{border:none;background:none;color:#4338ca;font-weight:700;font-size:12px;cursor:pointer;padding:0}',
+   '.apos-pager{display:flex;gap:10px;align-items:center;justify-content:flex-end;margin:12px 0;font-size:13px}'
+  ].join('\n');
+  document.head.appendChild(s);
+ }
+ async function fetchAll(table,cols,filter){
+  var out=[],from=0;
+  for(;;){
+   var q=_supabase.from(table).select(cols);if(filter)q=filter(q);
+   var r=await q.range(from,from+999);
+   if(r.error)throw Error(r.error.message);
+   out=out.concat(r.data||[]);
+   if(!r.data||r.data.length<1000)break;
+   from+=1000;
+  }
+  return out;
+ }
+ async function load(){
+  async function loadRegistry(){
+   var sets=['id,position_name,department,criticality,company,position_no','id,position_name,department,criticality,company','id,position_name,department,criticality'];
+   for(var i=0;i<sets.length;i++){
+    try{return await fetchAll('critical_positions',sets[i],function(q){return q.eq('is_active',true);});}catch(e){if(i===sets.length-1)throw e;}
+   }
+  }
+  var res=await Promise.all([
+   fetchAll('employees','employee_id,employee_name,position,department,company'),
+   loadRegistry(),
+   _supabase.from('positions').select('*'),
+   _supabase.from('departments').select('*')
+  ]);
+  var emps=res[0],regs=res[1],pos=res[2].data||[],deps=res[3].data||[];
+  var depName={};S.depOpts=deps.filter(function(d){return d.name;}).map(function(d){return {name:String(d.name).trim(),company:String(d.company||'').trim(),code:String(d.department_id||'').trim()};}).sort(function(a,b){return a.name.localeCompare(b.name)||a.company.localeCompare(b.company);});
+  deps.forEach(function(d){var code=norm(d.department_id||d.id);if(code)depName[code]=d.name||d.department_name||d.dept_name||d.title||d.label||'';});
+  var depCompany={};
+  emps.forEach(function(e){var d=norm(e.department),c=String(e.company||'').trim();if(!d||!c)return;(depCompany[d]=depCompany[d]||{})[c]=true;});
+  deps.forEach(function(d){var n=norm(d.name),c=String(d.company||'').trim();if(n&&c){(depCompany[n]=depCompany[n]||{})[c]=true;}});
+  function companyOfDept(d){var m=depCompany[norm(d)];if(!m)return '';var k=Object.keys(m);return k.length===1?k[0]:'';}
+  S.dbc={};emps.forEach(function(e){var c=String(e.company||'').trim(),d=norm(e.department);if(c&&d)(S.dbc[c]=S.dbc[c]||{})[d]=true;});
+  deps.forEach(function(d){var c=String(d.company||'').trim(),n=norm(d.name);if(c&&n)(S.dbc[c]=S.dbc[c]||{})[n]=true;});
+  var map={};
+  function mk(position,dept,company){
+   var key=norm(company)+'||'+norm(dept)+'||'+norm(position);
+   return map[key]||(map[key]={position:String(position).trim(),department:String(dept||'').trim(),company:company||'',crit:'',no:'',holders:[],inRegistry:false});
+  }
+  emps.forEach(function(e){
+   if(!String(e.position||'').trim())return;
+   mk(e.position,e.department||'',String(e.company||'').trim()).holders.push(e);
+  });
+  function attach(position,dept,crit,isReg,company,no,src){
+   var dp=norm(dept)+'||'+norm(position),hit=false,co=String(company||'').trim();
+   Object.keys(map).forEach(function(k){
+    var r=map[k];
+    if(norm(r.department)+'||'+norm(r.position)===dp&&(!co||norm(r.company)===norm(co))){hit=true;if(isReg){r.crit=crit;r.inRegistry=true;if(no)r.no=no;}else if(no){r.no=no;}if(src){if(src.regId)r.regId=src.regId;if(src.pid)r.pid=src.pid;}}
+   });
+  if(!hit){var r=mk(position,dept,co||companyOfDept(dept));if(isReg){r.crit=crit;r.inRegistry=true;if(no)r.no=no;}else if(no){r.no=no;}if(src){if(src.regId)r.regId=src.regId;if(src.pid)r.pid=src.pid;}}
+  }
+  regs.forEach(function(g){if(g.position_name)attach(g.position_name,g.department||'',g.criticality||'Critical Role',true,g.company,g.position_no,{regId:g.id});});
+  pos.forEach(function(p){var dn=p.department||p.department_name||p.dept||depName[norm(p.department_id)]||'';if(p.position_name)attach(p.position_name,dn,'',false,'',p.position_no||p.position_id,{pid:p.position_id});});
+  var rows=Object.keys(map).map(function(k){
+   var r=map[k];
+   r.companyList=r.company?[r.company]:[];
+   r.company=r.company||'Not set';
+   r.headcount=r.holders.length;
+   return r;
+  });
+  rows.sort(function(a,b){return a.department.localeCompare(b.department)||a.position.localeCompare(b.position);});
+  S.rows=rows;
+  S.companies=Object.keys(rows.reduce(function(m,r){r.companyList.forEach(function(c){m[c]=1;});return m;},{})).sort();
+ }
+ function inCompany(r,c){return r.companyList.indexOf(c)>=0||(r.companyList.length===0&&!!(S.dbc&&S.dbc[c]&&S.dbc[c][norm(r.department)]));}
+ function filtered(){
+  var q=norm(S.q);
+  return S.rows.filter(function(r){
+   if(S.company&&!inCompany(r,S.company))return false;
+   if(S.department&&r.department!==S.department)return false;
+   if(S.crit==='none'){if(r.crit)return false;}else if(S.crit&&r.crit!==S.crit)return false;
+   if(S.status==='filled'&&!r.headcount)return false;
+   if(S.status==='vacant'&&r.headcount)return false;
+   if(q&&norm(r.no+' '+r.position+' '+r.department+' '+r.company).indexOf(q)<0)return false;
+   return true;
+  });
+ }
+ function critPill(c){
+  if(!c)return el('span','apos-pill n','Not classified');
+  var cls=c==='Absolutely Critical Role'?'r':c==='Non-Critical Role'?'n':c==='Relatively Critical Role'?'o':'b';
+  return el('span','apos-pill '+cls,c);
+ }
+
+ function addForm(root){
+  var box=el('div','apos-form');
+  box.appendChild(el('h3',null,'Add a position'));
+  box.appendChild(el('p','apos-sub','It is saved straight to the Critical Positions Registry and appears here and in every position dropdown.'));
+  var g=el('div','apos-tools');
+  function fld(label,node){var l=el('label',null,label);l.appendChild(node);g.appendChild(l);return node;}
+  var co=el('select');[['','Choose company']].concat(S.companies.map(function(c){return [c,c];})).forEach(function(o){var op=el('option',null,o[1]);op.value=o[0];co.appendChild(op);});
+  co.value=S.company||'';fld('Company',co);
+  var dep=el('input');dep.setAttribute('list','aposDeps');dep.placeholder='Choose or type a department';
+  var dl=el('datalist');dl.id='aposDeps';
+  function fillDeps(){
+   dl.replaceChildren();var seen={};
+   S.rows.forEach(function(r){if(r.department&&(!co.value||inCompany(r,co.value))&&!seen[norm(r.department)]){seen[norm(r.department)]=1;var o=el('option');o.value=r.department;dl.appendChild(o);}});
+  }
+  fillDeps();co.onchange=fillDeps;
+  fld('Department',dep);g.appendChild(dl);
+  var pn=el('input');pn.placeholder='e.g. Senior Human Resource Officer';fld('Position name',pn);
+  var cr=el('select');[['Non-Critical Role','Non-critical'],['Relatively Critical Role','Relatively critical'],['Critical Role','Critical'],['Absolutely Critical Role','Absolutely critical']].forEach(function(o){var op=el('option',null,o[1]);op.value=o[0];cr.appendChild(op);});
+  fld('Criticality',cr);
+  box.appendChild(g);
+  var err=el('div');err.style.cssText='color:#b02323;font-size:13px;min-height:18px;margin:4px 0';box.appendChild(err);
+  var save=el('button','btn btn-primary','Save position');save.type='button';
+  save.onclick=async function(){
+   err.textContent='';
+   var d=dep.value.trim(),p=pn.value.trim();
+   if(!co.value){err.textContent='Choose the company.';return;}
+   if(!d){err.textContent='Choose or type the department.';return;}
+   if(p.length<2){err.textContent='Type the position name.';return;}
+   var dup=S.rows.some(function(r){return r.inRegistry&&norm(r.position)===norm(p)&&norm(r.department)===norm(d)&&(norm(r.company)===norm(co.value)||r.company==='Not set');});
+   if(dup){err.textContent='This position is already in the registry for that department.';return;}
+   save.disabled=true;
+   var row={department:d,position_name:p,criticality:cr.value,is_active:true,company:co.value};
+   var note='',no='';
+   var r=await _supabase.from('critical_positions').insert(row).select('position_no');
+   if(r.error&&/position_no/i.test(r.error.message||'')){r=await _supabase.from('critical_positions').insert(row);note=' The position number step has not been run in the database yet.';}
+   if(r.error&&/company/i.test(r.error.message||'')){delete row.company;r=await _supabase.from('critical_positions').insert(row);note+=' The company was not stored: run the company database step.';}
+   if(r.error){err.textContent='Not saved: '+r.error.message;save.disabled=false;return;}
+   if(r.data&&r.data[0]&&r.data[0].position_no)no=r.data[0].position_no;
+   if(note)toast('Saved.'+note);
+   window._posRegByDep=null;
+   S.adding=false;toast('Position added: '+p+(no?' ('+no+')':''));
+   await load();draw(root);
+  };
+  box.appendChild(save);
+  return box;
+ }
+ function rowKey(r){return norm(r.company)+'||'+norm(r.department)+'||'+norm(r.position);}
+ function selRows(){return S.rows.filter(function(r){return S.sel[rowKey(r)];});}
+ function assignForm(root){
+  var box=el('div','apos-form'),rows=selRows();
+  box.appendChild(el('h3',null,'Set department for '+rows.length+' selected position'+(rows.length===1?'':'s')));
+  box.appendChild(el('p','apos-sub','Pick the department. It is saved straight to the database and every page that reads positions will show it.'));
+  var g=el('div','apos-tools'),l=el('label',null,'Department'),dd=el('select');
+  var o0=el('option',null,'Choose department');o0.value='';dd.appendChild(o0);
+  S.depOpts.forEach(function(d,i){var op=el('option',null,d.name+(d.company?' - '+d.company:'')+(d.code?'':' (no code yet)'));op.value=String(i);dd.appendChild(op);});
+  l.appendChild(dd);g.appendChild(l);box.appendChild(g);
+  var err=el('div');err.style.cssText='color:#b02323;font-size:13px;min-height:18px;margin:4px 0';box.appendChild(err);
+  var save=el('button','btn btn-primary','Save department');save.type='button';
+  var cancel=el('button','btn btn-outline','Cancel');cancel.type='button';cancel.style.marginLeft='8px';
+  cancel.onclick=function(){S.assign=false;draw(root);};
+  save.onclick=async function(){
+   err.textContent='';
+   if(dd.value===''){err.textContent='Choose the department.';return;}
+   var d=S.depOpts[+dd.value],pids={},rids={},only=0;
+   rows.forEach(function(r){if(r.pid)pids[r.pid]=1;if(r.regId)rids[r.regId]=1;if(!r.pid&&!r.regId)only++;});
+   var pl=Object.keys(pids),rl=Object.keys(rids).map(function(x){return /^\d+$/.test(x)?+x:x;});
+   if(pl.length&&!d.code){err.textContent=d.name+' has no department code yet, so it cannot be used for these positions. Pick another one.';return;}
+   if(!pl.length&&!rl.length){err.textContent='These positions only exist on employee records. Change the department on the employee, or use Add a position.';return;}
+   save.disabled=true;
+   if(pl.length){
+    var r1=await _supabase.from('positions').update({department_id:d.code}).in('position_id',pl);
+    if(r1.error){err.textContent='Not saved: '+r1.error.message;save.disabled=false;return;}
+   }
+   if(rl.length){
+    var up={department:d.name};if(d.company)up.company=d.company;
+    var r2=await _supabase.from('critical_positions').update(up).in('id',rl);
+    if(r2.error&&/company/i.test(r2.error.message||'')){delete up.company;r2=await _supabase.from('critical_positions').update(up).in('id',rl);}
+    if(r2.error){err.textContent='Not saved: '+r2.error.message;save.disabled=false;return;}
+   }
+   window._posRegByDep=null;
+   toast('Department set to '+d.name+' for '+(pl.length+rl.length)+' position record'+((pl.length+rl.length)===1?'':'s')+(only?'. '+only+' employee-only position(s) skipped.':'.'));
+   S.sel={};S.assign=false;
+   await load();draw(root);
+  };
+  box.appendChild(save);box.appendChild(cancel);
+  return box;
+ }
+ function draw(root){
+  var all=S.rows,list=filtered();
+  var filled=all.filter(function(r){return r.headcount>0;}).length,vacant=all.length-filled;
+  var crit=all.filter(function(r){return r.crit&&r.crit!=='Non-Critical Role';}).length;
+  root.replaceChildren();
+  var head=el('div','apos-head'),left=el('div');
+  left.appendChild(el('h2',null,'All Positions'));
+  left.appendChild(el('p','apos-sub','Every position in the organisation, filled or vacant. Register or reclassify positions in the Critical Positions Registry.'));
+  head.appendChild(left);
+  var btns=el('div');btns.style.cssText='display:flex;gap:8px;flex-wrap:wrap';
+  var add=el('button','btn btn-primary',S.adding?'Close':'Add a position');add.type='button';
+  add.onclick=function(){S.adding=!S.adding;draw(root);};
+  var reg=el('button','btn btn-outline','Open Critical Positions Registry');reg.type='button';
+  reg.onclick=function(){navigateTo(APP.currentRole==='hohr'?'hohr-positions':'hr-positions');};
+  btns.appendChild(add);btns.appendChild(reg);head.appendChild(btns);root.appendChild(head);
+  if(S.adding)root.appendChild(addForm(root));
+  if(S.assign&&selRows().length)root.appendChild(assignForm(root));else S.assign=false;
+  var k=el('div','apos-kpis');
+  [['Total positions',all.length],['Filled',filled],['Vacant',vacant],['Critical roles',crit]].forEach(function(x){var d=el('div','apos-kpi');d.appendChild(el('b',null,String(x[1])));d.appendChild(el('span',null,x[0]));k.appendChild(d);});
+  root.appendChild(k);
+  var tools=el('div','apos-tools');
+  function sel(label,id,opts,val,onchange){
+   var l=el('label',null,label),s=el('select');s.id=id;
+   opts.forEach(function(o){var op=el('option',null,o[1]);op.value=o[0];s.appendChild(op);});
+   s.value=val;s.onchange=function(){onchange(s.value);S.page=0;draw(root);};
+   l.appendChild(s);tools.appendChild(l);
+  }
+  sel('Company','aposCompany',[['','All companies']].concat(S.companies.map(function(c){return [c,c];})),S.company,function(v){S.company=v;S.department='';});
+  var deps={};
+  all.forEach(function(r){if(!S.company||inCompany(r,S.company))deps[r.department||'']=1;});
+  sel('Department','aposDept',[['','All departments']].concat(Object.keys(deps).sort().map(function(d){return [d,d||'(No department)'];})),S.department,function(v){S.department=v;});
+  sel('Criticality','aposCrit',[['','Any'],['Absolutely Critical Role','Absolutely critical'],['Critical Role','Critical'],['Relatively Critical Role','Relatively critical'],['Non-Critical Role','Non-critical'],['none','Not classified']],S.crit,function(v){S.crit=v;});
+  sel('Status','aposStatus',[['','All'],['filled','Filled'],['vacant','Vacant']],S.status,function(v){S.status=v;});
+  var sl=el('label',null,'Search'),si=el('input');si.type='search';si.id='aposQ';si.value=S.q;si.placeholder='Position, number or department';
+  si.oninput=function(){S.q=si.value;S.page=0;var pos=si.selectionStart;draw(root);var n=document.getElementById('aposQ');if(n){n.focus();n.setSelectionRange(pos,pos);}};
+  sl.appendChild(si);tools.appendChild(sl);root.appendChild(tools);
+  var nSel=selRows().length,bar=el('div','apos-pager');bar.style.justifyContent='flex-start';
+  var ab=el('button','btn btn-primary','Set department for selected ('+nSel+')');ab.type='button';ab.disabled=!nSel;
+  ab.onclick=function(){S.assign=true;S.adding=false;draw(root);};
+  var cb=el('button','btn btn-outline','Clear selection');cb.type='button';cb.disabled=!nSel;
+  cb.onclick=function(){S.sel={};S.assign=false;draw(root);};
+  bar.appendChild(ab);bar.appendChild(cb);
+  bar.appendChild(el('span','apos-sub','Tick positions below (or the top box for everything shown), then set their department.'));
+  root.appendChild(bar);
+  var wrap=el('div','apos-table'),table=el('table'),thead=el('thead'),hr=el('tr');
+  var th0=el('th'),ca=el('input');ca.type='checkbox';ca.style.width='auto';
+  ca.checked=list.length>0&&list.every(function(r){return S.sel[rowKey(r)];});
+  ca.onchange=function(){list.forEach(function(r){if(ca.checked)S.sel[rowKey(r)]=1;else delete S.sel[rowKey(r)];});draw(root);};
+  th0.appendChild(ca);hr.appendChild(th0);
+  ['No.','Position','Department','Company','Criticality','People','Status'].forEach(function(h){hr.appendChild(el('th',null,h));});
+  thead.appendChild(hr);table.appendChild(thead);
+  var tb=el('tbody');
+  list.slice(S.page*PER,S.page*PER+PER).forEach(function(r){
+   var key=norm(r.company)+'||'+norm(r.department)+'||'+norm(r.position),tr=el('tr');
+   var tc=el('td'),ck=el('input');ck.type='checkbox';ck.style.width='auto';ck.checked=!!S.sel[key];
+   ck.onchange=function(){if(ck.checked)S.sel[key]=1;else delete S.sel[key];draw(root);};
+   tc.appendChild(ck);tr.appendChild(tc);
+   var cn=el('td',null,r.no||'-');cn.style.whiteSpace='nowrap';tr.appendChild(cn);
+   var c1=el('td');c1.appendChild(el('strong',null,r.position));
+   if(r.headcount){
+    var b=el('button','apos-link',S.open[key]?'Hide people':'Show people');b.type='button';
+    b.onclick=function(){S.open[key]=!S.open[key];draw(root);};
+    c1.appendChild(el('br'));c1.appendChild(b);
+    if(S.open[key])c1.appendChild(el('div','apos-who',r.holders.map(function(h){return h.employee_name||h.employee_id;}).sort().join(', ')));
+   }
+   tr.appendChild(c1);
+   tr.appendChild(el('td',null,r.department||'(No department)'));
+   tr.appendChild(el('td',null,r.company));
+   var c4=el('td');c4.appendChild(critPill(r.crit));tr.appendChild(c4);
+   tr.appendChild(el('td',null,String(r.headcount)));
+   var c6=el('td');c6.appendChild(el('span','apos-pill '+(r.headcount?'g':'o'),r.headcount?'Filled':'Vacant'));tr.appendChild(c6);
+   tb.appendChild(tr);
+  });
+  if(!list.length){var er=el('tr'),ec=el('td','',"No positions match these filters.");ec.colSpan=8;er.appendChild(ec);tb.appendChild(er);}
+  table.appendChild(tb);wrap.appendChild(table);root.appendChild(wrap);
+  var pages=Math.max(1,Math.ceil(list.length/PER)),pg=el('div','apos-pager');
+  pg.appendChild(el('span',null,list.length+' position'+(list.length===1?'':'s')+' | Page '+(S.page+1)+' of '+pages));
+  var pv=el('button','btn btn-outline','Previous'),nx=el('button','btn btn-outline','Next');pv.type='button';nx.type='button';
+  pv.disabled=S.page===0;nx.disabled=S.page+1>=pages;
+  pv.onclick=function(){S.page--;draw(root);};nx.onclick=function(){S.page++;draw(root);};
+  pg.appendChild(pv);pg.appendChild(nx);root.appendChild(pg);
+ }
+ var token=0;
+ async function render(){
+  css();
+  var t=++token;
+  setContent('<div id="aposRoot"><div class="loading"><div class="spinner"></div>Loading all positions...</div></div>');
+  var root=document.getElementById('aposRoot');
+  try{await load();}catch(e){if(root.isConnected)root.innerHTML='<div class="card"><p style="color:var(--red)">Could not load positions: '+String(e.message).replace(/</g,'&lt;')+'</p></div>';return;}
+  if(t!==token||!root.isConnected)return;
+  S.page=0;draw(root);
+ }
+ window.cmsAllPositionsRender=render;
+ function selected(){
+  if(APP.currentPage!==PAGE)return;
+  document.querySelectorAll('#sideNav .nv3-link,#sideNav .sb-item').forEach(function(b){
+   var on=b.dataset.page===PAGE||b.dataset.nvPage===PAGE;
+   b.classList.toggle('active',on);b.classList.toggle('nv3-current',on);
+   if(on)b.setAttribute('aria-current','page');else b.removeAttribute('aria-current');
+  });
+ }
+ function addNav(){
+  var side=document.getElementById('sideNav');if(!side||ROLES.indexOf(APP.currentRole)<0)return;
+  var b=side.querySelector('[data-page="'+PAGE+'"],[data-nv-page="'+PAGE+'"]');
+  if(!b){
+   b=document.createElement('button');b.type='button';b.className='sb-item';b.dataset.page=PAGE;b.textContent='All Positions';
+   b.onclick=function(){navigateTo(PAGE);};side.appendChild(b);
+   if(typeof cmsPolishNavigation==='function')cmsPolishNavigation();
+  }
+  selected();
+ }
+ if(typeof setupNav==='function'){var oldSetup=setupNav;setupNav=function(){var r=oldSetup.apply(this,arguments);try{addNav();}catch(e){}return r;};}
+ if(typeof cnPageRole==='function'){var oldRole=cnPageRole;cnPageRole=function(id,preferred){if(id===PAGE){return ROLES.indexOf(preferred)>=0?preferred:(ROLES.indexOf(APP.currentRole)>=0?APP.currentRole:null);}return oldRole.apply(this,arguments);};}
+ if(typeof getPageLabel==='function'){var oldLabel=getPageLabel;getPageLabel=function(id){return id===PAGE?'All Positions':oldLabel.apply(this,arguments);};}
+ if(typeof loadPage==='function'){var oldLoadPage=loadPage;loadPage=function(id){if(id!==PAGE)return oldLoadPage.apply(this,arguments);if(ROLES.indexOf(APP.currentRole)<0)return;var r=render();if(r&&r.then)r.then(selected,function(){});return r;};}
+ if(typeof navigateTo==='function'){var oldNav=navigateTo;navigateTo=function(){var r=oldNav.apply(this,arguments);selected();if(r&&typeof r.then==='function')r.then(selected,function(){});return r;};}
+ if(window.APP&&APP.user)try{addNav();}catch(e){}
+})();
+
+</script>
+<script id="cms-framework-redo-v1">
+(function(){
+ var BOX='fwRedoBox',S={cands:[],list:[],busy:false,seq:0,loadedFor:''};
+ function E(x){return String(x==null?'':x).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');}
+ function isHR(){return ['hr','hohr'].indexOf(APP.currentRole)>=0;}
+ function today(){return typeof ihToday==='function'?ihToday():new Date().toISOString().slice(0,10);}
+ function plus(n){var d=new Date(today()+'T12:00:00');d.setDate(d.getDate()+n);return d.toISOString().slice(0,10);}
+ function say(m){if(typeof ihNotice==='function')ihNotice(m);else if(typeof showToast==='function')showToast(m);}
+ async function rpc(action,data){var r=await _supabase.rpc('cms_framework_redo',{p_action:action,p_data:data||{}});if(r.error)throw Error(r.error.message);return r.data;}
+ function onRedoView(){
+  if(!document.getElementById('ihRoot')||typeof IH==='undefined')return false;
+  if(IH.view==='redos')return true;
+  return IH.view==='mine'&&typeof IR!=='undefined'&&IR.mineTab==='redos';
+ }
+ function css(){
+  if(document.getElementById('fwr-style'))return;
+  var s=document.createElement('style');s.id='fwr-style';
+  s.textContent='#fwRedoBox{margin:22px 0;padding:18px;border:1px solid #dfe5f3;border-radius:12px;background:#fff}#fwRedoBox h3{margin:0 0 6px}#fwRedoBox .fwr-item{border:1px solid #e2e8f0;border-radius:10px;padding:12px;margin:10px 0}#fwRedoBox .fwr-state{display:inline-block;border-radius:10px;padding:2px 10px;font-size:12px;font-weight:700;background:#eef2ff;color:#3730a3}#fwRedoBox label{display:block;margin:8px 0;font-weight:600}#fwRedoBox .fwr-row{display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end}';
+  document.head.appendChild(s);
+ }
+ function draw(){
+  var box=document.getElementById(BOX);if(!box)return;
+  var h='<h3>Competency-setting redo</h3><p>Ask to set the competencies for a role again after you have submitted them. HR Admin or HOHR approves. The published framework stays in force until the new one is approved.</p>';
+  if(S.cands.length){
+   h+='<label>Role<select id="fwrPos"><option value="">Choose the role</option>'+S.cands.map(function(c){return '<option value="'+E(c.position_id)+'">'+E(c.department+' / '+c.position)+'</option>';}).join('')+'</select></label>'+
+    '<label>Reason<textarea id="fwrReason" rows="3" maxlength="2000" placeholder="Explain why the competencies need to be set again"></textarea></label>'+
+    '<button type="button" class="btn btn-primary" data-fwr="request">Send redo request</button>';
+  }else h+='<p><em>You have no submitted competency-setting work that can be redone.</em></p>';
+  h+='<h4 style="margin:16px 0 4px">Requests</h4>';
+  if(!S.list.length)h+='<p>No competency-setting redo requests yet.</p>';
+  S.list.forEach(function(r){
+   h+='<div class="fwr-item"><b>'+E(r.department+' / '+r.position)+'</b> <span class="fwr-state">'+E(r.state)+'</span><p>'+E(r.reason)+'</p><small>Requested by '+E(r.requester_email)+' on '+E(String(r.requested_at||'').slice(0,10))+'</small>'+(r.review_note?'<p>Note: '+E(r.review_note)+'</p>':'');
+   if(r.can_review)h+='<label>Review note<input id="fwrNote-'+E(r.id)+'" minlength="5"></label><div class="fwr-row"><label>Deadline for the fresh invitation<input type="date" id="fwrDue-'+E(r.id)+'" min="'+today()+'" value="'+plus(7)+'"></label><button type="button" class="btn btn-primary" data-fwr="approve" data-id="'+E(r.id)+'">Approve and send invitation</button><button type="button" class="btn" data-fwr="reject" data-id="'+E(r.id)+'">Reject</button></div>';
+   if(isHR()&&r.state==='Approved')h+='<div class="fwr-row"><label>Deadline<input type="date" id="fwrDue-'+E(r.id)+'" min="'+today()+'" value="'+plus(7)+'"></label><button type="button" class="btn btn-primary" data-fwr="send" data-id="'+E(r.id)+'">Send invitation now</button></div>';
+   h+='</div>';
+  });
+  box.innerHTML=h;
+ }
+ async function load(){
+  var t=++S.seq;
+  try{var d=await Promise.all([rpc('candidates'),rpc('list')]);if(t!==S.seq)return;S.cands=d[0]||[];S.list=d[1]||[];draw();}
+  catch(e){var b=document.getElementById(BOX);if(b)b.innerHTML='<h3>Competency-setting redo</h3><p>Not available yet: '+E(e.message)+'</p>';}
+ }
+ function ensure(){
+  if(!onRedoView()){return;}
+  if(document.getElementById(BOX))return;
+  css();
+  var host=document.querySelector('#ihRoot .ih-panel')||document.getElementById('ihRoot');if(!host)return;
+  var box=document.createElement('section');box.id=BOX;host.appendChild(box);
+  draw();load();
+ }
+ async function sendInvite(f,due){
+  if(!due||due<today())throw Error('Choose today or a future deadline.');
+  await ihRPC('issue',{id:crypto.randomUUID(),kind:'framework',employee_row_id:null,expected_company:'',expected_department:'',manager_id:f.requester,position_id:f.position_id,due_date:due,instructions:'Competency-setting redo approved. Reason: '+String(f.reason||'').slice(0,500)});
+  await rpc('mark_used',{id:f.id});
+ }
+ document.addEventListener('click',async function(e){
+  var b=e.target.closest('[data-fwr]');if(!b||S.busy||b.disabled)return;
+  S.busy=true;
+  try{
+   var a=b.dataset.fwr,id=b.dataset.id,f=S.list.find(function(x){return String(x.id)===String(id);});
+   if(a==='request'){
+    var pos=document.getElementById('fwrPos').value,reason=document.getElementById('fwrReason').value.trim();
+    if(!pos||reason.length<10)throw Error('Choose the role and give a reason of at least 10 characters.');
+    await rpc('request',{position_id:pos,reason:reason});say('Redo requested. HR Admin or HOHR will review it.');
+   }
+   if(a==='reject'||a==='approve'){
+    var note=(document.getElementById('fwrNote-'+id)||{}).value||'';note=note.trim();
+    if(note.length<5)throw Error('Give a review note of at least five characters.');
+    var due=(document.getElementById('fwrDue-'+id)||{}).value;
+    if(a==='approve'&&(!due||due<today()))throw Error('Choose today or a future deadline.');
+    if(!confirm((a==='approve'?'Approve':'Reject')+' this competency-setting redo?'+(a==='approve'?' A fresh invitation will be sent to the requester.':'')))return;
+    await rpc('review',{id:id,decision:a==='approve'?'Approved':'Rejected',note:note});
+    if(a==='approve'){
+     try{await sendInvite(f,due);say('Approved and the fresh competency-setting invitation was sent.');}
+     catch(er){say('Approved, but the invitation was not sent: '+er.message+' Use Send invitation now.');}
+    }else say('Redo rejected.');
+   }
+   if(a==='send'){await sendInvite(f,(document.getElementById('fwrDue-'+id)||{}).value);say('Fresh competency-setting invitation sent.');}
+   await load();
+  }catch(er){say(er.message);}finally{S.busy=false;}
+ });
+ var timer;
+ new MutationObserver(function(){if(timer)return;timer=setTimeout(function(){timer=null;try{ensure();}catch(e){}},150);}).observe(document.body,{childList:true,subtree:true});
 })();
 </script>
 </body>
