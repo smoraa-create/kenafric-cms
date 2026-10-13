@@ -6347,7 +6347,6 @@ async function cmsEscalateDialog(id) {
     var members = await cmsEscMembers();
     DK.options = await dkRPC('release_options', { report_id: Number(id) });
     var picked = cmsEscPickLinks(DK.options);
-    if (!picked.hasCurrent) throw new Error('Both current-role assessments (Self and Manager) must be submitted before this report can go to an executive.');
     /* default executive: the C-Suite mapped to this employee's department */
     var defaultId = '';
     try {
@@ -6389,7 +6388,7 @@ async function cmsEscalateDialog(id) {
     box.appendChild(brief);
     var shared = picked.links.map(function (l) { return l.type + ' (round ' + l.round + ')'; }).join(', ');
     box.appendChild(el('div', 'font-size:12px;color:#475569;background:#f5f7ff;border:1px solid #c7d2fe;border-radius:8px;padding:8px 10px;margin:6px 0 10px',
-      'Only the executive you choose will see the report and your brief. Results shared: ' + shared + '.' + (picked.hasTarget ? '' : ' Target-role results are not included because both target-role assessments are not submitted yet.') + ' The employee is not notified.'));
+      'Only the executive you choose will see the report and your brief. ' + (shared ? 'Results shared: ' + shared + '.' : 'No assessment results are attached, only your brief.') + (picked.hasTarget || !shared ? '' : ' Target-role results are not included because both target-role assessments are not submitted yet.') + ' The employee is not notified.'));
     var msg = el('div', 'font-size:12px;min-height:16px;margin-bottom:8px;color:#b91c1c');
     box.appendChild(msg);
     var actions = el('div', 'display:flex;gap:10px;justify-content:flex-end');
@@ -9870,8 +9869,10 @@ if (!rows || !rows.length) return;
 const { data: existing } = await _supabase.from('dp_reports').select('id').eq('plan_id', planId);
 if (existing && existing.length) return;
 var r0 = rows[0];
-var start = r0.start_date ? new Date(r0.start_date) : new Date();
-var end = r0.end_date ? new Date(r0.end_date) : null;
+var starts = rows.map(function(x){ return x.start_date; }).filter(Boolean).sort();
+var ends = rows.map(function(x){ return x.end_date; }).filter(Boolean).sort();
+var start = starts.length ? new Date(starts[0]) : new Date();
+var end = ends.length ? new Date(ends[ends.length - 1]) : null;
 var months = 1;
 if (end && end > start) months = Math.max(1, Math.min(12, Math.ceil((end - start) / 2592000000)));
 var inserts = [];
@@ -22292,6 +22293,156 @@ doLogout=function(){EI.token++;EI.employee=null;return eiPriorLogout.apply(this,
 })();
 
 </script>
+<script id="exec-decision-desk-v2">
+/* Executive report page: clearer scores, assessments by type, ranked competencies, pinned recommendation. Display only. */
+(function(){
+ if(typeof dkReport!=='function'||typeof DK==='undefined')return;
+ var NAMES={'Self':'Self assessment','Manager':'Manager assessment','Prospective Self':'Target-role self','Prospective':'Target-role manager'};
+ var PAIR={'Self':'Manager','Manager':'Self','Prospective Self':'Prospective','Prospective':'Prospective Self'};
+ var ORDER=['Self','Manager','Prospective Self','Prospective'];
+ function num(v){if(v===null||v===undefined||v==='')return null;var n=Number(v);return isFinite(n)?n:null;}
+ function pct(v){var n=num(v);return n===null?'Not released':(Math.round(n*10)/10)+'%';}
+ function band(n){return n>=90?['Ready now','g']:n>=80?['Ready in 6-12 months','b']:n>=70?['Ready in 12-18 months','o']:['Not ready','r'];}
+ function tone(n){return n>=80?'g':n>=60?'b':n>=40?'o':'r';}
+ function el(tag,cls,text){var e=document.createElement(tag);if(cls)e.className=cls;if(text!==undefined&&text!==null)e.textContent=text;return e;}
+ function css(){
+  if(document.getElementById('cxd-style'))return;
+  var s=document.createElement('style');s.id='cxd-style';
+  s.textContent=[
+   '#dkRoot .cxd-layout{display:grid;grid-template-columns:minmax(0,1fr) 350px;gap:18px;align-items:start}',
+   '#dkRoot .cxd-main{min-width:0}',
+   '#dkRoot .cxd-side{position:sticky;top:12px;max-height:calc(100vh - 24px);overflow:auto;min-width:0}',
+   '@media(max-width:1050px){#dkRoot .cxd-layout{grid-template-columns:1fr}#dkRoot .cxd-side{position:static;max-height:none}}',
+   '#dkRoot .cxd-eyebrow{font-size:12px;font-weight:700;letter-spacing:.06em;color:#6a7595}',
+   '#dkRoot .cxd-name{font-size:24px;margin:2px 0 4px}',
+   '#dkRoot .cxd-sub{color:#536984;font-size:14px;margin:0 0 10px}',
+   '#dkRoot .cxd-pill{display:inline-block;padding:4px 11px;border-radius:14px;font-size:12px;font-weight:700;margin:0 6px 6px 0}',
+   '#dkRoot .cxd-pill.g{background:#d9f3e6;color:#0d7a46}#dkRoot .cxd-pill.r{background:#fde0e0;color:#b02323}',
+   '#dkRoot .cxd-pill.b{background:#e0e6ff;color:#2f3fb0}#dkRoot .cxd-pill.o{background:#ffefd6;color:#a65d00}#dkRoot .cxd-pill.n{background:#edf2fa;color:#3c5880}',
+   '#dkRoot .cxd-brief{background:#fff7e6;border-left:4px solid #e6a100;border-radius:6px;padding:11px 14px;margin-top:8px;font-size:14px;white-space:pre-wrap;overflow-wrap:anywhere}',
+   '#dkRoot .cxd-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin:12px 0}',
+   '#dkRoot .cxd-kpi{border-radius:10px;padding:13px 10px;text-align:center}',
+   '#dkRoot .cxd-kpi b{display:block;font-size:28px;line-height:1.1}#dkRoot .cxd-kpi span{display:block;font-size:12px;color:#44506b;margin-top:4px}',
+   '#dkRoot .cxd-kpi.g{background:#e7f6ee;color:#0d7a46}#dkRoot .cxd-kpi.b{background:#e5ebff;color:#2f3fb0}',
+   '#dkRoot .cxd-kpi.o{background:#fff1dc;color:#a65d00}#dkRoot .cxd-kpi.r{background:#fde8e8;color:#b02323}#dkRoot .cxd-kpi.p{background:#f0e6ff;color:#6b21a8}',
+   '#dkRoot .cxd-kpi.band b{font-size:19px;padding:5px 0}',
+   '#dkRoot .cxd-two{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:10px 0}',
+   '@media(max-width:700px){#dkRoot .cxd-two{grid-template-columns:1fr}}',
+   '#dkRoot .cxd-box{border:1px solid #dfe5f3;border-radius:10px;padding:12px 14px}',
+   '#dkRoot .cxd-box h3{margin:0 0 8px;font-size:14px}',
+   '#dkRoot .cxd-tabs{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0 4px}',
+   '#dkRoot .cxd-tab{border:1px solid #bdcce0;background:#fff;color:#2a3b66;border-radius:18px;padding:7px 15px;font-size:13px;font-weight:700;cursor:pointer}',
+   '#dkRoot .cxd-tab.on{background:#4b4fd8;border-color:#4b4fd8;color:#fff}',
+   '#dkRoot .cxd-note{font-size:12px;color:#6a7595;margin:6px 0 10px}',
+   '#dkRoot .cxd-row{border:1px solid #e3e8f4;border-radius:10px;padding:10px 14px;margin-bottom:8px}',
+   '#dkRoot .cxd-row.low{border-color:#fbc6c6;background:#fffafa}#dkRoot .cxd-row.top{border-color:#bfe6cf;background:#fafffc}',
+   '#dkRoot .cxd-head{display:flex;justify-content:space-between;gap:12px;align-items:baseline;flex-wrap:wrap;font-size:14px}',
+   '#dkRoot .cxd-head small{color:#536984;font-size:12px}',
+   '#dkRoot .cxd-bar{height:9px;background:#e8ecf7;border-radius:5px;margin:7px 0 2px}',
+   '#dkRoot .cxd-bar i{display:block;height:9px;border-radius:5px}',
+   '#dkRoot .cxd-bar i.g{background:#16a34a}#dkRoot .cxd-bar i.b{background:#4b6bdc}#dkRoot .cxd-bar i.o{background:#e08a00}#dkRoot .cxd-bar i.r{background:#dc2626}'
+  ].join('\n');
+  document.head.appendChild(s);
+ }
+ function buildHead(r){
+  var c=el('section','card');
+  c.appendChild(el('div','cxd-eyebrow','ASSIGNED TO YOU | PRIVATE'));
+  c.appendChild(el('h2','cxd-name',r.employee||''));
+  c.appendChild(el('p','cxd-sub',(r.position||'')+(r.target?' to '+r.target:'')));
+  var p=el('div');
+  if(r.purpose)p.appendChild(el('span','cxd-pill b',r.purpose));
+  if(r.hohr_outcome)p.appendChild(el('span','cxd-pill o',r.hohr_outcome));
+  var d=r.released_at?new Date(r.released_at):null;
+  if(d&&!isNaN(d.getTime()))p.appendChild(el('span','cxd-pill g','Released '+d.toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'})));
+  c.appendChild(p);
+  if(r.shared_note){var b=el('div','cxd-brief');var t=el('b',null,'Why this was escalated: ');b.appendChild(t);b.appendChild(document.createTextNode(r.shared_note));c.appendChild(b);}
+  return c;
+ }
+ function kpi(parent,value,label,cls){var k=el('div','cxd-kpi '+cls);k.appendChild(el('b',null,value));k.appendChild(el('span',null,label));parent.appendChild(k);return k;}
+ function buildResults(r){
+  var sc=r.scores||{},totals=sc.totals||{},comps=(sc.competencies||[]).map(function(x){return {type:x.type,name:x.name,score:x.score,p:num(x.percent)};});
+  var c=el('section','card');
+  c.appendChild(el('h2',null,'Released results'));
+  c.appendChild(el('p','cxd-note','Snapshot at release, not the latest unreviewed assessment. '+(sc.basis||'')));
+  var k=el('div','cxd-kpis');
+  ORDER.forEach(function(t){if(num(totals[t])!==null)kpi(k,pct(totals[t]),NAMES[t],t.indexOf('Prospective')===0?'p':tone(num(totals[t])));});
+  var cur=num(sc.current_combined),pro=num(sc.prospective_combined);
+  var labCur='Final score (current role)',labPro='Final score (target role)';
+  try{if(typeof fsFinalLabel==='function'){labPro=fsFinalLabel('prospective',r.target)||labPro;}}catch(e){}
+  if(cur!==null)kpi(k,pct(cur),labCur,tone(cur));
+  if(pro!==null){kpi(k,pct(pro),labPro,'p');var bd=band(pro);kpi(k,bd[0],'Readiness for target role',bd[1]+' band');}
+  if(!k.children.length)k.appendChild(el('p',null,'No scores were released with this report.'));
+  c.appendChild(k);
+  var types=ORDER.filter(function(t){return comps.some(function(x){return x.type===t&&x.p!==null;});});
+  if(!types.length){c.appendChild(el('p','cxd-note','No competency detail was released with this report.'));return c;}
+  var active=types.indexOf('Prospective')>=0?'Prospective':types.indexOf('Manager')>=0?'Manager':types[0];
+  var tabs=el('div','cxd-tabs'),holder=el('div');
+  c.appendChild(el('h3',null,'Assessments'));
+  c.appendChild(tabs);c.appendChild(holder);
+  function draw(){
+   tabs.replaceChildren();holder.replaceChildren();
+   types.forEach(function(t){
+    var b=el('button','cxd-tab'+(t===active?' on':''),NAMES[t]+(num(totals[t])!==null?' '+pct(totals[t]):''));
+    b.type='button';b.onclick=function(){active=t;draw();};tabs.appendChild(b);
+   });
+   var list=comps.filter(function(x){return x.type===active&&x.p!==null;}).sort(function(a,b){return b.p-a.p;});
+   var partnerType=PAIR[active],partner={};
+   comps.forEach(function(x){if(x.type===partnerType&&x.p!==null)partner[x.name]=x.p;});
+   var n=Math.min(3,Math.floor(list.length/2));
+   if(n>0){
+    var two=el('div','cxd-two'),a=el('div','cxd-box'),g=el('div','cxd-box');
+    a.appendChild(el('h3',null,'Top strengths'));g.appendChild(el('h3',null,'Biggest gaps'));
+    list.slice(0,n).forEach(function(x){a.appendChild(el('span','cxd-pill g',x.name+' '+pct(x.p)));a.appendChild(el('br'));});
+    list.slice(-n).reverse().forEach(function(x){g.appendChild(el('span','cxd-pill r',x.name+' '+pct(x.p)));g.appendChild(el('br'));});
+    two.appendChild(a);two.appendChild(g);holder.appendChild(two);
+   }
+   holder.appendChild(el('p','cxd-note','All competencies from highest to lowest, from the '+NAMES[active].toLowerCase()+'.'+(partnerType&&Object.keys(partner).length?' '+NAMES[partnerType]+' shown beside each score.':'')));
+   list.forEach(function(x,i){
+    var low=list.length>1&&i===list.length-1,top=list.length>1&&i===0;
+    var row=el('div','cxd-row'+(low?' low':top?' top':''));
+    var h=el('div','cxd-head'),left=el('span');
+    left.appendChild(el('b',null,(i+1)+'. '+x.name+' '));
+    if(top)left.appendChild(el('span','cxd-pill g','Highest'));
+    if(low)left.appendChild(el('span','cxd-pill r','Lowest'));
+    h.appendChild(left);
+    var right=el('span');right.appendChild(el('b',null,pct(x.p)));
+    if(partner[x.name]!==undefined){
+     var diff=Math.round(Math.abs(partner[x.name]-x.p));
+     right.appendChild(el('small','',' | '+NAMES[partnerType]+' '+pct(partner[x.name])+(diff>=20?' | gap of '+diff+' points':'')));
+    }
+    h.appendChild(right);row.appendChild(h);
+    var bar=el('div','cxd-bar'),fill=el('i',tone(x.p));fill.style.width=Math.max(0,Math.min(100,x.p))+'%';bar.appendChild(fill);row.appendChild(bar);
+    holder.appendChild(row);
+   });
+  }
+  draw();
+  return c;
+ }
+ function enhance(r){
+  var root=document.getElementById('dkRoot');
+  if(!root||!r||DK.selected!==r||root.querySelector('.cxd-layout'))return;
+  var cards=Array.prototype.filter.call(root.children,function(c){return c.tagName==='SECTION'&&c.classList.contains('card');});
+  if(cards.length<2)return;
+  var h2=cards[1].querySelector('h2');
+  if(!h2||h2.textContent!=='Released results')return;
+  css();
+  var layout=el('div','cxd-layout'),main=el('div','cxd-main'),side=el('div','cxd-side');
+  main.appendChild(buildHead(r));main.appendChild(buildResults(r));
+  var rest=[],n=cards[1].nextSibling;
+  while(n){rest.push(n);n=n.nextSibling;}
+  root.insertBefore(layout,cards[0]);
+  rest.forEach(function(x){side.appendChild(x);});
+  cards[0].remove();cards[1].remove();
+  layout.appendChild(main);layout.appendChild(side);
+ }
+ var original=dkReport;
+ dkReport=async function(){
+  var out=await original.apply(this,arguments);
+  try{enhance(DK.selected);}catch(e){if(window.console)console.error(e);}
+  return out;
+ };
+})();
+</script>
 <script id="invitation-opening-role">
 /* Show the published invitation target before employee search. Existing issue/preview/history checks retained. */
 (function(){
@@ -34372,6 +34523,31 @@ function dpbCompanyClass(value){
  ids.delete('');
  return ids.size;
 }
+function dpbPendingMarkup(){
+ if(!B.summary)return '';
+ if(!document.getElementById('dpb-pending-style')){
+  var st=document.createElement('style');st.id='dpb-pending-style';
+  st.textContent='.dpb-pend{background:#fff;border:1.5px solid #fde68a;border-radius:14px;padding:14px 18px;margin:14px 0}.dpb-pend h3{font-size:15px;margin:0 0 4px;color:#92400e}.dpb-pend p{margin:2px 0 8px;font-size:12px;color:#64748b}.dpb-pend-row{display:flex;gap:14px;align-items:center;justify-content:space-between;padding:10px 0;border-top:1px solid #fef3c7;flex-wrap:wrap}.dpb-pend-row b{display:block;font-size:14px;color:#0f172a}.dpb-pend-row small{display:block;font-size:12px;color:#64748b;line-height:1.45}.dpb-pend-n{font-size:11px;font-weight:800;background:#fef3c7;color:#b45309;border-radius:10px;padding:2px 9px;margin-left:8px}';
+  document.head.appendChild(st);
+ }
+ var byEmp={};
+ (B.pending||[]).forEach(function(x){
+  var k=x.employee_id;if(!k)return;
+  if(!byEmp[k])byEmp[k]={id:k,name:x.name,gaps:[],actions:0,date:''};
+  var e=byEmp[k];e.actions+=x.n;
+  if(x.gap&&e.gaps.indexOf(x.gap)<0)e.gaps.push(x.gap);
+  if(x.date&&x.date>e.date)e.date=x.date;
+ });
+ var list=Object.keys(byEmp).map(function(k){return byEmp[k];}).sort(function(a,b){return String(b.date).localeCompare(String(a.date));});
+ var h='<section class="dpb-pend" aria-label="Plans awaiting approval"><h3>Plans awaiting your approval ('+list.length+' employee'+(list.length===1?'':'s')+')</h3>';
+ if(!list.length)return h+'<p>Nothing is waiting for approval right now.</p></section>';
+ h+='<p>Open an employee to approve or disapprove each action.</p>';
+ list.slice(0,12).forEach(function(e){
+  h+='<div class="dpb-pend-row"><div><b>'+esc(e.name||e.id)+'<span class="dpb-pend-n">'+e.gaps.length+' gap plan'+(e.gaps.length===1?'':'s')+' | '+e.actions+' action'+(e.actions===1?'':'s')+'</span></b><small>'+esc(e.gaps.join(', ')||'Gap not recorded')+(e.date?' | Submitted '+esc(e.date):'')+'</small></div>'+button('employee','Open plans',e.id,'btn btn-sm btn-primary')+'</div>';
+ });
+ if(list.length>12)h+='<p>Showing the 12 most recent. Use the company and department cards below for the rest.</p>';
+ return h+'</section>';
+}
 function dpbSummaryMarkup(){
  var s=B.summary;
  var employees=s? s.employees : dpbDirectoryEmployeeCount();
@@ -34431,7 +34607,18 @@ Object.keys(byCompany).forEach(function(k){
  byCompany[k].verified=byCompany[k].progressCount?Math.round(byCompany[k].progress/byCompany[k].progressCount):0;
 });
   var verified=progress.length?Math.round(progress.reduce(function(sum,it){return sum+it.progress;},0)/progress.length):0;
-  B.summary={employees:employees.size,plans:items.length,review:review,verified:verified,companies:byCompany};
+  B.pending=(function(){
+   var m={};
+   items.forEach(function(it){
+    var a=it.action||{};
+    var state=String(a.status||a.hr_approved||'').toLowerCase();
+    if(!(state.includes('await')||state.includes('pending')))return;
+    var k=String(a.employee_id||'')+'|'+String(a.plan_id||a.id||'');
+    if(!m[k])m[k]={employee_id:a.employee_id,name:a.employee_name,gap:a.comp_name,date:String(a.created_date||'').slice(0,10),n:0};
+    m[k].n++;
+   });
+   return Object.keys(m).map(function(k){return m[k];});
+  })();
   B.summaryError='';
  }catch(e){
   B.summary=null;
@@ -34453,7 +34640,7 @@ Object.keys(byCompany).forEach(function(k){
   if(B.department!==null)h+='<span aria-hidden="true">/</span>'+button('department',label(dname),B.department);
   if(employee)h+='<span aria-hidden="true">/</span><strong>'+esc(employee.employee_name||employee.employee_id)+'</strong>';
   h+='</nav>';
-  if(level==='company'&&B.company===null)h+=dpbSummaryMarkup();
+  if(level==='company'&&B.company===null)h+=dpbSummaryMarkup()+dpbPendingMarkup();
   if(level==='employee'){
    var scoped=people().slice().sort((a,b)=>String(a.employee_name||a.employee_id).localeCompare(String(b.employee_name||b.employee_id)));
    h+='<section class="dpb-employee-picker"><label for="dpbEmployeeSelect">Employee in this department</label><select id="dpbEmployeeSelect" '+(!scoped.length?'disabled':'')+'><option value="">Choose an employee</option>'+
@@ -36667,6 +36854,41 @@ const st=document.createElement('style');st.id='cms-manager-tabs-style-v1';st.te
  }
  function editor(s,p,it,redraw){
   notice(p,'Agree measurable deliverables first. Each has equal weight; publication locks the list.');
+  const rep=node('details',null,'mt-plan-objective',p);
+  node('summary','Repeating task? Generate a deliverable for each period',null,rep);
+  const repGrid=node('div',null,'mt-form-grid',rep);
+  const repFreq=field(repGrid,'Repeats','','select','mt-rep-freq-'+it.action.id);
+  ['Weekly','Monthly','Quarterly'].forEach(x=>option(repFreq,x,x));repFreq.value='Monthly';
+  const repTimes=field(repGrid,'Times each period','3','number','mt-rep-n-'+it.action.id);repTimes.min='1';repTimes.max='50';
+  const repWhat=field(repGrid,'What is delivered (plural)','reports','text','mt-rep-what-'+it.action.id);repWhat.maxLength=80;
+  button(s,rep,'Generate deliverables',()=>{
+   const parse=v=>{const m=String(v||'').match(/^(\d{4})-(\d{2})-(\d{2})/);return m?new Date(Number(m[1]),Number(m[2])-1,Number(m[3])):null;};
+   const iso=d=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+   const mon=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+   const st=parse(it.action.start_date),en=parse(it.action.end_date);
+   if(!st||!en||en<st)throw Error('This action needs a valid start date and due date before deliverables can be generated.');
+   const n=Math.max(1,Math.min(50,Number(repTimes.value)||1)),what=(repWhat.value||'items').trim()||'items';
+   const periods=[];let cur=new Date(st);
+   while(cur<=en&&periods.length<60){
+    let end;
+    if(repFreq.value==='Weekly'){end=new Date(cur);end.setDate(end.getDate()+6);}
+    else if(repFreq.value==='Quarterly'){const q=cur.getMonth()-(cur.getMonth()%3)+2;end=new Date(cur.getFullYear(),q+1,0);}
+    else end=new Date(cur.getFullYear(),cur.getMonth()+1,0);
+    if(end>en)end=new Date(en);
+    periods.push({start:new Date(cur),end:end});
+    cur=new Date(end);cur.setDate(cur.getDate()+1);
+   }
+   const blank=[...rows.children].filter(r=>{const v=r.read();return !v.title&&!v.success_measure&&!v.due_date;});
+   if(rows.children.length-blank.length+periods.length>20)throw Error('That would create '+periods.length+' deliverables and the limit is 20 per action. Choose Monthly or Quarterly, or shorten the dates.');
+   blank.forEach(r=>r.remove());
+   periods.forEach((x,i)=>{
+    const label=repFreq.value==='Monthly'?mon[x.start.getMonth()]+' '+x.start.getFullYear():repFreq.value==='Quarterly'?'Quarter '+(i+1)+' ('+mon[x.start.getMonth()]+' '+x.start.getFullYear()+' to '+mon[x.end.getMonth()]+' '+x.end.getFullYear()+')':'Week '+(i+1)+' ('+x.start.getDate()+' '+mon[x.start.getMonth()]+' to '+x.end.getDate()+' '+mon[x.end.getMonth()]+')';
+    add({title:label+': submit '+n+' '+what,success_measure:n+' '+what+' submitted and accepted by the manager for '+label+'.',due_date:iso(x.end)});
+   });
+   s.detailDirty=true;
+   msg(s,periods.length+' deliverable'+(periods.length===1?'':'s')+' generated. Check each row, then save the draft.');
+  },'mt-outline',true);
+  node('p','Uses this action start and due dates. You can edit every row before saving.','mt-muted',rep);
   const rows=node('div',null,null,p);let n=0;
   function add(d={}){
    if(rows.children.length>=20)throw Error('Maximum 20 deliverables per action.');
@@ -37088,6 +37310,7 @@ role.addEventListener('change',()=>{
    if(t)switchTo(t.code);
   }
   function toReview(){
+   if(gap.disabled){mode='review';render();return;}
    commit();
    loadInto({});
    s.createDirty=true;
@@ -37122,6 +37345,7 @@ role.addEventListener('change',()=>{
    node('span','Gap plans ready',null,sm);node('span',ready+' of '+l.length,null,sm);
    const bar=node('div',null,'mtq-bar',pb),fill=node('i',null,null,bar);
    fill.style.width=(l.length?Math.round(ready/l.length*100):0)+'%';
+   if(mode==='plan'&&l.length)button(s,prog,'Review and send',()=>toReview(),'mt-next fin');
   }
   function paintQueue(){
    queue.replaceChildren();
@@ -37147,11 +37371,46 @@ role.addEventListener('change',()=>{
    });
    node('div','Click any gap to jump to it. A gap with no plan can be skipped, and you can still send the rest.','mtq-note',queue);
   }
+  function mtBaseVerb(w){
+   const lower=w.toLowerCase();
+   const irregular={led:'lead',held:'hold',built:'build',made:'make',kept:'keep',ran:'run',wrote:'write',took:'take',gave:'give',sent:'send',met:'meet',chose:'choose',drew:'draw',spoke:'speak',taught:'teach',thought:'think',found:'find',brought:'bring',began:'begin',oversaw:'oversee',undertook:'undertake',understood:'understand',dealt:'deal',drove:'drive',saw:'see',told:'tell',paid:'pay',sold:'sell',spent:'spend',taken:'take',got:'get',put:'put',read:'read',set:'set',developed:'develop',enveloped:'envelop',focused:'focus',monitored:'monitor',mentored:'mentor',tailored:'tailor',honored:'honor',honoured:'honour',invited:'invite',united:'unite',ignited:'ignite',recited:'recite',cited:'cite',appeared:'appear',avoided:'avoid',tuned:'tune',coordinated:'coordinate'};
+   let base;
+   if(irregular[lower])base=irregular[lower];
+   else if(!/ed$/.test(lower)||lower.length<4)return w;
+   else if(/[^aeiou]ied$/.test(lower))base=lower.slice(0,-3)+'y';
+   else if(/(ss|ll|ff|zz)ed$/.test(lower))base=lower.slice(0,-2);
+   else if(/([bcdfghjklmnpqrtvwxz])\1ed$/.test(lower))base=lower.slice(0,-3);
+   else if(/(ated|uted|oted|eted|ised|ysed|ized|yzed|ased|osed|used|ared|ured|ired|ived|ved|ced|ged|ided|ibed|ued|dled|bled|pled|tled|cled|gled|fled|zled|uled|iled|aped|iped|ymed|amed|imed|umed|omed|ined)$/.test(lower)&&!/(aained|oined|ained)$/.test(lower)&&!/(eared|ouped)$/.test(lower))base=lower.slice(0,-1);
+   else if(/eed$/.test(lower))base=lower.slice(0,-1);
+   else base=lower.slice(0,-2);
+   if(w[0]===w[0].toUpperCase()&&w[0]!==w[0].toLowerCase())base=base[0].toUpperCase()+base.slice(1);
+   return base;
+  }
+  function mtActionText(text){
+   let t=String(text||'').trim();
+   if(!t)return t;
+   const words=t.split(' ');
+   let k=0;
+   if(/ly$/i.test(words[0])&&words.length>1)k=1;
+   words[k]=mtBaseVerb(words[k]);
+   const notVerbs=/^(approved|agreed|disputed|validated|required|designated|defined|assigned|specified|existing|published|scheduled|planned|expected|targeted|associated|selected|qualified|skilled|experienced|detailed|structured|unresolved|incomplete|outstanding|related|combined|limited|advanced|united|need|speed|feed|proceed|exceed|succeed|seed|bed|red|shed|embed|hundred|sacred|used)$/i;
+   for(let i=k+1;i<words.length;i++){
+    const prev=(words[i-1]||'').toLowerCase();
+    const afterJoin=prev==='and'||prev==='then'||/,$/.test(words[i-1]||'');
+    const w=words[i].replace(/[.,;]$/,''),tail=words[i].slice(w.length);
+    if(!afterJoin||!w||/-/.test(w))continue;
+    if(/^used$/i.test(w)&&/^(it|them|this|these)$/i.test(words[i+1]||'')){words[i]=mtBaseVerb(w)+tail;continue;}
+    if(notVerbs.test(w))continue;
+    const b=mtBaseVerb(w);
+    if(b!==w)words[i]=b+tail;
+   }
+   return words.join(' ');
+  }
   function useExperience(x){
    if(gap.disabled)return;
    const d=baseRead(),acts=d.actions.map(a=>Object.assign({},a));
    const blank=acts.findIndex(a=>!(a.action||a.measure||a.responsible||a.start||a.end||a.period));
-   const fresh={action:x.text,measure:'Experience demonstrated with evidence and rated at least 4 / 5 at the next assessment'};
+   const fresh={action:mtActionText(x.text),measure:'Demonstrated with evidence and rated at least 4 / 5 at the next assessment'};
    if(blank>=0)acts[blank]=Object.assign(acts[blank],fresh);else acts.push(fresh);
    loadInto({comp_code:gap.value,objective:d.objective,actions:acts});
    render();
@@ -37176,7 +37435,7 @@ role.addEventListener('change',()=>{
     node('span',k===0?'Critical':k===1?'Important':'Value-Add','mtq-cl c'+(k+1),m);
     node('span',x.ticked?'Rated '+x.rating+' / 5':'Not demonstrated','mtq-rt '+(x.ticked?'r1':'r0'),m);
     node('span',null,'sp',m);
-    const at=acts.findIndex(a=>a.action===x.text);
+    const at=acts.findIndex(a=>a.action===mtActionText(x.text));
     if(at>=0)node('span','Added as Action '+(at+1),'mtq-rt',m).style.cssText='background:#ecfdf5;color:#047857';
     else button(s,m,'Use as action',()=>useExperience(x),'mt-outline',true);
    });
@@ -37226,6 +37485,12 @@ role.addEventListener('change',()=>{
    if(mode==='plan'){paintPlan();paintEx();}else paintReview();
    count();
   }
+  let refreshTimer=null;
+  function refreshLive(){
+   clearTimeout(refreshTimer);
+   refreshTimer=setTimeout(()=>{if(mode==='plan'&&planBox.isConnected){paintEx();paintQueue();paintProg();}},120);
+  }
+  ['input','click','change'].forEach(ev=>planBox.addEventListener(ev,refreshLive));
   if(hookRestore)hookRestore(d=>{
    if(!internal){
     form.plans=Array.isArray(d&&d.plans)?d.plans.map(x=>({comp_code:x.comp_code,objective:x.objective,actions:Array.isArray(x.actions)?x.actions:[]})):[];
