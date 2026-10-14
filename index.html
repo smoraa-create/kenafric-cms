@@ -44036,5 +44036,294 @@ html:not(:has(.header[style*="display: none"])):not(:has(#loginEmail)):not(:has(
 html:not(:has(.header[style*="display: none"])):not(:has(#loginEmail)):not(:has(#cmsFirstPw)) .lm-page,
 html:not(:has(.header[style*="display: none"])):not(:has(#loginEmail)):not(:has(#cmsFirstPw)) .tg-page{min-height:calc(125vh - 150px)}
 </style>
+<script id="cms-support-session-v1">
+/* Support session: a listed Super User opens another person's account. Viewing is free.
+   Anything that SAVES is locked until that person approves it by email.
+   Needs the Supabase function "support-session" and the 3 support tables. */
+(function(){
+ 'use strict';
+ var FLAG='cms-support-active-v1',SAVED='cms-support-saved-v1',UNTIL='cms-support-until-v1';
+ var OPEN_MS=120000,POLL_MS=300000;
+ var SS={active:null,until:0,modal:false,lastPrompt:0,waiting:null,poll:null};
+ function E(x){return escapeHtml(x==null?'':String(x));}
+ function say(m){if(typeof showToast==='function')showToast(m);else alert(m);}
+ function reload(){if(window.__ssNoReload){window.__reloaded=true;return;}location.reload();}
+ try{SS.active=JSON.parse(sessionStorage.getItem(FLAG)||'null');}catch(e){SS.active=null;}
+ try{SS.until=Number(sessionStorage.getItem(UNTIL)||0)||0;}catch(e){}
+ var origInvoke=_supabase.functions.invoke.bind(_supabase.functions);
+ var origRpc=_supabase.rpc.bind(_supabase);
+ var origFrom=_supabase.from.bind(_supabase);
+
+ /* ---------- calls to the support function (never locked) ---------- */
+ async function sfn(body){
+  var res=await origInvoke('support-session',{body:body});
+  if(res.error){
+   var msg=res.error.message||'Request failed';
+   try{if(res.error.context&&res.error.context.json){var j=await res.error.context.json();if(j&&j.error)msg=j.error;}}catch(e){}
+   if(/not found|404|failed to send|fetch/i.test(msg))msg='The support function is not installed yet in Supabase (support-session). '+msg;
+   throw new Error(msg);
+  }
+  if(res.data&&res.data.error)throw new Error(res.data.error);
+  return res.data;
+ }
+ function css(){
+  if(document.getElementById('ss-style'))return;
+  var s=document.createElement('style');s.id='ss-style';
+  s.textContent='#ssBar{position:fixed;top:0;left:0;right:0;z-index:2147483000;background:#dc2626;color:#fff;font:700 13px/1.4 system-ui,sans-serif;padding:8px 16px;display:flex;gap:12px;align-items:center;flex-wrap:wrap;box-shadow:0 2px 10px rgba(0,0,0,.3)}'+
+  '#ssBar .ss-grow{flex:1;min-width:200px}#ssBar button{border:0;border-radius:8px;padding:6px 12px;font-weight:700;cursor:pointer}'+
+  '#ssBar .ss-lock{background:#fff;color:#dc2626;border-radius:20px;padding:2px 10px}#ssBar .ss-open{background:#bbf7d0;color:#166534;border-radius:20px;padding:2px 10px}'+
+  'html.ss-on body{padding-top:42px}'+
+  '#ssModal,#ssAppr{position:fixed;inset:0;z-index:2147483100;background:rgba(15,23,42,.6);display:flex;align-items:center;justify-content:center;padding:20px}'+
+  '#ssModal .ss-box,#ssAppr .ss-box{background:#fff;border-radius:16px;max-width:560px;width:100%;padding:20px;box-shadow:0 24px 60px rgba(0,0,0,.4);max-height:90vh;overflow:auto}'+
+  '#ssModal h3,#ssAppr h3{margin:0 0 8px}#ssModal textarea,#ssPanel textarea{width:100%;min-height:70px}#ssModal .ss-row,#ssAppr .ss-row{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}'+
+  '#ssBanner{position:sticky;top:0;z-index:2147482000;background:#fef3c7;color:#92400e;border-bottom:2px solid #f59e0b;padding:10px 16px;font:700 14px system-ui,sans-serif;display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap}'+
+  '#ssPanel{background:#fff;border:2px solid #dc2626;border-radius:14px;padding:16px;margin:14px 0}#ssPanel h2{margin:0 0 4px;color:#b91c1c}'+
+  '#ssPanel .ss-hit{padding:8px 10px;border:1px solid #e2e8f0;border-radius:8px;margin-top:6px;cursor:pointer}#ssPanel .ss-hit:hover{background:#fef2f2}#ssPanel .ss-note{color:#64748b;font-size:12.5px}'+
+  '#ssAppr .ss-card{border:1px solid #e2e8f0;border-radius:12px;padding:12px;margin-top:10px}';
+  document.head.appendChild(s);
+ }
+
+ /* ---------- the lock: only while a support session is active ---------- */
+ var WRITE_WORDS='submit|save|send|issue|cancel|confirm|start|publish|delete|remove|approve|reject|renew|extend|request|decide|mark|set|update|create|add|assign|reassign|upload|import|resend|reopen|redo|grant|revoke|reset|archive|restore|transfer|merge|record|release|withdraw|return|disapprove|invite|apply|sync|repair|discard|supersede|transition|insert|upsert|process|finalize|finalise|retire|escalate|acknowledge|ack|unlock|lock|rename|move|copy|duplicate|generate_and_send|notify|edit|change|toggle|enable|disable|activate|deactivate|clear|purge|rollback|retry|review|preview';
+ var WRITE_RE=new RegExp('(^|_)('+WRITE_WORDS+')(_|$)','i');
+ function canWrite(){return SS.until>Date.now();}
+ function isWrite(name,args){
+  var a=args&&args.p_action,key=String(name)+(a!=null?':'+a:'');
+  var okList=window.CMS_SUPPORT_READ_EXTRA||[];if(okList.indexOf(key)>=0||okList.indexOf(String(name))>=0)return false;
+  var bad=window.CMS_SUPPORT_WRITE_EXTRA||[];if(bad.indexOf(key)>=0||bad.indexOf(String(name))>=0)return true;
+  if(a!=null)return WRITE_RE.test(String(a));
+  if(/(^|_)(get|list|info|prefill|policy|version|search|find|load|fetch|catalogue|dashboard|summary|overview|my)(_|$)/i.test(String(name)))return false;
+  return WRITE_RE.test(String(name));
+ }
+ var lastGesture=0;
+ ['click','keydown','submit'].forEach(function(t){document.addEventListener(t,function(){lastGesture=Date.now();},true);});
+ var LOCK_MSG='Support session: saving is locked. Ask the person to approve it (red bar, Ask for approval).';
+ function blocked(desc){
+  if(Date.now()-lastGesture<2000)askApproval(desc);
+  var res={data:null,error:{message:LOCK_MSG,code:'SUPPORT_LOCK'},status:403},p;
+  p=new Proxy(function(){},{get:function(_,k){if(k==='then')return function(a,b){return Promise.resolve(res).then(a,b);};return function(){return p;};},apply:function(){return p;}});
+  return p;
+ }
+ function installGuard(){
+  _supabase.rpc=function(name,args,opts){
+   if(canWrite()||!isWrite(name,args))return origRpc(name,args,opts);
+   return blocked('rpc '+name+(args&&args.p_action?' : '+args.p_action:''));
+  };
+  _supabase.from=function(table){
+   var b=origFrom(table);
+   ['insert','update','upsert','delete'].forEach(function(m){
+    if(typeof b[m]!=='function')return;var o=b[m].bind(b);
+    b[m]=function(){if(canWrite())return o.apply(null,arguments);return blocked('table '+table+' : '+m);};
+   });
+   return b;
+  };
+  _supabase.functions.invoke=function(name,opts){
+   if(canWrite())return origInvoke(name,opts);
+   return blocked('function '+name);
+  };
+  try{if(_supabase.auth&&_supabase.auth.updateUser){var ou=_supabase.auth.updateUser.bind(_supabase.auth);_supabase.auth.updateUser=function(){if(canWrite())return ou.apply(null,arguments);return blocked('change password or profile');};}}catch(e){}
+  try{
+   var st=_supabase.storage;
+   if(st&&typeof st.from==='function'){
+    var of=st.from.bind(st);
+    var gs={from:function(bucket){var b=of(bucket);['upload','update','remove','move','copy'].forEach(function(m){if(typeof b[m]!=='function')return;var o=b[m].bind(b);b[m]=function(){if(canWrite())return o.apply(null,arguments);return blocked('file '+m);};});return b;}};
+    Object.defineProperty(_supabase,'storage',{configurable:true,get:function(){return Object.assign(Object.create(st),gs);}});
+   }
+  }catch(e){}
+  try{if(window.emailjs&&emailjs.send){var oe=emailjs.send.bind(emailjs);emailjs.send=function(){if(canWrite())return oe.apply(null,arguments);return Promise.reject(new Error(LOCK_MSG));};}}catch(e){}
+ }
+
+ /* ---------- the red bar ---------- */
+ function barText(){
+  var left=Math.max(0,SS.until-Date.now()),m=Math.floor(left/60000),s=String(Math.floor(left%60000/1000)).padStart(2,'0');
+  return canWrite()?'<span class="ss-open">SAVING OPEN '+m+':'+s+'</span>':'<span class="ss-lock">SAVING LOCKED</span>';
+ }
+ function drawBar(){
+  var a=SS.active;if(!a)return;
+  var bar=document.getElementById('ssBar');
+  if(!bar){bar=document.createElement('div');bar.id='ssBar';document.body.appendChild(bar);document.documentElement.classList.add('ss-on');}
+  bar.innerHTML='<div class="ss-grow">SUPPORT SESSION: you are signed in as '+E(a.name||a.target)+' ('+E(a.target)+'). Reason: '+E(a.reason)+'</div>'+barText()+
+   '<button type="button" data-ss="ask" style="background:#fff;color:#dc2626">Ask for approval</button><button type="button" data-ss="exit" style="background:#7f1d1d;color:#fff">Exit support session</button>';
+ }
+ async function exitSession(why){
+  try{await sfn({action:'end'});}catch(e){}
+  try{_supabase.auth.stopAutoRefresh();}catch(e){}
+  var s=null;try{s=JSON.parse(sessionStorage.getItem(SAVED)||'null');}catch(e){}
+  sessionStorage.removeItem(FLAG);sessionStorage.removeItem(SAVED);sessionStorage.removeItem(UNTIL);
+  if(s&&s.auth)localStorage.setItem(CMS_AUTH_STORAGE_KEY,s.auth);else localStorage.removeItem(CMS_AUTH_STORAGE_KEY);
+  if(s&&s.win)localStorage.setItem(CMS_LOGIN_WINDOW_KEY,s.win);else localStorage.removeItem(CMS_LOGIN_WINDOW_KEY);
+  if(s&&s.tab)sessionStorage.setItem('cms-tab-auth-v1',s.tab);
+  if(s&&s.rel)sessionStorage.setItem('cms-release-session',s.rel);
+  reload();
+ }
+
+ /* ---------- asking the person to approve ---------- */
+ function askApproval(desc){
+  if(!SS.active||SS.modal||Date.now()-SS.lastPrompt<2500)return;
+  SS.lastPrompt=Date.now();openModal(desc||'');
+ }
+ function closeModal(){var m=document.getElementById('ssModal');if(m)m.remove();SS.modal=false;if(SS.waiting){clearInterval(SS.waiting);SS.waiting=null;}}
+ function openModal(desc){
+  css();SS.modal=true;
+  var m=document.createElement('div');m.id='ssModal';
+  m.innerHTML='<div class="ss-box"><h3>Saving needs '+E(SS.active.name||SS.active.target)+'\'s approval</h3><p>We will email them. Once they approve, saving opens for 2 minutes so you can finish the action.</p><label>What are you about to save or submit?</label><textarea id="ssWhat" maxlength="200">'+E(desc)+'</textarea><div class="ss-row" id="ssRow"><button type="button" class="btn btn-primary" data-ss="send">Send approval request</button><button type="button" class="btn btn-outline" data-ss="close">Cancel</button></div><p id="ssMsg" role="status"></p></div>';
+  document.body.appendChild(m);
+ }
+ function modalMsg(t,row){var e=document.getElementById('ssMsg');if(e)e.textContent=t;if(row!==undefined){var r=document.getElementById('ssRow');if(r)r.innerHTML=row;}}
+ async function sendRequest(){
+  var what=((document.getElementById('ssWhat')||{}).value||'').trim();
+  if(!what){modalMsg('Say what you are about to save.');return;}
+  try{
+   modalMsg('Sending...','');
+   var r=await sfn({action:'request',what:what,summary:''});
+   var NL=String.fromCharCode(10),a=SS.active;
+   var msg='Hi '+String(a.name||'').split(' ')[0]+','+NL+NL+r.helper_email+' (HR support) has opened a support session on your CMS account and asks to save something on your behalf.'+NL+NL+'What: '+what+NL+'Reason for the session: '+r.reason+NL+NL+'Nothing is saved unless you approve. Sign in to the CMS and click the yellow "Support approval" bar at the top:'+NL+APP_LINK+NL+NL+'The request expires in 30 minutes. If you were not expecting this, choose Decline and tell HR.'+NL+NL+'Regards,'+NL+'HR Department';
+   var sent=true;try{var er=await origInvoke('send-notification',{body:{to:a.target,subject:'Support approval needed on your CMS account',message:msg}});if(er.error||!er.data||!er.data.ok)sent=false;}catch(e){sent=false;}
+   modalMsg((sent?'Email sent to '+a.target+'. ':'The email could not be sent, ask them to open the CMS. ')+'Waiting for approval... (valid 30 minutes)','<button type="button" class="btn btn-outline" data-ss="close">Close and keep waiting</button>');
+   var rid=r.request_id;
+   SS.waiting=setInterval(async function(){
+    try{
+     var s=await sfn({action:'status',request_id:rid});
+     if(s.status==='Approved'){
+      clearInterval(SS.waiting);SS.waiting=null;
+      await sfn({action:'consume',request_id:rid});
+      SS.until=Date.now()+OPEN_MS;sessionStorage.setItem(UNTIL,String(SS.until));
+      modalMsg('Approved. Saving is open for 2 minutes. Close this and finish your action now.','<button type="button" class="btn btn-primary" data-ss="close">Close</button>');
+      drawBar();
+     }else if(s.status==='Declined'||s.status==='Expired'){
+      clearInterval(SS.waiting);SS.waiting=null;
+      modalMsg('The request was '+s.status.toLowerCase()+'. Nothing was saved.','<button type="button" class="btn btn-outline" data-ss="close">Close</button>');
+     }
+    }catch(e){modalMsg(e.message);}
+   },5000);
+  }catch(e){modalMsg(e.message,'<button type="button" class="btn btn-outline" data-ss="close">Close</button>');}
+ }
+
+ /* ---------- the person approves or declines (normal login only) ---------- */
+ var pendingRows=[];
+ async function checkPending(){
+  if(SS.active||typeof APP==='undefined'||!APP.user)return;
+  try{
+   var r=await sfn({action:'pending'});pendingRows=r.requests||[];
+   var b=document.getElementById('ssBanner');
+   if(!pendingRows.length){if(b)b.remove();return;}
+   css();
+   if(!b){b=document.createElement('div');b.id='ssBanner';document.body.insertBefore(b,document.body.firstChild);}
+   b.innerHTML='<span>Support approval: '+pendingRows.length+' request'+(pendingRows.length>1?'s':'')+' waiting for you.</span><button type="button" class="btn btn-primary" data-ss="review">Review</button>';
+  }catch(e){}
+ }
+ function openApprovals(){
+  css();var o=document.getElementById('ssAppr');if(o)o.remove();
+  o=document.createElement('div');o.id='ssAppr';
+  o.innerHTML='<div class="ss-box"><h3>Support approvals</h3><p>HR support opened a session on your account. Nothing is saved unless you approve. Approve only what you recognise.</p>'+
+   pendingRows.map(function(q){return '<div class="ss-card"><b>'+E(q.action)+'</b><div>From: '+E(q.helper_email)+'</div><div>Reason for the session: '+E(q.reason)+'</div><div class="ss-note">Expires '+E(new Date(q.expires_at).toLocaleTimeString())+'</div><div class="ss-row"><button type="button" class="btn btn-primary" data-ss="approve" data-id="'+E(q.id)+'">Approve</button><button type="button" class="btn btn-outline" data-ss="decline" data-id="'+E(q.id)+'">Decline</button></div></div>';}).join('')+
+   '<div class="ss-row"><button type="button" class="btn btn-outline" data-ss="closeappr">Close</button></div></div>';
+  document.body.appendChild(o);
+ }
+ async function decide(id,decision){
+  try{await sfn({action:'decide',request_id:id,decision:decision});say(decision==='approve'?'Approved.':'Declined.');}
+  catch(e){say(e.message);}
+  await checkPending();
+  if(pendingRows.length)openApprovals();else{var o=document.getElementById('ssAppr');if(o)o.remove();}
+ }
+
+ /* ---------- Super User Console: start a session ---------- */
+ var pick=null;
+ function consoleOK(){return typeof APP!=='undefined'&&APP.currentRole==='hr'&&window.CMS_SUPPORT&&CMS_SUPPORT.me&&CMS_SUPPORT.me.allowed===true&&!SS.active;}
+ function ensurePanel(){
+  var root=document.getElementById('sucRoot');
+  if(!root||!consoleOK()||document.getElementById('ssPanel'))return;
+  css();
+  var p=document.createElement('section');p.id='ssPanel';
+  p.innerHTML='<h2>Log in as a user (support session)</h2><p class="ss-note">You see the CMS exactly as that person does. Viewing is free. Anything that saves is locked until they approve it by email. Everything is logged. You cannot open HR Admin, Head of HR or C-Suite accounts.</p>'+
+   '<label>Find the person (name or email)</label><input id="ssFind" placeholder="Start typing" autocomplete="off"><div id="ssHits"></div>'+
+   '<div id="ssChosen" class="ss-note" style="margin-top:8px"></div>'+
+   '<label style="margin-top:10px">Reason (required, at least 10 characters)</label><textarea id="ssReason" maxlength="500" placeholder="e.g. She cannot see her self-assessment"></textarea>'+
+   '<p class="ss-note"><b>Tip:</b> do this in a private (incognito) window. Opening the session signs this browser into their account, so your other CMS tabs in the same browser would sign out.</p>'+
+   '<button type="button" class="btn btn-danger" data-ss="start">Start support session</button> <button type="button" class="btn btn-outline" data-ss="log">Show support log</button><div id="ssLog"></div>';
+  var anchor=root.querySelector('.suc-identity');
+  if(anchor)anchor.after(p);else root.prepend(p);
+ }
+ var findTimer=null;
+ async function find(q){
+  var host=document.getElementById('ssHits');if(!host)return;
+  q=q.trim();if(q.length<3){host.innerHTML='';return;}
+  var safe=q.replace(/[%,()]/g,' ');
+  var r=await origFrom('employees').select('employee_name,email,company,department,position').or('employee_name.ilike.%'+safe+'%,email.ilike.%'+safe+'%').limit(8);
+  var rows=(r.data||[]).filter(function(x){return x.email;});
+  host.innerHTML=rows.length?rows.map(function(x,i){return '<div class="ss-hit" data-ss="pick" data-i="'+i+'"><b>'+E(x.employee_name)+'</b> | '+E(x.email)+'<div class="ss-note">'+E(x.company)+' / '+E(x.department)+' / '+E(x.position)+'</div></div>';}).join(''):'<div class="ss-note">No match.</div>';
+  host._rows=rows;
+ }
+ async function startSession(){
+  var reason=((document.getElementById('ssReason')||{}).value||'').trim();
+  if(!pick){say('Choose the person first.');return;}
+  if(reason.length<10){say('Give a reason of at least 10 characters.');return;}
+  if(!confirm('Open a support session as '+pick.employee_name+' ('+pick.email+')?\n\nThey will be asked to approve anything that saves. Everything is logged.'))return;
+  var saved={auth:localStorage.getItem(CMS_AUTH_STORAGE_KEY),win:localStorage.getItem(CMS_LOGIN_WINDOW_KEY),tab:sessionStorage.getItem('cms-tab-auth-v1'),rel:sessionStorage.getItem('cms-release-session')};
+  var r;
+  try{r=await sfn({action:'start',target_email:pick.email,reason:reason});}catch(e){say(e.message);return;}
+  sessionStorage.setItem(SAVED,JSON.stringify(saved));
+  try{
+   var v=await _supabase.auth.verifyOtp({token_hash:r.token_hash,type:'magiclink'});
+   if(v.error){v=await _supabase.auth.verifyOtp({token_hash:r.token_hash,type:'email'});}
+   if(v.error)throw v.error;
+   var now=Date.now();
+   localStorage.setItem(CMS_LOGIN_WINDOW_KEY,JSON.stringify({email:String(pick.email).toLowerCase(),started:now,expires:now+CMS_LOGIN_WINDOW_MS}));
+   sessionStorage.setItem(FLAG,JSON.stringify({id:r.support_id,target:String(pick.email).toLowerCase(),name:pick.employee_name,reason:reason,expires:r.expires_at}));
+   await sfn({action:'bind',support_id:r.support_id});
+   try{
+    var NL=String.fromCharCode(10);
+    await origInvoke('send-notification',{body:{to:pick.email,subject:'A support session was opened on your CMS account',message:'Hi '+String(pick.employee_name||'').split(' ')[0]+','+NL+NL+'HR support opened a session on your CMS account to help with a problem.'+NL+'Reason: '+reason+NL+NL+'Nothing is saved on your behalf unless you approve it. If you were not expecting this, tell HR.'+NL+NL+'Regards,'+NL+'HR Department'}});
+   }catch(e){}
+   reload();
+  }catch(e){
+   try{_supabase.auth.stopAutoRefresh();}catch(x){}
+   if(saved.auth)localStorage.setItem(CMS_AUTH_STORAGE_KEY,saved.auth);
+   if(saved.win)localStorage.setItem(CMS_LOGIN_WINDOW_KEY,saved.win);
+   sessionStorage.removeItem(FLAG);sessionStorage.removeItem(SAVED);
+   say('Could not open the session: '+(e.message||e));reload();
+  }
+ }
+ async function showLog(){
+  var host=document.getElementById('ssLog');if(!host)return;
+  try{
+   var r=await sfn({action:'audit'});
+   host.innerHTML='<table style="width:100%;font-size:12.5px;margin-top:8px"><thead><tr><th>When</th><th>Who</th><th>Person</th><th>What</th></tr></thead><tbody>'+(r.rows||[]).slice(0,60).map(function(x){return '<tr><td>'+E(new Date(x.at).toLocaleString())+'</td><td>'+E(x.helper_email)+'</td><td>'+E(x.target_email)+'</td><td>'+E(String(x.event).replace(/_/g,' '))+'</td></tr>';}).join('')+'</tbody></table>';
+  }catch(e){host.textContent=e.message;}
+ }
+
+ /* ---------- events ---------- */
+ document.addEventListener('click',function(ev){
+  var b=ev.target.closest('[data-ss]');if(!b)return;var a=b.getAttribute('data-ss');
+  if(a==='exit')exitSession();
+  else if(a==='ask')askApproval('');
+  else if(a==='send')sendRequest();
+  else if(a==='close')closeModal();
+  else if(a==='start')startSession();
+  else if(a==='log')showLog();
+  else if(a==='review')openApprovals();
+  else if(a==='approve')decide(b.getAttribute('data-id'),'approve');
+  else if(a==='decline')decide(b.getAttribute('data-id'),'decline');
+  else if(a==='closeappr'){var o=document.getElementById('ssAppr');if(o)o.remove();}
+  else if(a==='pick'){var host=document.getElementById('ssHits');pick=host._rows[Number(b.getAttribute('data-i'))];document.getElementById('ssChosen').innerHTML='Selected: <b>'+E(pick.employee_name)+'</b> | '+E(pick.email);host.innerHTML='';}
+ });
+ document.addEventListener('input',function(ev){
+  if(ev.target&&ev.target.id==='ssFind'){clearTimeout(findTimer);var v=ev.target.value;findTimer=setTimeout(function(){find(v).catch(function(){});},250);}
+ });
+
+ /* ---------- start-up ---------- */
+ if(SS.active){
+  css();installGuard();
+  // A person who has not set a password yet must not be sent to the first-password screen by the helper.
+  if(typeof cmsNeedsFirstPassword==='function')cmsNeedsFirstPassword=async function(){return false;};
+  if(typeof doLogout==='function'){doLogout=function(){return exitSession();};}
+  new MutationObserver(function(){if(!document.getElementById('ssBar'))drawBar();}).observe(document.body,{childList:true});
+  drawBar();setInterval(function(){drawBar();if(SS.until&&SS.until<=Date.now()){SS.until=0;sessionStorage.removeItem(UNTIL);}if(new Date(SS.active.expires)<=new Date()){say('The support session has ended.');exitSession();}},1000);
+ }else{
+  var t,checkedFor='';new MutationObserver(function(){if(t)return;t=setTimeout(function(){t=null;try{ensurePanel();}catch(e){}try{if(APP.user&&checkedFor!==APP.user.email){checkedFor=APP.user.email;checkPending();}}catch(e){}},200);}).observe(document.body,{childList:true,subtree:true});
+  setTimeout(checkPending,4000);setInterval(checkPending,POLL_MS);
+ }
+})();
+</script>
 </body>
 </html>
