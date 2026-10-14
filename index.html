@@ -6,6 +6,20 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Kenafric CMS</title>
+<script id="cms-scale-fix-v1">
+(function(){
+ 'use strict';
+ if(window.__cmsScaleFixV1)return;window.__cmsScaleFixV1=true;
+ var cache=1,at=-1000;
+ function z(){var n=performance.now();if(n-at>40){at=n;var v=parseFloat(getComputedStyle(document.documentElement).zoom);cache=(v>0&&v<=3)?v:1;}return cache;}
+ var orig=Element.prototype.getBoundingClientRect;
+ Element.prototype.getBoundingClientRect=function(){var r=orig.call(this),k=z();if(k===1)return r;return new DOMRect(r.x/k,r.y/k,r.width/k,r.height/k);};
+ ['innerWidth','innerHeight'].forEach(function(name){
+  var d=Object.getOwnPropertyDescriptor(window,name);if(!d||!d.get||!d.configurable)return;
+  Object.defineProperty(window,name,{configurable:true,enumerable:d.enumerable,get:function(){return d.get.call(window)/z();},set:d.set});
+ });
+})();
+</script>
 <link rel="preconnect" href="https://openrouter.ai">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%231a1a6e'/%3E%3Cstop offset='1' stop-color='%235b4fcf'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='64' height='64' rx='14' fill='url(%23g)'/%3E%3Ctext x='32' y='45' font-family='Arial,sans-serif' font-size='34' font-weight='bold' fill='white' text-anchor='middle'%3EK%3C/text%3E%3C/svg%3E">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -2782,7 +2796,7 @@ body.sb-mode:has(#sideNav.nv3-sidebar) #roleBanner{
 #ihRoot .ih-tick input{width:18px;min-height:18px;height:18px;margin:0}
 #ihRoot .ih-actions{display:flex;gap:10px;flex-wrap:wrap;margin:24px 0}
 #ihRoot #ihStatus{color:var(--ih-muted);min-height:24px}
-.ih-due-banner{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;background:#fff7e5;border:1px solid #f0d28b;border-radius:14px;padding:14px 18px 14px 20px;margin:0 0 20px;color:#4b3210;min-height:66px;font:750 15px/1.5 system-ui;box-shadow:0 3px 12px rgba(20,54,100,.06)}
+.ih-due-banner{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;background:#fff7e5;border:1px solid #f0d28b;border-radius:14px;padding:14px 18px 14px 20px;margin:16px 0 20px;color:#4b3210;min-height:66px;font:750 15px/1.5 system-ui;box-shadow:0 3px 12px rgba(20,54,100,.06)}
 .ih-due-banner::before{content:"";width:38px;height:38px;flex:0 0 38px;border-radius:50%;background:#ffe5a8}
 .ih-due-banner span{flex:1 1 auto}
 .ih-due-banner button{min-height:42px;border:1px solid #dfbd77;border-radius:10px;background:#fff;color:#4b3210;padding:9px 16px;cursor:pointer;font:750 14px system-ui}
@@ -8820,7 +8834,7 @@ if (!name || !email) { showToast('Name and email are required'); return; }
 if (!dep || !pos) { showToast('Select department and position'); return; }
 var mgrName = '';
 if (mgrEmail) { var m = (window._aeEmps || []).find(function(e){ return e.email === mgrEmail; }); mgrName = m ? m.employee_name : ''; if (!mgrName) { var lm = (window._aeMgrRegs || []).find(function(x){ return (x.email || '').toLowerCase() === mgrEmail.toLowerCase(); }); mgrName = lm ? (lm.manager_name || '') : ''; } }
-var empId = 'EMP-' + Date.now().toString(36).toUpperCase() + Math.random().toString(36).substr(2,3).toUpperCase();
+var empId = ((document.getElementById('aeEmpId')||{}).value||'').trim() || ('EMP-' + Date.now().toString(36).toUpperCase() + Math.random().toString(36).substr(2,3).toUpperCase());
 var track = document.getElementById('aeTrack') ? document.getElementById('aeTrack').value : '';
 const { error } = await _supabase.from('employees').insert({ employee_id: empId, employee_name: name, email: email, department: dep, position: pos, competency_level: lvl, company: comp, manager: mgrName, manager_email: mgrEmail, talent_track: track });
 if (error) { showToast(error.message); return; }
@@ -15535,7 +15549,7 @@ async function ebOpenAdd(){
  try{
   if(!EB.refs){
    var values=await Promise.all([
-    ebAll('employees','employee_name,email,manager,manager_email,department,position,company'),
+    ebAll('employees','employee_id,employee_name,email,manager,manager_email,department,position,company'),
     ebAll('critical_positions','department,position_name,criticality',function(q){return q.eq('is_active',true)}),
     ebAll('line_managers','email,manager_name'),
     ebAll('departments','company,name,department_id'),
@@ -15552,7 +15566,7 @@ async function ebOpenAdd(){
   var __co=await _supabase.from('companies').select('name');(__co.data||[]).forEach(function(c){if(c.name)cos[String(c.name).trim()]=true;});
   var h='<style>.ae-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px}.ae-sec{border:1px solid #e2e8f0;border-radius:12px;padding:14px 16px;margin:12px 0;background:#f8fafc}.ae-sec h4{margin:0 0 10px;font-size:14px;color:#312e81}.ae-sec label{display:block;margin:0 0 4px}.ae-hint{display:block;margin-top:4px;color:#64748b;font-size:12px;min-height:16px}</style>';
   h+='<div class="card"><div class="eb-head"><h3>Add Employee</h3><button class="btn btn-outline" onclick="ebOpenAdd()">Close</button></div><p>Work down the three boxes. Department, position and level follow from your registries.</p>';
-  h+='<div class="ae-sec"><h4>1. Who</h4><div class="ae-grid"><div><label>Full name *</label><input id="aeName" placeholder="e.g. Jane Wanjiru"></div><div><label>Work email *</label><input type="email" id="aeEmail" placeholder="name@company.com"></div></div></div>';
+  h+='<div class="ae-sec"><h4>1. Who</h4><div class="ae-grid"><div><label>Full name *</label><input id="aeName" placeholder="e.g. Jane Wanjiru"></div><div><label>Work email *</label><input type="email" id="aeEmail" placeholder="name@company.com"></div><div><label>Employee ID / Payroll No. *</label><input id="aeEmpId" placeholder="At least 6 characters" autocomplete="off"></div></div></div>';
   h+='<div class="ae-sec"><h4>2. Where they work</h4><div class="ae-grid"><div><label>Company *</label><select id="aeCompany" onchange="aeFillDepartments()"><option value="">Select company</option>'+Object.keys(cos).sort().map(function(c){return '<option'+(ebKey(c)===ebKey(EB.company||'')?' selected':'')+'>'+escapeHtml(c)+'</option>';}).join('')+'</select></div>';
   h+='<div><label>Department *</label><select id="aeDept" onchange="aeFillPositions();aeAutoLevel()"><option value="">Select company first</option></select></div>';
   h+='<div><label>Position *</label><select id="aePos" onchange="aeAutoLevel()"><option value="">Select department first</option></select></div>';
@@ -15573,6 +15587,11 @@ async function ebSaveEmployee(button){
  if(!g('aeCompany').trim()){showToast('Choose the company');return;}
  if(!g('aeDept')||!g('aePos')){showToast('Select department and position');return;}
  if((window._aeEmps||[]).some(function(e){return String(e.email||'').toLowerCase()===em;})){showToast('An employee with this email already exists');return;}
+ var idv=g('aeEmpId').trim();
+ if(!idv){showToast('Enter the Employee ID / Payroll No.');return;}
+ if(idv.length<6){showToast('Employee ID must be at least 6 characters. It is the first password.');return;}
+ if(/\s/.test(idv)){showToast('Employee ID cannot contain spaces');return;}
+ if((window._aeEmps||[]).some(function(e){return String(e.employee_id||'').trim().toLowerCase()===idv.toLowerCase();})){showToast('This Employee ID already exists');return;}
  if(mg){var me=(mg.split('|').pop()||'').trim().toLowerCase();if(!(window._aeMgrKnown||{})[me]){showToast('Pick the line manager from the list');return;}document.getElementById('aeMgr').value=me;}
  button.disabled=true;EB.cache=null;EB.refs=null;
  try{await saveNewEmployee();}finally{if(button.isConnected)button.disabled=false;}
@@ -43220,7 +43239,7 @@ body.cms-focus-editor-v1 #mainContent #fwScreen.cfu-screen #fwBody .cfe-footer {
   var b=side.querySelector('[data-page="'+PAGE+'"],[data-nv-page="'+PAGE+'"]');
   if(!b){
    b=document.createElement('button');b.type='button';b.className='sb-item';b.dataset.page=PAGE;b.textContent='All Positions';
-   b.onclick=function(){navigateTo(PAGE);};side.appendChild(b);
+  b.onclick=function(){navigateTo(PAGE);};var dep=side.querySelector('[data-nv-page$="-departments"],[data-page$="-departments"]');if(dep)dep.after(b);else side.appendChild(b);
    if(typeof cmsPolishNavigation==='function')cmsPolishNavigation();
   }
   selected();
@@ -43325,7 +43344,7 @@ body.cms-focus-editor-v1 #mainContent #fwScreen.cfu-screen #fwBody .cfe-footer {
  var S={ref:null,rows:[],onlyErr:false,busy:false,fileName:''};
  var LEVELS=['Foundational','Intermediate','Advanced','Master'];
  var TRACKS=['Promotion Track','Succession Track','Talent Pipeline','Development Track'];
- var HEAD=['Full name','Work email','Company','Department','Position','Competency level (optional)','Line manager email (optional)','Talent track (optional)'];
+ var HEAD=['Employee ID / Payroll No.','Full name','Work email','Company','Department','Position','Competency level (optional)','Line manager email (optional)','Talent track (optional)'];
  function E(x){return String(x==null?'':x).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');}
  function K(x){return String(x==null?'':x).trim().replace(/ +/g,' ').toUpperCase();}
  function say(m){if(typeof showToast==='function')showToast(m);}
@@ -43338,7 +43357,7 @@ body.cms-focus-editor-v1 #mainContent #fwScreen.cfu-screen #fwBody .cfe-footer {
  }
  async function loadRefs(){
   var v=await Promise.all([
-   ebAll('employees','employee_name,email,manager_email,department,position,company'),
+   ebAll('employees','employee_id,employee_name,email,manager_email,department,position,company'),
    ebAll('critical_positions','department,position_name',function(q){return q.eq('is_active',true);}),
    ebAll('line_managers','email,manager_name'),
    ebAll('departments','company,name,department_id'),
@@ -43346,13 +43365,13 @@ body.cms-focus-editor-v1 #mainContent #fwScreen.cfu-screen #fwBody .cfe-footer {
    _supabase.from('positions').select('position_name,department_id,competency_level')
   ]);
   var emps=v[0],crit=v[1],lms=v[2],deps=v[3],cos=v[4],pos=(v[5].data||[]);
-  var R={companies:{},deps:{},depNames:{},pos:{},emails:{},mgrs:{},mgrNames:{}};
+  var R={companies:{},deps:{},depNames:{},pos:{},emails:{},mgrs:{},mgrNames:{},ids:{}};
   function addCo(n){n=String(n||'').trim();if(n)R.companies[K(n)]=R.companies[K(n)]||n;}
   function addDep(co,d){co=String(co||'').trim();d=String(d||'').trim();if(!co||!d)return;var m=R.deps[K(co)]=R.deps[K(co)]||{};m[K(d)]=m[K(d)]||d;R.depNames[K(d)]=R.depNames[K(d)]||d;}
   function addPos(d,p,lv){d=K(d);p=String(p||'').trim();if(!d||!p)return;var m=R.pos[d]=R.pos[d]||{};var o=m[K(p)]=m[K(p)]||{name:p,level:''};if(lv&&!o.level)o.level=lv==='Intermidiate'?'Intermediate':lv;}
   cos.forEach(function(c){addCo(c.name);});
   deps.forEach(function(d){addCo(d.company);addDep(d.company,d.name);});
-  emps.forEach(function(e){addCo(e.company);addDep(e.company,e.department);addPos(e.department,e.position);var em=String(e.email||'').trim().toLowerCase();if(em){R.emails[em]=true;R.mgrs[em]=true;R.mgrNames[em]=e.employee_name||'';}if(e.manager_email)R.mgrs[String(e.manager_email).trim().toLowerCase()]=true;});
+  emps.forEach(function(e){if(e.employee_id)R.ids[String(e.employee_id).trim().toLowerCase()]=true;addCo(e.company);addDep(e.company,e.department);addPos(e.department,e.position);var em=String(e.email||'').trim().toLowerCase();if(em){R.emails[em]=true;R.mgrs[em]=true;R.mgrNames[em]=e.employee_name||'';}if(e.manager_email)R.mgrs[String(e.manager_email).trim().toLowerCase()]=true;});
   crit.forEach(function(c){addPos(c.department,c.position_name);});
   lms.forEach(function(m){var em=String(m.email||'').trim().toLowerCase();if(em){R.mgrs[em]=true;if(!R.mgrNames[em])R.mgrNames[em]=m.manager_name||'';}});
   var codeName={};deps.forEach(function(d){if(d.department_id){var c=K(d.department_id);(codeName[c]=codeName[c]||{})[K(d.name)]=d.name;}});
@@ -43364,22 +43383,29 @@ body.cms-focus-editor-v1 #mainContent #fwScreen.cfu-screen #fwBody .cfe-footer {
   if(!rows.length)return [];
   var idx={};rows[0].forEach(function(h,i){idx[String(h).toLowerCase().replace(/[^a-z]/g,'')]=i;});
   function col(names){for(var i=0;i<names.length;i++){if(idx[names[i]]!==undefined)return idx[names[i]];}return -1;}
-  var c={name:col(['fullname','name','employeename']),email:col(['workemail','email','emailaddress']),company:col(['company']),dept:col(['department','dept']),pos:col(['position','jobtitle','role']),lvl:col(['competencyleveloptional','competencylevel','level']),mgr:col(['linemanageremailoptional','linemanageremail','manageremail','linemanager']),trk:col(['talenttrackoptional','talenttrack','track'])};
+  var c={eid:col(['employeeid','employeeidpayrollno','payrollno','payrollnumber','payroll']),name:col(['fullname','name','employeename']),email:col(['workemail','email','emailaddress']),company:col(['company']),dept:col(['department','dept']),pos:col(['position','jobtitle','role']),lvl:col(['competencyleveloptional','competencylevel','level']),mgr:col(['linemanageremailoptional','linemanageremail','manageremail','linemanager']),trk:col(['talenttrackoptional','talenttrack','track'])};
   if(c.name<0||c.email<0||c.company<0||c.dept<0||c.pos<0)throw Error('The first row must have these headings: Full name, Work email, Company, Department, Position. Download the template to get them.');
   var out=[];
   for(var r=1;r<rows.length;r++){
    var row=rows[r];function g(i){return i<0?'':String(row[i]==null?'':row[i]).trim();}
    if(!g(c.name)&&!g(c.email)&&!g(c.company)&&!g(c.dept)&&!g(c.pos))continue;
-   out.push({line:r+1,name:g(c.name),email:g(c.email).toLowerCase(),company:g(c.company),dept:g(c.dept),pos:g(c.pos),level:g(c.lvl),mgr:g(c.mgr).toLowerCase(),track:g(c.trk)});
+   out.push({line:r+1,eid:g(c.eid),name:g(c.name),email:g(c.email).toLowerCase(),company:g(c.company),dept:g(c.dept),pos:g(c.pos),level:g(c.lvl),mgr:g(c.mgr).toLowerCase(),track:g(c.trk)});
   }
   return out;
  }
  function validate(rows){
-  var R=S.ref,inFile={},fileEmails={};
+  var R=S.ref,inFile={},fileEmails={},idsInFile={};
   rows.forEach(function(r){if(r.email)fileEmails[r.email]=true;});
   rows.forEach(function(r){
    var errs=[],notes=[];
    if(!r.name)errs.push('Full name is missing');
+   var idk=String(r.eid||'').trim().toLowerCase();
+   if(!r.eid)errs.push('Employee ID / Payroll No. is missing');
+   else if(r.eid.length<6)errs.push('Employee ID must be at least 6 characters');
+   else if(/\s/.test(r.eid))errs.push('Employee ID cannot contain spaces');
+   else if(R.ids[idk])errs.push('Employee ID already exists');
+   else if(idsInFile[idk])errs.push('Employee ID repeated in this file (row '+idsInFile[idk]+')');
+   if(r.eid&&!idsInFile[idk])idsInFile[idk]=r.line;
    if(!r.email)errs.push('Work email is missing');
    else if(!/^[^@ ]+@[^@ ]+[.][^@ ]+$/.test(r.email))errs.push('Email is not valid');
    else if(R.emails[r.email])errs.push('This email is already an employee');
@@ -43400,7 +43426,7 @@ body.cms-focus-editor-v1 #mainContent #fwScreen.cfu-screen #fwBody .cfe-footer {
    var mgrName='';
    if(r.mgr){if(!R.mgrs[r.mgr]&&!fileEmails[r.mgr])errs.push('Line manager '+r.mgr+' is not a known manager or employee');else mgrName=R.mgrNames[r.mgr]||(rows.filter(function(x){return x.email===r.mgr;})[0]||{}).name||'';}
    r.errs=errs;r.notes=notes;r.ok=!errs.length;
-   r.final={employee_name:r.name,email:r.email,company:co||r.company,department:dep||r.dept,position:pos?pos.name:r.pos,competency_level:level,manager:mgrName,manager_email:r.mgr,talent_track:track};
+   r.final={employee_id:r.eid,employee_name:r.name,email:r.email,company:co||r.company,department:dep||r.dept,position:pos?pos.name:r.pos,competency_level:level,manager:mgrName,manager_email:r.mgr,talent_track:track};
   });
  }
  function counts(){var ok=S.rows.filter(function(r){return r.ok;}).length;return {ok:ok,bad:S.rows.length-ok};}
