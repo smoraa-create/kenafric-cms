@@ -9076,16 +9076,16 @@ function renderLM(){
   var start=(lmState.page-1)*lmState.pageSize,rows=filtered.slice(start,start+lmState.pageSize);
   var registered=managerList.filter(function(m){return m.registered;}).length,staffCovered=emps.filter(function(e){return !!e.manager_email;}).length;
   var photoMap=APP._photoOf||{};
-   var rowsHtml=rows.map(function(m){var photo=photoMap[(m.email||'').toLowerCase()]||'';var avatar=photo?'<img src="'+photo+'" alt="">':escapeHtml(initialsSafe(m.name));return '<tr><td><div class="lm-manager"><span class="lm-avatar">'+avatar+'</span><span class="lm-name">'+escapeHtml(m.name||'')+'</span></div></td><td class="lm-email">'+escapeHtml(m.email||'')+'</td><td>'+escapeHtml(m.department||'-')+'</td><td>'+escapeHtml(m.company||'-')+'</td><td>'+m.teamSize+' staff</td><td>'+(m.registered?'<span class="lm-badge registered">REGISTERED</span>':'<span class="lm-badge staff">FROM STAFF RECORDS</span>')+' '+(m.teamSize?'<span class="lm-badge registered">HAS TEAM</span>':'<span class="lm-badge staff">NO TEAM YET</span>')+'</td><td>'+(m.registered?'<button class="lm-delete" title="Delete manager" aria-label="Delete manager" onclick="deleteLineManager('+rcArg(m.email)+','+rcArg(m.name||'')+')">'+trashIcon()+'</button>':'<button class="btn btn-sm btn-outline" onclick="cmsLMRegister('+rcArg(m._key)+')">Register</button>')+'</td></tr>';}).join('')||'<tr><td colspan="7" class="lm-empty">No line managers match these filters.</td></tr>';
+   var rowsHtml=rows.map(function(m){var photo=photoMap[(m.email||'').toLowerCase()]||'';var avatar=photo?'<img src="'+photo+'" alt="">':escapeHtml(initialsSafe(m.name));return '<tr><td><div class="lm-manager"><span class="lm-avatar">'+avatar+'</span><span class="lm-name">'+escapeHtml(m.name||'')+'</span></div></td><td class="lm-email">'+escapeHtml(m.email||'')+'</td><td>'+escapeHtml(m.department||'-')+'</td><td>'+escapeHtml(m.company||'-')+'</td><td>'+(m.teamSize?'<button class="btn btn-sm btn-outline" title="View team" onclick="cmsLMTeamView('+rcArg(m._key)+')">'+m.teamSize+' staff (view)</button>':'0 staff')+'</td><td>'+(m.registered?'<span class="lm-badge registered">REGISTERED</span>':'<span class="lm-badge staff">FROM STAFF RECORDS</span>')+' '+(m.teamSize?'<span class="lm-badge registered">HAS TEAM</span>':'<span class="lm-badge staff">NO TEAM YET</span>')+'</td><td>'+(m.registered?'<button class="lm-delete" title="Delete manager" aria-label="Delete manager" onclick="deleteLineManager('+rcArg(m.email)+','+rcArg(m.name||'')+')">'+trashIcon()+'</button>':'<button class="btn btn-sm btn-outline" onclick="cmsLMRegister('+rcArg(m._key)+')">Register</button>')+'</td></tr>';}).join('')||'<tr><td colspan="7" class="lm-empty">No line managers match these filters.</td></tr>';
   var nums='';for(var pg=1;pg<=pages&&pg<=5;pg++)nums+='<button class="'+(pg===lmState.page?'active':'')+'" onclick="cmsLMPage('+pg+')">'+pg+'</button>';if(pages>6)nums+='<span>...</span><button onclick="cmsLMPage('+pages+')">'+pages+'</button>';
   var depOptions=Object.keys(departments).sort().map(function(d){return '<option value="'+escapeHtml(d)+'"'+(lmState.department===d?' selected':'')+'>'+escapeHtml(d)+'</option>';}).join('');
   var compOptions=Object.keys(companies).sort().map(function(c){return '<option value="'+escapeHtml(c)+'"'+(lmState.company===c?' selected':'')+'>'+escapeHtml(c)+'</option>';}).join('');
   var h='<section class="lm-page"><div class="lm-title-row"><div><h1>Line Managers Registry</h1><p>Manage and oversee line managers across departments and companies.</p></div></div>';
   h+='<div class="lm-kpis"><div class="lm-kpi"><span class="lm-kpi-icon">M</span><div><small>Managers Identified</small><strong>'+managerList.length+'</strong><em>Registered or linked to staff records</em></div></div><div class="lm-kpi green"><span class="lm-kpi-icon">&#10003;</span><div><small>Managers Registered</small><strong>'+registered+'</strong><em>Added to the manager registry</em></div></div><div class="lm-kpi blue"><span class="lm-kpi-icon" aria-hidden="true">&#128101;</span><div><small>Staff Covered</small><strong>'+staffCovered+'</strong><em>Staff linked to a manager</em></div></div></div>';
   h+='<div class="lm-toolbar"><div><label>Search manager</label><input id="lmSearch" value="'+escapeHtml(lmState.query)+'" oninput="cmsLMQuery(this.value)" placeholder="Search by name or email..."></div><div><label>Department</label><select id="lmDepartment" onchange="cmsLMDepartment(this.value)"><option value="">All Departments</option>'+depOptions+'</select></div><div><label>Company</label><select id="lmCompany" onchange="cmsLMCompany(this.value)"><option value="">All Companies</option>'+compOptions+'</select></div><button class="btn btn-primary lm-add-button" onclick="cmsLMToggleAdd()">+ Add Line Manager</button></div>';
-  h+='<div id="lmAddPanel" class="lm-add-panel" style="display:none"><div style="grid-column:1/-1"><label>Pick an employee to fill the boxes below</label><input id="lmPick" list="lmPickList" autocomplete="off" oninput="cmsLMPick(this.value)" placeholder="Start typing a name. Leave empty to type a manager who is not an employee."><datalist id="lmPickList">'+window.cmsLMPickOptions()+'</datalist></div><div><label>Full Name</label><input id="lmName" placeholder="e.g. Julius Angoli"></div><div><label>Email</label><input id="lmEmail" placeholder="e.g. julius@kenafricind.com"></div><div><label>Department</label><input id="lmDept" list="lmDeptList" placeholder="e.g. HUMAN RESOURCE"><datalist id="lmDeptList">'+Object.keys(departments).sort().map(function(d){return '<option value="'+escapeHtml(d)+'">';}).join('')+'</datalist></div><div><label>Company</label><input id="lmCompanyAdd" list="lmCompanyList" placeholder="e.g. Kenafric Industries"><datalist id="lmCompanyList">'+Object.keys(companies).sort().map(function(c){return '<option value="'+escapeHtml(c)+'">';}).join('')+'</datalist></div><div style="grid-column:1/-1"><label>Team (optional): tick the staff who report to this manager</label><input id="lmTeamSearch" placeholder="Search staff by name, email or department..." oninput="cmsLMTeamFilter(this.value)" style="margin-bottom:6px"><div id="lmTeamList" onchange="cmsLMTeamCount()" style="max-height:220px;overflow:auto;border:1px solid #cbd5e1;border-radius:8px;padding:6px 10px;background:#fff">'+emps.slice().sort(function(a,b){return String(a.employee_name||'').localeCompare(String(b.employee_name||''));}).map(function(e){return '<label class="lm-team-row" data-q="'+escapeHtml((String(e.employee_name||'')+' '+String(e.email||'')+' '+String(e.department||'')+' '+String(e.company||'')).toLowerCase())+'" style="display:flex;gap:8px;align-items:center;font-weight:400;margin:0;padding:4px 0"><input type="checkbox" class="lm-team-cb" value="'+escapeHtml(e.employee_id)+'" style="width:auto"><span>'+escapeHtml(e.employee_name||'')+' <small style="color:#64748b">'+escapeHtml(e.position||'')+(e.company?' | '+escapeHtml(e.company):'')+(e.manager?' | now under '+escapeHtml(e.manager):'')+'</small></span></label>';}).join('')+'</div><small id="lmTeamCount" style="color:#64748b">0 selected. Ticking staff moves them to this manager.</small></div><button class="btn btn-primary lm-add-save" onclick="addLineManager()">Save Line Manager</button></div>';
+  h+='<div id="lmAddPanel" class="lm-add-panel" style="display:none"><div style="grid-column:1/-1"><label>Pick an employee to fill the boxes below</label><input id="lmPick" list="lmPickList" autocomplete="off" oninput="cmsLMPick(this.value)" placeholder="Start typing a name. Leave empty to type a manager who is not an employee."><datalist id="lmPickList">'+window.cmsLMPickOptions()+'</datalist></div><div><label>Full Name</label><input id="lmName" placeholder="e.g. Julius Angoli"></div><div><label>Email</label><input id="lmEmail" placeholder="e.g. julius@kenafricind.com"></div><div><label>Department</label><input id="lmDept" list="lmDeptList" placeholder="e.g. HUMAN RESOURCE"><datalist id="lmDeptList">'+Object.keys(departments).sort().map(function(d){return '<option value="'+escapeHtml(d)+'">';}).join('')+'</datalist></div><div><label>Company</label><input id="lmCompanyAdd" list="lmCompanyList" placeholder="e.g. Kenafric Industries"><datalist id="lmCompanyList">'+Object.keys(companies).sort().map(function(c){return '<option value="'+escapeHtml(c)+'">';}).join('')+'</datalist></div><div style="grid-column:1/-1"><label>Team (optional): tick the staff who report to this manager</label><input id="lmTeamSearch" placeholder="Search staff by name, email or department..." oninput="cmsLMTeamFilter(this.value)" style="margin-bottom:6px"><div id="lmTeamList" onchange="cmsLMTeamCount()" style="max-height:220px;overflow:auto;border:1px solid #cbd5e1;border-radius:8px;padding:6px 10px;background:#fff">'+emps.slice().sort(function(a,b){return String(a.employee_name||'').localeCompare(String(b.employee_name||''));}).map(function(e){return '<label class="lm-team-row" data-q="'+escapeHtml((String(e.employee_name||'')+' '+String(e.email||'')+' '+String(e.department||'')+' '+String(e.company||'')).toLowerCase())+'" style="display:flex;gap:8px;align-items:center;font-weight:400;margin:0;padding:4px 0"><input type="checkbox" class="lm-team-cb" value="'+escapeHtml(e.employee_id)+'" style="width:auto"><span>'+escapeHtml(e.employee_name||'')+' <small style="color:#64748b">'+escapeHtml(e.position||'')+(e.company?' | '+escapeHtml(e.company):'')+(cmsLMHasManager(e)?' | <b style="color:#b45309">has manager: '+escapeHtml(e.manager||e.manager_email)+' (will be transferred)</b>':'')+'</small></span></label>';}).join('')+'</div><small id="lmTeamCount" style="color:#64748b">0 selected. Staff marked has manager will be transferred, you will be asked to confirm.</small></div><button class="btn btn-primary lm-add-save" onclick="addLineManager()">Save Line Manager</button></div>';
   var __unreg=managerList.filter(function(m){return !m.registered;}).length;if(__unreg)h+='<div class="lm-notice" style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;background:#fff7ed;border:1px solid #fed7aa;color:#9a3412;border-radius:10px;padding:10px 14px;margin:0 0 14px"><span>'+__unreg+' manager'+(__unreg===1?' is':'s are')+' in your staff records but not registered yet.</span><button class="btn btn-sm btn-primary" onclick="cmsLMRegisterAll()">Register all '+__unreg+'</button></div>';
-  h+='<div class="card lm-table-card"><div class="lm-table-head"><h2>Line Managers</h2><span>'+filtered.length+' manager'+(filtered.length===1?'':'s')+' found</span></div><div class="table-wrap"><table class="lm-table"><thead><tr><th>Manager</th><th>Email</th><th>Department</th><th>Company</th><th>Team Size</th><th>Status</th><th>Actions</th></tr></thead><tbody>'+rowsHtml+'</tbody></table></div><div class="lm-pagination"><span>Showing '+(filtered.length?start+1:0)+' to '+Math.min(start+lmState.pageSize,filtered.length)+' of '+filtered.length+' managers</span><div class="lm-page-buttons"><button onclick="cmsLMPage('+Math.max(1,lmState.page-1)+')" '+(lmState.page===1?'disabled':'')+'>&lt;</button>'+nums+'<button onclick="cmsLMPage('+Math.min(pages,lmState.page+1)+')" '+(lmState.page===pages?'disabled':'')+'>&gt;</button></div></div></div></section>';
+  h+='<div id="lmTeamPanel"></div><div class="card lm-table-card"><div class="lm-table-head"><h2>Line Managers</h2><span>'+filtered.length+' manager'+(filtered.length===1?'':'s')+' found</span></div><div class="table-wrap"><table class="lm-table"><thead><tr><th>Manager</th><th>Email</th><th>Department</th><th>Company</th><th>Team Size</th><th>Status</th><th>Actions</th></tr></thead><tbody>'+rowsHtml+'</tbody></table></div><div class="lm-pagination"><span>Showing '+(filtered.length?start+1:0)+' to '+Math.min(start+lmState.pageSize,filtered.length)+' of '+filtered.length+' managers</span><div class="lm-page-buttons"><button onclick="cmsLMPage('+Math.max(1,lmState.page-1)+')" '+(lmState.page===1?'disabled':'')+'>&lt;</button>'+nums+'<button onclick="cmsLMPage('+Math.min(pages,lmState.page+1)+')" '+(lmState.page===pages?'disabled':'')+'>&gt;</button></div></div></div></section>';
   if(typeof CN==='undefined'||__cmsRouteEpoch===CN.epoch)setContent(h);
   if(active){var el=document.getElementById(active);if(el){el.focus();if(cursor!==null&&typeof el.setSelectionRange==='function')el.setSelectionRange(cursor,cursor);}}
  }
@@ -9093,13 +9093,29 @@ function renderLM(){
  window.cmsLMDepartment=function(v){lmState.department=v||'';lmState.page=1;renderLM();};
  window.cmsLMCompany=function(v){lmState.company=v||'';lmState.page=1;renderLM();};
  window.cmsLMPage=function(v){lmState.page=v;renderLM();};
- window.cmsLMTeamFilter=function(v){var q=String(v||'').toLowerCase().trim();document.querySelectorAll('#lmTeamList .lm-team-row').forEach(function(r){r.style.display=(!q||(r.getAttribute('data-q')||'').indexOf(q)>=0)?'flex':'none';});};
- window.cmsLMTeamCount=function(){var c=document.getElementById('lmTeamCount');if(c)c.textContent=document.querySelectorAll('.lm-team-cb:checked').length+' selected. Ticking staff moves them to this manager.';};
+ window.cmsLMTeamClose=function(){var h=document.getElementById('lmTeamPanel');if(h)h.innerHTML='';};
+ window.cmsLMTeamView=function(k){
+  var host=document.getElementById('lmTeamPanel');if(!host)return;
+  var key=String(k||'').toLowerCase();
+  var m=managerList.filter(function(x){return x._key===key;})[0];
+  var team=emps.filter(function(e){return String(e.manager_email||'').toLowerCase()===key;}).sort(function(a,b){return String(a.employee_name||'').localeCompare(String(b.employee_name||''));});
+  var cos={},deps={};team.forEach(function(e){if(e.company)cos[e.company]=1;if(e.department)deps[e.department]=1;});
+  var nc=Object.keys(cos).length,nd=Object.keys(deps).length;
+  var rows=team.map(function(e,i){return '<tr><td>'+(i+1)+'</td><td><strong>'+escapeHtml(e.employee_name||'')+'</strong></td><td class="lm-email">'+escapeHtml(e.email||'')+'</td><td>'+escapeHtml(e.position||'-')+'</td><td>'+escapeHtml(e.department||'-')+'</td><td>'+escapeHtml(e.company||'-')+'</td></tr>';}).join('')||'<tr><td colspan="6" class="lm-empty">No staff are linked to this manager yet.</td></tr>';
+  host.innerHTML='<div class="card" style="border-left:4px solid #4338ca"><div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap"><div><div class="card-title" style="margin:0">Team of '+escapeHtml(m?m.name:key)+'</div><div style="font-size:12px;color:#64748b">'+team.length+' staff across '+nc+' compan'+(nc===1?'y':'ies')+' and '+nd+' department'+(nd===1?'':'s')+'</div></div><button class="btn btn-sm btn-outline" onclick="cmsLMTeamClose()">Close</button></div><div class="table-wrap" style="margin-top:10px"><table class="lm-table"><thead><tr><th>#</th><th>Name</th><th>Email</th><th>Position</th><th>Department</th><th>Company</th></tr></thead><tbody>'+rows+'</tbody></table></div></div>';
+  host.scrollIntoView({behavior:'smooth',block:'start'});
+ }; window.cmsLMTeamFilter=function(v){var q=String(v||'').toLowerCase().trim();document.querySelectorAll('#lmTeamList .lm-team-row').forEach(function(r){r.style.display=(!q||(r.getAttribute('data-q')||'').indexOf(q)>=0)?'flex':'none';});};
+ window.cmsLMTeamCount=function(){var c=document.getElementById('lmTeamCount');if(c)c.textContent=document.querySelectorAll('.lm-team-cb:checked').length+' selected. Staff marked has manager will be transferred, you will be asked to confirm.';};
  window.cmsLMPickOptions=function(){var rg={};regs.forEach(function(r){rg[String(r.email||'').toLowerCase()]=1;});return emps.filter(function(e){return e.email&&!rg[String(e.email).toLowerCase()];}).sort(function(x,y){return String(x.employee_name||'').localeCompare(String(y.employee_name||''));}).map(function(e){return '<option value="'+escapeHtml((e.employee_name||e.email)+' | '+String(e.email).toLowerCase())+'"></option>';}).join('');};
  window.cmsLMPick=function(v){var em=String(v||'').split('|').pop().trim().toLowerCase(),e=empByEmail[em];if(!e)return;document.getElementById('lmName').value=e.employee_name||'';document.getElementById('lmEmail').value=String(e.email||'').toLowerCase();document.getElementById('lmDept').value=e.department||'';document.getElementById('lmCompanyAdd').value=e.company||'';};
  window.cmsLMRegister=async function(k){var m=managerList.filter(function(x){return x._key===k;})[0];if(!m)return;var r=await _supabase.from('line_managers').insert({manager_name:m.name,email:String(m.email||'').toLowerCase(),department:m.department||'',company:m.company||''});if(r.error){showToast(r.error.message);return;}showToast('Registered: '+m.name);loadHRManagers();};
  window.cmsLMRegisterAll=async function(){var todo=managerList.filter(function(x){return !x.registered;});if(!todo.length){showToast('Every manager is already registered');return;}if(!confirm('Register '+todo.length+' manager'+(todo.length===1?'':'s')+' found in staff records?'))return;var r=await _supabase.from('line_managers').insert(todo.map(function(m){return {manager_name:m.name,email:String(m.email||'').toLowerCase(),department:m.department||'',company:m.company||''};}));if(r.error){showToast(r.error.message);return;}showToast(todo.length+' managers registered');loadHRManagers();};
  renderLM();
+}
+function cmsLMHasManager(e){
+var em = String((e && e.manager_email) || '').trim();
+var nm = String((e && e.manager) || '').trim().toLowerCase();
+return !!em || (nm !== '' && ['-', 'n/a', 'na', 'none', 'nil', 'null', '0'].indexOf(nm) < 0);
 }
 async function addLineManager() {
 var name = (document.getElementById('lmName').value || '').trim();
@@ -9112,6 +9128,18 @@ var team = Array.prototype.map.call(document.querySelectorAll('.lm-team-cb:check
 var btn = document.querySelector('.lm-add-save');
 if (btn) btn.disabled = true;
 try {
+var preRows = null, preErr = null;
+if (team.length) {
+const pr = await _supabase.from('employees').select('employee_id, employee_name, email, manager, manager_email').in('employee_id', team);
+preRows = pr.data; preErr = pr.error;
+if (!preErr) {
+var moving = (preRows || []).filter(function(r){ var cur = String(r.manager_email || '').trim().toLowerCase(); return String(r.email || '').trim().toLowerCase() !== email && cmsLMHasManager(r) && cur !== email; });
+if (moving.length) {
+var lines = moving.slice(0, 10).map(function(r){ return '- ' + (r.employee_name || r.email) + ' (now under ' + (r.manager || r.manager_email) + ')'; }).join('\n');
+if (!confirm(moving.length + ' selected staff already have a line manager:\n\n' + lines + (moving.length > 10 ? '\n...and ' + (moving.length - 10) + ' more' : '') + '\n\nTransfer them to ' + name + '?')) return;
+}
+}
+}
 const { data: dup } = await _supabase.from('line_managers').select('id').ilike('email', email).limit(1);
 var already = !!(dup && dup.length);
 if (already && !team.length) { showToast('This manager is already registered. Tick staff to link them to this manager.'); return; }
@@ -9121,7 +9149,7 @@ if (error) { showToast(error.message); return; }
 }
 var linked = 0;
 if (team.length) {
-const { data: rows, error: rowsErr } = await _supabase.from('employees').select('employee_id, email').in('employee_id', team);
+var rows = preRows; var rowsErr = preErr;
 if (rowsErr) { showToast('Manager saved, but staff could not be read: ' + rowsErr.message); loadHRManagers(); return; }
 var ids = (rows || []).filter(function(r){ return String(r.email || '').trim().toLowerCase() !== email; }).map(function(r){ return r.employee_id; });
 if (ids.length) {
@@ -43908,7 +43936,7 @@ body.cms-focus-editor-v1 #mainContent #fwScreen.cfu-screen #fwBody .cfe-footer {
    Needs the Supabase function invite-login. */
 (function(){
  'use strict';
- var LI={rows:[],users:null,filter:'all',company:'',search:'',picked:{},busy:false,open:false,report:null};
+ var LI={rows:[],users:null,filter:'all',company:'',search:'',picked:{},busy:false,open:false,report:null,page:0,size:10};
  var BATCH=25;
  function E(x){return escapeHtml(x==null?'':String(x));}
  function em(x){return String(x||'').trim().toLowerCase();}
@@ -43933,7 +43961,20 @@ body.cms-focus-editor-v1 #mainContent #fwScreen.cfu-screen #fwBody .cfe-footer {
   '#liBox .li-bar{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;background:#eef2ff;border:1px solid #c7d2fe;border-radius:12px;padding:14px 18px;margin:14px 18px 0;position:sticky;bottom:8px}'+
   '#liBox .li-note{color:#64748b;font-size:12.5px}'+
   '#liBox .li-res{display:flex;gap:10px;flex-wrap:wrap}#liBox .li-res div{flex:1;min-width:150px;border-radius:12px;padding:12px 14px;font-size:13px}#liBox .li-res b{display:block;font-size:22px}'+
-  '#liBox input[type=search],#liBox select{border:1px solid #cbd5e1;border-radius:9px;padding:8px 10px;background:#fff;font-size:14px}';
+'#liBox input[type=search],#liBox select{border:1px solid #cbd5e1;border-radius:9px;padding:8px 10px;background:#fff;font-size:14px}'+
+  '#liPanel{position:fixed;top:0;right:0;bottom:0;width:440px;max-width:100%;background:#fff;box-shadow:-12px 0 40px rgba(15,23,42,.28);z-index:100000;overflow:auto}'+
+  '#liPanel .lp-head{background:#3b4fc4;color:#fff;padding:18px 20px;display:flex;justify-content:space-between;align-items:flex-start;gap:10px}'+
+  '#liPanel .lp-head b{font-size:18px;display:block}'+
+  '#liPanel .lp-blk{margin:12px 16px;border-radius:12px;padding:12px 14px;border:1px solid}'+
+  '#liPanel .lp-yes{background:#f0fdf4;border-color:#bbf7d0;color:#166534}'+
+  '#liPanel .lp-no{background:#f1f5f9;border-color:#e2e8f0;color:#64748b}'+
+  '#liPanel .lp-chip{display:inline-block;margin:3px 4px 0 0;padding:3px 9px;border-radius:8px;background:#fff;border:1px solid #bbf7d0;font-size:12px;color:#166534}'+
+  '#liBox td .li-note{display:inline}'+
+  'html body #liBox td{padding:5px 8px!important;line-height:1.25}'+
+  'html body #liBox th{padding:6px 8px!important;white-space:nowrap}'+
+  'html body #liBox td small{font-size:11px;line-height:1.2}'+
+  'html body #liBox button[data-li="view"]{padding:3px 10px!important;font-size:11px!important;font-weight:700!important;line-height:1.2!important;min-height:0!important;height:auto!important;white-space:nowrap!important;border-radius:6px!important;box-shadow:none!important;width:auto!important}'+
+  'html body #liBox .li-chip{padding:1px 8px!important;font-size:11px!important;line-height:1.3!important}';
   document.head.appendChild(s);
  }
  function stateOf(r){
@@ -43953,17 +43994,82 @@ body.cms-focus-editor-v1 #mainContent #fwScreen.cfu-screen #fwBody .cfe-footer {
    return true;
   });
  }
- function selectable(r){var s=stateOf(r);return s==='none'||s==='pending';}
- function pickedRows(){return LI.rows.filter(function(r){return LI.picked[r.employee_id];});}
- function tableHTML(){
-  var rows=visible(),shown=rows.slice(0,100),sel=shown.filter(selectable);
-  var allOn=sel.length>0&&sel.every(function(r){return LI.picked[r.employee_id];});
-  var h='<table><thead><tr><th style="width:36px"><input type="checkbox" data-li-all '+(allOn?'checked ':'')+(sel.length?'':'disabled')+' aria-label="Tick all on this list"></th><th>Employee</th><th>Department / position</th><th>Login</th></tr></thead><tbody>';
+  function selectable(r){var s=stateOf(r);return s==='none'||s==='pending';}
+ /* ===== Access matrix: which workspaces a person has. Edit the page names here if your menus change. ===== */
+ var AC_PAGES={
+  employee:['My Profile','Self Assessment','Assessment Results','My Gaps','My Strengths','Development Plans'],
+  manager:['Dashboard','My Team','Progression-Ready Pool','Assessment','All Assessment Details & Reviews','Requests','Team Gaps','Development Plans','Set Competencies','Report Approvals','Competency Library (View)'],
+  hr:['Dashboard','KPI Dashboard','Companies','Departments','All Positions','Critical Positions Registry','Competency Library','Competency Approvals & Validation','All Employees','Line Managers','Talent Pools','Employee 360 Profile','Employee Gaps','Assessment Review','All Assessments','Reports','Report Approvals','Development Plans','Redo Requests','Executive responses','Access Center'],
+  hohr:['Dashboard','Critical Roles','Critical Positions Registry','Competency Library','Competency Approvals & Validation','All Staff','Talent Pool','Assessed','All Gaps','All Strengths','All Assessments','All Reports','Approved Dev Plans','Executive responses','Access Center'],
+  csuite:['Executive Overview','C-Suite','Group Snapshot','Companies & Departments','Succession & Critical Roles','Talent Pools','Development Plans','Competency Rankings','Competency Library','Monthly Reports']
+ };
+ function flagsOf(r){
+  var k=em(r.email),ro=(LI.roles&&LI.roles[k])||{},n=(LI.reports&&LI.reports[k])||0;
+  return {employee:!!k,manager:n>0||!!ro.MANAGER,reports:n,hr:!!ro.HR_ADMIN,hohr:!!ro.HEAD_HR,csuite:!!ro.C_SUITE};
+ }
+ function yn(on,extra){return on?'<span class="li-chip li-ok">Yes'+(extra?' ('+extra+')':'')+'</span>':'<span class="li-note">-</span>';}
+ function blockHTML(title,on,why,list){
+  return '<div class="lp-blk '+(on?'lp-yes':'lp-no')+'"><b>'+E(title)+': '+(on?'YES':'NO')+'</b>'+(why?'<div class="li-note">'+E(why)+'</div>':'')+
+   (on?'<div style="margin-top:6px">'+list.map(function(x){return '<span class="lp-chip">'+E(x)+'</span>';}).join('')+'</div>':'')+'</div>';
+ }
+ function blocksHTML(f,r){
+  return blockHTML('Employee workspace',f.employee,f.employee?'Has an employee record (ID '+String(r.employee_id).trim()+')':'No email on file, so no login can be linked',AC_PAGES.employee)+
+   blockHTML('Manager workspace',f.manager,f.reports>0?f.reports+' staff report to them':'Manager role on their profile, but no staff are linked yet',AC_PAGES.manager)+
+   blockHTML('HR Admin workspace',f.hr,'',AC_PAGES.hr)+
+   blockHTML('Head of HR workspace',f.hohr,'',AC_PAGES.hohr)+
+   blockHTML('C-Suite workspace',f.csuite,'',AC_PAGES.csuite);
+ }
+ function scopeText(f){
+  if(f.hr||f.hohr)return 'Data: all employees and assessments, within the app rules for HR.';
+  if(f.csuite&&!f.manager)return 'Data: the executive overview and the cases assigned to them.';
+  if(f.manager)return 'Data: their own record'+(f.reports?' and their '+f.reports+' staff':' and any staff linked to them')+'.';
+  return 'Data: their own record only.';
+ }
+ function closeAccess(){var p=document.getElementById('liPanel');if(p)p.remove();}
+ async function showAccess(id){
+  var r=LI.rows.find(function(x){return String(x.employee_id).trim()===String(id).trim();});if(!r)return;
+  var f=flagsOf(r),st=stateOf(r),l=LABEL[st];
+  closeAccess();
+  var p=document.createElement('div');p.id='liPanel';
+  p.innerHTML='<div class="lp-head"><div><b>Access for '+E(r.employee_name||r.email)+'</b><div style="opacity:.9;font-size:13px">'+E(r.email||'no email on file')+' | '+E(l[0])+'</div></div><button type="button" class="btn btn-outline" data-li="viewclose" style="background:#fff">Close</button></div>'+
+   '<div id="lpBlocks">'+blocksHTML(f,r)+'</div>'+
+   '<p class="li-note" id="lpTrusted" style="margin:6px 18px"></p>'+
+   '<p class="li-note" id="lpScope" style="margin:6px 18px"><b>'+E(scopeText(f))+'</b></p>'+
+   '<div style="margin:14px 18px">'+(st==='pending'?'<button type="button" class="btn btn-outline" data-li="resend" data-id="'+E(String(r.employee_id).trim())+'">Resend invite</button>':'')+'</div>';
+  document.body.appendChild(p);
+  if(window.CMS_ACCESS&&CMS_ACCESS.can_manage&&typeof uaRPC==='function'){
+   try{
+    var list=await uaRPC('search',{search:r.email});
+    var u=(list||[]).find(function(x){return em(x.email)===em(r.email);});
+    var box=document.getElementById('lpTrusted');
+    if(!box||document.getElementById('liPanel')!==p)return;
+    if(!u){box.textContent='User Access check: no login found for this email.';return;}
+    var rv=u.access&&u.access.reviewer,ex=!!(u.access&&u.access.executive);
+    var tHR=(rv==='HR_ADMIN'||rv==='BOTH'),tH=(rv==='HEAD_HR'||rv==='BOTH');
+    var same=(tHR===f.hr)&&(tH===f.hohr)&&(ex===f.csuite);
+    f.hr=tHR;f.hohr=tH;f.csuite=ex;
+    var bl=document.getElementById('lpBlocks');if(bl)bl.innerHTML=blocksHTML(f,r);
+    var sc=document.getElementById('lpScope');if(sc)sc.innerHTML='<b>'+E(scopeText(f))+'</b>';
+    box.innerHTML=same?'User Access check: matches the profile.':'<b>User Access check: differs from the profile.</b> The values shown above are from User Access, which is what the app uses.';
+   }catch(e){}
+  }
+ }
+ async function resendFor(id){
+  var r=LI.rows.find(function(x){return String(x.employee_id).trim()===String(id).trim();});if(!r)return;
+  if(!confirm('Send the login email again to '+r.email+'?'))return;
+  try{await welcome(r);showToast('Email sent to '+r.email);}catch(e){showToast('Email failed');}
+ }
+  function pickedRows(){return LI.rows.filter(function(r){return LI.picked[r.employee_id];});}
+ function pgSlice(rows){return rows.slice(LI.page*LI.size,LI.page*LI.size+LI.size);}
+function tableHTML(){
+  var rows=visible(),pages=Math.max(1,Math.ceil(rows.length/LI.size));if(LI.page>=pages)LI.page=pages-1;if(LI.page<0)LI.page=0;var shown=pgSlice(rows),sel=shown.filter(selectable);  var allOn=sel.length>0&&sel.every(function(r){return LI.picked[r.employee_id];});
+ var h=(LI.statusNote?'<p class="li-note" style="color:#b91c1c">Login status could not be read ('+E(LI.statusNote)+'). The Login column may be wrong; the workspace columns are still correct.</p>':'')+'<table><thead><tr><th style="width:36px"><input type="checkbox" data-li-all '+(allOn?'checked ':'')+(sel.length?'':'disabled')+' aria-label="Tick all on this list"></th><th>Employee</th<th>Department / position</th><th>Login</th><th>Employee page</th><th>Manager page</th><th>HR Admin</th><th>Head of HR</th><th>C-Suite</th><th></th></tr></thead><tbody>';
   h+=shown.map(function(r){
    var s=stateOf(r),l=LABEL[s];
-   return '<tr><td><input type="checkbox" data-li-pick="'+E(r.employee_id)+'" '+(LI.picked[r.employee_id]?'checked ':'')+(selectable(r)?'':'disabled')+'></td><td><b>'+E(r.employee_name||r.email)+'</b><small>'+E(r.email||'no email on file')+' | ID '+E(r.employee_id)+'</small></td><td>'+E(r.department)+' / '+E(r.position)+'<small>'+E(r.company)+'</small></td><td><span class="li-chip '+l[1]+'">'+E(l[0])+'</span></td></tr>';
+   return '<tr><td><input type="checkbox" data-li-pick="'+E(r.employee_id)+'" '+(LI.picked[r.employee_id]?'checked ':'')+(selectable(r)?'':'disabled')+'></td><td><b>'+E(r.employee_name||r.email)+'</b><small>'+E(r.email||'no email on file')+' | ID '+E(r.employee_id)+'</small></td><td>'+E(r.department)+' / '+E(r.position)+'<small>'+E(r.company)+'</small></td><td><span class="li-chip '+l[1]+'">'+E(l[0])+'</span></td>'+(function(){var f=flagsOf(r);return '<td>'+yn(f.employee)+'</td><td>'+yn(f.manager,f.reports?f.reports+' staff':'')+'</td><td>'+yn(f.hr)+'</td><td>'+yn(f.hohr)+'</td><td>'+yn(f.csuite)+'</td><td><button type="button" class="btn btn-outline" data-li="view" data-id="'+E(String(r.employee_id).trim())+'">View access</button></td>';})()+'</tr>';
   }).join('');
-  return h+'</tbody></table><p class="li-note">Showing '+shown.length+' of '+rows.length+(rows.length>shown.length?'. Use the search or filters to reach the others.':'.')+'</p>';
+  var from=rows.length?LI.page*LI.size+1:0,to=LI.page*LI.size+shown.length;
+  return h+'</tbody></table><div class="li-pager" style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-top:10px"><span class="li-note">Showing '+from+' to '+to+' of '+rows.length+'</span><span class="li-row" style="margin:0"><button type="button" class="btn btn-outline btn-sm" data-li="prev" '+(LI.page>0?'':'disabled')+'>Previous</button><span class="li-note">Page '+(LI.page+1)+' of '+pages+'</span><button type="button" class="btn btn-outline btn-sm" data-li="next" '+(LI.page<pages-1?'':'disabled')+'>Next</button><select id="liSize" aria-label="Rows per page" style="width:auto"><option value="10"'+(LI.size===10?' selected':'')+'>10 per page</option><option value="25"'+(LI.size===25?' selected':'')+'>25 per page</option><option value="50"'+(LI.size===50?' selected':'')+'>50 per page</option></select></span></div>';
  }
  function barHTML(){
   var p=pickedRows(),nNew=p.filter(function(r){return stateOf(r)==='none';}).length,nRe=p.length-nNew;
@@ -43982,11 +44088,11 @@ body.cms-focus-editor-v1 #mainContent #fwScreen.cfu-screen #fwBody .cfe-footer {
   var box=document.getElementById('liBox');if(!box)return;
   var c=counts();
   function pill(k,l){return '<button type="button" class="li-pill '+(LI.filter===k?'on':'')+'" data-li-filter="'+k+'">'+l+' ('+c[k]+')</button>';}
-  box.innerHTML='<div class="li-head"><div><b>Login access</b><span>See who can sign in, and send login invitations in one go.</span></div><button type="button" class="btn btn-outline" data-li="close" style="background:#fff">Close</button></div>'+
+  box.innerHTML='<div class="li-head"><div><b>Access Center</b><span>See who can sign in and send login invitations. Roles for HR, Head of HR and C-Suite are set in User Access.</span></div><button type="button" class="btn btn-outline" data-li="close" style="background:#fff">Back to Dashboard</button></div>'+
    '<section class="li-card"><div class="li-row">'+pill('all','All')+pill('none','No login')+pill('pending','Not signed in yet')+pill('has','Has login')+pill('noemail','No email')+
    '<select id="liCompany"><option value="">All companies</option>'+companies().map(function(x){return '<option value="'+E(x)+'"'+(LI.company===x?' selected':'')+'>'+E(x)+'</option>';}).join('')+'</select>'+
    '<input type="search" id="liSearch" placeholder="Search name, email or ID" value="'+E(LI.search)+'" style="margin-left:auto;min-width:220px"></div><div id="liTable">'+tableHTML()+'</div></section>'+
-   '<div class="li-bar" id="liBar">'+barHTML()+'</div>'+reportHTML()+'<p id="liStatus" class="li-note" role="status" style="margin:10px 18px 0"></p>';
+   '<div class="li-bar" id="liBar">'+barHTML()+'</div>'+reportHTML()+accessLinkHTML()+'<p id="liStatus" class="li-note" role="status" style="margin:10px 18px 0"></p>';
  }
  function refresh(){var t=document.getElementById('liTable'),b=document.getElementById('liBar');if(t)t.innerHTML=tableHTML();if(b)b.innerHTML=barHTML();}
  function say(m){var e=document.getElementById('liStatus');if(e)e.textContent=m;else showToast(m);}
@@ -44004,24 +44110,30 @@ body.cms-focus-editor-v1 #mainContent #fwScreen.cfu-screen #fwBody .cfe-footer {
  async function loadAll(){
   var rows=[],start=0;
   for(;;){
-   var r=await _supabase.from('employees').select('employee_id,employee_name,email,company,department,position').order('employee_id').range(start,start+499);
+   var r=await _supabase.from('employees').select('employee_id,employee_name,email,company,department,position,manager_email').order('employee_id').range(start,start+499);
    if(r.error)throw new Error(r.error.message);
    rows=rows.concat(r.data||[]);if(!r.data||r.data.length<500)break;start+=500;
   }
   LI.rows=rows;
-  var s=await callFn({action:'status'});
-  LI.users=s.users||{};
+  LI.reports={};
+  rows.forEach(function(r){var m=em(r.manager_email);if(m)LI.reports[m]=(LI.reports[m]||0)+1;});
+  LI.roles={};
+  var pr=await _supabase.from('user_profiles').select('email,role');
+  ((pr&&pr.data)||[]).forEach(function(p){var k=em(p.email);if(!LI.roles[k])LI.roles[k]={};LI.roles[k][p.role]=true;});
+  LI.statusNote='';
+  try{var s=await callFn({action:'status'});LI.users=s.users||{};}
+  catch(e){LI.users=LI.users||{};LI.statusNote=e.message;}
  }
- async function openPanel(){
+  async function openPanel(){
   if(!allowed()){showToast('HR access required.');return;}
   css();
   var ov=document.getElementById('liOverlay');if(ov)ov.remove();
-  ov=document.createElement('div');ov.id='liOverlay';ov.innerHTML='<div id="liBox"><div class="li-head"><div><b>Login access</b><span>Loading employees and checking who can sign in...</span></div></div></div>';
-  document.body.appendChild(ov);LI.open=true;LI.picked={};LI.report=null;
-  try{await loadAll();if(document.getElementById('liOverlay'))draw();}
-  catch(e){var box=document.getElementById('liBox');if(box)box.innerHTML='<div class="li-head"><div><b>Login access</b><span>Could not load</span></div><button type="button" class="btn btn-outline" data-li="close" style="background:#fff">Close</button></div><section class="li-card"><p>'+E(e.message)+'</p></section>';}
+  setContent('<div id="liBox"><div class="li-head"><div><b>Access Center</b><span>Loading employees and checking who can sign in...</span></div></div></div>');
+  LI.open=true;LI.picked={};LI.report=null;
+  try{await loadAll();if(document.getElementById('liBox'))draw();}
+  catch(e){var box=document.getElementById('liBox');if(box)box.innerHTML='<div class="li-head"><div><b>Access Center</b><span>Could not load</span></div></div><section class="li-card"><p>'+E(e.message)+'</p></section>';}
  }
- function closePanel(){var ov=document.getElementById('liOverlay');if(ov)ov.remove();LI.open=false;}
+ function closePanel(){closeAccess();LI.open=false;navigateTo(APP.currentRole==='hohr'?'hohr-dash':'hr-dashboard');}
  function welcome(r){
   var NL=String.fromCharCode(10),first=String(r.employee_name||'').trim().split(' ')[0]||'there';
   var msg='Hi '+first+','+NL+NL+'Your Kenafric Competency Management System (CMS) account is ready.'+NL+NL+'Sign in here:'+NL+APP_LINK+NL+NL+'Email: '+em(r.email)+NL+'First-time password: your Employee ID.'+NL+'You will be asked to create your own password straight after you sign in.'+NL+NL+'Regards,'+NL+'HR Department';
@@ -44058,32 +44170,52 @@ body.cms-focus-editor-v1 #mainContent #fwScreen.cfu-screen #fwBody .cfe-footer {
    draw();say('Finished.');
   }
  }
+ function pageId(){return APP.currentRole==='hohr'?'hohr-access-center':'hr-access-center';}
+ function accessLinkHTML(){
+  if(!(window.CMS_ACCESS&&CMS_ACCESS.can_manage))return '';
+  return '<section class="li-card"><div class="li-row" style="margin:0;justify-content:space-between"><div><b>Roles and permissions</b><div class="li-note">Give someone HR Admin, Head of HR or C-Suite access, with a reason and an audit trail.</div></div><button type="button" class="btn btn-primary" data-li="useraccess">Open User Access</button></div></section>';
+ }
  function ensure(){
-  var host=document.getElementById('ebTopActions');
-  if(!host||!allowed()||document.getElementById('liOpenBtn'))return;
-  var b=document.createElement('button');b.type='button';b.id='liOpenBtn';b.className='btn btn-outline';b.textContent='Login access';b.setAttribute('data-li','open');
-  host.appendChild(b);
+  var old=document.getElementById('liOpenBtn');if(old)old.remove();
+  if(!allowed())return;
+  var side=document.getElementById('sideNav');if(!side)return;
+  var target=pageId();
+  Array.prototype.forEach.call(side.querySelectorAll('[data-page="hr-access-center"],[data-page="hohr-access-center"]'),function(x){if(x.dataset.page!==target)x.remove();});
+  if(side.querySelector('[data-page="'+target+'"]'))return;
+  var b=document.createElement('button');b.type='button';b.className='sb-item';b.dataset.page=target;b.dataset.nvLabel='Access Center';b.textContent='Access Center';
+  b.onclick=function(){return navigateTo(pageId());};side.appendChild(b);
+  if(typeof cmsPolishNavigation==='function')cmsPolishNavigation();
  }
  var t;new MutationObserver(function(){if(t)return;t=setTimeout(function(){t=null;try{ensure();}catch(e){}},150);}).observe(document.body,{childList:true,subtree:true});
  document.addEventListener('click',function(e){
   var b=e.target.closest('[data-li]');
-  if(b){var a=b.getAttribute('data-li');if(a==='open')openPanel();if(a==='close')closePanel();if(a==='send')send();return;}
+  if(b){var a=b.getAttribute('data-li');if(a==='open')openPanel();if(a==='close')closePanel();if(a==='send')send();if(a==='useraccess')navigateTo(APP.currentRole==='hohr'?'hohr-user-access':'hr-user-access');if(a==='view')showAccess(b.getAttribute('data-id'));if(a==='viewclose')closeAccess();if(a==='prev'){LI.page=Math.max(0,LI.page-1);refresh();}if(a==='next'){LI.page++;refresh();}if(a==='resend')resendFor(b.getAttribute('data-id'));return;}
   var f=e.target.closest('[data-li-filter]');
-  if(f){LI.filter=f.getAttribute('data-li-filter');draw();return;}
+  if(f){LI.filter=f.getAttribute('data-li-filter');LI.page=0;draw();return;}
   if(e.target.id==='liOverlay')closePanel();
  });
- document.addEventListener('keydown',function(e){if(e.key==='Escape'&&LI.open&&!LI.busy)closePanel();});
+ /* Access Center is a page: Escape no longer closes it */
  document.addEventListener('change',function(e){
   var t=e.target;if(!t||!document.getElementById('liBox'))return;
-  if(t.id==='liCompany'){LI.company=t.value;draw();return;}
+  if(t.id==='liCompany'){LI.company=t.value;LI.page=0;draw();return;}
+  if(t.id==='liSize'){LI.size=parseInt(t.value,10)||10;LI.page=0;refresh();return;}
   if(t.hasAttribute('data-li-pick')){var id=t.getAttribute('data-li-pick');if(t.checked)LI.picked[id]=true;else delete LI.picked[id];refresh();return;}
   if(t.hasAttribute('data-li-all')){
-   var list=visible().slice(0,100).filter(selectable);
+   var list=pgSlice(visible()).filter(selectable);
    list.forEach(function(r){if(t.checked)LI.picked[r.employee_id]=true;else delete LI.picked[r.employee_id];});
    refresh();
   }
  });
- document.addEventListener('input',function(e){if(e.target.id==='liSearch'){LI.search=e.target.value;refresh();}});
+ document.addEventListener('input',function(e){if(e.target.id==='liSearch'){LI.search=e.target.value;LI.page=0;refresh();}});
+ var AC_HR='hr-access-center',AC_HOHR='hohr-access-center';
+ var acOldNav=setupNav,acOldLoad=loadPage,acOldRole=cnPageRole,acOldLabel=getPageLabel;
+ setupNav=function(){var r=acOldNav.apply(this,arguments);ensure();Promise.resolve(r).then(ensure,function(){});return r;};
+ loadPage=function(id){
+  if(id===AC_HR||id===AC_HOHR)return openPanel();
+  closeAccess();var r=acOldLoad.apply(this,arguments);Promise.resolve(r).then(ensure,function(){});return r;
+ };
+ cnPageRole=function(id,preferred){if(id===AC_HOHR)return 'hohr';if(id===AC_HR)return 'hr';return acOldRole.apply(this,arguments);};
+ getPageLabel=function(id){return (id===AC_HR||id===AC_HOHR)?'Access Center':acOldLabel.apply(this,arguments);};
  ensure();
 })();
 </script>
