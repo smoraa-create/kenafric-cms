@@ -9076,14 +9076,14 @@ function renderLM(){
   var start=(lmState.page-1)*lmState.pageSize,rows=filtered.slice(start,start+lmState.pageSize);
   var registered=managerList.filter(function(m){return m.registered;}).length,staffCovered=emps.filter(function(e){return !!e.manager_email;}).length;
   var photoMap=APP._photoOf||{};
-   var rowsHtml=rows.map(function(m){var photo=photoMap[(m.email||'').toLowerCase()]||'';var avatar=photo?'<img src="'+photo+'" alt="">':escapeHtml(initialsSafe(m.name));return '<tr><td><div class="lm-manager"><span class="lm-avatar">'+avatar+'</span><span class="lm-name">'+escapeHtml(m.name||'')+'</span></div></td><td class="lm-email">'+escapeHtml(m.email||'')+'</td><td>'+escapeHtml(m.department||'-')+'</td><td>'+escapeHtml(m.company||'-')+'</td><td>'+m.teamSize+' staff</td><td>'+(m.registered?'<span class="lm-badge registered">REGISTERED</span>':'<span class="lm-badge staff">FROM STAFF RECORDS</span>')+'</td><td>'+(m.registered?'<button class="lm-delete" title="Delete manager" aria-label="Delete manager" onclick="deleteLineManager('+rcArg(m.email)+','+rcArg(m.name||'')+')">'+trashIcon()+'</button>':'<button class="btn btn-sm btn-outline" onclick="cmsLMRegister('+rcArg(m._key)+')">Register</button>')+'</td></tr>';}).join('')||'<tr><td colspan="7" class="lm-empty">No line managers match these filters.</td></tr>';
+   var rowsHtml=rows.map(function(m){var photo=photoMap[(m.email||'').toLowerCase()]||'';var avatar=photo?'<img src="'+photo+'" alt="">':escapeHtml(initialsSafe(m.name));return '<tr><td><div class="lm-manager"><span class="lm-avatar">'+avatar+'</span><span class="lm-name">'+escapeHtml(m.name||'')+'</span></div></td><td class="lm-email">'+escapeHtml(m.email||'')+'</td><td>'+escapeHtml(m.department||'-')+'</td><td>'+escapeHtml(m.company||'-')+'</td><td>'+m.teamSize+' staff</td><td>'+(m.registered?'<span class="lm-badge registered">REGISTERED</span>':'<span class="lm-badge staff">FROM STAFF RECORDS</span>')+' '+(m.teamSize?'<span class="lm-badge registered">HAS TEAM</span>':'<span class="lm-badge staff">NO TEAM YET</span>')+'</td><td>'+(m.registered?'<button class="lm-delete" title="Delete manager" aria-label="Delete manager" onclick="deleteLineManager('+rcArg(m.email)+','+rcArg(m.name||'')+')">'+trashIcon()+'</button>':'<button class="btn btn-sm btn-outline" onclick="cmsLMRegister('+rcArg(m._key)+')">Register</button>')+'</td></tr>';}).join('')||'<tr><td colspan="7" class="lm-empty">No line managers match these filters.</td></tr>';
   var nums='';for(var pg=1;pg<=pages&&pg<=5;pg++)nums+='<button class="'+(pg===lmState.page?'active':'')+'" onclick="cmsLMPage('+pg+')">'+pg+'</button>';if(pages>6)nums+='<span>...</span><button onclick="cmsLMPage('+pages+')">'+pages+'</button>';
   var depOptions=Object.keys(departments).sort().map(function(d){return '<option value="'+escapeHtml(d)+'"'+(lmState.department===d?' selected':'')+'>'+escapeHtml(d)+'</option>';}).join('');
   var compOptions=Object.keys(companies).sort().map(function(c){return '<option value="'+escapeHtml(c)+'"'+(lmState.company===c?' selected':'')+'>'+escapeHtml(c)+'</option>';}).join('');
   var h='<section class="lm-page"><div class="lm-title-row"><div><h1>Line Managers Registry</h1><p>Manage and oversee line managers across departments and companies.</p></div></div>';
   h+='<div class="lm-kpis"><div class="lm-kpi"><span class="lm-kpi-icon">M</span><div><small>Managers Identified</small><strong>'+managerList.length+'</strong><em>Registered or linked to staff records</em></div></div><div class="lm-kpi green"><span class="lm-kpi-icon">&#10003;</span><div><small>Managers Registered</small><strong>'+registered+'</strong><em>Added to the manager registry</em></div></div><div class="lm-kpi blue"><span class="lm-kpi-icon" aria-hidden="true">&#128101;</span><div><small>Staff Covered</small><strong>'+staffCovered+'</strong><em>Staff linked to a manager</em></div></div></div>';
   h+='<div class="lm-toolbar"><div><label>Search manager</label><input id="lmSearch" value="'+escapeHtml(lmState.query)+'" oninput="cmsLMQuery(this.value)" placeholder="Search by name or email..."></div><div><label>Department</label><select id="lmDepartment" onchange="cmsLMDepartment(this.value)"><option value="">All Departments</option>'+depOptions+'</select></div><div><label>Company</label><select id="lmCompany" onchange="cmsLMCompany(this.value)"><option value="">All Companies</option>'+compOptions+'</select></div><button class="btn btn-primary lm-add-button" onclick="cmsLMToggleAdd()">+ Add Line Manager</button></div>';
-  h+='<div id="lmAddPanel" class="lm-add-panel" style="display:none"><div style="grid-column:1/-1"><label>Pick an employee to fill the boxes below</label><input id="lmPick" list="lmPickList" autocomplete="off" oninput="cmsLMPick(this.value)" placeholder="Start typing a name. Leave empty to type a manager who is not an employee."><datalist id="lmPickList">'+window.cmsLMPickOptions()+'</datalist></div><div><label>Full Name</label><input id="lmName" placeholder="e.g. Julius Angoli"></div><div><label>Email</label><input id="lmEmail" placeholder="e.g. julius@kenafricind.com"></div><div><label>Department</label><input id="lmDept" list="lmDeptList" placeholder="e.g. HUMAN RESOURCE"><datalist id="lmDeptList">'+Object.keys(departments).sort().map(function(d){return '<option value="'+escapeHtml(d)+'">';}).join('')+'</datalist></div><div><label>Company</label><input id="lmCompanyAdd" list="lmCompanyList" placeholder="e.g. Kenafric Industries"><datalist id="lmCompanyList">'+Object.keys(companies).sort().map(function(c){return '<option value="'+escapeHtml(c)+'">';}).join('')+'</datalist></div><button class="btn btn-primary lm-add-save" onclick="addLineManager()">Save Line Manager</button></div>';
+  h+='<div id="lmAddPanel" class="lm-add-panel" style="display:none"><div style="grid-column:1/-1"><label>Pick an employee to fill the boxes below</label><input id="lmPick" list="lmPickList" autocomplete="off" oninput="cmsLMPick(this.value)" placeholder="Start typing a name. Leave empty to type a manager who is not an employee."><datalist id="lmPickList">'+window.cmsLMPickOptions()+'</datalist></div><div><label>Full Name</label><input id="lmName" placeholder="e.g. Julius Angoli"></div><div><label>Email</label><input id="lmEmail" placeholder="e.g. julius@kenafricind.com"></div><div><label>Department</label><input id="lmDept" list="lmDeptList" placeholder="e.g. HUMAN RESOURCE"><datalist id="lmDeptList">'+Object.keys(departments).sort().map(function(d){return '<option value="'+escapeHtml(d)+'">';}).join('')+'</datalist></div><div><label>Company</label><input id="lmCompanyAdd" list="lmCompanyList" placeholder="e.g. Kenafric Industries"><datalist id="lmCompanyList">'+Object.keys(companies).sort().map(function(c){return '<option value="'+escapeHtml(c)+'">';}).join('')+'</datalist></div><div style="grid-column:1/-1"><label>Team (optional): tick the staff who report to this manager</label><input id="lmTeamSearch" placeholder="Search staff by name, email or department..." oninput="cmsLMTeamFilter(this.value)" style="margin-bottom:6px"><div id="lmTeamList" onchange="cmsLMTeamCount()" style="max-height:220px;overflow:auto;border:1px solid #cbd5e1;border-radius:8px;padding:6px 10px;background:#fff">'+emps.slice().sort(function(a,b){return String(a.employee_name||'').localeCompare(String(b.employee_name||''));}).map(function(e){return '<label class="lm-team-row" data-q="'+escapeHtml((String(e.employee_name||'')+' '+String(e.email||'')+' '+String(e.department||'')+' '+String(e.company||'')).toLowerCase())+'" style="display:flex;gap:8px;align-items:center;font-weight:400;margin:0;padding:4px 0"><input type="checkbox" class="lm-team-cb" value="'+escapeHtml(e.employee_id)+'" style="width:auto"><span>'+escapeHtml(e.employee_name||'')+' <small style="color:#64748b">'+escapeHtml(e.position||'')+(e.company?' | '+escapeHtml(e.company):'')+(e.manager?' | now under '+escapeHtml(e.manager):'')+'</small></span></label>';}).join('')+'</div><small id="lmTeamCount" style="color:#64748b">0 selected. Ticking staff moves them to this manager.</small></div><button class="btn btn-primary lm-add-save" onclick="addLineManager()">Save Line Manager</button></div>';
   var __unreg=managerList.filter(function(m){return !m.registered;}).length;if(__unreg)h+='<div class="lm-notice" style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;background:#fff7ed;border:1px solid #fed7aa;color:#9a3412;border-radius:10px;padding:10px 14px;margin:0 0 14px"><span>'+__unreg+' manager'+(__unreg===1?' is':'s are')+' in your staff records but not registered yet.</span><button class="btn btn-sm btn-primary" onclick="cmsLMRegisterAll()">Register all '+__unreg+'</button></div>';
   h+='<div class="card lm-table-card"><div class="lm-table-head"><h2>Line Managers</h2><span>'+filtered.length+' manager'+(filtered.length===1?'':'s')+' found</span></div><div class="table-wrap"><table class="lm-table"><thead><tr><th>Manager</th><th>Email</th><th>Department</th><th>Company</th><th>Team Size</th><th>Status</th><th>Actions</th></tr></thead><tbody>'+rowsHtml+'</tbody></table></div><div class="lm-pagination"><span>Showing '+(filtered.length?start+1:0)+' to '+Math.min(start+lmState.pageSize,filtered.length)+' of '+filtered.length+' managers</span><div class="lm-page-buttons"><button onclick="cmsLMPage('+Math.max(1,lmState.page-1)+')" '+(lmState.page===1?'disabled':'')+'>&lt;</button>'+nums+'<button onclick="cmsLMPage('+Math.min(pages,lmState.page+1)+')" '+(lmState.page===pages?'disabled':'')+'>&gt;</button></div></div></div></section>';
   if(typeof CN==='undefined'||__cmsRouteEpoch===CN.epoch)setContent(h);
@@ -9093,6 +9093,8 @@ function renderLM(){
  window.cmsLMDepartment=function(v){lmState.department=v||'';lmState.page=1;renderLM();};
  window.cmsLMCompany=function(v){lmState.company=v||'';lmState.page=1;renderLM();};
  window.cmsLMPage=function(v){lmState.page=v;renderLM();};
+ window.cmsLMTeamFilter=function(v){var q=String(v||'').toLowerCase().trim();document.querySelectorAll('#lmTeamList .lm-team-row').forEach(function(r){r.style.display=(!q||(r.getAttribute('data-q')||'').indexOf(q)>=0)?'flex':'none';});};
+ window.cmsLMTeamCount=function(){var c=document.getElementById('lmTeamCount');if(c)c.textContent=document.querySelectorAll('.lm-team-cb:checked').length+' selected. Ticking staff moves them to this manager.';};
  window.cmsLMPickOptions=function(){var rg={};regs.forEach(function(r){rg[String(r.email||'').toLowerCase()]=1;});return emps.filter(function(e){return e.email&&!rg[String(e.email).toLowerCase()];}).sort(function(x,y){return String(x.employee_name||'').localeCompare(String(y.employee_name||''));}).map(function(e){return '<option value="'+escapeHtml((e.employee_name||e.email)+' | '+String(e.email).toLowerCase())+'"></option>';}).join('');};
  window.cmsLMPick=function(v){var em=String(v||'').split('|').pop().trim().toLowerCase(),e=empByEmail[em];if(!e)return;document.getElementById('lmName').value=e.employee_name||'';document.getElementById('lmEmail').value=String(e.email||'').toLowerCase();document.getElementById('lmDept').value=e.department||'';document.getElementById('lmCompanyAdd').value=e.company||'';};
  window.cmsLMRegister=async function(k){var m=managerList.filter(function(x){return x._key===k;})[0];if(!m)return;var r=await _supabase.from('line_managers').insert({manager_name:m.name,email:String(m.email||'').toLowerCase(),department:m.department||'',company:m.company||''});if(r.error){showToast(r.error.message);return;}showToast('Registered: '+m.name);loadHRManagers();};
@@ -9105,15 +9107,40 @@ var email = (document.getElementById('lmEmail').value || '').trim().toLowerCase(
 var dept = (document.getElementById('lmDept').value || '').trim();
 var comp = (document.getElementById('lmCompanyAdd').value || '').trim();
 if (!name || !email) { showToast('Name and email are required'); return; }
+if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) { showToast('Enter a valid email address'); return; }
+var team = Array.prototype.map.call(document.querySelectorAll('.lm-team-cb:checked'), function(c){ return c.value; });
+var btn = document.querySelector('.lm-add-save');
+if (btn) btn.disabled = true;
+try {
 const { data: dup } = await _supabase.from('line_managers').select('id').ilike('email', email).limit(1);
-if (dup && dup.length) { showToast('This manager is already registered'); return; }
+var already = !!(dup && dup.length);
+if (already && !team.length) { showToast('This manager is already registered. Tick staff to link them to this manager.'); return; }
+if (!already) {
 const { error } = await _supabase.from('line_managers').insert({ manager_name: name, email: email, department: dept, company: comp });
 if (error) { showToast(error.message); return; }
-showToast(' Line Manager added: ' + name);
+}
+var linked = 0;
+if (team.length) {
+const { data: rows, error: rowsErr } = await _supabase.from('employees').select('employee_id, email').in('employee_id', team);
+if (rowsErr) { showToast('Manager saved, but staff could not be read: ' + rowsErr.message); loadHRManagers(); return; }
+var ids = (rows || []).filter(function(r){ return String(r.email || '').trim().toLowerCase() !== email; }).map(function(r){ return r.employee_id; });
+if (ids.length) {
+const { data: upd, error: updErr } = await _supabase.from('employees').update({ manager: name, manager_email: email }).in('employee_id', ids).select('employee_id');
+if (updErr) { showToast('Manager saved, but linking staff failed: ' + updErr.message); loadHRManagers(); return; }
+linked = (upd || []).length;
+if (!linked) { showToast('Manager saved, but no staff were updated. Your database may be blocking this change.'); loadHRManagers(); return; }
+}
+}
+showToast(name + (already ? ' was already registered' : ' added as Line Manager') + (linked ? ', ' + linked + ' staff linked' : ''));
 loadHRManagers();
+} finally {
+if (btn) btn.disabled = false;
+}
 }
 async function deleteLineManager(email, name) {
-if (!confirm('Remove ' + name + ' from the Line Managers registry? Staff records are NOT changed.')) return;
+var cnt = 0;
+try { const r = await _supabase.from('employees').select('employee_id', { count: 'exact', head: true }).ilike('manager_email', email); cnt = r.count || 0; } catch (e) {}
+if (!confirm('Remove ' + name + ' from the Line Managers registry? ' + (cnt ? cnt + ' staff still report to them and stay linked until you change their line manager. ' : 'No staff report to them. ') + 'Staff records are NOT changed.')) return;
 const { error } = await _supabase.from('line_managers').delete().ilike('email', email);
 if (error) { showToast(error.message); return; }
 showToast('Line Manager removed');
@@ -9282,7 +9309,7 @@ function hrxStyle() {
   '.hrx-tile i{width:10px;height:10px;border-radius:50%;display:inline-block}' +
   '.hrx-bar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:6px 0 10px}' +
   '.hrx-bar input[type=search]{max-width:300px;width:100%}' +
-  '.hrx-head,.hrx-row{display:grid;grid-template-columns:minmax(210px,0.9fr) minmax(560px,2.6fr) 170px;gap:14px;align-items:center;padding:10px 8px}' +
+  '.hrx-head,.hrx-row{display:grid;grid-template-columns:minmax(210px,0.9fr) minmax(520px,2.6fr) 300px;gap:14px;align-items:center;padding:10px 8px}' +
   '.hrx-head{border-bottom:1px solid #e1e6f1;font-size:12px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#6b7691}' +
   '.hrx-row{border-bottom:1px solid #eef1f7}' +
   '.hrx-row:hover{background:#f6f8fe}' +
@@ -9511,7 +9538,7 @@ function hrxRender(keepFocus) {
     var ask = HRX.askDelete === String(id);
     var act = ask
       ? '<button class="btn btn-sm btn-outline" onclick="HRX.askDelete=\'\';hrxRender()">Cancel</button><button class="btn btn-sm btn-danger" onclick="deleteAllAssessments(' + rcArg(id) + ',' + rcArg(name) + ')">Continue</button>'
-      : '<button class="btn btn-sm ' + (urgent ? 'btn-primary' : 'btn-outline') + '" onclick="hrxOpen(' + rcArg(id) + ')">Open Review</button><button type="button" class="hrx-del" title="Delete assessments" aria-label="Delete assessments for ' + escapeHtml(name) + '" onclick="HRX.askDelete=' + rcArg(String(id)) + ';hrxRender()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M6 6l1 14h10l1-14"/><path d="M10 11v5M14 11v5"/></svg></button>';
+      : '<button class="btn btn-sm ' + (urgent ? 'btn-primary' : 'btn-outline') + '" onclick="hrxOpen(' + rcArg(id) + ')">Open Review</button>' + (r.tracks.some(function(t){ return t.dec > 0; }) ? '<button type="button" class="btn btn-sm btn-outline" title="Reopen approved and disapproved decisions so you can change them" onclick="window._hrRevRedoId=' + rcArg(id) + ';hrxOpen(' + rcArg(id) + ')">Redo Review</button>' : '') + '<button type="button" class="hrx-del" title="Delete assessments" aria-label="Delete assessments for ' + escapeHtml(name) + '" onclick="HRX.askDelete=' + rcArg(String(id)) + ';hrxRender()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M6 6l1 14h10l1-14"/><path d="M10 11v5M14 11v5"/></svg></button>';
     return '<div class="hrx-row"><div class="hrx-emp"><span class="hrx-av" style="background:' + HRX_COLORS[(start + i) % HRX_COLORS.length] + '">' + escapeHtml(hrxInitials(name)) + '</span><div style="min-width:0"><b>' + escapeHtml(name) + '</b><small>' + escapeHtml(e.position || '') + '</small></div></div><div class="hrx-tracks">' + lines + '</div><div class="hrx-act">' + act + '</div></div>';
   }).join('');
   if (!slice.length) lh = '<p style="color:var(--gray-500);padding:18px 8px">' + (HRX.rows.length ? 'Nobody matches. Clear the search or the filter.' : 'No staff in this department.') + '</p>';
@@ -9802,21 +9829,24 @@ html += '</select></div></div><div id="hrGapContent"></div>';
 }
 async function loadHRGapEmp() {
 var id = document.getElementById('hrGapEmp').value;
-if (!id) { document.getElementById('hrGapContent').innerHTML = ''; return; }
-const { data: allResults } = await _supabase.from('assessments').select('*').eq('employee_id', id);
-var mgrResults = latestOnly(allResults || []).filter(r => r.type === 'Manager');
-if (mgrResults.length === 0) {
-document.getElementById('hrGapContent').innerHTML = '<div class="card"><p style="color:var(--gray-500)">No assessment yet.</p></div>';
-return;
-}
-var formattedResults = mgrResults.map(r => ({
+var box = document.getElementById('hrGapContent');
+if (!id) { box.innerHTML = ''; return; }
+const { data: allResults, error: gapErr } = await _supabase.from('assessments').select('*').eq('employee_id', id);
+var latest = latestOnly(allResults || []);
+function fmt(rows) {
+return rows.map(r => ({
 'Employee ID': r.employee_id, 'Competency Code': r.comp_code, 'Type': r.type,
 'Ticked': r.ticked, 'Evidence': r.evidence, 'HR_Status': r.hr_status, 'Rating': r.proficiency_rating
 , 'Scoring Rule': r.scoring_rule || 'legacy-zero', 'Classification': r.scoring_rule === 'floor-one-v1' ? r.classification : undefined, 'Weight Profile': r.weight_profile, 'Weight Policy': r.weight_policy}));
+}
+function section(title, type) {
+var rows = latest.filter(r => r.type === type);
+if (rows.length === 0) return '';
+var formatted = fmt(rows);
 var gaps = [];
 for (var i = 0; i < APP.competencies.length; i++) {
 var comp = APP.competencies[i];
-var cs = calculateCompetencyScore(id, comp.code, assessmentType, formattedResults);
+var cs = calculateCompetencyScore(id, comp.code, type, formatted);
 if (cs.total > 0) {
 var pct = Math.round((cs.score / 5) * 100);
 if (pct < 70) {
@@ -9826,16 +9856,45 @@ gaps.push({ name: comp.competency, pct: pct, timeline: tl });
 }
 }
 gaps.sort((a, b) => a.pct - b.pct);
-if (gaps.length === 0) {
-document.getElementById('hrGapContent').innerHTML = '<div class="card"><p style="color:var(--green)">No gaps.</p></div>';
-return;
+var role = type === 'Prospective' ? (rows[0].prospective_role || '') : '';
+var h = '<div class="card"><div class="card-title">' + escapeHtml(title) + (role ? ': ' + escapeHtml(role) : '') + '</div>';
+if (typeof cmsReviewComplete === 'function' && !cmsReviewComplete(rows)) {
+h += '<p style="font-size:11px;color:var(--orange);margin-bottom:8px">Note: HR review of this assessment is not finished yet.</p>';
 }
-var html = '<div class="card">';
+if (gaps.length === 0) {
+h += '<p style="color:var(--green)">No gaps.</p>';
+} else {
 gaps.forEach(function(g) {
-html += makeGapBar(escapeHtml(g.name), g.pct, 'var(--red)') + '<span style="font-size:10px;color:var(--gray-400)"> Close in: ' + escapeHtml(g.timeline) + '</span>';
+h += makeGapBar(escapeHtml(g.name), g.pct, 'var(--red)') + '<span style="font-size:10px;color:var(--gray-400)"> Close in: ' + escapeHtml(g.timeline) + '</span>';
 });
-html += '</div>';
-document.getElementById('hrGapContent').innerHTML = html;
+}
+return h + '</div>';
+}
+var curHtml = section('Current role gaps', 'Manager') || '<div class="card"><p style="color:var(--gray-500)">No current role manager assessment yet.</p></div>';
+var proHtml = section('Prospective role gaps', 'Prospective') || '<div class="card"><p style="color:var(--gray-500)">No prospective role manager assessment yet.</p></div>';
+var hasCur = latest.some(r => r.type === 'Manager');
+var hasPro = latest.some(r => r.type === 'Prospective');
+if (!hasCur && !hasPro) {
+curHtml = '<div class="card"><p style="color:var(--gray-500)">No manager assessment yet.</p><p style="font-size:11px;color:var(--gray-400)">Rows found for this employee: ' + (allResults ? allResults.length : 0) + ' (' + ['Self','Manager','Prospective Self','Prospective'].map(function(t){ return t + ' ' + (allResults || []).filter(function(r){ return r.type === t; }).length; }).join(', ') + ')' + (gapErr ? ' | Error: ' + escapeHtml(gapErr.message) : '') + '</p></div>';
+}
+var startPro = !hasCur && hasPro;
+var html = '<div style="display:flex;gap:8px;margin-bottom:12px">'
++ '<button type="button" id="hrGapTabCur" class="cs-pill' + (startPro ? '' : ' active') + '" onclick="hrGapTab(\'cur\')">Current role</button>'
++ '<button type="button" id="hrGapTabPro" class="cs-pill' + (startPro ? ' active' : '') + '" onclick="hrGapTab(\'pro\')">Prospective role</button>'
++ '</div>'
++ '<div id="hrGapPaneCur" style="display:' + (startPro ? 'none' : 'block') + '">' + curHtml + '</div>'
++ '<div id="hrGapPanePro" style="display:' + (startPro ? 'block' : 'none') + '">' + proHtml + '</div>';
+box.innerHTML = html;
+}
+function hrGapTab(which) {
+var cur = which === 'cur';
+var a = document.getElementById('hrGapPaneCur'), b = document.getElementById('hrGapPanePro');
+var ta = document.getElementById('hrGapTabCur'), tb = document.getElementById('hrGapTabPro');
+if (!a || !b) return;
+a.style.display = cur ? 'block' : 'none';
+b.style.display = cur ? 'none' : 'block';
+if (ta) ta.classList.toggle('active', cur);
+if (tb) tb.classList.toggle('active', !cur);
 }
 async function loadHRDevPlans() {
 var __cmsRouteEpoch = typeof CN === 'undefined' ? null : CN.epoch;
@@ -17407,7 +17466,7 @@ var pSelfScore=pSelfRows.length?calculateOverallScore(emp.employee_id,'Prospecti
 var pManagerScore=pManagerRows.length?calculateOverallScore(emp.employee_id,'Prospective',pManagerData):null;
 var pScore=pReleased&&pSelfScore!==null&&pManagerScore!==null ? cmsProspectiveDecision(pSelfScore,pManagerScore,pSelfRows.concat(pManagerRows)) : null;
 var pSelfLabel=pSelfRows.length?(pReleased?'Submitted':'Visible after HR release'):'Not submitted';
-var pManagerLabel=pManagerRows.length?(pReleased?'Submitted':'Visible after HR release'):'Not submitted';
+var pManagerLabel=pReleased?'Submitted':'Visible after HR release';
 h+=epRing(pReleased?pSelfScore:null,'#7c3aed','Self Assessment (Prospective)',pSelfLabel);
 h+=epRing(pReleased?pManagerScore:null,'#9333ea','Manager Assessment (Prospective)',pManagerLabel);
 h+=epRing(pScore,'#c026d3','Final Score (Prospective Role'+(pRole?': '+pRole:'')+')',pScore===null?(pRole?'Visible after HR release':'No prospective assessment yet'):'70% Manager + 30% Self');
@@ -18500,24 +18559,24 @@ function pfScopeControls(hostId,scopes,state,render,save){var host=document.getE
 }
 async function pfHR(){if(!hdAllowed())return;var epoch=CN.epoch;try{var saved=cnRead('cms_hr_scope:'+APP.user.email);if(saved){HD.company=saved.company||'';HD.department=saved.department||'';}
  setContent('<section class="hd"><div class="hd-card"><h2>HR Admin Dashboard</h2><p>Loading summary only...</p></div></section>');
- var d=await pfSummary('cms_dashboard_summary',{p_role:'hr',p_company:HD.company,p_department:HD.department});if(epoch!==CN.epoch||!hdAllowed())return;
+ var d=await pfSummary('cms_dashboard_summary',{p_role:'hr',p_company:HD.company,p_department:HD.department});if(epoch!==CN.epoch||!hdAllowed())return;var pp=null;try{var pq=await _supabase.rpc('cms_dashboard_prospective',{p_role:'hr',p_company:HD.company,p_department:HD.department});pp=pq.error?null:pq.data;}catch(e){pp=null;}if(epoch!==CN.epoch||!hdAllowed())return;
  var c=d.counts;var h='<div class="hd">'+hdTitle('HR Admin Dashboard','People, assessment coverage and actions requiring your attention.',false)+'<div class="hd-metrics">';
  h+=hdCard(d.staff,'Total Staff','hr-people-all','indigo','View all employees');h+=hdCard(d.assessed+' ('+d.coverage+'%)','Assessed','hr-people-assessed','green','View assessed employees');h+=hdCard(d.not_assessed,'Not Assessed','hr-people-pending','amber','View outstanding employees');h+=hdCard(d.critical,'Critical Positions','hr-position-critical','rose','View critical roles');h+=hdCard(d.positions,'Total Positions','hr-position-all','purple','View position registry');h+='</div><p class="hd-note">Assessed = current-role Manager submission. Summary updated '+escapeHtml(new Date(d.as_of).toLocaleTimeString())+'. Details load when opened.</p>';
  var descriptors=[['review','Assessment reviews','Review assessments'],['returned','Returned evidence','Monitor corrections'],['frameworks','Framework approvals','Open approvals'],['plans','Development plan items','Review plans'],['progress','Development reports','Review progress'],['reportApprovals','Report approvals','Open approvals'],['redos','Redo requests','Open requests'],['reports','Reports returned by HOHR','Open reports'],['unassigned','Unassigned executive cases','Assign privately'],['missing','Missing/inactive C-Suite defaults','Open mappings']];
  h+='<section class="hd-card hd-action-panel"><div class="hd-heading"><h2>Notifications &amp; Actions Needed</h2>'+hdButton('View all actions','hr-actions-all')+'</div>';
  var active=descriptors.filter(x=>Number(c[x[0]])>0);h+=active.length?active.map(x=>'<div class="hd-action"><span class="hd-count">'+c[x[0]]+'</span><div><h3>'+x[1]+'</h3><p>'+(x[0]==='review'?c.review_experiences+' experience rows awaiting review':'Open the queue for individual items.')+'</p></div>'+hdButton(x[2],'hr-actions-'+x[0])+'</div>').join(''):'<p>No outstanding actions in this scope.</p>';h+='</section>';
- h+='<div class="hd-columns"><section class="hd-card"><h2>Assessment Coverage</h2><div class="hd-coverage"><strong>'+d.coverage+'%</strong><p>'+d.assessed+' of '+d.staff+' assessed</p></div>'+hdButton('View coverage by position','hr-coverage')+'</section><section class="hd-card"><h2>Recent Assessment Activity</h2>';
+ h+='<div class="hd-columns"><section class="hd-card"><h2>Assessment Coverage</h2><div class="hd-coverage"><strong>'+d.coverage+'%</strong><p>Current role<br>'+d.assessed+' of '+d.staff+' assessed</p></div>'+(pp?'<div class="hd-coverage"><strong>'+pp.coverage+'%</strong><p>Prospective role<br>'+pp.assessed+' of '+pp.invited+' invited assessed</p></div>':'')+hdButton('View coverage by position','hr-coverage')+'</section><section class="hd-card"><h2>Recent Assessment Activity</h2>';
  h+=(d.recent||[]).map(r=>'<div class="hd-recent"><div><strong>'+escapeHtml(r.employee_name||r.employee_id)+'</strong><p>'+escapeHtml(r.type)+' | '+escapeHtml(r.assessment_date||'')+'</p></div>'+hdCall('View','hdOpenAssessment',[r.employee_id])+'</div>').join('')||'<p>No assessments yet.</p>';
  h+=hdButton('View all assessments','hr-all')+'</section></div><h2>Quick Actions</h2><div class="hd-quick">'+hdButton('Communicate to Employee','hr-communicate')+hdButton('Invite Prospective Assessment','hr-prosp-invites')+hdButton('Review Competencies','hr-comp-approvals')+hdButton('C-Suite Mapping','hr-csuite-mapping');if(CMS_ACCESS.can_manage)h+=hdButton('Manage User Access','hr-user-access');h+='</div>'+pfRefreshButton()+'</div>';setContent(h);
  pfScopeControls('hdFilters',d.scopes,HD,pfHR,()=>sessionStorage.setItem('cms_hr_scope:'+APP.user.email,JSON.stringify({company:HD.company,department:HD.department})));
  }catch(e){if(epoch===CN.epoch)setContent('<section class="card"><h2>Summary unavailable</h2><p>'+escapeHtml(e.message)+'</p>'+pfRefreshButton()+'</section>');}}
 async function pfHOHR(){if(!hhAllowed())return;hhState();var epoch=CN.epoch;setContent('<section class="card"><h2>Head of HR Dashboard</h2><p>Loading summary only...</p></section>');
- try{var d=await pfSummary('cms_dashboard_summary',{p_role:'hohr',p_company:HH.company,p_department:HH.department});if(epoch!==CN.epoch||!hhAllowed())return;var c=d.counts;
+ try{var d=await pfSummary('cms_dashboard_summary',{p_role:'hohr',p_company:HH.company,p_department:HH.department});if(epoch!==CN.epoch||!hhAllowed())return;var pp=null;try{var pq=await _supabase.rpc('cms_dashboard_prospective',{p_role:'hohr',p_company:HH.company,p_department:HH.department});pp=pq.error?null:pq.data;}catch(e){pp=null;}if(epoch!==CN.epoch||!hhAllowed())return;var c=d.counts;
  var h='<div class="hh">'+hhTitle('Head of HR Dashboard','Your leadership view of talent, coverage and decisions.',false)+'<div class="hh-metrics">';
  h+=hhMetric(d.staff,'Total Staff','hohr-overview-staff','View all staff',0)+hhMetric(d.assessed+' ('+d.coverage+'%)','Assessed','hohr-overview-assessed','View assessed employees',1)+hhMetric(d.not_assessed,'Not Assessed','hohr-overview-outstanding','View outstanding assessments',2)+hhMetric(d.critical,'Critical Positions','hohr-overview-critical','Explore critical roles',3)+hhMetric(d.positions,'Total Positions','hohr-overview-positions','Open position registry',4);
  h+='</div><p class="hh-note">Assessed = Manager submission. Updated '+escapeHtml(new Date(d.as_of).toLocaleTimeString())+'. Details load when opened.</p><section class="hh-card"><div class="hh-heading"><h2>Notifications &amp; Decisions Requiring Attention</h2>'+hhButton('Open action centre','hohr-action-all')+'</div>';
  [['decisions','Reports awaiting your decision','Open decision queue'],['frameworks','Frameworks awaiting approval','Review frameworks'],['executive','C-Suite recommendations to review','Review privately'],['endorsements','Legacy endorsements awaiting finalization','Review endorsements'],['unassigned','Unassigned executive cases','Assign privately']].forEach(x=>{h+='<div class="hh-action"><div><h3>'+x[1]+'</h3><p>'+c[x[0]]+' item(s) in scope.</p></div>'+hhButton(x[2],'hohr-action-'+x[0])+'</div>';});
- h+='</section><div class="hh-insights"><section class="hh-card"><h3>Assessment Coverage</h3><div class="hh-coverage"><div class="hh-ring" style="--hh-pct:'+d.coverage+'%"><strong>'+d.coverage+'%</strong></div><p>'+d.assessed+' of '+d.staff+' assessed</p></div>'+hhButton('View coverage by position','hohr-overview-coverage')+'</section><section class="hh-card"><h3>Succession &amp; Critical Roles</h3><div class="hh-feature">'+edIcon('file')+'<p>Review role criticality and successor readiness.</p></div>'+hhButton('Open critical-role coverage','hohr-kpi')+'</section><section class="hh-card"><h3>Development Oversight</h3><div class="hh-feature">'+edIcon('chart')+'<p>'+c.approved_plans+' approved plan item(s).</p></div>'+hhButton('View approved development plans','hohr-overview-plans')+'</section></div><h2 class="hh-leadership">Leadership Actions</h2><div class="hh-shortcuts">'+hhButton('Communicate to Employee','hr-communicate')+hhButton('Invite Prospective Assessment','hohr-prosp-invites')+hhButton('C-Suite Mapping','hohr-csuite-mapping')+hhButton('Private Executive Reviews','ex-private')+'</div>'+pfRefreshButton()+'</div>';setContent(h);pfScopeControls('hhFilters',d.scopes,HH,pfHOHR,hhSaveScope);
+ h+='</section><div class="hh-insights"><section class="hh-card"><h3>Assessment Coverage</h3<div class="hh-coverage"><div class="hh-ring" style="--hh-pct:'+d.coverage+'%"><strong>'+d.coverage+'%</strong></div><p>Current role<br>'+d.assessed+' of '+d.staff+' assessed</p></div>'+(pp?'<div class="hh-coverage"><div class="hh-ring" style="--hh-pct:'+pp.coverage+'%"><strong>'+pp.coverage+'%</strong></div><p>Prospective role<br>'+pp.assessed+' of '+pp.invited+' invited assessed</p></div>':'')+hhButton('View coverage by position','hohr-overview-coverage')+'</section><section class="hh-card"><h3>Succession &amp; Critical Roles</h3><div class="hh-feature">'+edIcon('file')+'<p>Review role criticality and successor readiness.</p></div>'+hhButton('Open critical-role coverage','hohr-kpi')+'</section><section class="hh-card"><h3>Development Oversight</h3><div class="hh-feature">'+edIcon('chart')+'<p>'+c.approved_plans+' approved plan item(s).</p></div>'+hhButton('View approved development plans','hohr-overview-plans')+'</section></div><h2 class="hh-leadership">Leadership Actions</h2><div class="hh-shortcuts">'+hhButton('Communicate to Employee','hr-communicate')+hhButton('Invite Prospective Assessment','hohr-prosp-invites')+hhButton('C-Suite Mapping','hohr-csuite-mapping')+hhButton('Private Executive Reviews','ex-private')+'</div>'+pfRefreshButton()+'</div>';setContent(h);pfScopeControls('hhFilters',d.scopes,HH,pfHOHR,hhSaveScope);
  }catch(e){if(epoch===CN.epoch)setContent('<section class="card"><h2>Summary unavailable</h2><p>'+escapeHtml(e.message)+'</p>'+pfRefreshButton()+'</section>');}}
 async function pfManager(){if(!mdAllowed())return;var epoch=CN.epoch;setContent('<section class="card"><h2>Manager Dashboard</h2><p>Loading summary only...</p></section>');
  try{var d=await pfSummary('cms_manager_summary');if(epoch!==CN.epoch||!mdAllowed())return;
@@ -24347,7 +24406,7 @@ loadHRRevEmp=async function(id){id=id||window._hrRevLast;if(!id)return;window._h
  try{var d=await sxRPC('cms_experience_review','get',{employee_id:id});if(epoch!==SR.epoch||identity!==adOwner()||!host.isConnected)return;
  var groups=srGroups(d.rows||[]),s={id,identity,name:d.employee?.employee_name||d.rows?.[0]?.employee_name||id,position:d.employee?.position||'',rows:d.rows||[],invitations:d.invitations||[],history:d.history||[],groups,selection:{},edits:{},kind:'current',busy:false};
  ['Self','Manager','Prospective Self','Prospective'].forEach(type=>s.selection[type]=groups.find(g=>g.type===type)?.key||'');
- SR.state=s;host.innerHTML='<section id="srRoot"></section>';await srLoadSavedEvidenceLinks(s);srRender(s);
+ s.redo=(window._hrRevRedoId===id);window._hrRevRedoId='';SR.state=s;host.innerHTML='<section id="srRoot"></section>';await srLoadSavedEvidenceLinks(s);srRender(s);
  }catch(e){if(host.isConnected)host.innerHTML='<p>'+sxE(e.message)+'</p><p>Install the matching assessment/review setup before opening this review.</p>';}
 };
 function srSide(s,r,type){
@@ -24356,7 +24415,7 @@ function srSide(s,r,type){
  return '<section class="sr-side sr-awaiting"><h3>'+sxE(type)+'</h3><b>'+(srSelected(s,type)?'No matching experience in this submission':!inv?'Not invited':inv.state==='Pending'?'Awaiting '+(type.includes('Self')?'Employee':'Manager')+' submission':inv.state==='Submitted'?'Submission recorded: select the matching round':'Invitation cancelled')+'</b>'+(inv?'<p>Sent '+sxE(adTime(inv.issued_at))+'</p><p>Deadline '+sxE(inv.due_date)+' | '+sxE(sxRemaining(inv))+'</p>':'')+'</section>';
  }
  var locked=['Approved','Disapproved'].includes(r.hr_status),g=srSelected(s,type),latest=s.groups.find(x=>x.type===type&&x.target===g.target);
- locked=locked||g!==latest;
+ locked=(locked&&!s.redo)||g!==latest;
  var edit=s.edits[r.id];return '<section class="sr-side '+(type.includes('Self')?'sr-self':'sr-manager')+'" data-sr-row="'+sxE(r.id)+'"><h3>'+sxE(type)+'</h3><p class="sr-meta">Round '+sxE(r.assessment_round||1)+' | '+sxE(r.assessor_email)+' | '+sxE(r.assessment_date)+'</p><p>'+sxE(r.ticked?'Demonstrated':'Not demonstrated')+'</p><div class="sr-original">'+[1,2,3,4,5].map(n=>'<label><input type="checkbox" disabled '+(Number(r.proficiency_rating)===n?'checked':'')+'>'+n+'</label>').join('')+'<strong>'+sxE(r.proficiency_rating?cmsRatingLabel(r.proficiency_rating):'Unanswered')+'</strong></div><div class="sr-evidence">'+cmsRichDisplayHTML(r.evidence||'No evidence submitted')+'</div>'+cmsReviewAttachmentHTML(r)+cmsReviewEvidenceLinksHTML(r)+
  '<p>Saved HR review: <b>'+sxE(r.hr_status||'Pending')+'</b></p>'+(r.hr_comment?'<p>'+sxE(r.hr_comment)+'</p>':'')+
  (locked?'<p class="sr-locked">Saved final or historical review: read-only.</p>':'<label>HR decision<select id="srDecision-'+sxE(r.id)+'" data-sr-decision><option value="">Choose a decision</option>'+['Approved','Returned','Disapproved'].map((v,i)=>'<option value="'+v+'" '+(edit?.status===v?'selected':'')+'>'+['Approve','Return','Disapprove'][i]+'</option>').join('')+'</select></label><label>HR comment<textarea id="srComment-'+sxE(r.id)+'" data-sr-comment rows="3" maxlength="2000" placeholder="Required for Return or Disapprove">'+sxE(edit?.comment||'')+'</textarea></label>')+'</section>';
@@ -24370,11 +24429,11 @@ function srRender(s){
  var compatible=left&&right&&left.rows[0].framework_version&&left.rows[0].framework_version===right.rows[0].framework_version&&left.rows[0].core_framework_version===right.rows[0].core_framework_version&&left.target===right.target&&rows.every(x=>x.sides[0].length===1&&x.sides[1].length===1);
  var complete=compatible&&rows.every(x=>x.sides.flat().every(r=>['Approved','Disapproved'].includes(r.hr_status)));
  document.getElementById('srRoot').innerHTML='<header class="sr-hero"><span>HR EXPERIENCE REVIEW</span><h2>'+sxE(s.name)+'</h2><p>'+sxE(s.position)+'</p><p>Review submitted evidence independently. Original ratings are read-only. Return or Disapprove requires a comment; a selection is not saved until Save review succeeds.</p></header>'+
- '<nav class="sr-toolbar"><button class="ad-btn '+(s.kind==='current'?'ad-primary':'')+'" data-sr-kind="current">Current role</button><button class="ad-btn '+(s.kind==='prospective'?'ad-primary':'')+'" data-sr-kind="prospective">Prospective role</button><button class="ad-btn" data-sr="history">Review history</button></nav>'+
+ '<nav class="sr-toolbar"><button class="ad-btn '+(s.kind==='current'?'ad-primary':'')+'" data-sr-kind="current">Current role</button><button class="ad-btn '+(s.kind==='prospective'?'ad-primary':'')+'" data-sr-kind="prospective">Prospective role</button><button class="ad-btn" data-sr="history">Review history</button><button class="ad-btn '+(s.redo?'ad-primary':'')+'" data-sr="redo">'+(s.redo?'Cancel redo':'Redo review')+'</button></nav>'+
  '<div class="sr-selectors">'+choices+'</div><aside class="sx-guidelines"><b>'+(!left||!right?'Final role score: Awaiting both submissions':!compatible?'Final role score: Awaiting compatible assessment snapshots':!complete?'Final role score: Awaiting HR review':'Both selected submissions are reviewed')+'</b><p>No missing side is treated as zero. Review here does not make a final employment decision. Official final scores use the report\u2019s complete-pair and policy checks.</p></aside>'+
  '<div id="srHistory"></div>'+rows.map(x=>'<article class="sr-experience"><header><span>'+sxE(x.tier)+'</span><h3>'+sxE(x.name||x.code)+'</h3><p>'+sxE(x.text)+'</p></header><div class="sr-pair">'+[0,1].map(i=>x.sides[i].length>1?'<section class="sr-side sr-awaiting">Duplicate experiences in this submission. HR must resolve this before review.</section>':srSide(s,x.sides[i][0],types[i])).join('')+'</div></article>').join('')+
  (!rows.length?'<div class="sr-pair">'+types.map(t=>srSide(s,null,t)).join('')+'</div>':'')+
- '<footer class="sr-save"><p id="srStatus" role="status">'+sxE(s.message||'No new review decisions saved.')+'</p><button class="ad-btn ad-primary" data-sr="save">Save review</button><button class="ad-btn" data-sr="save-close">Save review & close</button></footer>';
+ '<footer class="sr-save"><p id="srStatus" role="status">'+sxE(s.message||(s.redo?'Redo mode: decided answers are unlocked. You will be asked for a reason when you save.':'No new review decisions saved.'))+'</p><button class="ad-btn ad-primary" data-sr="save">Save review</button><button class="ad-btn" data-sr="save-close">Save review & close</button></footer>';
  document.querySelectorAll('#srRoot [data-sr-decision]').forEach(sel=>{
   var choices=document.createElement('div');choices.className='sr-decisions';choices.setAttribute('role','group');choices.setAttribute('aria-label','HR decision');
   choices.innerHTML=['Approved','Returned','Disapproved'].map((v,i)=>'<button type="button" data-sr-pick="'+v+'" aria-pressed="'+(sel.value===v)+'">'+['Approve','Return','Disapprove'][i]+'</button>').join('');
@@ -24385,10 +24444,10 @@ async function srSave(s,close){
  if(!srAlive(s)||s.busy)return;srCapture(s);var decisions=Object.values(s.edits).filter(x=>x.status),status=document.getElementById('srStatus');
  if(!decisions.length){status.textContent='Choose at least one new review decision before saving.';return;}
  if(decisions.some(x=>['Returned','Disapproved'].includes(x.status)&&x.comment.trim().length<5)){status.textContent='Add a clear comment of at least five characters for every Return or Disapprove.';return;}
- if(!confirm('Save '+decisions.length+' HR review decision(s)? Original submitted ratings and evidence will remain unchanged.'))return;
+ if(s.redo){var redoWhy=(prompt('Why are you redoing this review? Give a reason of at least 10 characters.')||'').trim();if(redoWhy.length<10){status.textContent='Redo needs a reason of at least ten characters. Nothing was saved.';return;}s.redoReason=redoWhy;} if(!confirm('Save '+decisions.length+' HR review decision(s)? Original submitted ratings and evidence will remain unchanged.'))return;
  s.busy=true;document.querySelectorAll('#srRoot button,#srRoot select,#srRoot textarea').forEach(e=>e.disabled=true);
- try{var result=await sxRPC('cms_experience_review','save',{employee_id:s.id,decisions});if(!srAlive(s))return;
- s.edits={};s.message='Saved to server '+adTime(result.saved_at);
+ try{var result=await sxRPC('cms_experience_review','save',{employee_id:s.id,decisions,redo:!!s.redo,reason:s.redo?s.redoReason:''});if(!srAlive(s))return;
+ s.edits={};s.redo=false;s.message='Saved to server '+adTime(result.saved_at);
  if(close){SR.state=null;document.getElementById('hrRevContent').innerHTML='<p>'+sxE(s.message)+'</p>';return;}
  var d=await sxRPC('cms_experience_review','get',{employee_id:s.id});if(!srAlive(s))return;s.rows=d.rows;s.history=d.history;s.invitations=d.invitations;s.groups=srGroups(s.rows);await srLoadSavedEvidenceLinks(s);srRender(s);
  }catch(e){if(srAlive(s))status.textContent='Review save not confirmed: '+e.message+'. Your selections remain here.';}
@@ -24402,7 +24461,7 @@ document.addEventListener('click',e=>{
  document.getElementById('srStatus').textContent=srPending(s)+' unsaved review decision(s). Save review to confirm.';
 });
 document.addEventListener('click',async e=>{var s=SR.state;if(!s||!srAlive(s))return;var b=e.target.closest('[data-sr],[data-sr-kind]');if(!b||b.disabled)return;
- if(b.dataset.srKind){srCapture(s);s.kind=b.dataset.srKind;srRender(s);}
+ if(b.dataset.srKind){srCapture(s);s.kind=b.dataset.srKind;srRender(s);} if(b.dataset.sr==='redo'){srCapture(s);s.redo=!s.redo;srRender(s);}
  if(b.dataset.sr==='save'||b.dataset.sr==='save-close')await srSave(s,b.dataset.sr==='save-close');
  if(b.dataset.sr==='history'){document.getElementById('srHistory').innerHTML='<details open><summary>Saved review history</summary>'+s.history.map(h=>'<article><b>'+sxE(h.after_row.type)+' | '+sxE(h.after_row.comp_name)+'</b><p>'+sxE(h.after_row.hr_status)+' | '+sxE(h.after_row.hr_reviewer)+' | '+sxE(adTime(h.reviewed_at))+'</p><p>'+sxE(h.after_row.hr_comment)+'</p></article>').join('')+(!s.history.length?'<p>No review changes recorded since this history feature was installed. Existing saved review details remain on each experience.</p>':'')+'</details>';}
 });
