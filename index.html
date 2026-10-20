@@ -8981,6 +8981,109 @@ plus:'<path d="M12 5v14M5 12h14"/>',
 info:'<circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/>'};
 return '<svg viewBox="0 0 24 24" width="12" height="12" aria-hidden="true" focusable="false"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">'+(paths[kind]||paths.department)+'</g></svg>';
 }
+var impState={open:false,res:null,name:'',busy:false};
+function impNorm(x){return String(x==null?'':x).trim().replace(/\s+/g,' ').toUpperCase();}
+async function impCompanies(){
+var m={};
+deptCompanies.forEach(function(c){m[impNorm(c)]=c;});
+try{var r=await _supabase.from('companies').select('name');(r.data||[]).forEach(function(c){if(c.name&&!m[impNorm(c.name)])m[impNorm(c.name)]=c.name;});}catch(e){}
+return m;
+}
+function impCheck(rows,cos){
+if(!rows.length)return {error:'The file is empty.',list:[],more:false};
+var idx={};
+rows[0].forEach(function(h,i){idx[String(h).toLowerCase().replace(/[^a-z]/g,'')]=i;});
+var cC=idx.company!==undefined?idx.company:-1;
+var cD=idx.department!==undefined?idx.department:(idx.departmentname!==undefined?idx.departmentname:(idx.dept!==undefined?idx.dept:-1));
+if(cC<0||cD<0)return {error:'The first row must have the headings Company and Department. Download the template to get them.',list:[],more:false};
+var have={};
+regs.forEach(function(d){have[impNorm(d.company)+'|'+impNorm(d.name)]=true;});
+var seen={},list=[],i;
+function cell(r,c){return r[c]==null?'':String(r[c]).trim().replace(/\s+/g,' ');}
+for(i=1;i<rows.length&&list.length<500;i++){
+var r=rows[i],co0=cell(r,cC),d0=cell(r,cD);
+if(!co0&&!d0)continue;
+var it={line:i+1,company:co0,name:d0.toUpperCase(),status:'ready',note:''};
+var co=cos[impNorm(co0)];
+if(!co0||d0.length<2){it.status='error';it.note='Company and department name are both required.';}
+else if(!co){it.status='error';it.note='Company not found. Use one from the Guide sheet.';}
+else{
+it.company=co;
+var key=impNorm(co)+'|'+impNorm(d0);
+if(have[key]){it.status='dup';it.note='Already registered for this company.';}
+else if(seen[key]){it.status='dup';it.note='Repeated in this file (row '+seen[key]+').';}
+else{seen[key]=it.line;}
+}
+list.push(it);
+}
+return {error:'',list:list,more:i<rows.length};
+}
+window.cmsDeptImportToggle=function(){impState.open=!impState.open;impState.res=null;window.cmsDeptImportDraw();};
+window.cmsDeptImportTemplate=async function(){
+if(typeof XLSX==='undefined'){showToast('The spreadsheet tool is not loaded. Refresh the page and try again.');return;}
+var cos=await impCompanies();var names=Object.keys(cos).map(function(k){return cos[k];}).sort();
+var wb=XLSX.utils.book_new();
+XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet([['Company','Department'],[names[0]||'','EXAMPLE DEPARTMENT']]),'Departments');
+var g=[['Valid companies']];names.forEach(function(n){g.push([n]);});
+XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(g),'Guide');
+XLSX.writeFile(wb,'CMS-departments-import-template.xlsx');
+};
+window.cmsDeptImportFile=async function(inp){
+var f=inp&&inp.files&&inp.files[0];if(!f)return;
+if(typeof XLSX==='undefined'){showToast('The spreadsheet tool is not loaded. Refresh the page and try again.');return;}
+try{
+var buf=await f.arrayBuffer();
+var wb=XLSX.read(buf,{type:'array'});
+var rows=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{header:1,defval:'',raw:false});
+var cos=await impCompanies();
+impState.name=f.name;impState.res=impCheck(rows,cos);
+}catch(e){showToast('Could not read that file: '+e.message);return;}
+window.cmsDeptImportDraw();
+};
+window.cmsDeptImportRun=async function(){
+var res=impState.res;if(!res||impState.busy)return;
+var ready=res.list.filter(function(x){return x.status==='ready';});
+if(!ready.length)return;
+if(!confirm('Register '+ready.length+' department'+(ready.length===1?'':'s')+'?'))return;
+impState.busy=true;window.cmsDeptImportDraw();
+var saved=0,failed='';
+try{
+for(var i=0;i<ready.length;i+=50){
+var chunk=ready.slice(i,i+50).map(function(x){return {company:x.company,name:x.name};});
+var r=await _supabase.from('departments').insert(chunk);
+if(r.error){failed=r.error.message;break;}
+saved+=chunk.length;
+}
+}catch(e){failed=e.message;}
+impState.busy=false;impState.res=null;
+if(failed){showToast('Registered '+saved+' of '+ready.length+'. Stopped: '+failed+'. Upload the file again: what was saved shows as already registered.');}
+else{showToast('Registered '+saved+' department'+(saved===1?'':'s')+'.');impState.open=false;}
+loadHRDepartments();
+};
+window.cmsDeptImportDraw=function(){
+var p=document.getElementById('deptImportPanel');if(!p)return;
+if(!impState.open){p.innerHTML='';p.style.display='none';return;}
+p.style.display='block';
+var h='<div class="dept-add-panel" style="display:block;margin:12px 0;padding:16px"><b style="font-size:16px">Import departments</b><p style="color:#64748b;margin:4px 0 10px">Step 1: download the template. Step 2: fill one row per department. Step 3: upload it and check the preview. Nothing is saved until you click Register.</p>';
+h+='<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"><button type="button" class="btn btn-outline" onclick="cmsDeptImportTemplate()">Download template</button><input type="file" accept=".xlsx,.xls,.csv" style="width:auto" onchange="cmsDeptImportFile(this)" '+(impState.busy?'disabled':'')+'></div>';
+var res=impState.res;
+if(res){
+if(res.error){h+='<p style="color:#b02323;margin-top:10px">'+escapeHtml(res.error)+'</p>';}
+else{
+var n={ready:0,dup:0,error:0};res.list.forEach(function(x){n[x.status]++;});
+h+='<p style="color:#64748b;margin:10px 0 6px">'+escapeHtml(impState.name)+': '+n.ready+' ready, '+n.dup+' duplicate, '+n.error+' with errors.'+(res.more?' Only the first 500 rows are checked. Register this batch, then upload the rest.':'')+'</p>';
+h+='<div style="max-height:300px;overflow:auto;border:1px solid #e2e8f0;border-radius:10px;background:#fff"><table style="width:100%;border-collapse:collapse;font-size:13px"><thead><tr><th style="text-align:left;padding:6px 10px">Row</th><th style="text-align:left;padding:6px 10px">Company</th><th style="text-align:left;padding:6px 10px">Department</th><th style="text-align:left;padding:6px 10px">Result</th></tr></thead><tbody>';
+res.list.forEach(function(x){
+var col=x.status==='ready'?'#0d7a46':x.status==='dup'?'#a65d00':'#b02323',lab=x.status==='ready'?'Ready':x.status==='dup'?'Duplicate':'Error';
+h+='<tr><td style="padding:5px 10px">'+x.line+'</td><td style="padding:5px 10px">'+escapeHtml(x.company)+'</td><td style="padding:5px 10px">'+escapeHtml(x.name)+'</td><td style="padding:5px 10px"><b style="color:'+col+'">'+lab+'</b>'+(x.note?' <span style="color:#64748b">'+escapeHtml(x.note)+'</span>':'')+'</td></tr>';
+});
+h+='</tbody></table></div>';
+h+='<button type="button" class="btn btn-primary" style="margin-top:10px" onclick="cmsDeptImportRun()" '+(!n.ready||impState.busy?'disabled':'')+'>'+(impState.busy?'Registering...':'Register '+n.ready+' department'+(n.ready===1?'':'s'))+'</button>';
+}
+}
+h+='</div>';
+p.innerHTML=h;
+};
 window.cmsDeptRegistryToggleAdd=function(){var p=document.getElementById('deptAddPanel');if(p)p.style.display=p.style.display==='none'?'grid':'none';};
 window.cmsDeptRegistryQuery=function(v){deptState.query=v||'';deptState.page=1;window.cmsDeptRegistryRender();};
 window.cmsDeptRegistryCompany=function(v){deptState.company=v||'';deptState.page=1;window.cmsDeptRegistryRender();};
@@ -9000,13 +9103,14 @@ var rowsHtml=rows.map(function(d){var k=(d.company||'').toUpperCase().trim()+'|'
 if(!rowsHtml)rowsHtml='<tr><td colspan="6" class="dept-empty">No departments match the selected filters.</td></tr>';
 var nums='';for(var pg=1;pg<=pages&&pg<=5;pg++)nums+='<button class="'+(pg===deptState.page?'active':'')+'" onclick="cmsDeptRegistryPage('+pg+')">'+pg+'</button>';if(pages>6)nums+='<span class="dept-ellipsis">...</span><button onclick="cmsDeptRegistryPage('+pages+')">'+pages+'</button>';
 var shownStart=filtered.length?start+1:0,shownEnd=Math.min(start+deptState.pageSize,filtered.length);
-var html='<div class="card dept-registry-card"><div class="dept-registry-heading"><div><div class="dept-title-line"><span class="dept-heading-icon">'+deptIcon('department')+'</span><span class="card-title">Departments Registry</span></div><p class="dept-subtitle">Register every department <strong>per company</strong> - two companies can share the same department name.</p></div><button class="dept-add-toggle" onclick="cmsDeptRegistryToggleAdd()">'+deptIcon('plus')+'<span>Add Department</span></button></div>';
+var html='<div class="card dept-registry-card"><div class="dept-registry-heading"><div><div class="dept-title-line"><span class="dept-heading-icon">'+deptIcon('department')+'</span><span class="card-title">Departments Registry</span></div><p class="dept-subtitle">Register every department <strong>per company</strong> - two companies can share the same department name.</p></div<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="dept-add-toggle" onclick="cmsDeptImportToggle()">'+deptIcon('plus')+'<span>Import departments</span></button><button class="dept-add-toggle" onclick="cmsDeptRegistryToggleAdd()">'+deptIcon('plus')+'<span>Add Department</span></button></div></div>';
+html+='<div id="deptImportPanel" style="display:none"></div>';
 html+='<div id="deptAddPanel" class="dept-add-panel" style="display:none"><div class="form-group" style="margin:0"><label>Company</label><input id="newDeptCompany" list="deptCompanyList" placeholder="e.g. Kenafric Industries"><datalist id="deptCompanyList">'+deptCompanies.map(function(c){return '<option value="'+escapeHtml(c)+'">';}).join('')+'</datalist></div><div class="form-group" style="margin:0"><label>Department</label><input id="newDeptName" placeholder="e.g. HUMAN RESOURCE"></div><button class="btn btn-primary" onclick="addDepartment()">Add Department</button></div>';
 html+='<div class="dept-summary-grid"><div class="dept-summary-card green" role="link" tabindex="0" onkeydown="if(event.key===&quot;Enter&quot;)this.click()" title="Go to the department list" onclick="document.querySelector(&quot;#mainContent table&quot;).scrollIntoView({behavior:&quot;smooth&quot;})"><span class="dept-summary-icon">'+deptIcon('department')+'</span><div><span>Total Departments</span><strong>'+list.length+'</strong><small>Registered and staff records</small></div></div><div class="dept-summary-card purple" role="link" tabindex="0" onkeydown="if(event.key===&quot;Enter&quot;)this.click()" title="Open Companies" onclick="navigateTo(&quot;hr-companies&quot;)"<span class="dept-summary-icon">'+deptIcon('company')+'</span><div><span>Total Companies</span><strong>'+deptCompanies.length+'</strong><small>Active companies</small></div></div><div class="dept-summary-card blue" role="link" tabindex="0" onkeydown="if(event.key===&quot;Enter&quot;)this.click()" title="Open All Employees" onclick="navigateTo(APP.currentRole===&quot;hohr&quot;?&quot;hohr-staff&quot;:&quot;hr-staff&quot;)"><span class="dept-summary-icon">'+deptIcon('people')+'</span><div><span>Total Staff</span><strong>'+deptTotalStaff+'</strong><small>Across departments</small></div></div><div class="dept-summary-card orange" role="link" tabindex="0" onkeydown="if(event.key===&quot;Enter&quot;)this.click()" title="Open All Positions" onclick="navigateTo(&quot;all-positions&quot;)"><span class="dept-summary-icon">'+deptIcon('position')+'</span><div><span>Total Positions</span><strong>'+deptTotalPositions+'</strong><small>Across departments</small></div></div></div>';
 html+='<div class="dept-filter-card"><div><label>Search Departments</label><div class="dept-search-wrap"><input id="deptSearch" value="'+escapeHtml(deptState.query)+'" placeholder="Search by department name..." oninput="cmsDeptRegistryQuery(this.value)"><span class="dept-search-icon">'+deptIcon('search')+'</span></div></div><div><label>Company</label><select onchange="cmsDeptRegistryCompany(this.value)"><option value="">All Companies</option>'+optionCompanies+'</select></div><div><label>Department Status</label><select onchange="cmsDeptRegistryStatus(this.value)"><option value="all">All Statuses</option><option value="registered" '+(deptState.status==='registered'?'selected':'')+'>Registered</option><option value="staff" '+(deptState.status==='staff'?'selected':'')+'>From staff records</option></select></div><div class="dept-result-count"><strong>'+filtered.length+' departments found</strong><span>Showing '+shownStart+'-'+shownEnd+'</span></div></div>';
 html+='<div class="dept-company-tabs">'+tabs+'</div><div class="table-wrap dept-table-wrap"><table class="dept-registry-table"><thead><tr><th>Company</th><th>Department</th><th>Staff</th><th>Positions</th><th>Status</th><th>Actions</th></tr></thead><tbody>'+rowsHtml+'</tbody></table></div>';
 html+='<div class="dept-pagination"><span>Showing '+shownStart+' to '+shownEnd+' of '+filtered.length+' departments</span><div><button onclick="cmsDeptRegistryPage('+Math.max(1,deptState.page-1)+')" '+(deptState.page===1?'disabled':'')+'>Previous</button>'+nums+'<button onclick="cmsDeptRegistryPage('+Math.min(pages,deptState.page+1)+')" '+(deptState.page===pages?'disabled':'')+'>Next</button></div></div><div class="dept-info-note"><strong>'+deptIcon('info')+'</strong><span>Departments are grouped by company for clarity and can be searched instantly by name.</span></div></div>';
-if(typeof CN==='undefined'||__cmsRouteEpoch===CN.epoch)setContent(html);if(activeId==='deptSearch'){var el=document.getElementById('deptSearch');if(el){el.focus();if(cursor!==null)el.setSelectionRange(cursor,cursor);}}
+if(typeof CN==='undefined'||__cmsRouteEpoch===CN.epoch)setContent(html);if(window.cmsDeptImportDraw)window.cmsDeptImportDraw();if(activeId==='deptSearch'){var el=document.getElementById('deptSearch');if(el){el.focus();if(cursor!==null)el.setSelectionRange(cursor,cursor);}}
 };
 window.cmsDeptRegistryRender();
 }
@@ -43019,7 +43123,7 @@ body.cms-focus-editor-v1 #mainContent #fwScreen.cfu-screen #fwBody .cfe-footer {
 (function(){
  var PAGE='all-positions';
  var ROLES=['hr','hohr'];
- var S={q:'',company:'',department:'',crit:'',status:'',page:0,rows:[],open:{},sel:{},assign:false};
+ var S={q:'',company:'',department:'',crit:'',status:'',page:0,rows:[],open:{},sel:{},assign:false,importing:false,imp:null,impBusy:false,edit:'',critBulk:false};
  var PER=10;
  function el(tag,cls,text){var e=document.createElement(tag);if(cls)e.className=cls;if(text!==undefined&&text!==null)e.textContent=text;return e;}
  function norm(x){return String(x==null?'':x).trim().replace(/\s+/g,' ').toUpperCase();}
@@ -43046,7 +43150,13 @@ body.cms-focus-editor-v1 #mainContent #fwScreen.cfu-screen #fwBody .cfe-footer {
    '.apos-pill.g{background:#d9f3e6;color:#0d7a46}.apos-pill.r{background:#fde0e0;color:#b02323}.apos-pill.o{background:#ffefd6;color:#a65d00}.apos-pill.b{background:#e0e6ff;color:#2f3fb0}.apos-pill.n{background:#edf2fa;color:#6a7595}',
    '.apos-who{font-size:12px;color:#536984;margin-top:4px}',
    '.apos-link{border:none;background:none;color:#4338ca;font-weight:700;font-size:12px;cursor:pointer;padding:0}',
-   '.apos-pager{display:flex;gap:10px;align-items:center;justify-content:flex-end;margin:12px 0;font-size:13px}'
+   '.apos-pager{display:flex;gap:10px;align-items:center;justify-content:flex-end;margin:12px 0;font-size:13px}',
+   '.apos-table td{padding:6px 10px!important}',
+   '.apos-ico{width:30px!important;height:30px!important;min-width:0!important;padding:0!important;border-radius:8px!important;background:#fff!important;cursor:pointer;display:inline-flex!important;align-items:center;justify-content:center;margin-right:6px;box-shadow:none!important}',
+   '.apos-ico.e{color:#2f3fb0!important;border:1px solid #b9c4ff!important}',
+   '.apos-ico.d{color:#b02323!important;border:1px solid #f2b8b8!important}',
+   '.apos-ico svg{width:15px;height:15px}',
+   '.apos-edit{background:#eef2ff!important;border-left:4px solid #4338ca;padding:14px!important}'
   ].join('\n');
   document.head.appendChild(s);
  }
@@ -43133,8 +43243,135 @@ body.cms-focus-editor-v1 #mainContent #fwScreen.cfu-screen #fwBody .cfe-footer {
   return el('span','apos-pill '+cls,c);
  }
 
- function addForm(root){
+ /* ===== Import positions ===== */
+ var CMAP={'non-critical':'Non-Critical Role','non critical':'Non-Critical Role','non-critical role':'Non-Critical Role','relatively critical':'Relatively Critical Role','relatively critical role':'Relatively Critical Role','critical':'Critical Role','critical role':'Critical Role','absolutely critical':'Absolutely Critical Role','absolutely critical role':'Absolutely Critical Role'};
+ function critOf(x){
+  var v=String(x==null?'':x).trim().toLowerCase().replace(/\s+/g,' ');
+  if(!v)return 'Non-Critical Role';
+  return CMAP[v]||'';
+ }
+ function knownCompanies(){
+  var m={};
+  S.companies.forEach(function(c){m[norm(c)]=c;});
+  Object.keys(S.dbc||{}).forEach(function(c){if(!m[norm(c)])m[norm(c)]=c;});
+  return m;
+ }
+ function dlTemplate(){
+  if(typeof XLSX==='undefined'){toast('The spreadsheet tool is not loaded. Refresh the page and try again.');return;}
+  var cos=Object.keys(knownCompanies()).map(function(k){return knownCompanies()[k];}).sort();
+  var crit=['Non-Critical Role','Relatively Critical Role','Critical Role','Absolutely Critical Role'];
+  var wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet([['Company','Department','Position name','Criticality'],[cos[0]||'','HUMAN RESOURCE','Example Officer','Non-Critical Role']]),'Positions');
+  var g=[['Valid companies','Valid criticality']];
+  for(var i=0;i<Math.max(cos.length,crit.length);i++)g.push([cos[i]||'',crit[i]||'']);
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(g),'Guide');
+  XLSX.writeFile(wb,'CMS-positions-import-template.xlsx');
+ }
+ function checkRows(rows){
+  if(!rows.length)return {error:'The file is empty.',list:[],more:false};
+  var idx={};
+  rows[0].forEach(function(h,i){idx[String(h).toLowerCase().replace(/[^a-z]/g,'')]=i;});
+  function col(names){for(var i=0;i<names.length;i++){if(idx[names[i]]!==undefined)return idx[names[i]];}return -1;}
+  var cC=col(['company']),cD=col(['department','dept']),cP=col(['positionname','position','title']),cK=col(['criticality','criticalrole','criticallevel']);
+  if(cC<0||cD<0||cP<0)return {error:'The first row must have the headings Company, Department and Position name. Download the template to get them.',list:[],more:false};
+  var cos=knownCompanies(),dsp={};
+  (S.depOpts||[]).forEach(function(d){dsp[norm(d.company)+'||'+norm(d.name)]=d.name;});
+  S.rows.forEach(function(r){if(r.department&&r.company&&r.company!=='Not set'){var k=norm(r.company)+'||'+norm(r.department);dsp[k]=dsp[k]||r.department;}});
+  var seen={},list=[],i;
+  function cell(r,c){return c<0||r[c]==null?'':String(r[c]).trim();}
+  for(i=1;i<rows.length&&list.length<500;i++){
+   var r=rows[i],co0=cell(r,cC),d0=cell(r,cD),p0=cell(r,cP),k0=cell(r,cK);
+   if(!co0&&!d0&&!p0)continue;
+   var it={line:i+1,company:co0,department:d0,position:p0,crit:'',status:'ready',note:''};
+   var co=cos[norm(co0)];
+   if(!co0||!d0||p0.length<2){it.status='error';it.note='Company, department and position name are all required.';}
+   else if(!co){it.status='error';it.note='Company not found. Use one from the Guide sheet.';}
+   else{
+    it.company=co;
+    var dk=norm(co)+'||'+norm(d0),known=!!(S.dbc&&S.dbc[co]&&S.dbc[co][norm(d0)]);
+    it.department=dsp[dk]||d0;
+    var cr=critOf(k0);
+    if(!cr){it.status='error';it.note='Criticality not recognised. Use Non-Critical, Relatively Critical, Critical or Absolutely Critical.';}
+    else{
+     it.crit=cr;
+     var key=norm(co)+'||'+norm(it.department)+'||'+norm(p0);
+     var dup=S.rows.some(function(x){return x.inRegistry&&norm(x.position)===norm(p0)&&norm(x.department)===norm(it.department)&&(norm(x.company)===norm(co)||x.company==='Not set');});
+     if(dup){it.status='dup';it.note='Already in the registry.';}
+     else if(seen[key]){it.status='dup';it.note='Repeated in this file (row '+seen[key]+').';}
+     else{seen[key]=it.line;if(!known)it.note='New department for this company.';}
+    }
+   }
+   list.push(it);
+  }
+  return {error:'',list:list,more:i<rows.length};
+ }
+ function readFile(f,root){
+  if(typeof XLSX==='undefined'){toast('The spreadsheet tool is not loaded. Refresh the page and try again.');return;}
+  f.arrayBuffer().then(function(buf){
+   var wb=XLSX.read(buf,{type:'array'});
+   var rows=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{header:1,defval:'',raw:false});
+   S.imp={name:f.name,res:checkRows(rows)};
+   draw(root);
+  }).catch(function(e){toast('Could not read that file: '+e.message);});
+ }
+ async function runImport(root){
+  var I=S.imp;if(!I)return;
+  var ready=I.res.list.filter(function(x){return x.status==='ready';});
+  if(!ready.length)return;
+  if(!confirm('Import '+ready.length+' position'+(ready.length===1?'':'s')+' into the Critical Positions Registry?'))return;
+  S.impBusy=true;draw(root);
+  var saved=0,failed='';
+  try{
+   for(var i=0;i<ready.length;i+=50){
+    var chunk=ready.slice(i,i+50).map(function(x){return {department:x.department,position_name:x.position,criticality:x.crit,is_active:true,company:x.company};});
+    var r=await _supabase.from('critical_positions').insert(chunk);
+    if(r.error&&/company/i.test(r.error.message||'')){chunk.forEach(function(c){delete c.company;});r=await _supabase.from('critical_positions').insert(chunk);}
+    if(r.error){failed=r.error.message;break;}
+    saved+=chunk.length;
+   }
+  }catch(e){failed=e.message;}
+  S.impBusy=false;S.imp=null;
+  window._posRegByDep=null;
+  if(failed){toast('Imported '+saved+' of '+ready.length+'. Stopped: '+failed+'. Upload the file again: anything already saved will show as a duplicate.');}
+  else{toast('Imported '+saved+' position'+(saved===1?'':'s')+'.');S.importing=false;}
+  await load();draw(root);
+ }
+ function importForm(root){
   var box=el('div','apos-form');
+  box.appendChild(el('h3',null,'Import positions'));
+  box.appendChild(el('p','apos-sub','Step 1: download the template. Step 2: fill one row per position. Step 3: upload it and check the preview. Nothing is saved until you click Import.'));
+  var row=el('div');row.style.cssText='display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:8px 0';
+  var tb=el('button','btn btn-outline','Download template');tb.type='button';tb.onclick=dlTemplate;row.appendChild(tb);
+  var fi=el('input');fi.type='file';fi.accept='.xlsx,.xls,.csv';fi.style.width='auto';fi.disabled=S.impBusy;
+  fi.onchange=function(){if(fi.files&&fi.files[0])readFile(fi.files[0],root);};
+  row.appendChild(fi);box.appendChild(row);
+  var I=S.imp;
+  if(!I)return box;
+  var res=I.res;
+  if(res.error){var e1=el('div',null,res.error);e1.style.cssText='color:#b02323;font-size:13px;margin:6px 0';box.appendChild(e1);return box;}
+  var n={ready:0,dup:0,error:0};res.list.forEach(function(x){n[x.status]++;});
+  var sum=el('p','apos-sub',I.name+': '+n.ready+' ready, '+n.dup+' duplicate, '+n.error+' with errors.'+(res.more?' Only the first 500 rows are checked. Import this batch, then upload the rest.':''));
+  box.appendChild(sum);
+  var wrap=el('div','apos-table');wrap.style.maxHeight='320px';wrap.style.overflowY='auto';
+  var t=el('table'),hd=el('tr');['Row','Company','Department','Position','Criticality','Result'].forEach(function(h){hd.appendChild(el('th',null,h));});
+  var th=el('thead');th.appendChild(hd);t.appendChild(th);
+  var tbd=el('tbody');
+  res.list.forEach(function(x){
+   var tr=el('tr');
+   [x.line,x.company,x.department,x.position,x.crit.replace(' Role','')].forEach(function(v){tr.appendChild(el('td',null,String(v)));});
+   var c=el('td'),cls=x.status==='ready'?'g':x.status==='dup'?'o':'r';
+   c.appendChild(el('span','apos-pill '+cls,x.status==='ready'?'Ready':x.status==='dup'?'Duplicate':'Error'));
+   if(x.note){var nn=el('div','apos-who',x.note);c.appendChild(nn);}
+   tr.appendChild(c);tbd.appendChild(tr);
+  });
+  t.appendChild(tbd);wrap.appendChild(t);box.appendChild(wrap);
+  var go=el('button','btn btn-primary',S.impBusy?'Importing...':'Import '+n.ready+' position'+(n.ready===1?'':'s'));
+  go.type='button';go.disabled=!n.ready||S.impBusy;go.style.marginTop='10px';
+  go.onclick=function(){runImport(root);};
+  box.appendChild(go);
+  return box;
+ }
+ function addForm(root){  var box=el('div','apos-form');
   box.appendChild(el('h3',null,'Add a position'));
   box.appendChild(el('p','apos-sub','It is saved straight to the Critical Positions Registry and appears here and in every position dropdown.'));
   var g=el('div','apos-tools');
@@ -43220,6 +43457,159 @@ body.cms-focus-editor-v1 #mainContent #fwScreen.cfu-screen #fwBody .cfe-footer {
   box.appendChild(save);box.appendChild(cancel);
   return box;
  }
+ /* ===== Edit and delete positions ===== */
+ var ICO_EDIT='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>';
+ var ICO_DEL='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/></svg>';
+ var CRITS=[['Non-Critical Role','Non-critical'],['Relatively Critical Role','Relatively critical'],['Critical Role','Critical'],['Absolutely Critical Role','Absolutely critical']];
+ function editCard(root,r){
+  var box=el('div');
+  box.appendChild(el('b',null,'Edit position '+(r.no||'')));
+  var g=el('div','apos-tools');g.style.marginTop='8px';
+  function fld(label,node){var l=el('label',null,label);l.appendChild(node);g.appendChild(l);return node;}
+  var nm=el('input');nm.value=r.position;fld('Position name',nm);
+  var dd=el('select'),cur=-1;
+  S.depOpts.forEach(function(d,i){
+   var op=el('option',null,d.name+(d.company?' - '+d.company:''));op.value=String(i);dd.appendChild(op);
+   if(cur<0&&norm(d.name)===norm(r.department)&&(!d.company||!r.companyList.length||r.companyList.indexOf(d.company)>=0))cur=i;
+  });
+  if(cur<0){var o0=el('option',null,(r.department||'(No department)')+' (current)');o0.value='';dd.insertBefore(o0,dd.firstChild);dd.value='';}
+  else dd.value=String(cur);
+  fld('Department',dd);
+  var co=el('select'),c0=el('option',null,'Not set');c0.value='';co.appendChild(c0);
+  S.companies.forEach(function(c){var op=el('option',null,c);op.value=c;co.appendChild(op);});
+  co.value=(r.company&&r.company!=='Not set')?r.company:'';
+  fld('Company',co);
+  var cr=el('select');
+  if(!r.regId){var k0=el('option',null,'Not registered (leave as is)');k0.value='';cr.appendChild(k0);}
+  CRITS.forEach(function(c){var op=el('option',null,c[1]);op.value=c[0];cr.appendChild(op);});
+  cr.value=CRITS.some(function(c){return c[0]===r.crit;})?r.crit:(r.regId?'Non-Critical Role':'');
+  fld('Criticality',cr);
+  box.appendChild(g);
+  box.appendChild(el('p','apos-sub','Renaming updates the positions list, the registry and every staff record that holds this position.'));
+  var err=el('div');err.style.cssText='color:#b02323;font-size:13px;min-height:18px;margin:4px 0';box.appendChild(err);
+  var save=el('button','btn btn-primary','Save changes');save.type='button';
+  var cancel=el('button','btn btn-outline','Cancel');cancel.type='button';cancel.style.marginLeft='8px';
+  cancel.onclick=function(){S.edit='';draw(root);};
+  save.onclick=async function(){
+   err.textContent='';
+   var newName=nm.value.trim().replace(/\s+/g,' ');
+   if(newName.length<2){err.textContent='Type the position name.';return;}
+   var d=dd.value===''?null:S.depOpts[+dd.value];
+   var newDept=d?d.name:r.department,newCo=co.value,newCrit=cr.value;
+   var oldCo=(r.company&&r.company!=='Not set')?r.company:'';
+   var nameChanged=newName!==r.position,deptChanged=norm(newDept)!==norm(r.department);
+   var coChanged=newCo!==oldCo,critChanged=newCrit!==(r.crit||'');
+   if(!nameChanged&&!deptChanged&&!coChanged&&!critChanged){S.edit='';draw(root);return;}
+   var dup=S.rows.some(function(x){return x!==r&&norm(x.position)===norm(newName)&&norm(x.department)===norm(newDept)&&norm(x.company)===norm(newCo||'Not set');});
+   if(dup){err.textContent='A position with this name already exists in that department and company.';return;}
+   if(r.pid&&deptChanged&&!(d&&d.code)){err.textContent='That department has no code yet, so the positions list cannot move to it. Pick another department.';return;}
+   save.disabled=true;
+   var did={pos:false,reg:false,newReg:null},oldPos=null,oldReg=null;
+   async function undo(){
+    try{
+     if(did.pos&&oldPos)await _supabase.from('positions').update(oldPos).eq('position_id',r.pid);
+     if(did.reg&&oldReg)await _supabase.from('critical_positions').update(oldReg).eq('id',r.regId);
+     if(did.newReg)await _supabase.from('critical_positions').delete().eq('id',did.newReg);
+    }catch(e){}
+   }
+   try{
+    if(r.pid&&(nameChanged||deptChanged)){
+     var pr=await _supabase.from('positions').select('position_id,position_name,department_id').eq('position_id',r.pid).maybeSingle();
+     if(pr.error)throw Error(pr.error.message);
+     if(pr.data){
+      oldPos={position_name:pr.data.position_name,department_id:pr.data.department_id};
+      var up={};if(nameChanged)up.position_name=newName;if(deptChanged&&d&&d.code)up.department_id=d.code;
+      var p1=await _supabase.from('positions').update(up).eq('position_id',r.pid);
+      if(p1.error)throw Error(p1.error.message);
+      did.pos=true;
+     }
+    }
+    if(r.regId){
+     oldReg={position_name:r.position,department:r.department,criticality:r.crit||'Non-Critical Role',company:oldCo};
+     var u2={position_name:newName,department:newDept,criticality:newCrit||r.crit||'Non-Critical Role',company:newCo};
+     var q=await _supabase.from('critical_positions').update(u2).eq('id',r.regId);
+     if(q.error&&/company/i.test(q.error.message||'')){delete u2.company;delete oldReg.company;q=await _supabase.from('critical_positions').update(u2).eq('id',r.regId);}
+     if(q.error)throw Error(q.error.message);
+     did.reg=true;
+    }else if(newCrit){
+     var row={department:newDept,position_name:newName,criticality:newCrit,is_active:true};
+     if(newCo)row.company=newCo;
+     var q2=await _supabase.from('critical_positions').insert(row).select('id');
+     if(q2.error&&/company/i.test(q2.error.message||'')){delete row.company;q2=await _supabase.from('critical_positions').insert(row).select('id');}
+     if(q2.error)throw Error(q2.error.message);
+     if(q2.data&&q2.data[0])did.newReg=q2.data[0].id;
+    }
+    if((nameChanged||deptChanged)&&r.holders.length){
+     var ids=r.holders.map(function(h){return h.employee_id;});
+     var e3={};if(nameChanged)e3.position=newName;if(deptChanged)e3.department=newDept;
+     var q3=await _supabase.from('employees').update(e3).in('employee_id',ids);
+     if(q3.error)throw Error('Staff records could not be updated ('+q3.error.message+'). Nothing was changed.');
+    }
+   }catch(e){
+    await undo();
+    err.textContent='Not saved: '+e.message;save.disabled=false;return;
+   }
+   window._posRegByDep=null;
+   S.edit='';toast('Saved: '+newName);
+   await load();draw(root);
+  };
+  box.appendChild(save);box.appendChild(cancel);
+  return box;
+ }
+ function critForm(root){
+  var box=el('div','apos-form'),rows=selRows();
+  box.appendChild(el('h3',null,'Set criticality for '+rows.length+' selected position'+(rows.length===1?'':'s')));
+  box.appendChild(el('p','apos-sub','Positions that are not in the Critical Positions Registry yet are added to it with this criticality.'));
+  var g=el('div','apos-tools'),l=el('label',null,'Criticality'),cr=el('select');
+  var o0=el('option',null,'Choose criticality');o0.value='';cr.appendChild(o0);
+  CRITS.forEach(function(c){var op=el('option',null,c[1]);op.value=c[0];cr.appendChild(op);});
+  l.appendChild(cr);g.appendChild(l);box.appendChild(g);
+  var err=el('div');err.style.cssText='color:#b02323;font-size:13px;min-height:18px;margin:4px 0';box.appendChild(err);
+  var save=el('button','btn btn-primary','Save criticality');save.type='button';
+  var cancel=el('button','btn btn-outline','Cancel');cancel.type='button';cancel.style.marginLeft='8px';
+  cancel.onclick=function(){S.critBulk=false;draw(root);};
+  save.onclick=async function(){
+   err.textContent='';
+   if(!cr.value){err.textContent='Choose the criticality.';return;}
+   save.disabled=true;
+   try{
+    var inReg=rows.filter(function(r){return r.regId;}),notReg=rows.filter(function(r){return !r.regId;});
+    if(inReg.length){
+     var ids=inReg.map(function(r){return /^\d+$/.test(String(r.regId))?+r.regId:r.regId;});
+     var a=await _supabase.from('critical_positions').update({criticality:cr.value}).in('id',ids);
+     if(a.error)throw Error(a.error.message);
+    }
+    for(var i=0;i<notReg.length;i+=50){
+     var chunk=notReg.slice(i,i+50).map(function(r){var o={department:r.department,position_name:r.position,criticality:cr.value,is_active:true};if(r.company&&r.company!=='Not set')o.company=r.company;return o;});
+     var b=await _supabase.from('critical_positions').insert(chunk);
+     if(b.error&&/company/i.test(b.error.message||'')){chunk.forEach(function(o){delete o.company;});b=await _supabase.from('critical_positions').insert(chunk);}
+     if(b.error)throw Error(b.error.message);
+    }
+   }catch(e){err.textContent='Not saved: '+e.message;save.disabled=false;return;}
+   window._posRegByDep=null;
+   toast('Criticality set for '+rows.length+' position'+(rows.length===1?'':'s')+'.');
+   S.sel={};S.critBulk=false;
+   await load();draw(root);
+  };
+  box.appendChild(save);box.appendChild(cancel);
+  return box;
+ }
+ async function delPosition(root,r){
+  if(r.headcount>0){toast(r.headcount+(r.headcount===1?' person holds ':' people hold ')+'"'+r.position+'". Move them to another position first (Edit Employee), then delete it.');return;}
+  if(!r.pid&&!r.regId){toast('This position only exists on employee records, so there is nothing to delete here.');return;}
+  if(!confirm('Delete "'+r.position+'" ('+(r.department||'no department')+')?\n\nIt has no people. It is removed from the positions list and the Critical Positions Registry.'))return;
+  if(r.pid){
+   var d1=await _supabase.from('positions').delete().eq('position_id',r.pid);
+   if(d1.error){toast('Not deleted: '+(/foreign key|violates/i.test(d1.error.message||'')?'saved assessments or frameworks still use this position.':d1.error.message));return;}
+  }
+  if(r.regId){
+   var d2=await _supabase.from('critical_positions').update({is_active:false}).eq('id',r.regId);
+   if(d2.error){toast('Removed from the positions list, but the registry entry could not be switched off: '+d2.error.message);}
+  }
+  window._posRegByDep=null;
+  S.edit='';toast('Deleted: '+r.position);
+  await load();draw(root);
+ }
  function draw(root){
   var all=S.rows,list=filtered();
   var filled=all.filter(function(r){return r.headcount>0;}).length,vacant=all.length-filled;
@@ -43234,9 +43624,13 @@ body.cms-focus-editor-v1 #mainContent #fwScreen.cfu-screen #fwBody .cfe-footer {
   add.onclick=function(){S.adding=!S.adding;draw(root);};
   var reg=el('button','btn btn-outline','Open Critical Positions Registry');reg.type='button';
   reg.onclick=function(){navigateTo(APP.currentRole==='hohr'?'hohr-positions':'hr-positions');};
-  btns.appendChild(add);btns.appendChild(reg);head.appendChild(btns);root.appendChild(head);
+  var imb=el('button','btn btn-outline',S.importing?'Close import':'Import positions');imb.type='button';
+  imb.onclick=function(){S.importing=!S.importing;if(S.importing){S.adding=false;}S.imp=null;draw(root);};
+  btns.appendChild(imb);btns.appendChild(add);btns.appendChild(reg);head.appendChild(btns);root.appendChild(head);
   if(S.adding)root.appendChild(addForm(root));
+  if(S.importing)root.appendChild(importForm(root));
   if(S.assign&&selRows().length)root.appendChild(assignForm(root));else S.assign=false;
+  if(S.critBulk&&selRows().length)root.appendChild(critForm(root));else S.critBulk=false;
   var k=el('div','apos-kpis');
   [['Total positions',all.length],['Filled',filled],['Vacant',vacant],['Critical roles',crit]].forEach(function(x){var d=el('div','apos-kpi');d.appendChild(el('b',null,String(x[1])));d.appendChild(el('span',null,x[0]));k.appendChild(d);});
   root.appendChild(k);
@@ -43261,7 +43655,9 @@ body.cms-focus-editor-v1 #mainContent #fwScreen.cfu-screen #fwBody .cfe-footer {
   ab.onclick=function(){S.assign=true;S.adding=false;draw(root);};
   var cb=el('button','btn btn-outline','Clear selection');cb.type='button';cb.disabled=!nSel;
   cb.onclick=function(){S.sel={};S.assign=false;draw(root);};
-  bar.appendChild(ab);bar.appendChild(cb);
+  var kb=el('button','btn btn-primary','Set criticality for selected ('+nSel+')');kb.type='button';kb.disabled=!nSel;
+  kb.onclick=function(){S.critBulk=true;S.assign=false;S.adding=false;draw(root);};
+  bar.appendChild(ab);bar.appendChild(kb);bar.appendChild(cb);
   bar.appendChild(el('span','apos-sub','Tick positions below (or the top box for everything shown), then set their department.'));
   root.appendChild(bar);
   var wrap=el('div','apos-table'),table=el('table'),thead=el('thead'),hr=el('tr');
@@ -43269,7 +43665,7 @@ body.cms-focus-editor-v1 #mainContent #fwScreen.cfu-screen #fwBody .cfe-footer {
   ca.checked=list.length>0&&list.every(function(r){return S.sel[rowKey(r)];});
   ca.onchange=function(){list.forEach(function(r){if(ca.checked)S.sel[rowKey(r)]=1;else delete S.sel[rowKey(r)];});draw(root);};
   th0.appendChild(ca);hr.appendChild(th0);
-  ['No.','Position','Department','Company','Criticality','People','Status'].forEach(function(h){hr.appendChild(el('th',null,h));});
+  ['No.','Position','Department','Company','Criticality','People','Status','Actions'].forEach(function(h){hr.appendChild(el('th',null,h));});
   thead.appendChild(hr);table.appendChild(thead);
   var tb=el('tbody');
   list.slice(S.page*PER,S.page*PER+PER).forEach(function(r){
@@ -43291,9 +43687,17 @@ body.cms-focus-editor-v1 #mainContent #fwScreen.cfu-screen #fwBody .cfe-footer {
    var c4=el('td');c4.appendChild(critPill(r.crit));tr.appendChild(c4);
    tr.appendChild(el('td',null,String(r.headcount)));
    var c6=el('td');c6.appendChild(el('span','apos-pill '+(r.headcount?'g':'o'),r.headcount?'Filled':'Vacant'));tr.appendChild(c6);
+   var c7=el('td');c7.style.whiteSpace='nowrap';
+   var eb=el('button','apos-ico e');eb.type='button';eb.title='Edit';eb.setAttribute('aria-label','Edit '+r.position);eb.innerHTML=ICO_EDIT;
+   eb.onclick=function(){S.edit=(S.edit===key?'':key);draw(root);};
+   var db=el('button','apos-ico d');db.type='button';db.title='Delete';db.setAttribute('aria-label','Delete '+r.position);db.innerHTML=ICO_DEL;
+   db.onclick=function(){delPosition(root,r);};
+   c7.appendChild(eb);c7.appendChild(db);tr.appendChild(c7);
+   tb.appendChild(tr);
+   if(S.edit===key){var er2=el('tr'),ec2=el('td');ec2.colSpan=9;ec2.className='apos-edit';ec2.appendChild(editCard(root,r));er2.appendChild(ec2);tb.appendChild(er2);}
    tb.appendChild(tr);
   });
-  if(!list.length){var er=el('tr'),ec=el('td','',"No positions match these filters.");ec.colSpan=8;er.appendChild(ec);tb.appendChild(er);}
+  if(!list.length){var er=el('tr'),ec=el('td','',"No positions match these filters.");ec.colSpan=9;er.appendChild(ec);tb.appendChild(er);}
   table.appendChild(tb);wrap.appendChild(table);root.appendChild(wrap);
   var pages=Math.max(1,Math.ceil(list.length/PER)),pg=el('div','apos-pager');
   pg.appendChild(el('span',null,list.length+' position'+(list.length===1?'':'s')+' | Page '+(S.page+1)+' of '+pages));
@@ -43838,7 +44242,9 @@ body.cms-focus-editor-v1 #mainContent #fwScreen.cfu-screen #fwBody .cfe-footer {
    '<button type="button" class="btn btn-primary" data-bs="preview" '+(n&&!BS.busy?'':'disabled')+'>Preview and send '+n+' invitation'+(n===1?'':'s')+'</button>';
  }
  function refreshTable(){var t=document.getElementById('bsTable'),b=document.getElementById('bsBar');if(t)t.innerHTML=tableHTML();if(b)b.innerHTML=barHTML();}
+ 
  function draw(root){
+  var all=S.rows,list=filtered();
   css();if(!BS.due)BS.due=plus(14);
   var people=BI.people||[];
   var companies=Array.from(new Set(people.map(function(p){return K(p.company);}).filter(Boolean))).sort();
@@ -44035,7 +44441,7 @@ body.cms-focus-editor-v1 #mainContent #fwScreen.cfu-screen #fwBody .cfe-footer {
    '<div id="lpBlocks">'+blocksHTML(f,r)+'</div>'+
    '<p class="li-note" id="lpTrusted" style="margin:6px 18px"></p>'+
    '<p class="li-note" id="lpScope" style="margin:6px 18px"><b>'+E(scopeText(f))+'</b></p>'+
-   '<div style="margin:14px 18px">'+(st==='pending'?'<button type="button" class="btn btn-outline" data-li="resend" data-id="'+E(String(r.employee_id).trim())+'">Resend invite</button>':'')+'</div>';
+   '<div style="margin:14px 18px">'+(st==='pending'?'<button type="button" class="btn btn-outline" data-li="resend" data-id="'+E(String(r.employee_id).trim())+'">Resend invite</button> ':'')+(f.manager?'<button type="button" class="btn btn-outline" data-li="rmmgr" data-id="'+E(String(r.employee_id).trim())+'" style="color:#b91c1c;border-color:#b91c1c">Remove manager access</button>':'')+'</div><div id="lpRemove"></div>';
   document.body.appendChild(p);
   if(window.CMS_ACCESS&&CMS_ACCESS.can_manage&&typeof uaRPC==='function'){
    try{
@@ -44053,6 +44459,35 @@ body.cms-focus-editor-v1 #mainContent #fwScreen.cfu-screen #fwBody .cfe-footer {
     box.innerHTML=same?'User Access check: matches the profile.':'<b>User Access check: differs from the profile.</b> The values shown above are from User Access, which is what the app uses.';
    }catch(e){}
   }
+ }
+ function findRow(id){return LI.rows.find(function(x){return String(x.employee_id).trim()===String(id).trim();});}
+ function mgrOptions(excl){
+  var list=LI.rows.filter(function(x){return em(x.email)&&em(x.email)!==excl&&flagsOf(x).manager;}).sort(function(a,b){return String(a.employee_name||'').localeCompare(String(b.employee_name||''));});
+  return '<option value="">Choose a line manager...</option><option value="__none__">Leave without a line manager</option>'+list.map(function(x){return '<option value="'+E(em(x.email))+'">'+E(x.employee_name||x.email)+'</option>';}).join('');
+ }
+ function openRemoveManager(id){
+  var r=findRow(id),box=document.getElementById('lpRemove');if(!r||!box)return;
+  var f=flagsOf(r),name=E(r.employee_name||r.email);
+  box.innerHTML='<div style="margin:0 16px 16px;border:1px solid #fcd34d;background:#fffbeb;border-radius:12px;padding:14px">'+
+   '<b style="color:#92400e">Remove manager access for '+name+'?</b>'+
+   '<p class="li-note" style="margin:6px 0">They lose the Manager page the next time they sign in.'+(f.reports?' Their '+f.reports+' staff will have no line manager unless you choose a new one below.':' No staff are linked to them.')+' They are also taken off the Line Managers list.</p>'+
+   (f.reports?'<label style="display:block;font-weight:600;margin-top:8px">Move their '+f.reports+' staff to</label><select id="lpMove" style="width:100%">'+mgrOptions(em(r.email))+'</select>':'')+
+   '<label style="display:block;font-weight:600;margin-top:8px">Reason (required)</label><textarea id="lpWhy" rows="2" style="width:100%;border:1px solid #cbd5e1;border-radius:8px;padding:8px" placeholder="Why is this access being removed?"></textarea>'+
+   '<div style="margin-top:10px"><button type="button" class="btn btn-primary" data-li="rmmgr_go" data-id="'+E(String(r.employee_id).trim())+'" style="background:#dc2626;border-color:#dc2626">Confirm removal</button> <button type="button" class="btn btn-outline" data-li="rmmgr_cancel">Cancel</button></div></div>';
+ }
+ async function confirmRemoveManager(id){
+  var r=findRow(id);if(!r)return;
+  var f=flagsOf(r),sel=document.getElementById('lpMove'),why=document.getElementById('lpWhy');
+  var move=f.reports>0?(sel?sel.value:''):'__none__';
+  if(f.reports>0&&!move){showToast('Choose who takes over their staff, or Leave without a line manager.');return;}
+  var reason=(why&&why.value||'').trim();
+  if(reason.length<5){showToast('Write a short reason (at least 5 characters).');return;}
+  if(!confirm('Remove manager access for '+(r.employee_name||r.email)+'?\n\n'+(f.reports?(move==='__none__'?f.reports+' staff will be left without a line manager.':f.reports+' staff will move to the manager you chose.'):'No staff are linked.')+'\n\nThis is recorded in the access log.'))return;
+  var res=await _supabase.rpc('cms_remove_manager_access',{p_email:em(r.email),p_reassign_to:move==='__none__'?'':move,p_reason:reason,p_remove_registry:true});
+  if(res.error){showToast(/could not find|schema cache|does not exist/i.test(res.error.message)?'Run the Remove manager access SQL in Supabase first.':res.error.message);return;}
+  showToast('Manager access removed.');
+  closeAccess();
+  try{await loadAll();refresh();}catch(e){}
  }
  async function resendFor(id){
   var r=LI.rows.find(function(x){return String(x.employee_id).trim()===String(id).trim();});if(!r)return;
@@ -44189,7 +44624,7 @@ function tableHTML(){
  var t;new MutationObserver(function(){if(t)return;t=setTimeout(function(){t=null;try{ensure();}catch(e){}},150);}).observe(document.body,{childList:true,subtree:true});
  document.addEventListener('click',function(e){
   var b=e.target.closest('[data-li]');
-  if(b){var a=b.getAttribute('data-li');if(a==='open')openPanel();if(a==='close')closePanel();if(a==='send')send();if(a==='useraccess')navigateTo(APP.currentRole==='hohr'?'hohr-user-access':'hr-user-access');if(a==='view')showAccess(b.getAttribute('data-id'));if(a==='viewclose')closeAccess();if(a==='prev'){LI.page=Math.max(0,LI.page-1);refresh();}if(a==='next'){LI.page++;refresh();}if(a==='resend')resendFor(b.getAttribute('data-id'));return;}
+  if(b){var a=b.getAttribute('data-li');if(a==='open')openPanel();if(a==='close')closePanel();if(a==='send')send();if(a==='useraccess')navigateTo(APP.currentRole==='hohr'?'hohr-user-access':'hr-user-access');if(a==='view')showAccess(b.getAttribute('data-id'));if(a==='viewclose')closeAccess();if(a==='prev'){LI.page=Math.max(0,LI.page-1);refresh();}if(a==='next'){LI.page++;refresh();}if(a==='resend')resendFor(b.getAttribute('data-id'));if(a==='rmmgr')openRemoveManager(b.getAttribute('data-id'));if(a==='rmmgr_cancel'){var rb=document.getElementById('lpRemove');if(rb)rb.innerHTML='';}if(a==='rmmgr_go')confirmRemoveManager(b.getAttribute('data-id'));return;}
   var f=e.target.closest('[data-li-filter]');
   if(f){LI.filter=f.getAttribute('data-li-filter');LI.page=0;draw();return;}
   if(e.target.id==='liOverlay')closePanel();
