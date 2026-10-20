@@ -45435,7 +45435,7 @@ function tableHTML(){
  ensure();
 })();
 </script>
-<script id="cms-dept-staff-popup-v1">
+<<script id="cms-dept-staff-popup-v1">
 /* Departments page: click the Staff number to see the people in that department (a side panel with the list). */
 (function(){
  'use strict';
@@ -45471,12 +45471,30 @@ function tableHTML(){
   '#dsPanel .ds-out{background:#fff;color:#2563eb;border:1px solid #2563eb;white-space:nowrap}'+
   '#dsPanel .ds-vac{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:16px}'+
   '.ds-pos{background:#ede9fe;border-color:#ddd6fe;color:#5b21b6}.ds-pos:hover{background:#7c3aed;border-color:#7c3aed;color:#fff}'+
+  '.ds-dots{width:34px;height:30px;border-radius:8px;border:1px solid #cbd5e1;background:#fff;color:#334155;font-size:18px;line-height:1;cursor:pointer;font-weight:800}.ds-dots:hover{background:#eef2ff;border-color:#818cf8}'+
+  '#dsMenu{position:fixed;z-index:100003;min-width:240px;background:#fff;border:1px solid #e2e8f0;border-radius:12px;box-shadow:0 12px 32px rgba(15,23,42,.22);padding:6px}'+
+  '#dsMenu button{display:block;width:100%;text-align:left;background:none;border:0;padding:8px 12px;border-radius:8px;font-size:13.5px;font-weight:600;color:#1e293b;cursor:pointer}'+
+  '#dsMenu button:hover:not(:disabled){background:#eef2ff}'+
+  '#dsMenu button:disabled{color:#94a3b8;cursor:not-allowed}'+
+  '#dsMenu button small{display:block;font-weight:500;font-size:11px;color:#94a3b8}'+
+  '#dsMenu .ds-red{color:#dc2626}#dsMenu hr{border:0;border-top:1px solid #eef2f7;margin:5px 0}'+
   '#dsPanel .ds-pill{padding:6px 14px;border-radius:999px;border:1px solid #cbd5e1;background:#fff;color:#475569;font-weight:700;font-size:13px;cursor:pointer}#dsPanel .ds-pill.on{background:#4338ca;color:#fff;border-color:#4338ca}'+
   '#dsPanel .ds-poscard{display:flex;gap:12px;align-items:center;justify-content:space-between;background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:12px 14px;margin-top:8px}'+
   '#dsPanel .ds-crit{border-radius:6px;padding:1px 8px;font-size:11px;font-weight:700}'+
   '#dsPanel .ds-filled{display:inline-block;background:#dcfce7;color:#166534;border-radius:6px;padding:1px 10px;font-size:12px;font-weight:700}'+
   '#dsPanel .ds-holder{display:flex;align-items:center;gap:6px;justify-content:flex-end;margin-top:4px;font-size:13px;color:#0f172a;font-weight:600}'+
   '#dsPanel .ds-av2{width:24px;height:24px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;color:#fff;font-size:10px;font-weight:800}'+
+  '#dsRen{position:fixed;inset:0;background:rgba(15,23,42,.55);z-index:100004;display:flex;align-items:center;justify-content:center;padding:16px}'+
+  '#dsRen .ds-rbox{background:#fff;border-radius:16px;width:480px;max-width:100%;padding:22px 24px;box-shadow:0 20px 50px rgba(15,23,42,.35)}'+
+  '#dsRen h3{font-size:20px;font-weight:800;color:#1e2a78;margin-bottom:10px}'+
+  '#dsRen label{display:block;font-size:12px;font-weight:700;color:#475569;margin:12px 0 4px}'+
+  '#dsRen input{width:100%;border:1px solid #cbd5e1;border-radius:10px;padding:9px 12px;font-size:14px}'+
+  '#dsRen .ds-cur{background:#eef2ff;border:1px solid #c7d2fe;border-radius:10px;padding:8px 12px;font-weight:800;color:#3730a3}'+
+  '#dsRen .ds-warn{background:#fff7ed;border:1px solid #fed7aa;color:#9a3412;border-radius:10px;padding:8px 12px;font-size:13px;margin-top:10px}'+
+  '#dsRen .ds-err{color:#b91c1c;font-size:13px;margin-top:10px;font-weight:600}'+
+  '#dsRen .ds-acts{display:flex;justify-content:flex-end;gap:8px;margin-top:16px}'+
+  '#dsRen .ds-acts button{padding:9px 18px;border-radius:10px;border:0;font-weight:800;font-size:13px;cursor:pointer}'+
+  '#dsRen .ds-go{background:#2563eb;color:#fff;box-shadow:0 2px 8px rgba(37,99,235,.35)}#dsRen .ds-go:disabled{opacity:.6;cursor:wait}#dsRen .ds-no{background:#e2e8f0;color:#334155}'+
   '#dsPanel .ds-vchip{border:1.5px dashed #fb923c;color:#c2410c;background:#fff7ed;border-radius:8px;padding:4px 12px;font-size:12.5px;font-weight:700}'+
   document.head.appendChild(s);
  }
@@ -45610,10 +45628,10 @@ function tableHTML(){
   Array.prototype.forEach.call(tbl.querySelectorAll('tbody tr'),function(tr){
    var tds=tr.children;if(!tds||tds.length<6)return;
    var co=tds[0].textContent.trim(),dep=tds[1].textContent.trim();
-   var td=tds[2];
+   var td=tds[2],nStaff=parseInt(tr.getAttribute('data-ds-n')||'',10);
    if(td&&!td.getAttribute('data-ds')){
     td.setAttribute('data-ds','1');
-    var n=parseInt(td.textContent,10)||0;
+    var n=parseInt(td.textContent,10)||0;tr.setAttribute('data-ds-n',String(n));nStaff=n;
     if(n<1){td.innerHTML='<span class="ds-zero">0</span>';}
     else{
      var b=document.createElement('button');b.type='button';b.className='ds-link';b.innerHTML='<span>'+n+'</span><small>staff</small>';
@@ -45624,24 +45642,134 @@ function tableHTML(){
    var tp=tds[3];
    if(tp&&!tp.getAttribute('data-dsp')){
     tp.setAttribute('data-dsp','1');
-    var m=parseInt(tp.textContent,10)||0;
+    var m=parseInt(tp.textContent,10)||0;tr.setAttribute('data-ds-p',String(m));
     if(m<1){tp.innerHTML='<span class="ds-zero">0</span>';}
     else{
-     var c=document.createElement('button');c.type='button';c.className='ds-link ds-pos';c.innerHTML='<span>'+m+'</span><small>positions</small>';
+     var c=document.createElement('button');c.type='button';c.className='ds-link ds-pos';c.innerHTML='<span>'+m+'</span><small>'+(m===1?'position':'positions')+'</small>';
      c.title='Show the positions in '+dep;c.setAttribute('data-ds-pco',co);c.setAttribute('data-ds-pdep',dep);
      tp.textContent='';tp.appendChild(c);
     }
    }
+   var ta=tds[5];
+   if(ta&&!ta.getAttribute('data-dsa')){
+    ta.setAttribute('data-dsa','1');
+    var del=ta.querySelector('.dept-delete-button');
+    if(del)del.style.display='none';
+    var d=document.createElement('button');d.type='button';d.className='ds-dots';d.textContent='...';d.title='Actions';
+    d.setAttribute('data-ds-menu','1');d.setAttribute('data-ds-mco',co);d.setAttribute('data-ds-mdep',dep);
+    d.setAttribute('data-ds-mhasdel',del?'1':'');
+    ta.appendChild(d);
+   }
   });
+ }
+ function closeMenu(){var m=document.getElementById('dsMenu');if(m)m.remove();}
+ function openMenu(btn){
+  closeMenu();css();
+  var tr=btn.closest('tr'),co=btn.getAttribute('data-ds-mco'),dep=btn.getAttribute('data-ds-mdep');
+  var ns=parseInt(tr.getAttribute('data-ds-n')||'0',10)||0,np=parseInt(tr.getAttribute('data-ds-p')||'0',10)||0;
+  var hasDel=!!btn.getAttribute('data-ds-mhasdel');
+  var m=document.createElement('div');m.id='dsMenu';
+  var h='<button type="button" data-ds-act="staff"'+(ns?'':' disabled')+'>View staff'+(ns?' ('+ns+')':'')+'</button>'+
+   '<button type="button" data-ds-act="positions"'+(np?'':' disabled')+'>View positions'+(np?' ('+np+')':'')+'</button>'+
+   '<button type="button" data-ds-act="export">Export staff and positions</button><hr>';
+  h+=hasDel?'<button type="button" data-ds-act="rename">Rename department</button>':'<button type="button" disabled>Rename department<small>Only registered departments can be renamed</small></button>';
+  h+='<hr>';
+  if(hasDel){
+   var blocked=ns>0||np>0;
+   h+='<button type="button" class="ds-red" data-ds-act="delete"'+(blocked?' disabled':'')+'>Delete department'+(blocked?'<small>Has '+(ns>0&&np>0?'staff and positions':ns>0?'staff':'positions')+'</small>':'')+'</button>';
+  }else{
+   h+='<button type="button" disabled>Delete department<small>Only registered departments can be deleted</small></button>';
+  }
+  m.innerHTML=h;m.setAttribute('data-co',co);m.setAttribute('data-dep',dep);
+  document.body.appendChild(m);
+  m._tr=tr;m._btn=btn;
+  var r=btn.getBoundingClientRect(),hh=m.offsetHeight||200,top=r.bottom+6;
+  if(top+hh>window.innerHeight-8)top=Math.max(8,r.top-hh-6);
+  m.style.top=top+'px';m.style.left=Math.max(8,Math.min(window.innerWidth-258,r.right-240))+'px';
+ }
+
+ var REN=null;
+ function closeRen(){var w=document.getElementById('dsRen');if(w)w.remove();REN=null;}
+ async function renameDept(co,dep){
+  css();closeRen();
+  var w=document.createElement('div');w.id='dsRen';
+  w.innerHTML='<div class="ds-rbox"><h3>Rename department</h3><div id="dsRenBody">Checking this department...</div></div>';
+  document.body.appendChild(w);
+  var body=document.getElementById('dsRenBody');
+  try{
+   var rows=await pullT('departments','department_id,name,company');
+   var me=rows.filter(function(r){return nk(r.name)===nk(dep)&&nk(r.company)===nk(co);})[0];
+   if(!me){body.innerHTML='<div class="ds-err">This department is not in the registry, so it cannot be renamed.</div><div class="ds-acts"><button type="button" class="ds-no" data-ds-ren-x="1">Close</button></div>';return;}
+   var same=me.department_id?rows.filter(function(r){return r.department_id===me.department_id;}):[me];
+   var seen={},cos=[];same.forEach(function(r){var k=nk(r.company);if(!seen[k]){seen[k]=1;cos.push(String(r.company||'').trim());}});
+   var shared=cos.length>1;
+   REN={co:co,dep:dep,id:me.department_id||'',shared:shared};
+   body.innerHTML='<label>Current name</label><div class="ds-cur">'+E(dep)+' <span style="font-weight:600;color:#64748b">('+E(co)+')</span></div>'+
+    (shared?'<div class="ds-warn">This department exists in '+cos.length+' companies ('+E(cos.join(', '))+'). Renaming changes it in all of them, so the name stays the same everywhere.</div>':'')+
+    '<label>New name</label><input id="dsRenNew" type="text" maxlength="80" autocomplete="off">'+
+    '<label>Reason (optional)</label><input id="dsRenWhy" type="text" maxlength="200" autocomplete="off">'+
+    '<div class="ds-err" id="dsRenErr" style="display:none"></div>'+
+    '<div class="ds-acts"><button type="button" class="ds-no" data-ds-ren-x="1">Cancel</button><button type="button" class="ds-go" data-ds-ren-go="1">Rename</button></div>';
+   var inp=document.getElementById('dsRenNew');if(inp)inp.focus();
+  }catch(e){body.innerHTML='<div class="ds-err">'+E(e.message)+'</div><div class="ds-acts"><button type="button" class="ds-no" data-ds-ren-x="1">Close</button></div>';}
+ }
+ async function doRename(btn){
+  if(!REN)return;
+  var nv=String((document.getElementById('dsRenNew')||{}).value||'').trim().replace(/\s+/g,' ');
+  var why=String((document.getElementById('dsRenWhy')||{}).value||'').trim();
+  var er=document.getElementById('dsRenErr');
+  function fail(m){if(er){er.style.display='block';er.textContent=m;}btn.disabled=false;btn.textContent='Rename';}
+  if(nv.length<2){fail('Type the new name (at least 2 characters).');return;}
+  if(nv.toUpperCase()===nk(REN.dep)){fail('That is the same as the current name.');return;}
+  btn.disabled=true;btn.textContent='Renaming...';if(er)er.style.display='none';
+  try{
+   var r=REN.shared&&REN.id
+    ?await _supabase.rpc('cms_rename_department_all',{p_department_id:REN.id,p_new:nv,p_reason:why})
+    :await _supabase.rpc('cms_rename_department',{p_company:REN.co,p_old:REN.dep,p_new:nv,p_reason:why});
+   if(r.error){fail(r.error.message||'Could not rename.');return;}
+   var d=r.data||{};
+   closeRen();
+   showToast('Renamed to '+(d.new_name||nv.toUpperCase())+'. Employees updated: '+(d.employees||0));
+   try{if(typeof loadHRDepartments==='function')loadHRDepartments();}catch(x){}
+  }catch(e){fail(e.message||'Could not rename.');}
+ }
+ async function exportDept(co,dep){
+  if(typeof XLSX==='undefined'){showToast('The spreadsheet tool is not loaded. Refresh and try again.');return;}
+  try{
+   var g=await gather(co,dep);
+   var staffRows=g.staff.map(function(e){return {Company:e.company,Department:e.department,Name:e.employee_name,'Employee ID':e.employee_id,Email:e.email,Position:e.position,'Line manager':e.manager||''};});
+   var posRows=g.keys.map(function(k){var inf=g.info[k]||{},hs=g.holders[k]||[];return {Company:co,Department:dep,Position:g.names[k],Criticality:critClass(inf.crit)[0],'Position no':inf.no||'',Status:hs.length?'Filled':'Vacant',Holders:hs.map(function(e){return e.employee_name;}).join(', ')};});
+   var wb=XLSX.utils.book_new();
+   XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(staffRows.length?staffRows:[{Note:'No staff'}]),'Staff');
+   XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(posRows.length?posRows:[{Note:'No positions'}]),'Positions');
+   XLSX.writeFile(wb,'CMS-'+String(co).replace(/[^A-Za-z0-9]+/g,'-')+'-'+String(dep).replace(/[^A-Za-z0-9]+/g,'-')+'.xlsx');
+  }catch(e){showToast('Could not export: '+e.message);}
  }
  var t;new MutationObserver(function(){if(t)return;t=setTimeout(function(){t=null;try{decorate();}catch(e){}},120);}).observe(document.body,{childList:true,subtree:true});
  document.addEventListener('click',function(e){
+  var rx=e.target.closest&&e.target.closest('[data-ds-ren-x]');if(rx){closeRen();return;}
+  var rg=e.target.closest&&e.target.closest('[data-ds-ren-go]');if(rg){doRename(rg);return;}
   var c=e.target.closest&&e.target.closest('[data-ds-close]');if(c){close();return;}
   var x=e.target.closest&&e.target.closest('[data-ds-export]');if(x){exportXlsx();return;}
   var p3=e.target.closest&&e.target.closest('[data-ds-360]');
   if(p3){var pid=p3.getAttribute('data-ds-360');close();try{if(typeof openSearchResult==='function')openSearchResult(pid);else navigateTo('hr-employee-360');}catch(x){}return;}
   var v=e.target.closest&&e.target.closest('[data-ds-view]');
   if(v){var id=v.getAttribute('data-ds-view');close();try{APP.hrAllTarget=id;navigateTo('hr-all');}catch(x){}return;}
+  var mb=e.target.closest&&e.target.closest('[data-ds-menu]');
+  if(mb){var was=document.getElementById('dsMenu');if(was&&was._btn===mb){closeMenu();}else{openMenu(mb);}return;}
+  var ac=e.target.closest&&e.target.closest('[data-ds-act]');
+  if(ac){
+   var mm=document.getElementById('dsMenu');if(!mm)return;
+   var act=ac.getAttribute('data-ds-act'),mco=mm.getAttribute('data-co'),mdep=mm.getAttribute('data-dep'),mtr=mm._tr;
+   closeMenu();
+   if(act==='staff')open(mco,mdep);
+   if(act==='positions')openPositions(mco,mdep);
+   if(act==='export')exportDept(mco,mdep);
+   if(act==='rename')renameDept(mco,mdep);
+   if(act==='delete'&&mtr){var orig=mtr.querySelector('.dept-delete-button');if(orig){orig.style.display='';orig.click();orig.style.display='none';}}
+   return;
+  }
+  if(document.getElementById('dsMenu')&&!(e.target.closest&&e.target.closest('#dsMenu')))closeMenu();
   var pf=e.target.closest&&e.target.closest('[data-ds-pf]');
   if(pf&&CUR&&CUR.kind==='pos'){CUR.filter=pf.getAttribute('data-ds-pf');drawPos();return;}
   var pb=e.target.closest&&e.target.closest('[data-ds-pco]');
@@ -45651,6 +45779,8 @@ function tableHTML(){
  });
  document.addEventListener('input',function(e){if(e.target&&e.target.id==='dsSearch'&&CUR){CUR.q=e.target.value;CUR.focusSearch=true;draw();}});
  document.addEventListener('input',function(e){if(e.target&&e.target.id==='dsPosSearch'&&CUR&&CUR.kind==='pos'){CUR.q=e.target.value;CUR.focusSearch=true;drawPos();}});
+ document.addEventListener('keydown',function(e){if(e.key==='Escape'){closeMenu();closeRen();}if(e.key==='Enter'&&e.target&&e.target.id==='dsRenNew'){var g=document.querySelector('[data-ds-ren-go]');if(g)doRename(g);}});
+ window.addEventListener('scroll',closeMenu,true);
  decorate();
 })();
 </script>
