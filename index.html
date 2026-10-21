@@ -12233,7 +12233,7 @@ if(active){var a=document.getElementById(active);if(a){a.focus();if(cursor!==nul
 window.cmsPosRegistryRender();
 }
 async function addPositionRegistry() {
-var dep = (document.getElementById('regDept').value || '').trim();
+var dep = (document.getElementById('regDept').value || '').trim().toUpperCase();
 var pos = (document.getElementById('regPos').value || '').trim();
 var lv = document.getElementById('regCrit').value;
 if (!dep || !pos) { showToast('Department and position are required'); return; }
@@ -43222,7 +43222,7 @@ body.cms-focus-editor-v1 #mainContent #fwScreen.cfu-screen #fwBody .cfe-footer {
    r.headcount=r.holders.length;
    return r;
   });
-  rows.sort(function(a,b){return a.department.localeCompare(b.department)||a.position.localeCompare(b.position);});
+  rows.sort(function(a,b){return a.position.localeCompare(b.position)||a.department.localeCompare(b.department)||String(a.company).localeCompare(String(b.company));});
   S.rows=rows;
   S.companies=Object.keys(rows.reduce(function(m,r){r.companyList.forEach(function(c){m[c]=1;});return m;},{})).sort();
    try{var __cc=await _supabase.from('companies').select('name');(__cc.data||[]).forEach(function(c){var n=String(c.name||'').trim();if(n&&!S.companies.some(function(x){return norm(x)===norm(n);}))S.companies.push(n);});S.companies.sort();}catch(e){}
@@ -43292,7 +43292,7 @@ body.cms-focus-editor-v1 #mainContent #fwScreen.cfu-screen #fwBody .cfe-footer {
    else{
     it.company=co;
     var dk=norm(co)+'||'+norm(d0),known=!!(S.dbc&&S.dbc[co]&&S.dbc[co][norm(d0)]);
-    it.department=dsp[dk]||d0;
+    it.department=dsp[dk]||d0.toUpperCase();
     var cr=critOf(k0);
     if(!cr){it.status='error';it.note='Criticality not recognised. Use Non-Critical, Relatively Critical, Critical or Absolutely Critical.';}
     else{
@@ -43384,7 +43384,7 @@ body.cms-focus-editor-v1 #mainContent #fwScreen.cfu-screen #fwBody .cfe-footer {
   var dep=el('input');dep.setAttribute('list','aposDeps');dep.placeholder='Choose or type a department';
   var dl=el('datalist');dl.id='aposDeps';
   function fillDeps(){
-   dl.replaceChildren();var seen={};
+   dl.replaceChildren();var seen={};(S.depOpts||[]).forEach(function(d){if(d.name&&(!co.value||norm(d.company)===norm(co.value))&&!seen[norm(d.name)]){seen[norm(d.name)]=1;var o=el('option');o.value=d.name;dl.appendChild(o);}});
    S.rows.forEach(function(r){if(r.department&&(!co.value||inCompany(r,co.value))&&!seen[norm(r.department)]){seen[norm(r.department)]=1;var o=el('option');o.value=r.department;dl.appendChild(o);}});
   }
   fillDeps();co.onchange=fillDeps;
@@ -43397,7 +43397,7 @@ body.cms-focus-editor-v1 #mainContent #fwScreen.cfu-screen #fwBody .cfe-footer {
   var save=el('button','btn btn-primary','Save position');save.type='button';
   save.onclick=async function(){
    err.textContent='';
-   var d=dep.value.trim(),p=pn.value.trim();
+   var d=dep.value.trim().toUpperCase(),p=pn.value.trim();
    if(!co.value){err.textContent='Choose the company.';return;}
    if(!d){err.textContent='Choose or type the department.';return;}
    if(p.length<2){err.textContent='Type the position name.';return;}
@@ -43597,6 +43597,31 @@ body.cms-focus-editor-v1 #mainContent #fwScreen.cfu-screen #fwBody .cfe-footer {
   box.appendChild(save);box.appendChild(cancel);
   return box;
  }
+ async function bulkDelete(root){
+  var rows=selRows();if(!rows.length)return;
+  var blocked=rows.filter(function(r){return r.headcount>0;});
+  var ok=rows.filter(function(r){return r.headcount===0&&(r.pid||r.regId);});
+  if(!ok.length){toast('None of the ticked positions can be deleted. Positions with people must be emptied first.');return;}
+  var names=ok.slice(0,8).map(function(r){return '- '+r.position+' ('+(r.department||'no department')+', '+r.company+')';}).join('\n');
+  var msg='Delete '+ok.length+' position'+(ok.length===1?'':'s')+'?\n\n'+names+(ok.length>8?'\n...and '+(ok.length-8)+' more':'')+'\n\n'+(blocked.length?blocked.length+' ticked position'+(blocked.length===1?' has':'s have')+' people and will be skipped.\n\n':'')+'They are removed from the positions list and the Critical Positions Registry.';
+  if(!confirm(msg))return;
+  var done=0,fail=0;
+  for(var i=0;i<ok.length;i++){
+   var r=ok[i],bad=false;
+   if(r.pid){
+    var d1=await _supabase.from('positions').delete().eq('position_id',r.pid);
+    if(d1.error){bad=true;}
+   }
+   if(!bad&&r.regId){
+    var d2=await _supabase.from('critical_positions').update({is_active:false}).eq('id',r.regId);
+    if(d2.error){bad=true;}
+   }
+   if(bad)fail++;else done++;
+  }
+  S.sel={};S.edit='';window._posRegByDep=null;
+  toast('Deleted '+done+(fail?'. Not deleted: '+fail+' (saved assessments or frameworks still use them)':'')+(blocked.length?'. Skipped '+blocked.length+' with people':''));
+  await load();draw(root);
+ }
  async function delPosition(root,r){
   if(r.headcount>0){toast(r.headcount+(r.headcount===1?' person holds ':' people hold ')+'"'+r.position+'". Move them to another position first (Edit Employee), then delete it.');return;}
   if(!r.pid&&!r.regId){toast('This position only exists on employee records, so there is nothing to delete here.');return;}
@@ -43660,7 +43685,7 @@ body.cms-focus-editor-v1 #mainContent #fwScreen.cfu-screen #fwBody .cfe-footer {
   cb.onclick=function(){S.sel={};S.assign=false;draw(root);};
   var kb=el('button','btn btn-primary','Set criticality for selected ('+nSel+')');kb.type='button';kb.disabled=!nSel;
   kb.onclick=function(){S.critBulk=true;S.assign=false;S.adding=false;draw(root);};
-  bar.appendChild(ab);bar.appendChild(kb);bar.appendChild(cb);
+  bar.appendChild(ab);bar.appendChild(kb);bar.appendChild(cb);var xb=el('button','btn btn-danger','Delete selected ('+nSel+')');xb.type='button';xb.disabled=!nSel;xb.onclick=function(){bulkDelete(root);};bar.appendChild(xb);
   bar.appendChild(el('span','apos-sub','Tick positions below (or the top box for everything shown), then set their department.'));
   root.appendChild(bar);
   var wrap=el('div','apos-table'),table=el('table'),thead=el('thead'),hr=el('tr');
@@ -45624,8 +45649,7 @@ function tableHTML(){
   XLSX.writeFile(wb,'CMS-staff-'+String(CUR.dep).replace(/[^A-Za-z0-9]+/g,'-')+'.xlsx');
  }
  function decorate(){
-  var tbl=document.querySelector('#mainContent table.dept-registry-table');if(!tbl)return;
-  Array.prototype.forEach.call(tbl.querySelectorAll('tbody tr'),function(tr){
+  var tbl=document.querySelector('#mainContent table.dept-registry-table');if(!tbl)return;css();  Array.prototype.forEach.call(tbl.querySelectorAll('tbody tr'),function(tr){
    var tds=tr.children;if(!tds||tds.length<6)return;
    var co=tds[0].textContent.trim(),dep=tds[1].textContent.trim();
    var td=tds[2],nStaff=parseInt(tr.getAttribute('data-ds-n')||'',10);
@@ -45705,7 +45729,7 @@ function tableHTML(){
    var shared=cos.length>1;
    REN={co:co,dep:dep,id:me.department_id||'',shared:shared};
    body.innerHTML='<label>Current name</label><div class="ds-cur">'+E(dep)+' <span style="font-weight:600;color:#64748b">('+E(co)+')</span></div>'+
-    (shared?'<div class="ds-warn">This department exists in '+cos.length+' companies ('+E(cos.join(', '))+'). Renaming changes it in all of them, so the name stays the same everywhere.</div>':'')+
+    (shared?'<div class="ds-warn">This department exists in '+cos.length+' companies ('+E(cos.join(', '))+').<label style="display:block;margin:8px 0 2px;font-size:13px;color:#7c2d12"><input type="radio" name="dsRenMode" value="one" checked style="width:auto;display:inline;margin-right:6px;padding:0">Rename in '+E(co)+' only</label><label style="display:block;margin:2px 0;font-size:13px;color:#7c2d12"><input type="radio" name="dsRenMode" value="all" style="width:auto;display:inline;margin-right:6px;padding:0">Rename in all '+cos.length+' companies</label></div>':'')+
     '<label>New name</label><input id="dsRenNew" type="text" maxlength="80" autocomplete="off">'+
     '<label>Reason (optional)</label><input id="dsRenWhy" type="text" maxlength="200" autocomplete="off">'+
     '<div class="ds-err" id="dsRenErr" style="display:none"></div>'+
@@ -45723,8 +45747,11 @@ function tableHTML(){
   if(nv.toUpperCase()===nk(REN.dep)){fail('That is the same as the current name.');return;}
   btn.disabled=true;btn.textContent='Renaming...';if(er)er.style.display='none';
   try{
+   var modeEl=document.querySelector('input[name=dsRenMode]:checked'),mode=modeEl?modeEl.value:'all';
    var r=REN.shared&&REN.id
-    ?await _supabase.rpc('cms_rename_department_all',{p_department_id:REN.id,p_new:nv,p_reason:why})
+    ?(mode==='one'
+     ?await _supabase.rpc('cms_rename_department_split',{p_company:REN.co,p_old:REN.dep,p_new:nv,p_reason:why})
+     :await _supabase.rpc('cms_rename_department_all',{p_department_id:REN.id,p_new:nv,p_reason:why}))
     :await _supabase.rpc('cms_rename_department',{p_company:REN.co,p_old:REN.dep,p_new:nv,p_reason:why});
    if(r.error){fail(r.error.message||'Could not rename.');return;}
    var d=r.data||{};
@@ -45782,6 +45809,286 @@ function tableHTML(){
  document.addEventListener('keydown',function(e){if(e.key==='Escape'){closeMenu();closeRen();}if(e.key==='Enter'&&e.target&&e.target.id==='dsRenNew'){var g=document.querySelector('[data-ds-ren-go]');if(g)doRename(g);}});
  window.addEventListener('scroll',closeMenu,true);
  decorate();
+})();
+</script>
+<script id="cms-position-hierarchy-v1">
+/* All Positions: a second tab, Position Hierarchy. Shows who each position reports to, per company and department.
+   Reads and writes critical_positions.reports_to_id and sort_order. Nothing else is changed. */
+(function(){
+ 'use strict';
+ function E(x){return escapeHtml(x==null?'':String(x));}
+ function nk(x){return String(x==null?'':x).trim().replace(/\s+/g,' ').toUpperCase();}
+ function toast(m){if(typeof showToast==='function')showToast(m);}
+ var HY={mode:'list',root:null,data:null,co:'',dep:'',drag:null,pre:null};
+ var COLS=['#7c3aed','#2563eb','#059669','#0d9488','#ea580c','#db2777','#d97706','#4338ca'];
+ function colorOf(s){var h=0;String(s||'').split('').forEach(function(c){h=(h*31+c.charCodeAt(0))%997;});return COLS[h%COLS.length];}
+ function initials(n){var p=String(n||'').trim().split(/\s+/);return (((p[0]||'')[0]||'')+((p.length>1?p[p.length-1][0]:'')||'')).toUpperCase();}
+ var LV=['#4338ca','#2563eb','#0d9488','#059669','#d97706','#ea580c','#db2777'];
+ function critStyle(c){
+  if(c==='Absolutely Critical Role')return 'background:#fee2e2;color:#b91c1c';
+  if(c==='Critical Role')return 'background:#dbeafe;color:#1d4ed8';
+  if(c==='Relatively Critical Role')return 'background:#ffedd5;color:#c2410c';
+  return 'background:#f1f5f9;color:#64748b';
+ }
+ function css(){
+  if(document.getElementById('hy-style'))return;
+  var s=document.createElement('style');s.id='hy-style';
+  s.textContent=
+  '.hy-tabs{display:flex;gap:6px;border-bottom:2px solid #e2e8f0;margin:6px 0 14px}'+
+  '.hy-tab{background:none;border:0;padding:10px 18px;font-size:14px;font-weight:700;color:#64748b;cursor:pointer;border-bottom:3px solid transparent;margin-bottom:-2px}'+
+  '.hy-tab.on{color:#3730a3;border-bottom-color:#4338ca}.hy-tab:hover{color:#3730a3}'+
+  '#aposRoot.hy-on > :not(.apos-head):not(.hy-tabs):not(#hyPane){display:none!important}'+
+  '#hyPane .hy-bar{display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap;margin-bottom:12px}'+
+  '#hyPane .hy-bar label{font-size:12px;font-weight:700;color:#475569;display:block}'+
+  '#hyPane .hy-bar select{min-width:200px;border:1px solid #cbd5e1;border-radius:10px;padding:8px 12px;font-size:14px;background:#fff}'+
+  '#hyPane .hy-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:12px}'+
+  '#hyPane .hy-stat{background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:10px 14px}#hyPane .hy-stat small{display:block;color:#64748b;font-weight:700;font-size:12px}#hyPane .hy-stat b{font-size:24px;color:#0f172a}'+
+  '#hyPane .hy-grid{display:grid;grid-template-columns:1fr 250px;gap:12px;align-items:start}'+
+  '@media(max-width:900px){#hyPane .hy-grid{grid-template-columns:1fr}}'+
+  '#hyPane .hy-canvas{background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:16px;overflow:auto;min-height:260px}'+
+  '#hyPane .hy-side{background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:12px}'+
+  '#hyPane .hy-side h4{font-size:14px;font-weight:800;color:#0f172a;margin-bottom:4px}#hyPane .hy-hint{font-size:12px;color:#64748b;margin-bottom:8px}'+
+  '#hyPane .hy-top{border:2px dashed #cbd5e1;border-radius:10px;padding:8px;text-align:center;font-size:12px;color:#64748b;margin-bottom:12px}'+
+  '#hyPane .hy-over{border-color:#4338ca!important;background:#eef2ff!important}'+
+  '#hyPane .hy-card{background:#fff;border:1.5px solid #cbd5e1;border-radius:12px;padding:10px 12px;width:230px;text-align:left;box-shadow:0 1px 4px rgba(15,23,42,.08);cursor:grab}'+
+  '#hyPane .hy-card.hy-vac{border:2px dashed #fb923c;background:#fffaf5}'+
+  '#hyPane .hy-card b.hy-name{display:block;font-size:14px;color:#0f172a;margin-bottom:4px}'+
+  '#hyPane .hy-chip{display:inline-block;border-radius:6px;padding:1px 8px;font-size:11px;font-weight:700;margin:0 4px 4px 0}'+
+  '#hyPane .hy-who{display:flex;align-items:center;gap:6px;font-size:12.5px;color:#0f172a;font-weight:600;margin:2px 0 6px}'+
+  '#hyPane .hy-av{width:24px;height:24px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;color:#fff;font-size:10px;font-weight:800;flex:none}'+
+  '#hyPane .hy-card select{width:100%;border:1px solid #cbd5e1;border-radius:8px;padding:5px 6px;font-size:12px;background:#fff}'+
+  '#hyPane .hy-x{background:none;border:0;color:#b91c1c;font-size:11.5px;font-weight:700;cursor:pointer;padding:4px 0 0}'+
+  '#hyPane .hy-side .hy-card{width:auto;margin-bottom:8px}'+
+  '#hyPane .hy-tree ul{display:flex;justify-content:center;padding:22px 0 0;position:relative;list-style:none;margin:0}'+
+  '#hyPane .hy-tree li{position:relative;padding:22px 8px 0;display:flex;flex-direction:column;align-items:center}'+
+  '#hyPane .hy-tree li::before,#hyPane .hy-tree li::after{content:"";position:absolute;top:0;right:50%;border-top:2px solid #cbd5e1;width:50%;height:22px}'+
+  '#hyPane .hy-tree li::after{right:auto;left:50%;border-left:2px solid #cbd5e1}'+
+  '#hyPane .hy-tree li:only-child::before,#hyPane .hy-tree li:only-child::after{display:none}'+
+  '#hyPane .hy-tree li:only-child{padding-top:22px}'+
+  '#hyPane .hy-tree li:first-child::before,#hyPane .hy-tree li:last-child::after{border:0 none}'+
+  '#hyPane .hy-tree li:last-child::before{border-right:2px solid #cbd5e1;border-radius:0 8px 0 0}'+
+  '#hyPane .hy-tree li:first-child::after{border-radius:8px 0 0 0}'+
+  '#hyPane .hy-tree ul ul::before{content:"";position:absolute;top:0;left:50%;border-left:2px solid #cbd5e1;height:22px}'+
+  '#hyPane .hy-tree>ul{padding-top:0}#hyPane .hy-tree>ul>li{padding-top:0}#hyPane .hy-tree>ul>li::before,#hyPane .hy-tree>ul>li::after{display:none}'+
+  '#hyPane .hy-empty{color:#64748b;font-size:14px;padding:30px;text-align:center}';
+  document.head.appendChild(s);
+ }
+ async function pull(table,cols,mod){
+  var out=[],start=0;
+  for(;;){
+   var q=_supabase.from(table).select(cols);if(mod)q=mod(q);
+   var r=await q.range(start,start+999);
+   if(r.error)throw new Error(r.error.message||'Could not load');
+   out=out.concat(r.data||[]);if(!r.data||r.data.length<1000)break;start+=1000;
+  }
+  return out;
+ }
+ function coLabel(c){c=String(c==null?'':c).trim();return c||'Not set';}
+ async function loadData(){
+  var regs,emps;
+  try{
+   var res=await Promise.all([
+    pull('critical_positions','id,position_name,department,company,criticality,is_active,reports_to_id,sort_order',function(q){return q.eq('is_active',true);}),
+    pull('employees','employee_id,employee_name,position,department,company')
+   ]);
+   regs=res[0];emps=res[1];
+  }catch(e){
+   if(/reports_to_id|sort_order/i.test(e.message))throw new Error('The database step for the hierarchy has not been run yet.');
+   throw e;
+  }
+  HY.data={
+   regs:regs.filter(function(g){return g.position_name;}).map(function(g){return {id:g.id,name:String(g.position_name).trim(),dep:String(g.department||'').trim(),co:coLabel(g.company),crit:g.criticality||'',parent:g.reports_to_id==null?null:g.reports_to_id,sort:g.sort_order==null?null:g.sort_order};}),
+   emps:emps
+  };
+ }
+ function companies(){var m={},o=[];HY.data.regs.forEach(function(r){var k=nk(r.co);if(!m[k]){m[k]=1;o.push(r.co);}});return o.sort();}
+ function depsOf(co){var m={},o=[];HY.data.regs.forEach(function(r){if(nk(r.co)!==nk(co))return;var k=nk(r.dep);if(!m[k]){m[k]=1;o.push(r.dep);}});return o.sort();}
+ function current(){return HY.data.regs.filter(function(r){return nk(r.co)===nk(HY.co)&&nk(r.dep)===nk(HY.dep);});}
+ function holdersOf(r){
+  return HY.data.emps.filter(function(e){return nk(coLabel(e.company))===nk(r.co)&&nk(e.department)===nk(r.dep)&&nk(e.position)===nk(r.name);});
+ }
+ function model(){
+  var items=current(),byId={},kids={},roots=[],unpl=[];
+  items.forEach(function(r){byId[String(r.id)]=r;});
+  items.forEach(function(r){
+   if(r.sort==null){r._p=null;unpl.push(r);return;}
+   var p=r.parent!=null&&byId[String(r.parent)]&&byId[String(r.parent)].sort!=null&&String(r.parent)!==String(r.id)?String(r.parent):null;
+   r._p=p;if(p==null)roots.push(r);else(kids[p]=kids[p]||[]).push(r);
+  });
+  function cmp(a,b){return (a.sort-b.sort)||a.name.localeCompare(b.name);}
+  roots.sort(cmp);Object.keys(kids).forEach(function(k){kids[k].sort(cmp);});
+  unpl.sort(function(a,b){return a.name.localeCompare(b.name);});
+  return {items:items,byId:byId,kids:kids,roots:roots,unpl:unpl};
+ }
+ function subtree(m,id){var out={},st=[String(id)];while(st.length){var x=st.pop();if(out[x])continue;out[x]=1;(m.kids[x]||[]).forEach(function(c){st.push(String(c.id));});}return out;}
+ function parentOptions(r,m,placed){
+  var sub=subtree(m,r.id),h='';
+  h+=placed?'':'<option value="" selected>Place under...</option>';
+  h+='<option value="top"'+(placed&&r._p==null?' selected':'')+'>Top of department</option>';
+  m.items.forEach(function(q){
+   if(q.sort==null||sub[String(q.id)])return;
+   h+='<option value="'+E(q.id)+'"'+(placed&&r._p===String(q.id)?' selected':'')+'>'+E(q.name)+'</option>';
+  });
+  if(placed)h+='<option value="none">Remove from hierarchy</option>';
+  return h;
+ }
+ function card(r,m,level,placed){
+  var hs=holdersOf(r),vac=!hs.length;
+  var h='<div class="hy-card'+(vac?' hy-vac':'')+'" draggable="true" data-hid="'+E(r.id)+'">'+
+   '<b class="hy-name">'+E(r.name)+'</b>';
+  if(placed)h+='<span class="hy-chip" style="background:#eef2ff;color:'+LV[Math.min(level-1,LV.length-1)]+'">Level '+level+'</span>';
+  h+='<span class="hy-chip" style="'+critStyle(r.crit)+'">'+E(r.crit||'Not classified')+'</span>';
+  if(vac)h+='<div class="hy-who"><span class="hy-chip" style="background:#ffedd5;color:#c2410c;margin:0">Vacant</span></div>';
+  else h+='<div class="hy-who"><span class="hy-av" style="background:'+colorOf(hs[0].employee_name)+'">'+E(initials(hs[0].employee_name))+'</span><span>'+E(hs[0].employee_name||hs[0].employee_id)+(hs.length>1?' +'+(hs.length-1):'')+'</span></div>';
+  h+='<select data-hy-parent="'+E(r.id)+'" aria-label="Reports to">'+parentOptions(r,m,placed)+'</select>';
+  h+='</div>';
+  return h;
+ }
+ function branch(r,m,level,seen){
+  if(seen[String(r.id)])return '';seen[String(r.id)]=1;
+  var ks=m.kids[String(r.id)]||[];
+  return '<li>'+card(r,m,level,true)+(ks.length?'<ul>'+ks.map(function(c){return branch(c,m,level+1,seen);}).join('')+'</ul>':'')+'</li>';
+ }
+ function treeHtml(m){
+  if(!m.roots.length)return '<div class="hy-empty">No positions placed yet. Pick a position on the right and choose where it reports to, or choose "Top of department" for the highest one.</div>';
+  var seen={};
+  return '<div class="hy-tree"><ul>'+m.roots.map(function(r){return branch(r,m,1,seen);}).join('')+'</ul></div>';
+ }
+ function renderPane(){
+  var pane=document.getElementById('hyPane');if(!pane||!HY.data)return;
+  var cos=companies();
+  if(!cos.length){pane.innerHTML='<div class="hy-empty">There are no registered positions yet.</div>';return;}
+  if(HY.pre&&!HY.co){
+   var pc=cos.filter(function(c){return nk(c)===nk(HY.pre.co);})[0];
+   if(pc){HY.co=pc;var pd=depsOf(pc).filter(function(d){return nk(d)===nk(HY.pre.dep);})[0];if(pd)HY.dep=pd;}
+  }
+  HY.pre=null;
+  if(!cos.some(function(c){return nk(c)===nk(HY.co);}))HY.co=cos[0];
+  var deps=depsOf(HY.co);
+  if(!deps.some(function(d){return nk(d)===nk(HY.dep);}))HY.dep=deps[0]||'';
+  var m=model(),filled=0;
+  m.items.forEach(function(r){if(holdersOf(r).length)filled++;});
+  var h='<div class="hy-bar"><div><label for="hyCo">Company</label><select id="hyCo">'+cos.map(function(c){return '<option value="'+E(c)+'"'+(nk(c)===nk(HY.co)?' selected':'')+'>'+E(c)+'</option>';}).join('')+'</select></div>'+
+   '<div><label for="hyDep">Department</label><select id="hyDep">'+deps.map(function(d){return '<option value="'+E(d)+'"'+(nk(d)===nk(HY.dep)?' selected':'')+'>'+E(d||'(No department)')+'</option>';}).join('')+'</select></div>'+
+   '<button type="button" class="btn btn-outline" data-hy-export="1">Export</button>'+
+   '<span class="apos-sub" style="font-size:12px;color:#64748b">Changes save as soon as you make them.</span></div>'+
+   '<div class="hy-stats"><div class="hy-stat"><small>Positions</small><b>'+m.items.length+'</b></div><div class="hy-stat"><small>Filled</small><b>'+filled+'</b></div><div class="hy-stat"><small>Vacant</small><b>'+(m.items.length-filled)+'</b></div><div class="hy-stat"><small>Unplaced</small><b>'+m.unpl.length+'</b></div></div>'+
+   '<div class="hy-grid"><div class="hy-canvas"><div class="hy-top" data-hy-top="1">Drop a position here to make it the top position</div>'+treeHtml(m)+'</div>'+
+   '<div class="hy-side"><h4>Unplaced positions ('+m.unpl.length+')</h4><div class="hy-hint">Drag onto a position to set who they report to, or use the dropdown.</div>'+
+   (m.unpl.length?m.unpl.map(function(r){return card(r,m,0,false);}).join(''):'<div class="hy-hint">Everything is placed.</div>')+'</div></div>';
+  pane.innerHTML=h;
+ }
+ async function dbUpdate(r,obj){
+  var res=await _supabase.from('critical_positions').update(obj).eq('id',r.id);
+  if(res.error)throw new Error(res.error.message||'Could not save');
+ }
+ async function place(id,parentKey){
+  var m=model(),r=m.byId[String(id)];if(!r)return;
+  var p=null;
+  if(parentKey!=null){
+   p=m.byId[String(parentKey)];if(!p){toast('That position was not found.');return;}
+   if(String(p.id)===String(r.id)||subtree(m,r.id)[String(p.id)]){toast('A position cannot report to itself or to someone below it.');return;}
+   if(p.sort==null){toast('Place the manager position first.');return;}
+  }
+  if(r.sort!=null&&((p==null&&r._p==null)||(p&&r._p===String(p.id))))return;
+  var sib=m.items.filter(function(x){return x.sort!=null&&String(x.id)!==String(r.id)&&(p?x._p===String(p.id):x._p==null);});
+  var next=sib.reduce(function(a,x){return Math.max(a,x.sort);},-1)+1;
+  try{await dbUpdate(r,{reports_to_id:p?p.id:null,sort_order:next});}catch(e){toast(e.message);renderPane();return;}
+  r.parent=p?p.id:null;r.sort=next;renderPane();
+ }
+ async function unplace(id){
+  var m=model(),r=m.byId[String(id)];if(!r)return;
+  var np=r._p?m.byId[r._p]:null,ks=m.kids[String(r.id)]||[];
+  try{
+   for(var i=0;i<ks.length;i++){await dbUpdate(ks[i],{reports_to_id:np?np.id:null});ks[i].parent=np?np.id:null;}
+   await dbUpdate(r,{reports_to_id:null,sort_order:null});
+  }catch(e){toast(e.message);renderPane();return;}
+  r.parent=null;r.sort=null;renderPane();
+ }
+ function exportXlsx(){
+  if(typeof XLSX==='undefined'){toast('The spreadsheet tool is not loaded. Refresh and try again.');return;}
+  var m=model(),rows=[];
+  function walk(r,lvl,seen){
+   if(seen[String(r.id)])return;seen[String(r.id)]=1;
+   var hs=holdersOf(r),par=r._p?m.byId[r._p]:null;
+   rows.push({Company:r.co,Department:r.dep,Level:lvl,Position:r.name,'Reports to':par?par.name:'(Top)',Criticality:r.crit||'Not classified',Status:hs.length?'Filled':'Vacant',Holders:hs.map(function(e){return e.employee_name;}).join(', ')});
+   (m.kids[String(r.id)]||[]).forEach(function(c){walk(c,lvl+1,seen);});
+  }
+  var seen={};m.roots.forEach(function(r){walk(r,1,seen);});
+  m.unpl.forEach(function(r){var hs=holdersOf(r);rows.push({Company:r.co,Department:r.dep,Level:'',Position:r.name,'Reports to':'(Unplaced)',Criticality:r.crit||'Not classified',Status:hs.length?'Filled':'Vacant',Holders:hs.map(function(e){return e.employee_name;}).join(', ')});});
+  var wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(rows.length?rows:[{Note:'No positions'}]),'Hierarchy');
+  XLSX.writeFile(wb,'CMS-hierarchy-'+String(HY.co).replace(/[^A-Za-z0-9]+/g,'-')+'-'+String(HY.dep).replace(/[^A-Za-z0-9]+/g,'-')+'.xlsx');
+ }
+ async function startLoad(){
+  var pane=document.getElementById('hyPane');if(!pane)return;
+  pane.innerHTML='<div class="hy-empty">Loading the hierarchy...</div>';
+  try{await loadData();}catch(e){var p2=document.getElementById('hyPane');if(p2)p2.innerHTML='<div class="hy-empty" style="color:#b91c1c">'+E(e.message)+'</div>';return;}
+  renderPane();
+ }
+ function ensure(){
+  var root=document.getElementById('aposRoot');if(!root||!root.isConnected)return;
+  if(HY.root!==root){HY.root=root;HY.mode='list';HY.data=null;HY.co='';HY.dep='';}
+  var head=root.querySelector('.apos-head');if(!head)return;
+  css();
+  var tabs=root.querySelector('.hy-tabs');
+  if(!tabs){
+   tabs=document.createElement('div');tabs.className='hy-tabs';
+   tabs.innerHTML='<button type="button" class="hy-tab" data-hy-tab="list">Positions list</button><button type="button" class="hy-tab" data-hy-tab="hier">Position Hierarchy</button>';
+   head.insertAdjacentElement('afterend',tabs);
+  }
+  Array.prototype.forEach.call(tabs.querySelectorAll('.hy-tab'),function(b){b.classList.toggle('on',b.getAttribute('data-hy-tab')===HY.mode);});
+  var pane=document.getElementById('hyPane');
+  if(HY.mode==='hier'){
+   root.classList.add('hy-on');
+   if(!pane){pane=document.createElement('div');pane.id='hyPane';root.appendChild(pane);if(HY.data)renderPane();else startLoad();}
+  }else{root.classList.remove('hy-on');if(pane)pane.remove();}
+ }
+ var tm;new MutationObserver(function(){if(tm)return;tm=setTimeout(function(){tm=null;try{ensure();}catch(e){}},120);}).observe(document.body,{childList:true,subtree:true});
+ document.addEventListener('click',function(e){
+  var t=e.target.closest&&e.target.closest('[data-hy-tab]');
+  if(t){
+   var want=t.getAttribute('data-hy-tab');if(want===HY.mode)return;
+   if(want==='hier'){
+    var c=document.getElementById('aposCompany'),d=document.getElementById('aposDept');
+    HY.pre={co:c&&c.value||'',dep:d&&d.value||''};HY.data=null;HY.co='';HY.dep='';
+   }
+   HY.mode=want;ensure();return;
+  }
+  if(e.target.closest&&e.target.closest('[data-hy-export]')){exportXlsx();return;}
+ });
+ document.addEventListener('change',function(e){
+  var el=e.target;if(!el||!el.closest||!el.closest('#hyPane'))return;
+  if(el.id==='hyCo'){HY.co=el.value;HY.dep='';renderPane();return;}
+  if(el.id==='hyDep'){HY.dep=el.value;renderPane();return;}
+  var pid=el.getAttribute&&el.getAttribute('data-hy-parent');
+  if(pid){
+   var v=el.value;
+   if(v==='')return;
+   if(v==='none')unplace(pid);else if(v==='top')place(pid,null);else place(pid,v);
+  }
+ });
+ document.addEventListener('dragstart',function(e){
+  var c=e.target.closest&&e.target.closest('#hyPane [data-hid]');if(!c)return;
+  HY.drag=c.getAttribute('data-hid');
+  try{e.dataTransfer.setData('text/plain',HY.drag);e.dataTransfer.effectAllowed='move';}catch(x){}
+ });
+ document.addEventListener('dragover',function(e){
+  if(HY.drag==null)return;
+  var z=e.target.closest&&e.target.closest('#hyPane [data-hid],#hyPane [data-hy-top]');if(!z)return;
+  e.preventDefault();z.classList.add('hy-over');
+ });
+ document.addEventListener('dragleave',function(e){var z=e.target.closest&&e.target.closest('#hyPane .hy-over');if(z)z.classList.remove('hy-over');});
+ document.addEventListener('drop',function(e){
+  if(HY.drag==null)return;
+  var z=e.target.closest&&e.target.closest('#hyPane [data-hid],#hyPane [data-hy-top]');if(!z)return;
+  e.preventDefault();z.classList.remove('hy-over');
+  var id=HY.drag;HY.drag=null;
+  if(z.hasAttribute('data-hy-top'))place(id,null);else place(id,z.getAttribute('data-hid'));
+ });
+ document.addEventListener('dragend',function(){HY.drag=null;Array.prototype.forEach.call(document.querySelectorAll('#hyPane .hy-over'),function(x){x.classList.remove('hy-over');});});
+ if(window.__HY_TEST)window.__hyDbg={HY:HY,model:model,place:place,unplace:unplace,treeHtml:treeHtml,renderPane:renderPane,loadData:loadData,subtree:subtree};
+ ensure();
 })();
 </script>
 <style id="cms-fixed-scale-v1">
