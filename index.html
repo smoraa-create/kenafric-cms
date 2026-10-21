@@ -44273,7 +44273,6 @@ body.cms-focus-editor-v1 #mainContent #fwScreen.cfu-screen #fwBody .cfe-footer {
  function refreshTable(){var t=document.getElementById('bsTable'),b=document.getElementById('bsBar');if(t)t.innerHTML=tableHTML();if(b)b.innerHTML=barHTML();}
  
  function draw(root){
-  var all=S.rows,list=filtered();
   css();if(!BS.due)BS.due=plus(14);
   var people=BI.people||[];
   var companies=Array.from(new Set(people.map(function(p){return K(p.company);}).filter(Boolean))).sort();
@@ -46590,6 +46589,124 @@ function tableHTML(){
  var side=document.getElementById('sideNav');
  if(side&&window.MutationObserver)new MutationObserver(later).observe(side,{childList:true,subtree:true});
  sweep();
+})();
+</script>
+<script id="cms-line-manager-edit-v1">
+/* Line Managers: adds an Edit button next to Delete on every registered manager.
+   Edits name, department and company. Email stays locked because logins and staff links use it. */
+(function(){
+ 'use strict';
+ if(window.__cmsLMEditV1)return;window.__cmsLMEditV1=true;
+ var busy=false;
+ function toast(m){if(typeof showToast==='function')showToast(m);else alert(m);}
+ function el(tag,props,kids){
+  var n=document.createElement(tag),k;
+  props=props||{};
+  for(k in props){
+   if(k==='style')n.style.cssText=props[k];
+   else if(k==='text')n.textContent=props[k];
+   else if(k==='cls')n.className=props[k];
+   else n.setAttribute(k,props[k]);
+  }
+  (kids||[]).forEach(function(c){if(c)n.appendChild(c);});
+  return n;
+ }
+ function field(label,input,note){
+  var g=el('div',{style:'margin-bottom:12px'},[el('label',{text:label,style:'display:block;font-size:12px;font-weight:700;color:#334155;margin-bottom:4px'}),input]);
+  if(note)g.appendChild(el('div',{text:note,style:'font-size:11px;color:#64748b;margin-top:3px'}));
+  return g;
+ }
+ function closeModal(){var m=document.getElementById('lmEditOverlay');if(m)m.remove();}
+ async function openEdit(email){
+  if(busy)return;
+  closeModal();
+  var key=String(email||'').trim().toLowerCase();
+  if(!key)return;
+  var q=await _supabase.from('line_managers').select('*').ilike('email',key).limit(1);
+  if(q.error||!q.data||!q.data.length){toast(q.error?q.error.message:'Could not find this manager in the registry.');return;}
+  var row=q.data[0];
+  var opts={dep:{},co:{}};
+  try{
+   var er=await _supabase.from('employees').select('department,company');
+   (er.data||[]).forEach(function(e){if(e.department)opts.dep[String(e.department).toUpperCase()]=1;if(e.company)opts.co[e.company]=1;});
+  }catch(x){}
+  try{
+   var lr=await _supabase.from('line_managers').select('department,company');
+   (lr.data||[]).forEach(function(e){if(e.department)opts.dep[String(e.department).toUpperCase()]=1;if(e.company)opts.co[e.company]=1;});
+  }catch(x){}
+  if(row.company)opts.co[row.company]=1;
+  var nameIn=el('input',{id:'lmEditName',value:row.manager_name||''});
+  nameIn.value=row.manager_name||'';
+  var mailIn=el('input',{id:'lmEditEmail',readonly:'readonly',style:'background:#f1f5f9;color:#64748b'});
+  mailIn.value=row.email||key;
+  var depIn=el('input',{id:'lmEditDept',list:'lmEditDeptList',placeholder:'Leave empty if none'});
+  depIn.value=row.department||'';
+  var dl=el('datalist',{id:'lmEditDeptList'});
+  Object.keys(opts.dep).sort().forEach(function(d){var o=el('option');o.value=d;dl.appendChild(o);});
+  var coSel=el('select',{id:'lmEditCompany'});
+  var none=el('option',{text:'No company'});none.value='';coSel.appendChild(none);
+  Object.keys(opts.co).sort().forEach(function(c){var o=el('option',{text:c});o.value=c;coSel.appendChild(o);});
+  coSel.value=row.company||'';
+  var saveBtn=el('button',{type:'button',cls:'btn btn-primary',text:'Save changes'});
+  var cancelBtn=el('button',{type:'button',cls:'btn btn-outline',text:'Cancel'});
+  cancelBtn.onclick=closeModal;
+  var card=el('div',{style:'background:#fff;border-radius:14px;padding:22px;width:460px;max-width:92vw;box-shadow:0 20px 50px rgba(15,23,42,0.35)'},[
+   el('h2',{text:'Edit line manager',style:'color:#312e81;font-size:18px;margin:0 0 4px'}),
+   el('p',{text:'Change the details for this manager. Their team stays linked.',style:'font-size:12px;color:#64748b;margin:0 0 14px'}),
+   field('Full name',nameIn,'If you change the name, it is also updated on the staff who report to them.'),
+   field('Email',mailIn,'Locked. Logins and staff links use the email.'),
+   field('Department',depIn,'Saved in capital letters.'),dl,
+   field('Company',coSel),
+   el('div',{style:'display:flex;gap:8px;justify-content:flex-end;margin-top:6px'},[cancelBtn,saveBtn])
+  ]);
+  var ov=el('div',{id:'lmEditOverlay',style:'position:fixed;inset:0;background:rgba(15,23,42,0.55);z-index:5000;display:flex;align-items:center;justify-content:center'},[card]);
+  ov.addEventListener('mousedown',function(e){if(e.target===ov)closeModal();});
+  document.body.appendChild(ov);
+  nameIn.focus();
+  saveBtn.onclick=async function(){
+   if(busy)return;
+   var nm=String(nameIn.value||'').trim(),dp=String(depIn.value||'').trim().toUpperCase(),co=String(coSel.value||'').trim();
+   if(!nm){toast('Name is required.');return;}
+   busy=true;saveBtn.disabled=true;saveBtn.textContent='Saving...';
+   try{
+    var up=await _supabase.from('line_managers').update({manager_name:nm,department:dp,company:co}).ilike('email',key).select('email');
+    if(up.error){toast(up.error.message);return;}
+    if(!up.data||!up.data.length){toast('Nothing was saved. Your database may be blocking this change.');return;}
+    var moved=0;
+    if(nm!==String(row.manager_name||'').trim()){
+     var us=await _supabase.from('employees').update({manager:nm}).ilike('manager_email',key).select('employee_id');
+     if(us.error){toast('Manager saved, but the name on staff records could not be updated: '+us.error.message);}
+     else moved=(us.data||[]).length;
+    }
+    closeModal();
+    toast('Saved: '+nm+(moved?' ('+moved+' staff records updated)':''));
+    if(typeof loadHRManagers==='function')loadHRManagers();
+   }catch(e){toast(e.message||'Could not save.');}
+   finally{busy=false;if(document.body.contains(saveBtn)){saveBtn.disabled=false;saveBtn.textContent='Save changes';}}
+  };
+ }
+ document.addEventListener('keydown',function(e){if(e.key==='Escape')closeModal();});
+ function inject(){
+  var dels=document.querySelectorAll('.lm-table .lm-delete');
+  for(var i=0;i<dels.length;i++){
+   var d=dels[i],prev=d.previousElementSibling;
+   if(prev&&prev.getAttribute&&prev.getAttribute('data-lm-editbtn'))continue;
+   var tr=d.closest('tr'),cell=tr?tr.querySelector('.lm-email'):null;
+   if(!cell)continue;
+   var em=String(cell.textContent||'').trim().toLowerCase();
+   var b=el('button',{type:'button',cls:'btn btn-sm btn-outline',text:'Edit',title:'Edit manager','data-lm-editbtn':'1',style:'margin-right:6px;vertical-align:middle'});
+   (function(e2){b.onclick=function(){openEdit(e2);};})(em);
+   d.parentNode.insertBefore(b,d);
+   d.parentNode.style.whiteSpace='nowrap';
+  }
+ }
+ /* Check on every page change and also on a short timer, so the button comes back
+    even when the page redraws the table (search, filters, paging, photo loading). */
+ var pending=false;
+ function soon(){if(pending)return;pending=true;setTimeout(function(){pending=false;inject();},30);}
+ if(window.MutationObserver)new MutationObserver(soon).observe(document.body,{childList:true,subtree:true});
+ setInterval(inject,500);
+ inject();
 })();
 </script>
 <style id="cms-fixed-scale-v1">
