@@ -8835,7 +8835,8 @@ if (!dep || !pos) { showToast('Select department and position'); return; }
 var mgrName = '';
 if (mgrEmail) { var m = (window._aeEmps || []).find(function(e){ return e.email === mgrEmail; }); mgrName = m ? m.employee_name : ''; if (!mgrName) { var lm = (window._aeMgrRegs || []).find(function(x){ return (x.email || '').toLowerCase() === mgrEmail.toLowerCase(); }); mgrName = lm ? (lm.manager_name || '') : ''; } }
 var empId = ((document.getElementById('aeEmpId')||{}).value||'').trim() || ('EMP-' + Date.now().toString(36).toUpperCase() + Math.random().toString(36).substr(2,3).toUpperCase());
-var track = document.getElementById('aeTrack') ? document.getElementById('aeTrack').value : '';
+var track = document.getElementById('aeTrack') ? document.getElementById('aeTrack').value : '';var track = document.getElementById('aeTrack') ? document.getElementById('aeTrack').value : '';
+try{ await _supabase.rpc('cms_ensure_position',{p_company:comp,p_department:dep,p_position:pos,p_level:lvl||null}); }catch(x){}
 const { error } = await _supabase.from('employees').insert({ employee_id: empId, employee_name: name, email: email, department: dep, position: pos, competency_level: lvl, company: comp, manager: mgrName, manager_email: mgrEmail, talent_track: track });
 if (error) { showToast(error.message); return; }
 showToast('OK ' + name + ' added as ' + pos + ' (' + dep + ')');
@@ -46089,6 +46090,506 @@ function tableHTML(){
  document.addEventListener('dragend',function(){HY.drag=null;Array.prototype.forEach.call(document.querySelectorAll('#hyPane .hy-over'),function(x){x.classList.remove('hy-over');});});
  if(window.__HY_TEST)window.__hyDbg={HY:HY,model:model,place:place,unplace:unplace,treeHtml:treeHtml,renderPane:renderPane,loadData:loadData,subtree:subtree};
  ensure();
+})();
+</script>
+<script id="cms-user-access-list-v1">
+/* User Access: a list of everyone (employees and line managers who are not employees) with their login status and
+   the type of access they have, plus a Manage access panel. Replaces the search-only start of the User Access page.
+   The old page stays available as "Classic view". */
+(function(){
+ 'use strict';
+ if(typeof uaOpen!=='function'||typeof uaRPC!=='function')return;
+ var prevOpen=uaOpen;
+ function E(x){return escapeHtml(x==null?'':String(x));}
+ function em(x){return String(x==null?'':x).trim().toLowerCase();}
+ function toast(m){if(typeof showToast==='function')showToast(m);}
+ function eligible(){return !!APP.user&&['hr','hohr'].indexOf(APP.currentRole)>=0;}
+ var S={rows:[],filter:'all',q:'',company:'',page:0,sel:null,u:null,busy:false,token:0,notes:[],picked:{},inv:{}};
+ var BATCH=25;
+ var PER=15;
+ var COLS=['#7c3aed','#2563eb','#059669','#0d9488','#ea580c','#db2777','#d97706','#4338ca'];
+ function colorOf(s){var h=0;String(s||'').split('').forEach(function(c){h=(h*31+c.charCodeAt(0))%997;});return COLS[h%COLS.length];}
+ function initials(n){var p=String(n||'').trim().split(/\s+/);return (((p[0]||'')[0]||'')+((p.length>1?p[p.length-1][0]:'')||'')).toUpperCase()||'?';}
+ function css(){
+  if(document.getElementById('ual-style'))return;
+  var s=document.createElement('style');s.id='ual-style';
+  s.textContent=
+  '#ualRoot .ual-sub{color:#64748b;font-size:14px;margin:2px 0 14px}'+
+  '#ualRoot .ual-tools{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:12px}'+
+  '#ualRoot .ual-tools input{max-width:340px;border:1px solid #cbd5e1;border-radius:10px;padding:9px 12px;font-size:14px;background:#fff}'+
+  '#ualRoot .ual-pills{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}'+
+  '#ualRoot .ual-pill{padding:7px 14px;border-radius:999px;border:1px solid #cbd5e1;background:#fff;color:#475569;font-weight:700;font-size:13px;cursor:pointer}'+
+  '#ualRoot .ual-pill.on{background:#2563eb;border-color:#2563eb;color:#fff}'+
+  '#ualRoot .ual-wrap{background:#fff;border:1px solid #e2e8f0;border-radius:12px;overflow:auto}'+
+  '#ualRoot table{width:100%;border-collapse:collapse;font-size:13.5px}'+
+  '#ualRoot th{text-align:left;font-size:12px;color:#475569;font-weight:800;padding:12px 12px;background:#f8fafc;border-bottom:1px solid #e2e8f0;white-space:nowrap}'+
+  '#ualRoot td{padding:10px 12px;border-bottom:1px solid #eef2f7;vertical-align:middle}'+
+  '#ualRoot .ual-av{display:inline-flex;width:34px;height:34px;border-radius:50%;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:12px;margin-right:10px;vertical-align:middle}'+
+  '#ualRoot .ual-nm{font-weight:700;color:#0f172a}'+
+  '#ualRoot .ual-tag{display:inline-block;border-radius:6px;padding:2px 9px;font-size:12px;font-weight:700}'+
+  '#ualRoot .ual-g{background:#dcfce7;color:#166534}#ualRoot .ual-b{background:#dbeafe;color:#1d4ed8}#ualRoot .ual-a{background:#fef3c7;color:#92400e}#ualRoot .ual-x{background:#f1f5f9;color:#475569}'+
+  '#ualRoot .ual-chip{display:inline-block;border-radius:6px;padding:2px 9px;font-size:12px;font-weight:700;background:#eef2ff;color:#3730a3;margin:0 4px 4px 0}'+
+  '#ualRoot .ual-btn{background:#2563eb;color:#fff;border:0;border-radius:8px;padding:7px 14px;font-weight:700;font-size:13px;cursor:pointer;white-space:nowrap}'+
+  '#ualRoot .ual-out{background:#fff;color:#2563eb;border:1px solid #2563eb}'+
+  '#ualRoot .ual-pager{display:flex;gap:8px;align-items:center;justify-content:space-between;padding:10px 12px;color:#64748b;font-size:13px}'+
+  '#ualRoot .ual-note{background:#fff7ed;border:1px solid #fed7aa;color:#9a3412;border-radius:10px;padding:8px 12px;font-size:13px;margin-bottom:10px}'+
+  '#ualRoot .ual-cards{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:12px}'+
+  '#ualRoot .ual-card{background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:12px 16px}#ualRoot .ual-card small{display:block;color:#64748b;font-weight:700;font-size:13px}#ualRoot .ual-card b{font-size:28px;color:#1d4ed8}'+
+  '@media(max-width:800px){#ualRoot .ual-cards{grid-template-columns:repeat(2,1fr)}}'+
+  '#ualRoot .ual-bar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;background:#eff6ff;border:1px solid #bfdbfe;border-radius:12px;padding:10px 12px;margin-bottom:10px;font-size:13px;color:#1e293b}'+
+  '#ualRoot .ual-btn:disabled{opacity:.5;cursor:not-allowed}'+
+  '#ualRoot .ual-dots{width:34px;height:30px;border-radius:8px;border:1px solid #cbd5e1;background:#fff;color:#334155;font-size:18px;line-height:1;cursor:pointer;font-weight:800}#ualRoot .ual-dots:hover{background:#eef2ff;border-color:#818cf8}'+
+  '#ualRoot select.ual-co{border:1px solid #cbd5e1;border-radius:10px;padding:9px 12px;font-size:14px;background:#fff}'+
+  '#ualMenu{position:fixed;z-index:100006;min-width:220px;background:#fff;border:1px solid #e2e8f0;border-radius:12px;box-shadow:0 12px 32px rgba(15,23,42,.22);padding:6px}'+
+  '#ualMenu button{display:block;width:100%;text-align:left;background:none;border:0;padding:9px 12px;border-radius:8px;font-size:13.5px;font-weight:600;color:#1e293b;cursor:pointer}'+
+  '#ualMenu button:hover:not(:disabled){background:#eef2ff}#ualMenu button:disabled{color:#94a3b8;cursor:not-allowed}#ualMenu button small{display:block;font-weight:500;font-size:11px;color:#94a3b8}#ualMenu .ual-red{color:#dc2626}'+
+  '#ualPanel .ual-blk{border-radius:12px;padding:10px 12px;margin-bottom:10px;border:1px solid #e2e8f0}#ualPanel .ual-yes{background:#f0fdf4;border-color:#bbf7d0}#ualPanel .ual-yes b{color:#166534}#ualPanel .ual-no2{background:#f1f5f9}#ualPanel .ual-no2 b{color:#475569}'+
+  '#ualPanel .ual-bn{color:#475569;font-size:13px}#ualPanel .ual-pg{display:inline-block;border:1px solid #bbf7d0;background:#fff;color:#166534;border-radius:8px;padding:2px 9px;font-size:12px;margin:0 4px 4px 0}'+
+  '#ualPanel .ual-blk label{font-size:13px;font-weight:600;color:#334155;display:flex;gap:8px;align-items:center}#ualPanel .ual-blk input[type=checkbox]{width:18px;height:18px}'+
+  '#ualPanel{position:fixed;top:0;right:0;bottom:0;width:430px;max-width:100%;background:#fff;box-shadow:-12px 0 40px rgba(15,23,42,.3);z-index:100005;overflow:auto;padding:20px}'+
+  '#ualPanel h3{font-size:20px;font-weight:800;color:#1e2a78}#ualPanel .ual-em{color:#64748b;font-size:13px;margin-bottom:12px}'+
+  '#ualPanel h4{font-size:14px;font-weight:800;margin:14px 0 6px}'+
+  '#ualPanel .ual-row{display:flex;justify-content:space-between;align-items:center;gap:10px;border:1px solid #e2e8f0;border-radius:10px;padding:10px 12px;margin-bottom:8px;font-size:14px}'+
+  '#ualPanel .ual-row small{display:block;color:#64748b;font-size:12px}'+
+  '#ualPanel select,#ualPanel textarea,#ualPanel input[type=text],#ualPanel input[type=email]{width:100%;border:1px solid #cbd5e1;border-radius:8px;padding:8px 10px;font-size:14px}'+
+  '#ualPanel .ual-row select{width:auto;max-width:240px}'+
+  '#ualPanel .ual-row input[type=checkbox]{width:20px;height:20px}'+
+  '#ualPanel label.ual-l{display:block;font-size:12px;font-weight:700;color:#475569;margin:12px 0 4px}'+
+  '#ualPanel .ual-acts{display:flex;gap:8px;margin-top:16px}'+
+  '#ualPanel .ual-acts button{padding:10px 18px;border-radius:10px;border:0;font-weight:800;cursor:pointer;font-size:14px}'+
+  '#ualPanel .ual-go{background:#2563eb;color:#fff}#ualPanel .ual-go:disabled{opacity:.6;cursor:wait}#ualPanel .ual-no{background:#e2e8f0;color:#334155}';
+  document.head.appendChild(s);
+ }
+ async function pull(table,cols){
+  var out=[],start=0;
+  for(;;){
+   var r=await _supabase.from(table).select(cols).range(start,start+999);
+   if(r.error)throw new Error(table+': '+r.error.message);
+   out=out.concat(r.data||[]);if(!r.data||r.data.length<1000)break;start+=1000;
+  }
+  return out;
+ }
+ function build(emps,lms,profs,login,trusted){
+  var map={};
+  function get(email){var k=em(email);if(!k)return null;return map[k]||(map[k]={email:k,name:'',company:'',emp:false,lm:false,reports:0,prof:{},login:'unknown',t:null});}
+  emps.forEach(function(e){var r=get(e.email);if(!r)return;r.emp=true;r.name=e.employee_name||r.name;r.company=e.company||r.company;r.empId=e.employee_id;r.dept=e.department||'';r.pos=e.position||'';});
+  emps.forEach(function(e){var m=em(e.manager_email);if(m&&map[m])map[m].reports++;else if(m){var r=get(m);r.reports++;r.mgrOnly=true;}});
+  lms.forEach(function(l){var r=get(l.email);if(!r)return;r.lm=true;if(!r.name)r.name=l.manager_name||'';if(!r.company)r.company=l.company||'';});
+  profs.forEach(function(p){var k=em(p.email);if(!k)return;var privileged=['HR_ADMIN','HEAD_HR','C_SUITE','MANAGER'].indexOf(p.role)>=0;var r=privileged?get(p.email):map[k];if(r)r.prof[p.role]=true;});
+  Object.keys(map).forEach(function(k){
+   var r=map[k];
+   if(login){var u=login[k];r.login=!u?'none':(u.signed_in?'signed':'invited');}
+   var t=trusted&&trusted[k];r.t=t||null;
+   r.isMgr=r.reports>0||!!r.prof.MANAGER;
+   r.hr=t?(t.reviewer==='HR_ADMIN'||t.reviewer==='BOTH'):!!r.prof.HR_ADMIN;
+   r.hohr=t?(t.reviewer==='HEAD_HR'||t.reviewer==='BOTH'):!!r.prof.HEAD_HR;
+   r.cs=t?!!t.executive:!!r.prof.C_SUITE;
+   if(!r.name)r.name=r.email;
+   r.type=r.emp?'Employee':(r.lm||r.mgrOnly?'Director, not an employee':'Login only');
+  });
+  return Object.keys(map).map(function(k){return map[k];}).filter(function(r){return r.emp||r.lm||r.hr||r.hohr||r.cs||r.isMgr;}).sort(function(a,b){return a.name.localeCompare(b.name);});
+ }
+ async function load(){
+  S.notes=[];
+  var res=await Promise.all([
+   pull('employees','employee_id,employee_name,email,company,manager_email,department,position'),
+   pull('line_managers','email,manager_name').catch(function(){return [];}),
+   pull('user_profiles','email,role').catch(function(){return [];})
+  ]);
+  var login=null;
+  try{var ov=await _supabase.rpc('cms_login_overview');if(ov.error)throw new Error(ov.error.message);login={};(ov.data||[]).forEach(function(u){login[em(u.u_email)]={signed_in:!!u.u_last_sign_in};});}
+  catch(e){S.notes.push('Login status is not available: '+e.message);}
+  S.inv={};
+  try{var iv=await _supabase.rpc('cms_invite_dates');if(!iv.error)(iv.data||[]).forEach(function(x){S.inv[em(x.email)]={at:x.last_sent,kind:x.kind};});}catch(e){}
+  var doms={};
+  res[0].concat(res[1]).forEach(function(x){var e=em(x.email),i=e.indexOf('@');if(i>0){var d=e.slice(i+1).split('.')[0];if(d.length>=3)doms[d]=1;}});
+  var trusted={};
+  for(var d in doms){
+   try{var list=await uaRPC('search',{search:d});(list||[]).forEach(function(u){trusted[em(u.email)]={id:u.id,reviewer:u.access&&u.access.reviewer,executive:u.access&&u.access.executive};});}catch(e){}
+  }
+  S.rows=build(res[0],res[1],res[2],login,trusted);
+ }
+ var AC_PAGES={
+  employee:['My Profile','Self Assessment','Assessment Results','My Gaps','My Strengths','Development Plans'],
+  manager:['Dashboard','My Team','Progression-Ready Pool','Assessment','All Assessment Details & Reviews','Requests','Team Gaps','Development Plans','Set Competencies','Report Approvals','Competency Library (View)'],
+  hr:['Dashboard','KPI Dashboard','Companies','Departments','All Positions','Critical Positions Registry','Competency Library','Competency Approvals & Validation','All Active Employees','Line Managers','Talent Pools','Employee 360 Profile','Employee Gaps','Assessment Review','All Assessments','Reports','Report Approvals','Development Plans','Redo Requests','Executive responses','Access Center'],
+  hohr:['Dashboard','Critical Roles','Critical Positions Registry','Competency Library','Competency Approvals & Validation','All Staff','Talent Pool','Assessed','All Gaps','All Strengths','All Assessments','All Reports','Approved Dev Plans','Executive responses','Access Center'],
+  csuite:['Executive Overview','C-Suite','Group Snapshot','Companies & Departments','Succession & Critical Roles','Talent Pools','Development Plans','Competency Rankings','Competency Library','Monthly Reports']
+ };
+ var FILTERS=[['all','All',function(){return true;}],['mgr','Managers',function(r){return r.isMgr;}],['hr','HR Admin',function(r){return r.hr;}],['hohr','Head of HR',function(r){return r.hohr;}],['cs','C-Suite',function(r){return r.cs;}],['nologin','No login',function(r){return r.login==='none';}],['notemp','Not an employee',function(r){return !r.emp;}]];
+ function selectable(r){return !!r.emp&&!!r.email&&(r.login==='none'||r.login==='invited');}
+ function pickedRows(){return S.rows.filter(function(r){return S.picked[r.email];});}
+ function visible(){
+  var f=FILTERS.filter(function(x){return x[0]===S.filter;})[0][2],q=S.q.trim().toLowerCase();
+  return S.rows.filter(function(r){
+   if(!f(r))return false;
+   if(S.company&&String(r.company||'').trim().toUpperCase()!==S.company)return false;
+   return !q||(r.name+' '+r.email+' '+r.company).toLowerCase().indexOf(q)>=0;
+  });
+ }
+ function cardsHtml(){
+  var c={signed:0,invited:0,none:0,dir:0};
+  S.rows.forEach(function(r){if(r.login==='signed')c.signed++;else if(r.login==='invited')c.invited++;else if(r.login==='none')c.none++;if(!r.emp&&(r.lm||r.mgrOnly))c.dir++;});
+  return [['Can sign in',c.signed],['Login created, not signed in',c.invited],['No login yet',c.none],['Directors, not employees',c.dir]].map(function(x){return '<div class="ual-card"><small>'+E(x[0])+'</small><b>'+x[1]+'</b></div>';}).join('');
+ }
+ function barHtml(){
+  var n=pickedRows().length;
+  return '<button type="button" class="ual-btn" data-ual-send="1"'+(n&&!S.busy?'':' disabled')+'>Send login invitations to selected ('+n+')</button> <button type="button" class="ual-btn ual-out" data-ual-clear="1"'+(n?'':' disabled')+'>Clear selection</button> <span>Tick people with No login or Invited, then send. Only people with an employee record can be invited here.</span>';
+ }
+ function pillsHtml(){
+  return FILTERS.map(function(x){var n=S.rows.filter(x[2]).length;return '<button type="button" class="ual-pill'+(S.filter===x[0]?' on':'')+'" data-ual-f="'+x[0]+'">'+E(x[1])+' ('+n+')</button>';}).join('');
+ }
+ function loginTag(r){
+  if(r.login==='signed')return '<span class="ual-tag ual-g">Signed in</span>';
+  if(r.login==='invited'){
+   var iv=S.inv[r.email];
+   if(iv&&iv.at){var d=new Date(iv.at);return '<span class="ual-tag ual-b" title="The CMS emailed this person on '+E(d.toLocaleString())+'. They have not signed in yet.">'+(iv.kind==='reminder'?'Reminder emailed ':'Invite emailed ')+E(d.toLocaleDateString('en-GB',{day:'numeric',month:'short'}))+', not signed in</span>';}
+   return '<span class="ual-tag ual-x" title="A login account exists but this system has no record of sending an invite. It may have been created before invites were tracked, or outside the CMS. Nothing is emailed automatically.">Login exists, no invite on record</span>';
+  }
+  if(r.login==='none')return '<span class="ual-tag ual-a">No login</span>';
+  return '<span class="ual-tag ual-x">Unknown</span>';
+ }
+ function chips(r){
+  var c=[];if(r.emp)c.push('Employee');if(r.isMgr)c.push('Manager');if(r.hr)c.push('HR Admin');if(r.hohr)c.push('Head of HR');if(r.cs)c.push('C-Suite');
+  return c.length?c.map(function(x){return '<span class="ual-chip">'+E(x)+'</span>';}).join(''):'<span class="ual-tag ual-x">None</span>';
+ }
+ function tableHtml(){
+  var list=visible(),pages=Math.max(1,Math.ceil(list.length/PER));
+  if(S.page>=pages)S.page=pages-1;
+  var pgList=list.slice(S.page*PER,S.page*PER+PER),allOn=pgList.filter(selectable).length>0&&pgList.filter(selectable).every(function(r){return S.picked[r.email];});
+  var h='<div class="ual-wrap"><table><thead><tr><th><input type="checkbox" data-ual-all="1"'+(allOn?' checked':'')+'></th><th>Employee</th><th>Department / Position</th><th>Login</th><th>Employee page</th><th>Manager page</th><th>HR Admin</th><th>Head of HR</th><th>C-Suite</th><th>Actions</th></tr></thead><tbody>';
+  function yes(on,extra){return on?'<span class="ual-tag ual-g">Yes'+(extra?' ('+E(extra)+')':'')+'</span>':'<span style="color:#94a3b8">-</span>';}
+  pgList.forEach(function(r){
+   h+='<tr><td>'+(selectable(r)?'<input type="checkbox" data-ual-pick="'+E(r.email)+'"'+(S.picked[r.email]?' checked':'')+'>':'')+'</td>'+
+    '<td><span class="ual-av" style="background:'+colorOf(r.name)+'">'+E(initials(r.name))+'</span><span class="ual-nm">'+E(r.name)+'</span><div style="font-size:12px;color:#64748b;margin-left:44px">'+E(r.email)+(r.empId?' | ID '+E(r.empId):'')+'</div></td>'+
+    '<td>'+(r.emp?'<div style="font-weight:600">'+E((r.dept||'-')+' / '+(r.pos||'-'))+'</div><div style="font-size:12px;color:#64748b">'+E(r.company||'')+'</div>':'<span class="ual-tag ual-x">'+E(r.type)+'</span>')+'</td>'+
+    '<td>'+loginTag(r)+'</td>'+
+    '<td>'+yes(r.emp)+'</td><td>'+yes(r.isMgr,r.reports?r.reports+' staff':'')+'</td><td>'+yes(r.hr)+'</td><td>'+yes(r.hohr)+'</td><td>'+yes(r.cs)+'</td>'+
+    '<td><button type="button" class="ual-dots" data-ual-menu="'+E(r.email)+'" title="Actions" aria-label="Actions for '+E(r.name)+'">...</button></td></tr>';
+  });
+  if(!list.length)h+='<tr><td colspan="10" style="padding:24px;color:#64748b">Nobody matches this filter.</td></tr>';
+  h+='</tbody></table><div class="ual-pager"><span>Showing '+(list.length?S.page*PER+1:0)+' to '+Math.min(list.length,S.page*PER+PER)+' of '+list.length+'</span><span>'+
+   '<button type="button" class="ual-btn ual-out" data-ual-pg="-1"'+(S.page===0?' disabled':'')+'>Previous</button> <button type="button" class="ual-btn ual-out" data-ual-pg="1"'+(S.page+1>=pages?' disabled':'')+'>Next</button></span></div></div>';
+  return h;
+ }
+ function refresh(){var p=document.getElementById('ualPills'),t=document.getElementById('ualTable'),b=document.getElementById('ualBar'),c=document.getElementById('ualCards');if(p)p.innerHTML=pillsHtml();if(t)t.innerHTML=tableHtml();if(b)b.innerHTML=barHtml();if(c)c.innerHTML=cardsHtml();}
+ function drawPage(){
+  var cos={};S.rows.forEach(function(r){var c=String(r.company||'').trim();if(c)cos[c.toUpperCase()]=c;});
+  var coOpts='<option value="">All companies</option>'+Object.keys(cos).sort().map(function(k){return '<option value="'+E(k)+'"'+(S.company===k?' selected':'')+'>'+E(cos[k])+'</option>';}).join('');
+  var h='<div id="ualRoot"><div class="card"><h2 style="color:#312e81;margin:0">Access Center</h2><p class="ual-sub">Invite people to sign in and decide what each person can open.</p>'+
+   S.notes.map(function(n){return '<div class="ual-note">'+E(n)+'</div>';}).join('')+
+   '<div class="ual-cards" id="ualCards">'+cardsHtml()+'</div>'+
+   '<div class="ual-note" style="background:#f8fafc;border-color:#e2e8f0;color:#475569"><b>How to read Login:</b> No login means no account exists. Login exists, no invite on record means an account is there but the CMS never recorded emailing it. Invite emailed means the CMS sent the email on that date. <b>Nothing is sent automatically</b>: an email goes out only when you press Send invite or Send invitations.</div>'+
+   '<div class="ual-tools"><input id="ualQ" type="search" placeholder="Search name or email" value="'+E(S.q)+'"><select id="ualCo" class="ual-co">'+coOpts+'</select><button type="button" class="ual-btn ual-out" data-ual-classic="1">Classic view and history</button></div>'+
+   '<div class="ual-pills" id="ualPills">'+pillsHtml()+'</div><div class="ual-bar" id="ualBar">'+barHtml()+'</div><div id="ualTable">'+tableHtml()+'</div></div></div>';
+  setContent(h);
+ }
+ function closePanel(){var p=document.getElementById('ualPanel');if(p)p.remove();S.sel=null;S.u=null;}
+ function scopeText(r,hr,hohr,cs){
+  if(hr||hohr)return 'Data: all employees and assessments, within the app rules for HR.';
+  if(cs&&!r.isMgr)return 'Data: the executive overview and the cases assigned to them.';
+  if(r.isMgr)return 'Data: their own record'+(r.reports?' and their '+r.reports+' staff':' and any staff linked to them')+'.';
+  return 'Data: their own record only.';
+ }
+ function blk(title,on,why,list,control){
+  return '<div class="ual-blk '+(on?'ual-yes':'ual-no2')+'"><b>'+E(title)+': '+(on?'YES':'NO')+'</b>'+(why?'<div class="ual-bn">'+E(why)+'</div>':'')+
+   (on&&list?'<div style="margin-top:6px">'+list.map(function(x){return '<span class="ual-pg">'+E(x)+'</span>';}).join('')+'</div>':'')+(control?'<div style="margin-top:8px">'+control+'</div>':'')+'</div>';
+ }
+ async function openPanel(email){
+  css();closePanel();
+  var r=S.rows.filter(function(x){return x.email===email;})[0];if(!r)return;
+  S.sel=r;S.u=null;
+  var p=document.createElement('div');p.id='ualPanel';
+  p.innerHTML='<div style="display:flex;justify-content:space-between;gap:10px"><div><h3>Access for '+E(r.name)+'</h3><div class="ual-em">'+E(r.email)+'</div></div><button type="button" class="ual-no" style="height:36px;border:0;border-radius:10px;padding:0 14px;font-weight:800;cursor:pointer;background:#e2e8f0" data-ual-cancel="1">Close</button></div><div id="ualPBody">Checking their current access...</div>';
+  document.body.appendChild(p);
+  var u=null;
+  try{var list=await uaRPC('search',{search:r.email});u=(list||[]).filter(function(x){return em(x.email)===r.email;})[0]||null;}catch(e){}
+  if(S.sel!==r||!document.getElementById('ualPanel'))return;
+  S.u=u;
+  var reviewer=u&&u.access?u.access.reviewer:(r.hr&&r.hohr?'BOTH':r.hr?'HR_ADMIN':r.hohr?'HEAD_HR':'NONE'),exec=u&&u.access?!!u.access.executive:r.cs;
+  var curHr=(reviewer==='HR_ADMIN'||reviewer==='BOTH'),curHohr=(reviewer==='HEAD_HR'||reviewer==='BOTH');
+  var protectedAdmin=!!(u&&u.access&&u.access.access_admin);
+  var noLogin=!u,cannot=!S.canManage,lock=(noLogin||protectedAdmin||cannot)?' disabled':'';
+  var hasAlways=!!r.prof.MANAGER;
+  var mgrCtl='<select id="ualMgr"><option value="auto"'+(hasAlways?'':' selected')+'>Automatic, when they have a team</option><option value="always"'+(hasAlways?' selected':'')+'>Always on, even with no team</option></select>';
+  var body=document.getElementById('ualPBody');
+  body.innerHTML=
+   '<div style="margin:6px 0 10px">'+loginTag(r)+'</div>'+
+   blk('Employee workspace',r.emp,r.emp?'Has an employee record (ID '+r.empId+')':'No employee record, so no employee workspace',AC_PAGES.employee)+
+   blk('Manager workspace',r.isMgr,r.reports>0?r.reports+' staff report to them':(r.prof.MANAGER?'Manager role on their profile, but no staff are linked yet':'No staff report to them'),AC_PAGES.manager,'<label class="ual-l" style="margin:0 0 4px">Manager workspace setting</label>'+mgrCtl)+
+   blk('HR Admin workspace',curHr,'',AC_PAGES.hr,'<label><input type="checkbox" id="ualHr"'+(curHr?' checked':'')+lock+'> HR Admin access</label>')+
+   blk('Head of HR workspace',curHohr,'',AC_PAGES.hohr,'<label><input type="checkbox" id="ualHohr"'+(curHohr?' checked':'')+lock+'> Head of HR access</label>')+
+   blk('C-Suite workspace',exec,'',AC_PAGES.csuite,'<label><input type="checkbox" id="ualCs"'+(exec?' checked':'')+lock+'> C-Suite access</label>')+
+   '<p class="ual-bn" style="margin:8px 2px"><b>'+E(scopeText(r,curHr,curHohr,exec))+'</b></p>'+
+   (cannot?'<div class="ual-note">Only the designated access administrator can change HR Admin, Head of HR and C-Suite. You can still set the Manager workspace.</div>':'')+
+   (noLogin?'<div class="ual-note">No login exists for this email yet, so HR Admin, Head of HR and C-Suite cannot be set until they have one. The Manager workspace setting applies once they sign in.</div>':'')+
+   (protectedAdmin?'<div class="ual-note">This is a protected administrator account. Its HR and C-Suite access cannot be changed here.</div>':'')+
+   '<label class="ual-l" for="ualWhy">Reason for this change</label><textarea id="ualWhy" rows="3" maxlength="1000"></textarea>'+
+   '<label class="ual-l" for="ualConf">Type the login email to confirm</label><input type="email" id="ualConf" autocomplete="off">'+
+   '<div class="ual-acts"><button type="button" class="ual-go" data-ual-save="1">Review and save</button>'+
+   ((r.emp&&(r.login==='none'||r.login==='invited'))?'<button type="button" class="ual-no" data-ual-pinvite="1" style="background:#fff;border:1px solid #2563eb;color:#2563eb">'+(r.login==='invited'?'Resend invite':'Send invite')+'</button>':'')+
+   (r.isMgr?'<button type="button" class="ual-no" data-ual-prm="1" style="background:#fff;border:1px solid #dc2626;color:#dc2626">Remove manager access</button>':'')+'</div>';
+ }
+ async function save(btn){
+  var r=S.sel,u=S.u;if(!r||S.busy)return;
+  var why=String((document.getElementById('ualWhy')||{}).value||'').trim(),conf=em((document.getElementById('ualConf')||{}).value);
+  if(why.length<5||conf!==r.email){toast('Enter a reason (at least 5 characters) and type the login email exactly.');return;}
+  var wantAlways=document.getElementById('ualMgr').value==='always',hadAlways=!!r.prof.MANAGER;
+  var hr=!!(document.getElementById('ualHr')||{}).checked,hohr=!!(document.getElementById('ualHohr')||{}).checked,cs=!!(document.getElementById('ualCs')||{}).checked;
+  var rev=hr&&hohr?'BOTH':hr?'HR_ADMIN':hohr?'HEAD_HR':'NONE';
+  var mgrChanged=wantAlways!==hadAlways;
+  var privChanged=!!u&&(rev!==u.access.reviewer||cs!==!!u.access.executive);
+  var ch=[];
+  if(mgrChanged)ch.push('Manager workspace: '+(wantAlways?'Always on':'Automatic'));
+  if(privChanged)ch.push('Reviewer role: '+rev+', C-Suite: '+(cs?'Enabled':'Disabled'));
+  if(!ch.length){toast('Nothing was changed.');return;}
+  if(!confirm('Save these changes for '+r.email+'?\n\n'+ch.join('\n')))return;
+  S.busy=true;btn.disabled=true;
+  try{
+   if(mgrChanged){
+    var m=await _supabase.rpc('cms_set_manager_access',{p_email:r.email,p_on:wantAlways,p_reason:why});
+    if(m.error)throw new Error(/find the function|does not exist|schema cache/i.test(m.error.message||'')?'The manager access step has not been installed in the database yet.':m.error.message);
+   }
+   if(privChanged){
+    await uaRPC('save',{id:u.id,reviewer:rev,executive:cs,reason:why,confirm_email:conf,expected:u.access});
+   }
+   toast('Saved access for '+r.email+'. Ask them to sign out and sign in again.');
+   closePanel();
+   await load();refresh();
+  }catch(e){toast(e.message);btn.disabled=false;}
+  finally{S.busy=false;}
+ }
+
+ function closeMenu(){var m=document.getElementById('ualMenu');if(m)m.remove();}
+ function openMenu(btn){
+  closeMenu();css();
+  var email=btn.getAttribute('data-ual-menu'),r=S.rows.filter(function(x){return x.email===email;})[0];if(!r)return;
+  var can=!!r.emp&&(r.login==='none'||r.login==='invited');
+  var label=r.login==='invited'?'Resend invite':'Send invite';
+  var m=document.createElement('div');m.id='ualMenu';m.setAttribute('data-email',email);
+  var h='';
+  if(r.login==='signed')h+='<button type="button" disabled>Already signed in</button>';
+  else if(can)h+='<button type="button" data-ual-act="invite">'+label+'</button>';
+  else h+='<button type="button" disabled>'+label+'<small>'+(r.emp?'No email on file':'Needs an employee record')+'</small></button>';
+  h+='<button type="button" data-ual-act="manage">View and manage access</button>';
+  h+=r.isMgr?'<button type="button" class="ual-red" data-ual-act="rmmgr">Remove manager access</button>':'<button type="button" disabled>Remove manager access<small>Not a manager</small></button>';
+  m.innerHTML=h;document.body.appendChild(m);
+  var b=btn.getBoundingClientRect(),hh=m.offsetHeight||140,top=b.bottom+6;
+  if(top+hh>window.innerHeight-8)top=Math.max(8,b.top-hh-6);
+  m.style.top=top+'px';m.style.left=Math.max(8,Math.min(window.innerWidth-240,b.right-220))+'px';
+ }
+ async function callFn(body){
+  var res=await _supabase.functions.invoke('invite-login',{body:body});
+  if(res.error){
+   var msg=res.error.message||'Request failed';
+   try{if(res.error.context&&res.error.context.json){var j=await res.error.context.json();if(j&&j.error)msg=j.error;}}catch(e){}
+   throw new Error(msg);
+  }
+  if(res.data&&res.data.error)throw new Error(res.data.error);
+  return res.data;
+ }
+ function welcome(r){
+  var NL=String.fromCharCode(10),first=String(r.name||'').trim().split(' ')[0]||'there';
+  var msg='Hi '+first+','+NL+NL+'Your Kenafric Competency Management System (CMS) account is ready.'+NL+NL+'Sign in here:'+NL+APP_LINK+NL+NL+'Email: '+r.email+NL+'First-time password: your Employee ID.'+NL+'You will be asked to create your own password straight after you sign in.'+NL+NL+'Regards,'+NL+'HR Department';
+  return sendCMSemail(r.email,'Your CMS login is ready',msg,{page:'emp-profile'});
+ }
+ async function sendInvites(rows){
+  if(S.busy||!rows.length)return;
+  var fresh=rows.filter(function(r){return r.login==='none';}),again=rows.filter(function(r){return r.login==='invited';});
+  if(!confirm('Send login invitations to '+rows.length+' '+(rows.length===1?'person':'people')+'?\n\n'+fresh.length+' new login(s) will be created and emailed.\n'+again.length+' existing login(s) will get the email again.'))return;
+  S.busy=true;refresh();
+  var rep={created:0,emailed:0,exists:0,noemail:0,failed:[]},toEmail=again.slice();
+  try{
+   for(var i=0;i<fresh.length;i+=BATCH){
+    var chunk=fresh.slice(i,i+BATCH);
+    toast('Creating logins '+(i+1)+' to '+(i+chunk.length)+' of '+fresh.length+'...');
+    var out=await callFn({action:'create',employee_ids:chunk.map(function(r){return r.empId;})});
+    (out.results||[]).forEach(function(x){
+     var row=fresh.filter(function(r){return String(r.empId).trim()===String(x.employee_id).trim();})[0];
+     if(x.status==='created'){rep.created++;if(row)toEmail.push(row);}
+     else if(x.status==='exists')rep.exists++;
+     else if(x.status==='no_email')rep.noemail++;
+     else rep.failed.push((x.name||x.employee_id)+': '+(x.error||x.status));
+    });
+   }
+   for(var j=0;j<toEmail.length;j++){
+    toast('Sending email '+(j+1)+' of '+toEmail.length+'...');
+    try{await welcome(toEmail[j]);rep.emailed++;try{_supabase.rpc('cms_log_invite',{p_email:toEmail[j].email,p_kind:fresh.indexOf(toEmail[j])>=0?'invite':'resend'});}catch(x){}}catch(e){rep.failed.push((toEmail[j].name||toEmail[j].email)+': email failed');}
+   }
+  }catch(e){rep.failed.push(e.message);}
+  finally{
+   S.busy=false;S.picked={};
+   try{await load();}catch(e){}
+   refresh();
+   toast('Finished: '+rep.created+' login(s) created, '+rep.emailed+' email(s) sent'+(rep.failed.length?', '+rep.failed.length+' problem(s): '+rep.failed.slice(0,2).join('; '):'')+'.');
+  }
+ }
+ function openRemove(email){
+  css();closePanel();
+  var r=S.rows.filter(function(x){return x.email===email;})[0];if(!r)return;
+  S.sel=r;
+  var opts=S.rows.filter(function(x){return x.isMgr&&x.email!==r.email;}).map(function(x){return '<option value="'+E(x.email)+'">'+E(x.name)+'</option>';}).join('');
+  var p=document.createElement('div');p.id='ualPanel';
+  p.innerHTML='<h3>Remove manager access</h3><div class="ual-em">'+E(r.name)+' | '+E(r.email)+'</div>'+
+   '<div class="ual-note">They lose the Manager page the next time they sign in.'+(r.reports?' Their '+r.reports+' staff will have no line manager unless you choose a new one below.':' No staff are linked to them.')+' They are also taken off the Line Managers list.</div>'+
+   (r.reports?'<label class="ual-l" for="ualMove">Move their '+r.reports+' staff to</label><select id="ualMove"><option value="">Choose a line manager...</option><option value="__none__">Leave without a line manager</option>'+opts+'</select>':'')+
+   '<label class="ual-l" for="ualWhy2">Reason (required)</label><textarea id="ualWhy2" rows="3" maxlength="1000"></textarea>'+
+   '<div class="ual-acts"><button type="button" class="ual-go" style="background:#dc2626" data-ual-rmgo="1">Confirm removal</button><button type="button" class="ual-no" data-ual-cancel="1">Cancel</button></div>';
+  document.body.appendChild(p);
+ }
+ async function confirmRemove(btn){
+  var r=S.sel;if(!r||S.busy)return;
+  var sel=document.getElementById('ualMove'),move=r.reports>0?(sel?sel.value:''):'__none__';
+  if(r.reports>0&&!move){toast('Choose who takes over their staff, or Leave without a line manager.');return;}
+  var reason=String((document.getElementById('ualWhy2')||{}).value||'').trim();
+  if(reason.length<5){toast('Write a short reason (at least 5 characters).');return;}
+  if(!confirm('Remove manager access for '+r.name+'?\n\n'+(r.reports?(move==='__none__'?r.reports+' staff will be left without a line manager.':r.reports+' staff will move to the manager you chose.'):'No staff are linked.')+'\n\nThis is recorded in the access log.'))return;
+  S.busy=true;btn.disabled=true;
+  try{
+   var res=await _supabase.rpc('cms_remove_manager_access',{p_email:r.email,p_reassign_to:move==='__none__'?'':move,p_reason:reason,p_remove_registry:true});
+   if(res.error)throw new Error(/could not find|schema cache|does not exist/i.test(res.error.message||'')?'Run the Remove manager access SQL in Supabase first.':res.error.message);
+   toast('Manager access removed.');closePanel();await load();refresh();
+  }catch(e){toast(e.message);btn.disabled=false;}
+  finally{S.busy=false;}
+ }
+ uaOpen=async function(){
+  if(!eligible()){toast('Open User Access from HR Admin or Head of HR.');return;}
+  css();
+  var token=++S.token,identity=String(APP.user.email)+'|'+APP.currentRole;
+  setContent('<section class="card" id="ualCheck"><h2>User Access</h2><p>Checking your account permissions...</p></section>');
+  var me;
+  try{me=await uaRPC('me');}catch(e){var h0=document.getElementById('ualCheck');if(h0)h0.textContent='Could not verify User Access: '+e.message;return;}
+  if(token!==S.token||!document.getElementById('ualCheck'))return;
+  window.CMS_ACCESS=me;
+  S.canManage=!!me.can_manage;
+  var host=document.getElementById('ualCheck');if(host)host.querySelector('p').textContent='Loading everyone who can sign in...';
+  try{await load();}catch(e){var h1=document.getElementById('ualCheck');if(h1)h1.textContent='Could not load: '+e.message;return;}
+  if(token!==S.token||identity!==String(APP.user.email)+'|'+APP.currentRole||!document.getElementById('ualCheck'))return;
+  S.page=0;drawPage();
+ };
+ document.addEventListener('click',function(e){
+  var t=e.target;if(!t||!t.closest)return;
+  var f=t.closest('[data-ual-f]');if(f){S.filter=f.getAttribute('data-ual-f');S.page=0;refresh();return;}
+  var pg=t.closest('[data-ual-pg]');if(pg){S.page+=parseInt(pg.getAttribute('data-ual-pg'),10);refresh();return;}
+  var dm=t.closest('[data-ual-menu]');if(dm){var was=document.getElementById('ualMenu');if(was&&was.getAttribute('data-email')===dm.getAttribute('data-ual-menu')){closeMenu();}else{openMenu(dm);}return;}
+  var ac=t.closest('[data-ual-act]');
+  if(ac){
+   var mm=document.getElementById('ualMenu');if(!mm)return;
+   var act=ac.getAttribute('data-ual-act'),email=mm.getAttribute('data-email');closeMenu();
+   var rr=S.rows.filter(function(x){return x.email===email;})[0];
+   if(act==='manage')openPanel(email);
+   if(act==='rmmgr')openRemove(email);
+   if(act==='invite'&&rr)sendInvites([rr]);
+   return;
+  }
+  if(document.getElementById('ualMenu'))closeMenu();
+  if(t.closest('[data-ual-send]')){sendInvites(pickedRows());return;}
+  if(t.closest('[data-ual-clear]')){S.picked={};refresh();return;}
+  var rg=t.closest('[data-ual-rmgo]');if(rg){confirmRemove(rg);return;}
+  if(t.closest('[data-ual-pinvite]')){var pr=S.sel;if(pr){closePanel();sendInvites([pr]);}return;}
+  if(t.closest('[data-ual-prm]')){var pm=S.sel;if(pm)openRemove(pm.email);return;}
+  var sv=t.closest('[data-ual-save]');if(sv){save(sv);return;}
+  if(t.closest('[data-ual-cancel]')){closePanel();return;}
+  if(t.closest('[data-ual-classic]')){prevOpen();return;}
+ });
+ document.addEventListener('change',function(e){
+  var t=e.target;if(!t||!document.getElementById('ualRoot'))return;
+  if(t.id==='ualCo'){S.company=t.value;S.page=0;refresh();return;}
+  if(t.hasAttribute&&t.hasAttribute('data-ual-pick')){var k=t.getAttribute('data-ual-pick');if(t.checked)S.picked[k]=true;else delete S.picked[k];refresh();return;}
+  if(t.hasAttribute&&t.hasAttribute('data-ual-all')){
+   var lst=visible().slice(S.page*PER,S.page*PER+PER).filter(selectable);
+   lst.forEach(function(r){if(t.checked)S.picked[r.email]=true;else delete S.picked[r.email];});
+   refresh();
+  }
+ });
+ document.addEventListener('input',function(e){if(e.target&&e.target.id==='ualQ'){S.q=e.target.value;S.page=0;refresh();}});
+ document.addEventListener('keydown',function(e){if(e.key==='Escape'){closeMenu();closePanel();}});
+ window.addEventListener('scroll',closeMenu,true);
+ var acPrevLoad=loadPage;
+ loadPage=function(id){
+  if(id==='hr-access-center'||id==='hohr-access-center')return uaOpen();
+  return acPrevLoad.apply(this,arguments);
+ };
+ if(window.__UAL_TEST)window.__ual={build:build,S:S,visible:visible,tableHtml:tableHtml,pillsHtml:pillsHtml};
+})();
+</script>
+<script id="cms-add-employee-positions-v1">
+/* Add Employee: the Position list now follows Company + Department, so KML SD ADMIN no longer shows positions that belong to KBBL or KML FD. */
+(function(){
+ 'use strict';
+ if(typeof aeFillPositions!=='function')return;
+ var orig=aeFillPositions;
+ function nk(x){return String(x==null?'':x).trim().replace(/\s+/g,' ').toUpperCase();}
+ function E(x){return escapeHtml(x==null?'':String(x));}
+ var CACHE=null,AT=0,LOADING=null;
+ async function regs(){
+  if(CACHE&&Date.now()-AT<20000)return CACHE;
+  if(LOADING)return LOADING;
+  LOADING=(async function(){
+   var out=[],start=0;
+   for(;;){
+    var r=await _supabase.from('critical_positions').select('department,position_name,company,is_active').range(start,start+999);
+    if(r.error)throw new Error(r.error.message);
+    out=out.concat(r.data||[]);if(!r.data||r.data.length<1000)break;start+=1000;
+   }
+   CACHE=out;AT=Date.now();return out;
+  })();
+  try{return await LOADING;}finally{LOADING=null;}
+ }
+ function fill(list){
+  var depEl=document.getElementById('aeDept'),coEl=document.getElementById('aeCompany'),sel=document.getElementById('aePos');
+  if(!depEl||!sel)return;
+  var dep=nk(depEl.value),co=nk(coEl&&coEl.value);
+  var pos={};
+  list.forEach(function(r){
+   if(r.is_active===false||!r.position_name||nk(r.department)!==dep)return;
+   var rc=nk(r.company);
+   if(rc&&rc!==co)return;
+   pos[nk(r.position_name)]=String(r.position_name).trim();
+  });
+  (window._aeEmps||[]).forEach(function(e){
+   if(!e.position||nk(e.department)!==dep||nk(e.company)!==co)return;
+   if(!pos[nk(e.position)])pos[nk(e.position)]=String(e.position).trim();
+  });
+  /* positions kept only in the old positions list: use them only when this department exists in just this one company */
+  var cos={};
+  (window._aeDeptRegs||[]).forEach(function(d){if(nk(d.name)===dep&&d.company)cos[nk(d.company)]=1;});
+  if(Object.keys(cos).length===1&&cos[co]&&typeof posRegFor==='function'){
+   try{var old=posRegFor(depEl.value||'');Object.keys(old||{}).forEach(function(p){if(!pos[nk(p)])pos[nk(p)]=p;});}catch(e){}
+  }
+  var keys=Object.keys(pos).sort();
+  sel.innerHTML='<option value="">-- Select --</option>'+keys.map(function(k){return '<option>'+E(pos[k])+'</option>';}).join('');
+ }
+ aeFillPositions=function(){
+  var coEl=document.getElementById('aeCompany'),sel=document.getElementById('aePos');
+  if(!coEl||!coEl.value||!sel)return orig.apply(this,arguments);
+  sel.innerHTML='<option value="">Loading positions...</option>';
+  regs().then(fill).catch(function(){try{orig();}catch(e){}});
+ };
+ if(window.__AEP_TEST)window.__aep={fill:fill};
+})();
+</script>
+<script id="cms-hide-user-access-v1">
+/* Access Center is now the single place for access. Hide the separate User Access menu item.
+   Old links to the User Access page still open the same Access Center page, so nothing breaks. */
+(function(){
+ if(window.__cmsHideUA)return;window.__cmsHideUA=true;
+ var st=document.createElement('style');st.id='cms-hide-user-access-css';
+ st.textContent='#sideNav [data-page="hr-user-access"],#sideNav [data-page="hohr-user-access"],#sideNav [data-nv-page="hr-user-access"],#sideNav [data-nv-page="hohr-user-access"]{display:none!important}';
+ document.head.appendChild(st);
+ function sweep(){
+  var side=document.getElementById('sideNav');if(!side)return;
+  var items=side.querySelectorAll('button,a,.sb-item,.nv3-link');
+  for(var i=0;i<items.length;i++){
+   var el=items[i];
+   if(String(el.textContent||'').replace(/\s+/g,' ').trim()==='User Access'&&el.style.display!=='none')el.style.display='none';
+  }
+ }
+ var timer=null;
+ function later(){clearTimeout(timer);timer=setTimeout(sweep,30);}
+ var side=document.getElementById('sideNav');
+ if(side&&window.MutationObserver)new MutationObserver(later).observe(side,{childList:true,subtree:true});
+ sweep();
 })();
 </script>
 <style id="cms-fixed-scale-v1">
