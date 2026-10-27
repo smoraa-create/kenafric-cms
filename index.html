@@ -44189,110 +44189,308 @@ body.cms-focus-editor-v1 #mainContent #fwScreen.cfu-screen #fwBody .cfe-footer {
  });
 })();
 </script>
-<script id="cms-bulk-send-v1">
-/* Bulk send for employees: one list with tick boxes and a work-type dropdown.
-   It reuses the existing batch preview, confirm and send, so nothing else changes. */
+<script id="cms-send-invitations-v4">
+/* Send invitations, one page.
+   Work, People, Deadline. One list for one person or many. Employee or line manager work is chosen in the Work dropdown.
+   Uses the existing preview, confirm and send. Development plan emails are sent from here. */
 (function(){
  'use strict';
- var BS={kind:'framework',company:'',dept:'',search:'',picked:{},role:'',due:'',note:'',classic:false,busy:false};
- var KINDS=[['framework','Set competencies (self)'],['self_current','Current role assessment (self)'],['self_target','Prospective role assessment (self)']];
+ if(window.__cmsSendInvV4)return;window.__cmsSendInvV4=true;
+ var DPKEY='cms-devplan-emails:v1';
+ function loadDp(){try{return JSON.parse(localStorage.getItem(DPKEY)||'{}')||{};}catch(e){return {};}}
+ var BS={mode:'employee',size:'many',kind:'self_current',list:[],picked:{},roleOf:{},search:'',deptOpen:false,company:'',dept:'',pasteOpen:false,pasteMsg:'',focus:false,due:'',note:'',classic:false,busy:false,sent:[],inv:{},sentAt:0,sentLoading:false,dp:loadDp()};
+ var KINDS={
+  framework:{mode:'employee',title:'Employee sets competencies for their own role',desc:'The email goes to the employee. HR still reviews and publishes.'},
+  self_current:{mode:'employee',title:'Employee assesses themselves: current role',desc:'The email goes to the employee.'},
+  self_target:{mode:'employee',title:'Employee assesses themselves: next role',desc:'The email goes to the employee. Choose a target role for each person in the list.'},
+  framework_pos:{mode:'manager',title:'Line manager sets competencies for the employee\'s position',desc:'The email goes to the employee\'s line manager. People in the same position under the same manager are sent once.'},
+  manager_current:{mode:'manager',title:'Line manager assesses the employee: current role',desc:'The email goes to the employee\'s line manager.'},
+  manager_target:{mode:'manager',title:'Line manager assesses the employee: next role',desc:'The email goes to the employee\'s line manager. Choose a target role for each person in the list.'},
+  devplan:{mode:'manager',title:'Line manager sets the employee\'s development plan',desc:'Each line manager gets one email listing their people from the list.'}
+ };
+ var ORDER={employee:['framework','self_current','self_target'],manager:['framework_pos','manager_current','manager_target','devplan']};
+ var DEFAULT={employee:'self_current',manager:'manager_current'};
+ var rc={src:null,list:[],byLabel:{},byId:{},all:[],allByLabel:{},allById:{}},mc={src:null,rows:[],byId:{}};
  function E(x){return escapeHtml(x==null?'':String(x));}
  function K(x){return String(x==null?'':x).trim().replace(/\s+/g,' ').toUpperCase();}
  function em(x){return String(x||'').trim().toLowerCase();}
  function plus(n){var d=new Date(ihToday()+'T12:00:00');d.setDate(d.getDate()+n);return d.toISOString().slice(0,10);}
+ function nice(iso,withDay){
+  if(!iso)return '';var d=new Date(iso+'T12:00:00');if(isNaN(d.getTime()))return String(iso);
+  return d.toLocaleDateString('en-GB',withDay?{weekday:'short',day:'numeric',month:'short',year:'numeric'}:{day:'numeric',month:'short'});
+ }
+ function mgrRows(){return false;}
+ function needsRole(k){return k==='self_target'||k==='manager_target'||k==='framework_pos';}
+ function isMgrAssess(k){return k==='manager_current'||k==='manager_target';}
+ function needsMgr(k){return isMgrAssess(k)||k==='framework_pos'||k==='devplan';}
  function css(){
-  if(document.getElementById('bs-style'))return;
-  var s=document.createElement('style');s.id='bs-style';
-  s.textContent='#bsPage .bs-card{background:#fff;border:1px solid #dfe5f3;border-radius:14px;padding:18px;margin:14px 0}'+
-  '#bsPage .bs-card h2{margin:0 0 12px;font-size:16px;display:flex;align-items:center;gap:8px}'+
-  '#bsPage .bs-num{display:inline-block;width:26px;height:26px;border-radius:50%;background:#3b4fc4;color:#fff;text-align:center;line-height:26px;font-weight:700;font-size:13px}'+
-  '#bsPage .bs-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}'+
-  '#bsPage label{display:block;font-weight:600;font-size:13px}#bsPage label select,#bsPage label input,#bsPage label textarea{display:block;width:100%;margin-top:5px;font-weight:400}'+
-  '#bsPage table{width:100%;border-collapse:collapse;font-size:13.5px;margin-top:10px}'+
-  '#bsPage th{text-align:left;color:#64748b;font-size:12px;padding:8px;border-bottom:2px solid #e2e8f0;background:#f8fafc}'+
-  '#bsPage td{padding:9px 8px;border-bottom:1px solid #eef2f7;vertical-align:middle}'+
-  '#bsPage tr.bs-off td{color:#a0a8b8;background:#fafbfd}'+
-  '#bsPage small{display:block;color:#94a3b8}'+
-  '#bsPage .bs-chip{padding:3px 10px;border-radius:20px;font-size:12px;font-weight:600;white-space:nowrap}'+
-  '#bsPage .bs-ok{background:#dcfce7;color:#166534}#bsPage .bs-bad{background:#fee2e2;color:#991b1b}'+
-  '#bsPage .bs-bar{position:sticky;bottom:8px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;background:#eef2ff;border:1px solid #c7d2fe;border-radius:12px;padding:14px 18px;margin-top:14px}'+
-  '#bsPage .bs-note{color:#64748b;font-size:12.5px}';
+  if(document.getElementById('bs-style7'))return;
+  var s=document.createElement('style');s.id='bs-style7';
+  s.textContent=
+  '#bsDlgBack{position:fixed;inset:0;background:rgba(15,23,42,0.6);z-index:6000;display:flex;align-items:center;justify-content:center;padding:16px}'+
+  '#bsDlg{background:#fff;border-radius:16px;width:720px;max-width:100%;max-height:92vh;overflow:auto;padding:26px 28px;box-shadow:0 24px 60px rgba(15,23,42,0.45);color:#0f172a;font-size:17px}'+
+  '#bsDlg h2{font-size:28px;font-weight:800;margin:0 0 14px}'+
+  '#bsDlg .bs-l{display:flex;gap:10px;margin:4px 0;font-size:18px}#bsDlg .bs-l span{width:90px;color:#334155}#bsDlg .bs-l b{font-weight:800}'+
+  '#bsDlg table{width:100%;border-collapse:collapse;margin:14px 0;font-size:16px}'+
+  '#bsDlg th{text-align:left;background:#f1f5f9;color:#334155;padding:9px 10px;font-size:14px;border-bottom:2px solid #cbd5e1}'+
+  '#bsDlg td{padding:10px;border-bottom:1px solid #e2e8f0}#bsDlg td small{display:block;color:#475569;font-size:14px}'+
+  '#bsDlg .bs-scroll{max-height:260px;overflow:auto;border:1px solid #cfd8ea;border-radius:10px}'+
+  '#bsDlg .bs-act{display:flex;gap:12px;margin-top:16px;flex-wrap:wrap}'+
+  '#bsDlg .bs-act button{font-size:19px;font-weight:800;padding:14px 26px;border-radius:12px;cursor:pointer}'+
+  '#bsDlg .bs-go{background:#3730a3;color:#fff;border:0}#bsDlg .bs-go:disabled{opacity:.5;cursor:not-allowed}'+
+  '#bsDlg .bs-back{background:#fff;color:#0f172a;border:2px solid #94a3b8}'+
+  '#bsPage.v7{max-width:1000px;margin:0 auto;font-size:16px;color:#0f172a}'+
+  '#bsPage .v7-card{background:#fff;border:1px solid #cfd8ea;border-radius:16px;padding:28px 30px;box-shadow:0 6px 20px rgba(15,23,42,0.07)}'+
+  '#bsPage .v7-h{display:flex;align-items:center;gap:12px;font-size:25px;font-weight:800;margin:28px 0 12px;color:#0f172a}'+
+  '#bsPage .v7-h.first{margin-top:0}'+
+  '#bsPage .bs-num{flex:none;width:36px;height:36px;border-radius:50%;background:#3b4fc4;color:#fff;text-align:center;line-height:36px;font-weight:800;font-size:18px}'+
+  '#bsPage select,#bsPage input[type=date],#bsPage input[type=search],#bsPage input[type=text],#bsPage textarea{display:block;width:100%;font-size:17px;padding:12px 14px;color:#0f172a;margin:0;border:2px solid #cbd5e1;border-radius:10px}'+
+  '#bsPage .v7-help{color:#334155;font-size:15px;margin:8px 0 0}'+
+  '#bsPage .v7-find{display:flex;gap:10px;align-items:flex-start;flex-wrap:wrap}'+
+  '#bsPage .v7-sbox{position:relative;flex:1;min-width:280px}'+
+  '#bsPage .v7-sugg{position:absolute;left:0;right:0;top:100%;margin-top:4px;background:#fff;border:1px solid #94a3b8;border-radius:12px;box-shadow:0 12px 30px rgba(15,23,42,0.2);z-index:40;max-height:380px;overflow:auto}'+
+  '#bsPage .v7-sugg:empty{display:none}'+
+  '#bsPage .v7-sg{display:flex;align-items:center;gap:12px;width:100%;text-align:left;background:#fff;border:0;border-bottom:1px solid #e2e8f0;padding:10px 14px;cursor:pointer;font-size:16px;color:#0f172a}'+
+  '#bsPage .v7-sg:hover{background:#eef2ff}'+
+  '#bsPage .v7-sg-empty{padding:14px;color:#475569}'+
+  '#bsPage .v7-av{flex:none;width:40px;height:40px;border-radius:50%;background:#e0e7ff;color:#312e81;font-weight:800;font-size:15px;display:flex;align-items:center;justify-content:center}'+
+  '#bsPage .v7-sgt{flex:1;min-width:0}#bsPage .v7-sgt b,#bsPage .v7-who b{display:block;font-weight:800}#bsPage .v7-sgt small,#bsPage .v7-who small{display:block;color:#475569;font-size:14px}'+
+  '#bsPage .v7-btn{border:2px solid #4338ca;background:#fff;color:#312e81;border-radius:10px;padding:12px 18px;font-size:16px;font-weight:700;cursor:pointer;white-space:nowrap}'+
+  '#bsPage .v7-btn:hover{background:#eef2ff}#bsPage .v7-btn:disabled{opacity:.5;cursor:not-allowed}'+
+  '#bsPage .v7-btn.pri{background:#4338ca;color:#fff}'+
+  '#bsPage .v7-dept{display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;background:#f1f5f9;border-radius:12px;padding:14px;margin:12px 0}'+
+  '#bsPage .v7-dept>div{flex:1;min-width:200px}#bsPage .v7-dept label{font-weight:700;font-size:15px;margin:0 0 4px;display:block}'+
+  '#bsPage .v7-lh{display:flex;justify-content:space-between;align-items:center;margin:20px 0 6px;font-weight:800;font-size:18px}'+
+  '#bsPage .v7-link{background:none;border:0;color:#3730a3;font-weight:700;cursor:pointer;padding:0;font-size:15px;text-decoration:underline}'+
+  '#bsPage .v7-row{display:flex;align-items:center;gap:14px;padding:12px 4px;border-bottom:1px solid #e2e8f0;flex-wrap:wrap}'+
+  '#bsPage .v7-row.off{background:#f8fafc}#bsPage .v7-row.off .v7-who b{color:#64748b}'+
+  '#bsPage .v7-who{flex:2;min-width:230px}'+
+  '#bsPage .v7-to{flex:1.2;min-width:170px;color:#334155;font-size:15px}'+
+  '#bsPage .v7-role{flex:1.5;min-width:230px}#bsPage .v7-role input{font-size:15px;padding:9px 10px}'+
+  '#bsPage .v7-x{flex:none;width:36px;height:36px;border-radius:50%;border:0;background:#e2e8f0;color:#334155;font-size:16px;font-weight:800;cursor:pointer}#bsPage .v7-x:hover{background:#fecaca;color:#7f1d1d}'+
+  '#bsPage .v7-empty{padding:18px;color:#475569;background:#f8fafc;border-radius:12px}'+
+  '#bsPage .v7-due{display:flex;gap:10px;align-items:center;flex-wrap:wrap}#bsPage .v7-due input[type=date]{max-width:230px}#bsPage .v7-due textarea{flex:1;min-width:240px}'+
+  '#bsPage .v7-send{display:flex;width:100%;justify-content:center;align-items:center;font-size:21px;font-weight:800;padding:16px;margin-top:26px;border-radius:12px}'+
+  '#bsPage .bs-note{color:#334155;font-size:14.5px}'+
+  '#bsPage .btn{font-size:15px}'+
+  '.bs-chip{display:inline-block;padding:4px 12px;border-radius:20px;font-size:14px;font-weight:700;white-space:nowrap}'+
+  '.bs-ok{background:#bbf7d0;color:#14532d}.bs-warn{background:#fde68a;color:#78350f}.bs-info{background:#c7d2fe;color:#1e1b4b}.bs-off{background:#e2e8f0;color:#334155}';
   document.head.appendChild(s);
  }
- function target(p){return (BI.targets||[]).find(function(t){return K(t.department)===K(p.department)&&K(t.position)===K(p.position);})||null;}
- function login(p){return (BI.authors||[]).find(function(a){return em(a.email)===em(p.email);})||null;}
+ function roleLabel(t){return t.department+' / '+t.position;}
  function good(t){return !!(t&&t.published&&t.configuration_linked&&t.level);}
+ function rebuildRoles(){
+  if(rc.src===BI.targets)return;
+  rc.src=BI.targets;rc.byLabel={};rc.byId={};rc.allByLabel={};rc.allById={};
+  var sorter=function(a,b){return roleLabel(a).localeCompare(roleLabel(b));};
+  rc.list=(BI.targets||[]).filter(good).sort(sorter);
+  rc.all=(BI.targets||[]).slice().sort(sorter);
+  rc.list.forEach(function(t){rc.byLabel[K(roleLabel(t))]=t;rc.byId[t.id]=t;});
+  rc.all.forEach(function(t){rc.allByLabel[K(roleLabel(t))]=t;rc.allById[t.id]=t;});
+ }
+ function roleById(id){return BS.kind==='framework_pos'?rc.allById[id]:rc.byId[id];}
+ function roleByLabel(txt){return BS.kind==='framework_pos'?rc.allByLabel[K(txt)]:rc.byLabel[K(txt)];}
+ function roleList(){return BS.kind==='framework_pos'?rc.all:rc.list;} function why(t){return !t.published?'framework not published':(!t.configuration_linked?'not linked to a configuration':'no level set');}
+
+
+ function loginByEmail(x){return (BI.authors||[]).find(function(a){return em(a.email)===em(x);})||null;}
+ function mgrLogin(x){return (BI.managers||[]).find(function(m){return em(m.email)===em(x);})||null;}
+ function target(p){return (BI.targets||[]).find(function(t){return K(t.department)===K(p.department)&&K(t.position)===K(p.position);})||null;}
+ function rebuildMgrs(){
+  if(mc.src===BI.people&&mc.mg===BI.managers)return;
+  mc.src=BI.people;mc.mg=BI.managers;var map={};
+  (BI.people||[]).forEach(function(p){
+   var k=em(p.manager_email);if(!k)return;
+   var m=map[k]||(map[k]={id:'m:'+k,email:k,name:'',team:0,cos:{},deps:{}});
+   m.team++;if(p.company)m.cos[K(p.company)]=1;if(p.department)m.deps[K(p.department)]=1;
+   if(!m.name&&p.manager)m.name=String(p.manager).trim();
+  });
+  mc.rows=Object.keys(map).map(function(k){
+   var m=map[k],lg=mgrLogin(k);
+   if(lg&&lg.name)m.name=lg.name;if(!m.name)m.name=k;
+   m.login=lg;return m;
+  }).sort(function(a,b){return a.name.localeCompare(b.name);});
+  mc.byId={};mc.rows.forEach(function(m){mc.byId[m.id]=m;});
+ }
+ function invKey(r){
+  if(KINDS[r.kind]&&isMgrAssess(r.kind))return em(r.recipient_email)+'|'+r.kind+'|'+K(r.employee_name);
+  return em(r.recipient_email)+'|'+r.kind;
+ }
+ function invIndex(){
+  var m={};
+  (BS.sent||[]).forEach(function(r){
+   if(r.state==='Cancelled'||r.submitted_at)return;
+   var k=invKey(r);if(!m[k])m[k]=r;
+   if(r.kind==='framework'){var k2=em(r.recipient_email)+'|framework|'+K(r.target_department)+'|'+K(r.target_position);if(!m[k2])m[k2]=r;}
+  });
+  return m;
+ }
+ function invited(p){
+  if(BS.kind==='devplan'){var dd=BS.dp['e:'+em(p.email)];return dd&&dd.due?{due_date:dd.due}:null;}
+  if(BS.kind==='framework_pos')return BS.inv[em(p.manager_email)+'|framework|'+K(p.department)+'|'+K(p.position)]||null;
+  if(isMgrAssess(BS.kind))return BS.inv[em(p.manager_email)+'|'+BS.kind+'|'+K(p.employee_name)]||null;
+  return BS.inv[em(p.email)+'|'+BS.kind]||null;
+ }
  function check(p){
-  if(!em(p.email))return{ok:false,reason:'No email'};
-  if(BS.kind==='framework'){
-   var l=login(p),t=target(p);
-   if(!l)return{ok:false,reason:'No login yet'};
-   if(!t)return{ok:false,reason:'Role not in list'};
-   return{ok:true,t:t,l:l};
+  rebuildRoles();
+  if(!em(p.email))return{ok:false,chip:'No email',cls:'bs-off'};
+  var k=BS.kind,mg=null;
+  if(needsMgr(k)){
+   if(!em(p.manager_email))return{ok:false,chip:'No line manager recorded',cls:'bs-off'};
+   mg=mgrLogin(p.manager_email);
+   if(!mg)return{ok:false,chip:'Line manager has no login yet',cls:'bs-off'};
   }
-  if(BS.kind==='self_current'){
+  var iv=invited(p);
+  if(iv)return{ok:false,chip:'Invited, due '+nice(iv.due_date),cls:'bs-info',inv:iv};
+  if(k==='devplan')return{ok:true,chip:'Ready',cls:'bs-ok',mg:mg};
+  if(k==='framework_pos'){var tp=target(p);if(!tp)return{ok:false,chip:'Role not in list',cls:'bs-off'};return{ok:true,chip:'Ready',cls:'bs-ok',t:tp,mg:mg,used:roleLabel(tp)};}
+  if(k==='framework'){
+   var l=loginByEmail(p.email),t=target(p);
+   if(!l)return{ok:false,chip:'No login yet',cls:'bs-off'};
+   if(!t)return{ok:false,chip:'Role not in list',cls:'bs-off'};
+   return{ok:true,chip:'Ready',cls:'bs-ok',t:t,l:l,used:roleLabel(t)};
+  }
+  if(k==='self_current'||k==='manager_current'){
    var c=target(p);
-   if(!c)return{ok:false,reason:'Role not in list'};
-   if(!good(c))return{ok:false,reason:'Role has no published framework'};
-   return{ok:true,t:c};
+   if(!c)return{ok:false,chip:'Role not in list',cls:'bs-off'};
+   if(!good(c))return{ok:false,chip:'Role has no published framework',cls:'bs-off'};
+   return{ok:true,chip:'Ready',cls:'bs-ok',t:c,mg:mg,used:roleLabel(c)};
   }
-  var r=(BI.targets||[]).find(function(x){return x.id===BS.role;});
-  if(!r)return{ok:false,reason:'Choose the role above'};
-  return{ok:true,t:r};
+  var r=rc.byId[BS.roleOf[p.id]];
+  if(!r)return{ok:true,chip:'Needs target role',cls:'bs-warn',need:true,mg:mg};
+  return{ok:true,chip:'Ready',cls:'bs-ok',t:r,mg:mg,used:roleLabel(r)};
  }
- function visible(){
-  var q=BS.search.trim().toLowerCase();
-  return (BI.people||[]).filter(function(p){
-   if(BS.company&&K(p.company)!==K(BS.company))return false;
-   if(BS.dept&&K(p.department)!==K(BS.dept))return false;
-   if(q&&[p.employee_name,p.email,p.position,p.employee_id].join(' ').toLowerCase().indexOf(q)<0)return false;
-   return true;
-  }).sort(function(a,b){return String(a.employee_name||'').localeCompare(String(b.employee_name||''));});
+ function ini(n){var s=String(n||'?').replace(/@.*/,'').replace(/[^A-Za-z ]/g,' ').trim().split(/\s+/);return ((s[0]||'?').charAt(0)+(s.length>1?s[s.length-1].charAt(0):'')).toUpperCase();}
+ function byId(){
+  if(byId.src!==BI.people){byId.src=BI.people;byId.m={};(BI.people||[]).forEach(function(p){byId.m[p.id]=p;});}
+  return byId.m;
  }
- function count(){return Object.keys(BS.picked).filter(function(k){return BS.picked[k];}).length;}
- function dropStale(){
-  (BI.people||[]).forEach(function(p){if(BS.picked[p.id]&&!check(p).ok)delete BS.picked[p.id];});
+ function listRows(){var m=byId();return BS.list.map(function(id){return m[id];}).filter(Boolean);}
+ function pickedRows(){return listRows().filter(function(p){return check(p).ok;});}
+ function count(){return pickedRows().length;}
+ function dropStale(){var m=byId();BS.list=BS.list.filter(function(id){return m[id];});}
+ function addIds(ids,cap){
+  var added=0;
+  ids.forEach(function(id){
+   if(BS.list.indexOf(id)>=0)return;
+   if(cap&&count()>=100)return;
+   BS.list.push(id);added++;
+  });
+  return added;
  }
- function opts(list,chosen,first){return '<option value="">'+E(first)+'</option>'+list.map(function(v){return '<option value="'+E(v[0])+'"'+(v[0]===chosen?' selected':'')+'>'+E(v[1])+'</option>';}).join('');}
- function tableHTML(){
-  var rows=visible(),shown=rows.slice(0,100),okRows=shown.filter(function(p){return check(p).ok;});
-  var allOn=okRows.length>0&&okRows.every(function(p){return BS.picked[p.id];});
-  var h='<table><thead><tr><th style="width:36px"><input type="checkbox" data-bs-all '+(allOn?'checked':'')+' '+(okRows.length?'':'disabled')+' aria-label="Tick all ready"></th><th>Employee</th><th>Department / position</th><th>Role used</th><th>Status</th></tr></thead><tbody>';
-  h+=shown.map(function(p){
-   var c=check(p),used=c.ok?c.t.department+' / '+c.t.position:'';
-   return '<tr class="'+(c.ok?'':'bs-off')+'"><td><input type="checkbox" data-bs-pick="'+E(p.id)+'" '+(BS.picked[p.id]?'checked ':'')+(c.ok?'':'disabled')+'></td><td><b>'+E(p.employee_name||p.email)+'</b><small>'+E(p.email)+'</small></td><td>'+E(p.department)+' / '+E(p.position)+'<small>'+E(p.company)+'</small></td><td>'+E(used||'-')+'</td><td><span class="bs-chip '+(c.ok?'bs-ok':'bs-bad')+'">'+E(c.ok?'Ready':c.reason)+'</span></td></tr>';
-  }).join('');
-  h+='</tbody></table><p class="bs-note">Showing '+shown.length+' of '+rows.length+' matching employees'+(rows.length>shown.length?'. Use the filters to reach the others.':'.')+' Greyed rows cannot be ticked, the reason is shown.</p>';
-  return h;
+ function suggest(q){
+  q=String(q||'').trim().toLowerCase();
+  if(q.length<2)return [];
+  var inL={};BS.list.forEach(function(i){inL[i]=1;});
+  return (BI.people||[]).filter(function(p){return !inL[p.id]&&[p.employee_name,p.email,p.employee_id,p.position].join(' ').toLowerCase().indexOf(q)>=0;}).slice(0,8);
+ }
+ function suggHTML(){
+  if(BS.search.trim().length<2)return '';
+  var r=suggest(BS.search);
+  if(!r.length)return '<div class="v7-sg-empty">Nobody found, or already in your list.</div>';
+  return r.map(function(p){var c=check(p);return '<button type="button" class="v7-sg" data-bs-add="'+E(p.id)+'"><span class="v7-av">'+E(ini(p.employee_name||p.email))+'</span><span class="v7-sgt"><b>'+E(p.employee_name||p.email)+'</b><small>'+E(p.email)+' | '+E(p.position)+' | '+E(p.department)+' | '+E(p.company)+'</small></span><span class="bs-chip '+c.cls+'">'+E(c.chip)+'</span></button>';}).join('');
+ }
+ function rowHTML(p){
+  var c=check(p),tgt=needsRole(BS.kind),mgrMode=KINDS[BS.kind].mode==='manager';
+  var goes=mgrMode?(p.manager||p.manager_email||'no line manager'):'the employee';
+  var cur=tgt?rc.byId[BS.roleOf[p.id]]:null;
+  var role=tgt&&c.ok?'<div class="v7-role"><input type="text" list="bsRoles" data-bs-role="'+E(p.id)+'" placeholder="Target role: type or choose" value="'+E(cur?roleLabel(cur):'')+'"></div>':'';
+  return '<div class="v7-row'+(c.ok?'':' off')+'"><span class="v7-av">'+E(ini(p.employee_name||p.email))+'</span>'+
+   '<div class="v7-who"><b>'+E(p.employee_name||p.email)+'</b><small>'+E(p.email)+' | '+E(p.position)+' | '+E(p.department)+' | '+E(p.company)+'</small></div>'+
+   '<div class="v7-to">Email goes to: <b>'+E(goes)+'</b></div>'+role+
+   '<span class="bs-chip '+c.cls+'">'+E(c.chip)+'</span><button type="button" class="v7-x" data-bs-rm="'+E(p.id)+'" aria-label="Remove">x</button></div>';
+ }
+ function listHTML(){
+  var rows=listRows();
+  var h='<div class="v7-lh"><span>Your list ('+rows.length+')</span>'+(rows.length?'<button type="button" class="v7-link" data-bs="clearList">Clear list</button>':'')+'</div>';
+  if(!rows.length)return h+'<div class="v7-empty">Nobody yet. Type a name above, or add a department.</div>';
+  if(needsRole(BS.kind)&&rows.length>1)h+='<div class="v7-dept" style="margin:6px 0"><div><label for="bsApplyRole">Same target role for everyone ready in the list</label><input type="text" id="bsApplyRole" list="bsRoles" placeholder="Type or choose"></div><button type="button" class="v7-btn" data-bs="applyRole">Apply</button></div>';
+  return h+rows.map(rowHTML).join('');
+ }
+ function missingRoles(){
+  if(!needsRole(BS.kind))return 0;
+  return pickedRows().filter(function(p){return !rc.byId[BS.roleOf[p.id]];}).length;
+ }
+ function sendCount(){
+  var rows=pickedRows(),k=BS.kind;
+  if(KINDS[k].mode!=='manager')return rows.length;
+  var u={};
+  rows.forEach(function(p){
+   if(k==='devplan')u[em(p.manager_email)]=1;
+   else if(k==='framework_pos')u[em(p.manager_email)+'|'+K(p.department)+'|'+K(p.position)]=1;
+   else u[p.id]=1;
+  });
+  return Object.keys(u).length;
  }
  function barHTML(){
-  var n=count(),label=(KINDS.filter(function(k){return k[0]===BS.kind;})[0]||[])[1];
-  return '<div><b>'+n+' ticked</b> | '+E(label)+' | '+(BS.due?'due '+E(BS.due):'choose a deadline')+'<div class="bs-note">Max 100 per batch. You preview first, nothing is sent yet.</div></div>'+
-   '<button type="button" class="btn btn-primary" data-bs="preview" '+(n&&!BS.busy?'':'disabled')+'>Preview and send '+n+' invitation'+(n===1?'':'s')+'</button>';
+  var n=count(),miss=missingRoles(),k=BS.kind,sc=sendCount(),total=listRows().length,skipped=total-n;
+  var noun=(k==='devplan'||k==='framework_pos')?'email':'invitation';
+  var label=sc?('Send '+sc+' '+noun+(sc===1?'':'s')):'Send invitations';
+  var dueOk=!!BS.due&&BS.due>=ihToday();
+  var notes=[];
+  if(KINDS[k].mode==='manager'&&n){var mg={};pickedRows().forEach(function(p){mg[em(p.manager_email)]=1;});notes.push(Object.keys(mg).length+' line manager'+(Object.keys(mg).length===1?'':'s')+' will get an email.');}
+  if(skipped>0)notes.push(skipped+' in the list cannot be sent and will be skipped.');
+  if(miss)notes.push(miss+' still need a target role.');
+  if(!dueOk)notes.push('Choose today or a later deadline.');
+  return '<button type="button" class="btn btn-primary v7-send" data-bs="preview" '+(sc&&!BS.busy&&!miss&&dueOk?'':'disabled')+'>'+E(label)+'</button>'+
+   '<p class="bs-note" style="text-align:center;margin:10px 0 0">'+(notes.length?E(notes.join(' '))+' ':'')+'You will see a summary to confirm before anything is sent.</p>';
  }
- function refreshTable(){var t=document.getElementById('bsTable'),b=document.getElementById('bsBar');if(t)t.innerHTML=tableHTML();if(b)b.innerHTML=barHTML();}
- 
+ function refreshTable(){
+  var l=document.getElementById('bsList'),b=document.getElementById('bsBar'),s=document.getElementById('bsSugg');
+  if(l)l.innerHTML=listHTML();if(b)b.innerHTML=barHTML();if(s)s.innerHTML=suggHTML();
+ }
+ function opts(list,chosen,first){return '<option value="">'+E(first)+'</option>'+list.map(function(v){return '<option value="'+E(v[0])+'"'+(v[0]===chosen?' selected':'')+'>'+E(v[1])+'</option>';}).join('');}
+ function deptCandidates(){
+  var inL={};BS.list.forEach(function(i){inL[i]=1;});
+  return (BI.people||[]).filter(function(p){
+   if(inL[p.id])return false;
+   if(BS.company&&K(p.company)!==K(BS.company))return false;
+   if(BS.dept&&K(p.department)!==K(BS.dept))return false;
+   return check(p).ok;
+  });
+ }
  function draw(root){
-  css();if(!BS.due)BS.due=plus(14);
+  css();rebuildRoles();if(!BS.due)BS.due=plus(14);
   var people=BI.people||[];
   var companies=Array.from(new Set(people.map(function(p){return K(p.company);}).filter(Boolean))).sort();
   var deps=Array.from(new Set(people.filter(function(p){return !BS.company||K(p.company)===K(BS.company);}).map(function(p){return K(p.department);}).filter(Boolean))).sort();
-  var roles=(BI.targets||[]).filter(good).map(function(t){return [t.id,t.department+' / '+t.position];}).sort(function(a,b){return a[1].localeCompare(b[1]);});
-  var h='<header class="bi-heading"><div><h1>Invitations</h1><p>Tick the employees, choose the work, send once.</p></div><div><button type="button" class="btn btn-outline" data-bi="single">Single invitation</button> <button type="button" class="btn btn-primary" data-bi="new">Bulk invitations</button> <button type="button" class="btn btn-outline" data-bi="history">My batches</button></div></header>';
-  h+='<div id="bsPage"><section class="bs-card"><h2><span class="bs-num">1</span>What are you sending?</h2><div class="bs-grid">'+
-   '<label>Work type<select id="bsKind">'+KINDS.map(function(k){return '<option value="'+k[0]+'"'+(BS.kind===k[0]?' selected':'')+'>'+E(k[1])+'</option>';}).join('')+'</select></label>'+
-   (BS.kind==='self_target'?'<label>Prospective role (for everyone ticked)<select id="bsRole">'+opts(roles,BS.role,'Choose the prospective role')+'</select></label>':'')+
-   '<label>Shared deadline (end of day, Nairobi)<input type="date" id="bsDue" min="'+ihToday()+'" value="'+E(BS.due)+'"></label>'+
-   '<label>Instructions (optional)<textarea id="bsNote" rows="2" maxlength="2000" placeholder="Anything the employees should know">'+E(BS.note)+'</textarea></label></div>'+
-   '<p class="bs-note" style="margin-top:10px">'+(BS.kind==='framework'?'Each employee sets competencies for their own role. HR still reviews and publishes.':BS.kind==='self_current'?'Each employee is assessed on their own current role.':'Everyone ticked is invited to self-assess for the role you choose above.')+'</p></section>'+
-   '<section class="bs-card"><h2><span class="bs-num">2</span>Tick the employees</h2><div class="bs-grid">'+
-   '<label>Company<select id="bsCompany">'+opts(companies.map(function(c){return [c,c];}),K(BS.company),'All companies')+'</select></label>'+
-   '<label>Department<select id="bsDept">'+opts(deps.map(function(c){return [c,c];}),K(BS.dept),'All departments')+'</select></label>'+
-   '<label>Search<input type="search" id="bsSearch" placeholder="Name, email or position" value="'+E(BS.search)+'"></label></div>'+
-   '<div id="bsTable">'+tableHTML()+'</div></section>'+
-   '<div class="bs-bar" id="bsBar">'+barHTML()+'</div>'+
-   '<p class="bs-note" style="margin-top:10px">Need manager invitations or a different layout? <button type="button" class="btn btn-outline" data-bs="classic">Open the classic bulk page</button></p><p id="biStatus" role="status"></p></div>';
+  var h='<header class="bi-heading"><div><h1>Send invitations</h1><p>Work, people, deadline.</p></div><div><button type="button" class="btn btn-outline" data-bs="goSent">Sent invites</button></div></header>';
+  h+='<div id="bsPage" class="v7"><section class="v7-card">';
+  h+='<div class="v7-h first"><span class="bs-num">1</span>Work</div>'+
+   '<select id="bsKindSel" aria-label="Work">'+
+   '<optgroup label="The employee does it">'+ORDER.employee.map(function(k){return '<option value="'+k+'"'+(BS.kind===k?' selected':'')+'>'+E(KINDS[k].title)+'</option>';}).join('')+'</optgroup>'+
+   '<optgroup label="The line manager does it">'+ORDER.manager.map(function(k){return '<option value="'+k+'"'+(BS.kind===k?' selected':'')+'>'+E(KINDS[k].title)+'</option>';}).join('')+'</optgroup></select>'+
+   '<div class="v7-help">'+E(KINDS[BS.kind].desc)+'</div>';
+  h+='<div class="v7-h"><span class="bs-num">2</span>People</div>'+
+   '<div class="v7-find"><div class="v7-sbox"><input type="search" id="bsSearch" autocomplete="off" placeholder="Type a name, then press Enter" value="'+E(BS.search)+'" aria-label="Find a person"><div id="bsSugg" class="v7-sugg">'+suggHTML()+'</div></div>'+
+   '<button type="button" class="v7-btn" data-bs="deptToggle">Add a department</button><button type="button" class="v7-btn" data-bs="addAll">Add everyone</button></div>';
+  if(BS.deptOpen){
+   var nc=deptCandidates().length;
+   h+='<div class="v7-dept"><div><label for="bsCompany">Company</label><select id="bsCompany">'+opts(companies.map(function(c){return [c,c];}),K(BS.company),'All companies')+'</select></div>'+
+    '<div><label for="bsDept">Department</label><select id="bsDept">'+opts(deps.map(function(c){return [c,c];}),K(BS.dept),'All departments')+'</select></div>'+
+    '<button type="button" class="v7-btn pri" data-bs="addDept" '+(nc?'':'disabled')+'>Add '+nc+' ready '+(nc===1?'person':'people')+'</button></div>';
+  }
+  h+='<div style="margin-top:8px"><button type="button" class="v7-link" data-bs="pasteToggle">'+(BS.pasteOpen?'Hide the email list':'Add from a list of emails')+'</button></div>';
+  if(BS.pasteOpen)h+='<div style="margin-top:8px"><textarea id="bsPasteBox" rows="4" placeholder="One email per line, or separated by commas"></textarea><div style="margin-top:8px"><button type="button" class="v7-btn" data-bs="pasteApply">Add them to my list</button></div></div>';
+  if(BS.pasteMsg)h+='<p class="bs-note" style="margin-top:8px">'+E(BS.pasteMsg)+'</p>';
+  if(needsRole(BS.kind))h+='<datalist id="bsRoles">'+roleList().concat(rc.all.filter(function(t){return !good(t);})).map(function(t){return good(t)?'<option value="'+E(roleLabel(t))+'"></option>':'<option value="'+E(roleLabel(t))+'" label="NOT READY: '+E(why(t))+'"></option>';}).join('')+'</datalist>';
+  h+='<div id="bsList">'+listHTML()+'</div>';
+  h+='<div class="v7-h"><span class="bs-num">3</span>Deadline</div>'+
+   '<div class="v7-due"><input type="date" id="bsDue" min="'+ihToday()+'" value="'+E(BS.due)+'" aria-label="Deadline"><button type="button" class="v7-btn" data-bs="due7">7 days</button><button type="button" class="v7-btn" data-bs="due14">14 days</button><button type="button" class="v7-btn" data-bs="due30">30 days</button><b id="bsDueText">'+E(nice(BS.due,true))+'</b></div>'+
+   '<div style="margin-top:10px"><textarea id="bsNote" rows="2" maxlength="2000" placeholder="Message (optional)">'+E(BS.note)+'</textarea></div>';
+  h+='<div id="bsBar">'+barHTML()+'</div></section>'+
+   '<p class="bs-note" style="margin-top:14px;text-align:center"><button type="button" class="v7-link" data-bi="history">My batches</button> &nbsp; <button type="button" class="v7-link" data-bs="goRedo">Redo requests</button> &nbsp; <button type="button" class="v7-link" data-bi="single">Classic single form</button> &nbsp; <button type="button" class="v7-link" data-bs="classic">Classic bulk page</button></p><p id="biStatus" role="status"></p></div>';
   root.innerHTML=h;
+  if(BS.focus){BS.focus=false;var si=document.getElementById('bsSearch');if(si){si.focus();}}
+ }
+ function loadSent(){
+  if(BS.sentLoading||typeof ihAll!=='function')return;
+  BS.sentLoading=true;var who=biID();
+  Promise.resolve().then(function(){return ihAll('sent',200);}).then(function(rows){
+   if(who!==biID())return;
+   BS.sent=Array.isArray(rows)?rows:[];BS.sentAt=Date.now();BS.inv=invIndex();dropStale();
+   if(document.getElementById('bsPage')&&!BI.batch)refreshTable();
+  }).catch(function(){BS.sentAt=Date.now();}).then(function(){BS.sentLoading=false;});
  }
  var oldRender=biRender;
  biRender=function(){
@@ -44301,68 +44499,234 @@ body.cms-focus-editor-v1 #mainContent #fwScreen.cfu-screen #fwBody .cfe-footer {
   if(BS.classic){
    var r=oldRender.apply(this,arguments);
    root=document.getElementById('biRoot');
-   if(root&&!root.querySelector('[data-bs="tick"]')){var b=document.createElement('button');b.type='button';b.className='btn btn-primary';b.setAttribute('data-bs','tick');b.textContent='Back to the tick list';b.style.margin='0 0 12px';var hd=root.querySelector('.bi-heading');if(hd)hd.after(b);else root.prepend(b);}
+   if(root&&!root.querySelector('[data-bs="tick"]')){var b=document.createElement('button');b.type='button';b.className='btn btn-primary';b.setAttribute('data-bs','tick');b.textContent='Back to Invitations';b.style.margin='0 0 12px';var hd=root.querySelector('.bi-heading');if(hd)hd.after(b);else root.prepend(b);}
    return r;
   }
   dropStale();draw(root);
+  if(Date.now()-BS.sentAt>15000)loadSent();
  };
+ function closeDlg(){var d=document.getElementById('bsDlgBack');if(d)d.remove();}
+ function dlg(html){closeDlg();var back=document.createElement('div');back.id='bsDlgBack';back.innerHTML='<div id="bsDlg" role="dialog" aria-modal="true">'+html+'</div>';document.body.appendChild(back);css();return back;}
+ function summaryLines(n,who,work){
+  return '<div class="bs-l"><span>To:</span><b>'+n+' '+E(who)+'</b></div><div class="bs-l"><span>Work:</span><b>'+E(work)+'</b></div><div class="bs-l"><span>Deadline:</span><b>'+E(nice(BS.due,true))+'</b></div>';
+ }
  async function preview(){
-  var rows=(BI.people||[]).filter(function(p){return BS.picked[p.id];});
-  if(!rows.length)throw Error('Tick at least one employee.');
-  if(rows.length>100)throw Error('Maximum 100 per batch. Untick some employees.');
+  rebuildRoles();
+  var rows=pickedRows();
+  if(!rows.length)throw Error('Add at least one person who is Ready.');
+  if(rows.length>100)throw Error('Maximum 100 per batch. Remove some from the list and send the rest next.');
   if(!BS.due)throw Error('Choose the deadline.');
   if(BS.due<ihToday())throw Error('Choose today or a future deadline.');
-  var own=BS.kind==='framework';
+  var need=rows.filter(function(p){return check(p).need;});
+  if(need.length)throw Error(need.length+' still need a target role: '+need.slice(0,3).map(function(p){return p.employee_name||p.email;}).join(', ')+(need.length>3?' and more':'')+'.');
+  if(BS.kind==='devplan'){openDevplanDialog(rows);return;}
   var items=rows.map(function(p){
-   var c=check(p);if(!c.ok)throw Error((p.employee_name||p.email)+': '+c.reason);
-   return{kind:BS.kind,employee_row_id:own?null:p.id,expected_company:own?'':(p.company||''),expected_department:own?'':(p.department||''),manager_id:own?c.l.id:null,position_id:c.t.id,due_date:BS.due,instructions:BS.note.trim()};
+   var c=check(p),k=BS.kind;
+   if(k==='framework')return{kind:'framework',employee_row_id:null,expected_company:'',expected_department:'',manager_id:c.l.id,position_id:c.t.id,due_date:BS.due,instructions:BS.note.trim()};
+   if(k==='framework_pos')return{kind:'framework',employee_row_id:null,expected_company:'',expected_department:'',manager_id:c.mg.id,position_id:c.t.id,due_date:BS.due,instructions:BS.note.trim()};
+   return{kind:k,employee_row_id:p.id,expected_company:p.company||'',expected_department:p.department||'',manager_id:isMgrAssess(k)?c.mg.id:null,position_id:c.t.id,due_date:BS.due,instructions:BS.note.trim()};
   });
-  BI.kind=BS.kind;BI.due=BS.due;BI.instructions=BS.note;
+  var seenF={};items=items.filter(function(it){if(it.kind!=='framework')return true;var key=it.manager_id+'|'+it.position_id;if(seenF[key])return false;seenF[key]=1;return true;});
+  BI.kind=BS.kind==='framework_pos'?'framework':BS.kind;BI.due=BS.due;BI.instructions=BS.note;
   var identity=biID();
   BS.busy=true;refreshTable();
   try{
    var result=await biRPC('preview',{items:items});
    if(identity!==biID())throw Error('Account changed. Reopen My batches.');
    await biGet(result.id);
-   BS.picked={};biRender();
+   var gone={};rows.forEach(function(p){gone[p.id]=1;});BS.list=BS.list.filter(function(id){return !gone[id];});
+   BS.sentAt=0;biRender();
+   openSendDialog();
   }finally{BS.busy=false;if(document.getElementById('biRoot')&&!BI.batch)refreshTable();}
  }
+ function openSendDialog(){
+  var b=BI.batch;if(!b||!b.items)return;
+  var items=b.items,ready=items.filter(function(i){return i.state==='Ready';}).length,bad=items.length-ready;
+  var rowsH=items.map(function(i){
+   var r=i.resolved||{},ok=i.state==='Ready';
+   return '<tr><td><b>'+E(r.employee_name||r.recipient_email||'Unresolved')+'</b><small>'+E(r.recipient_email||'')+'</small></td><td>'+E(r.target_position?r.target_department+' / '+r.target_position:'')+'</td><td><span class="bs-chip '+(ok?'bs-ok':'bs-warn')+'">'+(ok?'Email will be sent':'Cannot send: '+E(i.error||i.state))+'</span></td></tr>';
+  }).join('');
+  var back=dlg('<h2>Ready to send? Check this first</h2>'+summaryLines(ready,ready===1?'invitation':'invitations',KINDS[BS.kind].title)+
+   (bad?'<p style="color:#7c2d12;font-weight:700;margin:8px 0">'+bad+' row'+(bad===1?'':'s')+' cannot be sent and will be skipped.</p>':'')+
+   '<div class="bs-scroll"><table><thead><tr><th>Name and email</th><th>Role</th><th>What happens</th></tr></thead><tbody>'+rowsH+'</tbody></table></div>'+
+   '<p>Each person receives one email with a link and the deadline. Reminders go out every 24 hours until they are done. Delivery shows later in Sent invites.</p>'+
+   '<div class="bs-act"><button type="button" class="bs-go" data-bsd="send" '+(ready?'':'disabled')+'>Send '+ready+' email'+(ready===1?'':'s')+' now</button><button type="button" class="bs-back" data-bsd="back">Go back</button></div>');
+  back.setAttribute('data-ready',String(ready));
+ }
+ function dpBody(name,people){
+  var NL=String.fromCharCode(10),link=(typeof APP_LINK!=='undefined'?APP_LINK:'');
+  var list=(people||[]).map(function(p){return '- '+(p.employee_name||p.email)+(p.position?' ('+p.position+')':'');}).join(NL);
+  return 'Dear '+name+','+NL+NL+'HR asks you to set development plans for the following team members, by '+nice(BS.due,true)+':'+NL+list+NL+NL+'Open the Development Plans page here:'+NL+link+
+   (BS.note.trim()?NL+NL+'Note from HR: '+BS.note.trim():'')+NL+NL+'Regards,'+NL+'HR Department';
+ }
+ function dpGroups(ids){
+  var set={};ids.forEach(function(i){set[i]=1;});
+  var g={},order=[];
+  (BI.people||[]).forEach(function(p){
+   if(!set[p.id])return;
+   var k=em(p.manager_email);if(!k)return;
+   if(!g[k]){g[k]={email:k,name:String(p.manager||k).trim(),people:[]};order.push(g[k]);}
+   g[k].people.push(p);
+  });
+  return order;
+ }
+ function openDevplanDialog(rows){
+  var ids=rows.map(function(p){return p.id;}),groups=dpGroups(ids);
+  var rowsH=groups.map(function(m){return '<tr><td><b>'+E(m.name)+'</b><small>'+E(m.email)+'</small></td><td>'+m.people.map(function(p){return E(p.employee_name||p.email);}).join(', ')+'</td><td><span class="bs-chip bs-ok">Email will be sent</span></td></tr>';}).join('');
+  dlg('<h2>Ready to send? Check this first</h2>'+summaryLines(groups.length,groups.length===1?'line manager':'line managers','Development plans for '+rows.length+' employee'+(rows.length===1?'':'s'))+
+   '<div class="bs-scroll"><table><thead><tr><th>Line manager</th><th>Employees listed</th><th>What happens</th></tr></thead><tbody>'+rowsH+'</tbody></table></div>'+
+   '<p>Each manager receives one email that lists only these people, with a link to Development Plans and the deadline. The Development Plans page itself still shows the whole team. This option does not send automatic reminders, so follow up from here when needed.</p>'+
+   '<div class="bs-act"><button type="button" class="bs-go" data-bsd="senddp" data-ids="'+E(ids.join('|'))+'">Send '+groups.length+' email'+(groups.length===1?'':'s')+' now</button><button type="button" class="bs-back" data-bsd="back">Go back</button></div>');
+ }
+ async function sendDevplans(ids,btn){
+  var groups=dpGroups(ids),n=0;
+  var subject='Please set development plans for your team members (due '+nice(BS.due,true)+')';
+  for(var i=0;i<groups.length;i++){
+   var m=groups[i];btn.textContent='Sending '+(i+1)+' of '+groups.length+'...';
+   try{
+    var p=sendCMSemail(m.email,subject,dpBody(m.name,m.people),{page:'mgr-devplans'});
+    await Promise.resolve(p).catch(function(){});
+    var stamp=new Date().toISOString();
+    m.people.forEach(function(x){BS.dp['e:'+em(x.email)]={at:stamp,due:BS.due};});
+    n++;
+   }catch(e){}
+   await new Promise(function(r){setTimeout(r,300);});
+  }
+  try{localStorage.setItem(DPKEY,JSON.stringify(BS.dp));}catch(e){}
+  var gone={};ids.forEach(function(i){gone[i]=1;});BS.list=BS.list.filter(function(id){return !gone[id];});
+  closeDlg();refreshTable();
+  say(n+' of '+groups.length+' emails handed to the mail service. Status is remembered on this computer.');
+ }
+ async function sendBatch(btn){
+  var b=BI.batch;if(!b)return;
+  var ready=b.items.filter(function(i){return i.state==='Ready';}).length;if(!ready)return;
+  btn.disabled=true;btn.textContent='Sending...';
+  try{
+   await biRPC('confirm',{id:b.id,ready_count:ready});
+   await biGet(b.id);
+   closeDlg();
+   await biRun();
+  }catch(e){closeDlg();say(e.message);}
+ }
  function say(m){var e=document.getElementById('biStatus');if(e)e.textContent=m;else showToast(m);}
+ function setDue(v){BS.due=v;var i=document.getElementById('bsDue');if(i)i.value=v;var s=document.getElementById('bsDueText');if(s)s.textContent=nice(v,true);var b=document.getElementById('bsBar');if(b)b.innerHTML=barHTML();}
+ function setKind(k){BS.kind=k;BS.mode=KINDS[k].mode;BS.pasteMsg='';biRender();}
+ function addReady(filterFn){
+  var inL={};BS.list.forEach(function(i){inL[i]=1;});
+  var c=(BI.people||[]).filter(function(p){return !inL[p.id]&&(!filterFn||filterFn(p))&&check(p).ok;});
+  var before=BS.list.length;
+  addIds(c.map(function(p){return p.id;}),true);
+  var added=BS.list.length-before;
+  return {added:added,left:c.length-added};
+ }
+ function afterAdd(r){
+  biRender();
+  say(r.added?('Added '+r.added+' ready '+(r.added===1?'person':'people')+' to your list.'+(r.left>0?' The limit is 100 per batch. Send these first, then add the rest.':'')):(r.left>0?'Your list is already at the 100 limit. Send these first, then add the rest.':'Nobody ready to add here.'));
+ }
+ function applyPaste(){
+  var box=document.getElementById('bsPasteBox');if(!box)return;
+  var wanted=String(box.value||'').split(/[\s,;]+/).map(em).filter(function(x){return x.indexOf('@')>0;});
+  if(!wanted.length){say('Paste at least one email address.');return;}
+  var have={};(BI.people||[]).forEach(function(p){have[em(p.email)]=p;});
+  var miss=[],n=0;
+  wanted.forEach(function(x){var p=have[x];if(!p){if(miss.indexOf(x)<0)miss.push(x);return;}if(BS.list.indexOf(p.id)<0){BS.list.push(p.id);n++;}});
+  BS.pasteMsg='Added '+n+' to your list.'+(miss.length?' Not found: '+miss.slice(0,6).join(', ')+(miss.length>6?' and '+(miss.length-6)+' more':'')+'.':'');
+  BS.pasteOpen=false;biRender();
+ }
  document.addEventListener('click',function(e){
   if(e.target.closest('[data-bi="new"],[data-open-bulk]')){BS.classic=false;}
  },true);
  document.addEventListener('change',function(e){
   var t=e.target;if(!t||!document.getElementById('bsPage'))return;
-  if(t.id==='bsKind'){BS.kind=t.value;dropStale();biRender();return;}
-  if(t.id==='bsRole'){BS.role=t.value;dropStale();refreshTable();return;}
-  if(t.id==='bsDue'){BS.due=t.value;refreshTable();return;}
+  if(t.id==='bsKindSel'){setKind(t.value);return;}
+  if(t.id==='bsDue'){setDue(t.value);return;}
   if(t.id==='bsCompany'){BS.company=t.value;BS.dept='';biRender();return;}
-  if(t.id==='bsDept'){BS.dept=t.value;refreshTable();return;}
-  if(t.hasAttribute('data-bs-pick')){
-   var id=t.getAttribute('data-bs-pick');
-   if(t.checked){if(count()>=100){t.checked=false;say('Maximum 100 per batch.');return;}BS.picked[id]=true;}else delete BS.picked[id];
-   refreshTable();return;
-  }
-  if(t.hasAttribute('data-bs-all')){
-   var list=visible().slice(0,100).filter(function(p){return check(p).ok;});
-   if(t.checked){list.forEach(function(p){if(count()<100)BS.picked[p.id]=true;});}else list.forEach(function(p){delete BS.picked[p.id];});
+  if(t.id==='bsDept'){BS.dept=t.value;biRender();return;}
+  if(t.hasAttribute('data-bs-role')){
+   var rid=t.getAttribute('data-bs-role'),role=roleByLabel(t.value);
+   if(role)BS.roleOf[rid]=role.id;else{delete BS.roleOf[rid];if(String(t.value).trim()){var nr=rc.allByLabel[K(t.value)];say(nr?('Not ready: '+why(nr)+'. Publish it first.'):'Pick it from the list.');}}
    refreshTable();return;
   }
  });
  document.addEventListener('input',function(e){
   var t=e.target;if(!t||!document.getElementById('bsPage'))return;
-  if(t.id==='bsSearch'){BS.search=t.value;refreshTable();}
+  if(t.id==='bsSearch'){BS.search=t.value;var s=document.getElementById('bsSugg');if(s)s.innerHTML=suggHTML();}
   if(t.id==='bsNote')BS.note=t.value;
  });
+ document.addEventListener('keydown',function(e){
+  if(e.key==='Escape')closeDlg();
+  if(e.key==='Enter'&&e.target&&e.target.id==='bsSearch'&&document.getElementById('bsPage')){
+   e.preventDefault();
+   var r=suggest(BS.search);
+   if(r.length){addIds([r[0].id]);BS.search='';BS.focus=true;biRender();}
+  }
+ });
  document.addEventListener('click',async function(e){
+  var d=e.target.closest('[data-bsd]');
+  if(d){
+   var a2=d.getAttribute('data-bsd');
+   if(a2==='back'){closeDlg();return;}
+   if(d.disabled)return;
+   try{
+    if(a2==='send'){await sendBatch(d);return;}
+    if(a2==='senddp'){d.disabled=true;await sendDevplans(String(d.getAttribute('data-ids')||'').split('|').filter(Boolean),d);return;}
+   }catch(err){closeDlg();say(err.message);}
+   return;
+  }
+  if(document.getElementById('bsPage')){
+   var ad=e.target.closest('[data-bs-add]');if(ad){addIds([ad.getAttribute('data-bs-add')]);BS.search='';BS.focus=true;biRender();return;}
+   var rm=e.target.closest('[data-bs-rm]');if(rm){var rid2=rm.getAttribute('data-bs-rm');BS.list=BS.list.filter(function(i){return i!==rid2;});refreshTable();return;}
+  }
   var b=e.target.closest('[data-bs]');if(!b||b.disabled)return;
   var a=b.getAttribute('data-bs');
   try{
    if(a==='classic'){BS.classic=true;biRender();return;}
    if(a==='tick'){BS.classic=false;biRender();return;}
-   if(a==='preview')await preview();
+   if(a==='preview'){await preview();return;}
+   if(a==='goSent'){await ihOpen('sent');return;}
+   if(a==='goRedo'){await ihOpen('redos');return;}
+   if(a==='due7'){setDue(plus(7));return;}
+   if(a==='due14'){setDue(plus(14));return;}
+   if(a==='due30'){setDue(plus(30));return;}
+   if(a==='deptToggle'){BS.deptOpen=!BS.deptOpen;biRender();return;}
+   if(a==='addDept'){afterAdd(addReady(function(p){return (!BS.company||K(p.company)===K(BS.company))&&(!BS.dept||K(p.department)===K(BS.dept));}));return;}
+   if(a==='addAll'){afterAdd(addReady(null));return;}
+   if(a==='clearList'){BS.list=[];BS.pasteMsg='';biRender();return;}
+   if(a==='pasteToggle'){BS.pasteOpen=!BS.pasteOpen;biRender();return;}
+   if(a==='pasteApply'){applyPaste();return;}
+   if(a==='applyRole'){
+    rebuildRoles();
+    var inp=document.getElementById('bsApplyRole'),role=inp?roleByLabel(inp.value):null;
+    if(!role){var nr2=inp?rc.allByLabel[K(inp.value)]:null;say(nr2?('Not ready: '+why(nr2)+'. Publish it first.'):'Pick one from the list first.');return;}
+    var n=0;pickedRows().forEach(function(p){BS.roleOf[p.id]=role.id;n++;});
+    if(!n){say('Add people to the list first.');return;}
+    refreshTable();say('Applied to '+n+' '+(n===1?'person':'people')+'.');return;
+   }
   }catch(err){say(err.message);}
  });
+ /* The Invitations & Follow-up menu item opens this page. The old Invite employee, Invite manager and Bulk tabs lead here too. */
+ var prevLoad=loadPage;
+ loadPage=function(id){
+  if((id==='hr-invitation-hub'||id==='hohr-invitation-hub')&&['hr','hohr'].indexOf(APP.currentRole)>=0){BS.classic=false;return biOpen();}
+  return prevLoad.apply(this,arguments);
+ };
+ document.addEventListener('click',function(e){
+  var t=e.target.closest('[data-ih="view"]');
+  if(!t||['hr','hohr'].indexOf(APP.currentRole)<0)return;
+  var v=t.getAttribute('data-value');
+  if(v==='employee'||v==='manager'){e.stopImmediatePropagation();e.preventDefault();BS.classic=false;if(v!==BS.mode){BS.mode=v;BS.kind=DEFAULT[v];resetPick();}biOpen();}
+ },true);
+ function fixTabs(){
+  var root=document.getElementById('ihRoot');if(!root||['hr','hohr'].indexOf(APP.currentRole)<0)return;
+  var tabs=root.querySelector('.ih-tabs');if(!tabs)return;
+  var emp=tabs.querySelector('[data-ih="view"][data-value="employee"]'),mg=tabs.querySelector('[data-ih="view"][data-value="manager"]'),bulk=tabs.querySelector('[data-open-bulk]');
+  if(emp){var sp=emp.querySelector('span');if(sp)sp.textContent='Employee invitations';}
+  if(mg){var sp2=mg.querySelector('span');if(sp2)sp2.textContent='Manager invitations';}
+  if(bulk)bulk.style.display='none';
+ }
+ var prevIh=ihRender;
+ ihRender=function(){var r=prevIh.apply(this,arguments);try{fixTabs();}catch(e){}return r;};
+ if(window.__BS_TEST)window.__bs={BS:BS,check:check,pickedRows:pickedRows,listRows:listRows,suggest:suggest,listHTML:listHTML,barHTML:barHTML,draw:draw,preview:preview,invIndex:invIndex,addIds:addIds,addReady:addReady,sendCount:sendCount,dpGroups:dpGroups,sendDevplans:sendDevplans,setKind:setKind,rebuildRoles:rebuildRoles,refreshTable:refreshTable};
 })();
 </script>
 <script id="cms-login-access-v1">
@@ -45460,7 +45824,7 @@ function tableHTML(){
  ensure();
 })();
 </script>
-<<script id="cms-dept-staff-popup-v1">
+<script id="cms-dept-staff-popup-v1">
 /* Departments page: click the Staff number to see the people in that department (a side panel with the list). */
 (function(){
  'use strict';
@@ -46709,6 +47073,173 @@ function tableHTML(){
  inject();
 })();
 </script>
+<script id="cms-sent-invites-v1">
+/* Sent invites: cleaner table. Summary cards, filter pills, search, one-line rows, one View button and a "..." menu.
+   The menu buttons use the same actions as before (Email status, Extend deadline, Cancel, Delete). */
+(function(){
+ 'use strict';
+ if(window.__cmsSentInvV1)return;window.__cmsSentInvV1=true;
+ var SI={pill:'all',q:'',page:0,size:15};
+ function E(x){return typeof ihE==='function'?ihE(x):String(x==null?'':x).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');}
+ function admin(){return ['hr','hohr'].indexOf(APP.currentRole)>=0;}
+ function css(){
+  if(document.getElementById('si-style'))return;
+  var s=document.createElement('style');s.id='si-style';
+  s.textContent=
+  '#siPage{font-size:16px;color:#0f172a}'+
+  '#siPage .si-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px;margin:4px 0 16px}'+
+  '#siPage .si-card{background:#fff;border:1px solid #cfd8ea;border-left:6px solid #94a3b8;border-radius:12px;padding:14px 18px}'+
+  '#siPage .si-card span{display:block;font-size:15px;font-weight:700;color:#334155}#siPage .si-card b{display:block;font-size:34px;font-weight:800;line-height:1.15}'+
+  '#siPage .si-c-sent{border-left-color:#0ea5e9}#siPage .si-c-wait{border-left-color:#f59e0b}#siPage .si-c-late{border-left-color:#ef4444}#siPage .si-c-done{border-left-color:#16a34a}'+
+  '#siPage .si-tools{display:flex;gap:14px;align-items:center;flex-wrap:wrap;margin:0 0 14px}'+
+  '#siPage .si-pills{display:flex;gap:8px;flex-wrap:wrap}'+
+  '#siPage .si-pill{border:2px solid #cbd5e1;background:#fff;color:#0f172a;border-radius:999px;padding:8px 18px;font-size:16px;font-weight:700;cursor:pointer}'+
+  '#siPage .si-pill.on{background:#312e81;border-color:#312e81;color:#fff}'+
+  '#siPage .si-search{flex:1;min-width:260px}#siPage .si-search input{width:100%;font-size:16px;padding:11px 14px;border:2px solid #cbd5e1;border-radius:10px}'+
+  '#siPage .si-wrap{background:#fff;border:1px solid #cfd8ea;border-radius:14px;overflow:auto}'+
+  '#siPage table{width:100%;border-collapse:collapse;font-size:16px}'+
+  '#siPage th{text-align:left;background:#f1f5f9;color:#334155;font-size:14px;padding:12px 12px;border-bottom:2px solid #cbd5e1;white-space:nowrap}'+
+  '#siPage td{padding:12px;border-bottom:1px solid #e2e8f0;vertical-align:middle;color:#0f172a}'+
+  '#siPage tbody tr:nth-child(even) td{background:#fafbfe}'+
+  '#siPage tbody tr:hover td{background:#eef2ff}'+
+  '#siPage .si-who{display:flex;align-items:center;gap:12px;min-width:240px}'+
+  '#siPage .si-av{width:40px;height:40px;border-radius:50%;background:#3b4fc4;color:#fff;font-weight:800;font-size:15px;display:flex;align-items:center;justify-content:center;flex:none}'+
+  '#siPage td b{font-weight:800}#siPage td small{display:block;color:#475569;font-size:14px;margin-top:1px}'+
+  '.si-chip{display:inline-block;padding:5px 12px;border-radius:999px;font-size:14px;font-weight:700;white-space:nowrap}'+
+  '.si-ok{background:#bbf7d0;color:#14532d}.si-wait{background:#fde68a;color:#78350f}.si-late{background:#fecaca;color:#7f1d1d}.si-off{background:#e2e8f0;color:#334155}'+
+  '#siPage .si-bar{height:7px;background:#e2e8f0;border-radius:99px;margin-top:6px;overflow:hidden;width:150px}#siPage .si-bar i{display:block;height:100%;background:#16a34a}#siPage .si-bar i.over{background:#f59e0b}'+
+  '#siPage .si-act{display:flex;gap:8px;align-items:center;white-space:nowrap}'+
+  '#siPage .si-act .btn{font-size:15px;padding:9px 18px}'+
+  '#siPage .si-more{width:40px;height:38px;border:2px solid #cbd5e1;background:#fff;border-radius:10px;font-size:18px;font-weight:800;cursor:pointer;color:#0f172a}'+
+  '#siPage .si-page{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:12px;font-size:15px;color:#334155}'+
+  '#siPage .si-page button{font-size:15px;padding:8px 16px;border:2px solid #cbd5e1;background:#fff;border-radius:10px;font-weight:700;cursor:pointer}#siPage .si-page button:disabled{opacity:.45;cursor:not-allowed}'+
+  '#ihRoot #siPage table,#siPage table{table-layout:auto!important;width:100%!important;min-width:760px!important}'+
+  '#ihRoot #siPage td,#ihRoot #siPage th,#siPage td,#siPage th{min-width:0;width:auto;overflow-wrap:anywhere;word-break:normal}'+
+  '#siPage th{white-space:nowrap}#siPage td{white-space:normal}'+
+  '#siPage .si-who{min-width:200px;max-width:280px}#siPage .si-who>div{min-width:0}'+
+  '#siPage td small{overflow-wrap:anywhere}'+
+  '#siMenu{position:fixed;z-index:7000;background:#fff;border:1px solid #cbd5e1;border-radius:12px;box-shadow:0 12px 30px rgba(15,23,42,.25);padding:6px;min-width:210px}'+
+  '#siMenu button{display:block;width:100%;text-align:left;border:0;background:none;padding:11px 14px;font-size:16px;font-weight:600;color:#0f172a;border-radius:8px;cursor:pointer}'+
+  '#siMenu button:hover{background:#eef2ff}#siMenu button.del{color:#b91c1c}#siMenu button.del:hover{background:#fee2e2}';
+  document.head.appendChild(s);
+ }
+ function kindOf(r){
+  if(r.state==='Cancelled'||r.status==='Cancelled')return 'cancel';
+  if(r.submitted_at)return 'done';
+  if(r.status==='Overdue')return 'late';
+  return 'wait';
+ }
+ function shortDate(ts){
+  if(!ts)return '';var d=new Date(ts);if(isNaN(d.getTime()))return String(ts);
+  return d.toLocaleDateString('en-GB',{day:'numeric',month:'short',timeZone:'Africa/Nairobi'});
+ }
+ function dueDate(v){
+  if(!v)return '';var d=new Date(v+'T12:00:00');if(isNaN(d.getTime()))return String(v);
+  return d.toLocaleDateString('en-GB',{day:'numeric',month:'short'});
+ }
+ function initials(r){
+  var s=String(r.employee_name||r.recipient_email||'?').replace(/@.*/,'').replace(/[^A-Za-z ]/g,' ').trim().split(/\s+/);
+  return ((s[0]||'?').charAt(0)+(s.length>1?s[s.length-1].charAt(0):'')).toUpperCase();
+ }
+ function days(v){var n=Number(v);return isFinite(n)?n.toFixed(1):'0.0';}
+ function chip(r){
+  var k=kindOf(r);
+  if(k==='cancel')return '<span class="si-chip si-off">Cancelled</span>';
+  if(k==='done')return '<span class="si-chip '+(r.status==='Submitted late'?'si-wait':'si-ok')+'">'+E(r.status||'Submitted')+'</span>';
+  if(k==='late'){var n=Math.abs(Number(r.days_remaining)||0);return '<span class="si-chip si-late">Overdue'+(n?' by '+n+' day'+(n===1?'':'s'):'')+'</span>';}
+  var d=Number(r.days_remaining);
+  return '<span class="si-chip si-wait">'+(d===0?'Due today':(isFinite(d)&&d>0?'Waiting, '+d+' day'+(d===1?'':'s')+' left':'Waiting'))+'</span>';
+ }
+ function took(r){
+  if(!r.submitted_at)return '<span style="color:#475569">'+(kindOf(r)==='cancel'?'Not applicable':'Not submitted yet')+'</span>';
+  var a=Number(r.actual_days),t=Number(r.target_days),pct=t>0?Math.min(100,Math.round(a/t*100)):100;
+  return '<b>'+days(a)+' days</b><small>target '+days(t)+'</small><div class="si-bar"><i class="'+(t>0&&a>t?'over':'')+'" style="width:'+pct+'%"></i></div>';
+ }
+ function rowsAll(){return Array.isArray(IH.rows)?IH.rows:[];}
+ function filtered(){
+  var q=SI.q.trim().toLowerCase();
+  return rowsAll().filter(function(r){
+   var k=kindOf(r);
+   if(SI.pill==='wait'&&k!=='wait')return false;
+   if(SI.pill==='late'&&k!=='late')return false;
+   if(SI.pill==='done'&&k!=='done')return false;
+   if(SI.pill==='cancel'&&k!=='cancel')return false;
+   if(q&&[r.recipient_email,recipName(r),r.employee_name,r.company,r.department,r.target_position,r.target_department,(typeof ihWork==='function'?ihWork(r):r.kind)].join(' ').toLowerCase().indexOf(q)<0)return false;
+   return true;
+  });
+ }
+ function cardsHTML(){
+  var all=rowsAll(),c={wait:0,late:0,done:0};
+  all.forEach(function(r){var k=kindOf(r);if(c[k]!==undefined)c[k]++;});
+  return '<div class="si-cards"><div class="si-card si-c-sent"><span>Sent</span><b>'+all.length+'</b></div><div class="si-card si-c-wait"><span>Waiting</span><b>'+c.wait+'</b></div><div class="si-card si-c-late"><span>Overdue</span><b>'+c.late+'</b></div><div class="si-card si-c-done"><span>Submitted</span><b>'+c.done+'</b></div></div>';
+ }
+ function pillsHTML(){
+  return [['all','All'],['wait','Waiting'],['late','Overdue'],['done','Submitted'],['cancel','Cancelled']].map(function(p){return '<button type="button" class="si-pill'+(SI.pill===p[0]?' on':'')+'" data-si-pill="'+p[0]+'">'+p[1]+'</button>';}).join('');
+ }
+ function tableHTML(){
+  var rows=filtered(),pages=Math.max(1,Math.ceil(rows.length/SI.size));
+  if(SI.page>=pages)SI.page=pages-1;if(SI.page<0)SI.page=0;
+  var from=SI.page*SI.size,part=rows.slice(from,from+SI.size);
+  var body=part.map(function(r){
+   var mgrKind=String(r.kind||'').indexOf('manager')===0;
+   if(mgrKind)loadNames();
+   var rn=recipName(r),name=rn||r.recipient_email,sub=rn?r.recipient_email:'',by=senderOf(r);
+   var forWho=(mgrKind&&r.employee_name)?'<small>For: '+E(r.employee_name)+'</small>':'';
+   return '<tr><td><div class="si-who"><span class="si-av">'+E(initials({employee_name:name,recipient_email:r.recipient_email}))+'</span><div><b>'+E(name)+'</b><small>'+E(sub)+'</small></div></div></td>'+
+    '<td><b>'+E(typeof ihWork==='function'?ihWork(r):r.kind)+'</b>'+forWho+'<small>'+E(r.target_position||'')+(r.target_department?' | '+E(r.target_department):'')+'</small></td>'+
+    '<td>Sent '+E(shortDate(r.issued_at))+'<small>Due '+E(dueDate(r.due_date))+'</small>'+(by?'<small>By '+E(by)+'</small>':'')+'</td>'+
+    '<td>'+chip(r)+'</td><td>'+took(r)+'</td>'+
+    '<td><div class="si-act"><button type="button" class="btn btn-primary" data-ih="details" data-value="'+E(r.id)+'">View</button><button type="button" class="si-more" data-si-menu="'+E(r.id)+'" aria-label="More actions">...</button></div></td></tr>';
+  }).join('')||'<tr><td colspan="6" style="padding:26px;color:#334155">No invitations match this view.</td></tr>';
+  return '<div class="si-wrap"><table><thead><tr><th>Person</th><th>Work</th><th>Sent and due</th><th>Status</th><th>Took</th><th>Action</th></tr></thead><tbody>'+body+'</tbody></table></div>'+
+   '<div class="si-page"><span>'+(rows.length?'Showing '+(from+1)+' to '+Math.min(rows.length,from+SI.size):'Showing 0')+' of '+rows.length+' invitations</span><span><button type="button" data-si-page="-1" '+(SI.page?'':'disabled')+'>Previous</button> <button type="button" data-si-page="1" '+(SI.page+1>=pages?'disabled':'')+'>Next</button></span></div>';
+ }
+ function closeMenu(){var m=document.getElementById('siMenu');if(m)m.remove();}
+ function openMenu(btn){
+  closeMenu();
+  var id=btn.getAttribute('data-si-menu'),r=rowsAll().filter(function(x){return String(x.id)===String(id);})[0];if(!r)return;
+  var items='<button type="button" data-fwi-email="'+E(id)+'">Email status</button>';
+  if(r.state==='Pending'){
+   items+='<button type="button" data-cms-extend-deadline="'+E(id)+'">Extend deadline</button>';
+   items+='<button type="button" data-ih="cancel" data-value="'+E(id)+'">Cancel or reissue</button>';
+  }
+  if(typeof sdAllowed==='function'&&sdAllowed())items+='<button type="button" class="del" data-hd-delete-invite="'+E(id)+'">Delete</button>';
+  var m=document.createElement('div');m.id='siMenu';m.innerHTML=items;document.body.appendChild(m);
+  var b=btn.getBoundingClientRect(),w=m.offsetWidth||220,hh=m.offsetHeight||160;
+  var left=Math.max(8,Math.min(b.right-w,window.innerWidth-w-8)),top=b.bottom+6;
+  if(top+hh>window.innerHeight-8)top=Math.max(8,b.top-hh-6);
+  m.style.left=left+'px';m.style.top=top+'px';
+ }
+ function render(){
+  var host=document.getElementById('ihRegister');if(!host)return;
+  css();
+  var panel=host.parentElement;
+  if(panel)Array.prototype.forEach.call(panel.children,function(c){if(c!==host&&c.matches&&c.matches('.ir-register-title,.ir-filter-row,.ih-list-tools'))c.style.display='none';});
+  host.innerHTML='<div id="siPage">'+cardsHTML()+'<div class="si-tools"><div class="si-pills" id="siPills">'+pillsHTML()+'</div><div class="si-search"><input type="search" id="siSearch" placeholder="Search by name, email or work" value="'+E(SI.q)+'"></div></div><div id="siTable">'+tableHTML()+'</div></div>';
+ }
+ var prevReg=ihRegister;
+ ihRegister=function(){
+  if(IH.view!=='sent'||!admin())return prevReg.apply(this,arguments);
+  render();
+ };
+ document.addEventListener('click',function(e){
+  var pill=e.target.closest('[data-si-pill]');
+  if(pill){SI.pill=pill.getAttribute('data-si-pill');SI.page=0;closeMenu();var p=document.getElementById('siPills'),t=document.getElementById('siTable');if(p)p.innerHTML=pillsHTML();if(t)t.innerHTML=tableHTML();return;}
+  var pg=e.target.closest('[data-si-page]');
+  if(pg){SI.page+=parseInt(pg.getAttribute('data-si-page'),10);closeMenu();var t2=document.getElementById('siTable');if(t2)t2.innerHTML=tableHTML();return;}
+  var more=e.target.closest('[data-si-menu]');
+  if(more){var open=document.getElementById('siMenu');var same=open&&open.getAttribute('data-for')===more.getAttribute('data-si-menu');closeMenu();if(!same){openMenu(more);var m=document.getElementById('siMenu');if(m)m.setAttribute('data-for',more.getAttribute('data-si-menu'));}return;}
+  if(!e.target.closest('#siMenu'))closeMenu();
+  else setTimeout(closeMenu,0);
+ });
+ document.addEventListener('input',function(e){
+  if(e.target&&e.target.id==='siSearch'){SI.q=e.target.value;SI.page=0;var t=document.getElementById('siTable');if(t)t.innerHTML=tableHTML();}
+ });
+ document.addEventListener('keydown',function(e){if(e.key==='Escape')closeMenu();});
+ window.addEventListener('scroll',closeMenu,true);
+ if(window.__SI_TEST)window.__si={SI:SI,filtered:filtered,tableHTML:tableHTML,cardsHTML:cardsHTML,chip:chip,took:took,kindOf:kindOf,render:render,openMenu:openMenu};
+})();
+</script>
 <style id="cms-fixed-scale-v1">
 /* Permanent 80% display size for the signed-in app. To change the size, edit the two numbers below:
    zoom 0.8 and the 125vh (125vh = 100 divided by 0.8). For 70% use 0.7 and 143vh. For 75% use 0.75 and 133vh. */
@@ -47004,6 +47535,28 @@ html:not(:has(.header[style*="display: none"])):not(:has(#loginEmail)):not(:has(
   var t,checkedFor='';new MutationObserver(function(){if(t)return;t=setTimeout(function(){t=null;try{ensurePanel();}catch(e){}try{if(APP.user&&checkedFor!==APP.user.email){checkedFor=APP.user.email;checkPending();}}catch(e){}},200);}).observe(document.body,{childList:true,subtree:true});
   setTimeout(checkPending,4000);setInterval(checkPending,POLL_MS);
  }
+})();
+</script>
+<script id="cms-sent-names-v1">
+/* Sent invites: names of the people the emails went to. Global, so it can be pasted anywhere near the end of the file. */
+(function(){
+ 'use strict';
+ var NM={},asked=false;
+ window.loadNames=function(){
+  if(asked)return;asked=true;
+  try{ihRPC('managers').then(function(list){
+   (list||[]).forEach(function(m){var k=String(m.email||'').trim().toLowerCase();if(k&&m.name)NM[k]=m.name;});
+   var b=document.querySelector('#siPage .si-pill.on');if(b)b.click();
+  }).catch(function(){});}catch(e){}
+ };
+ window.recipName=function(r){
+  var k=String(r.recipient_email||'').trim().toLowerCase();
+  if(String(r.kind||'').indexOf('manager')!==0&&r.employee_name)return r.employee_name;
+  return r.recipient_name||NM[k]||'';
+ };
+ window.senderOf=function(r){
+  return r.issued_by_name||r.sent_by_name||r.issued_by_email||r.sent_by_email||r.created_by_email||r.invited_by_email||'';
+ };
 })();
 </script>
 </body>
