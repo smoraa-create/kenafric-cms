@@ -36185,7 +36185,7 @@ function kgStat(parent,label,value){
 #cmsDevelopmentV1 .kg-route span{border:1px solid #dce4f3;background:#f8fafc;border-radius:999px;padding:5px 10px;font-size:11px;font-weight:800;color:#556276}
 @media(max-width:1100px){#cmsDevelopmentV1 .kg-companies{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:650px){#cmsDevelopmentV1 .kg-companies{grid-template-columns:1fr}#cmsDevelopmentV1 .kg-company{padding:13px}}
-`;
+`;window.__kgCompanyOverviewCss = companyOverviewCss;
  const style = document.createElement('style'); style.id='cms-development-interface-style-v1';style.textContent=css;document.head.append(style);
  function el(tag, text, cls, parent) {
   const n=document.createElement(tag); if(text!=null)n.textContent=String(text);if(cls)n.className=cls;if(parent)parent.append(n);return n;
@@ -36811,7 +36811,7 @@ function cmsModernDevelopmentLayoutV1() {
  const style = document.createElement('style');
  style.id = 'cms-development-modern-layout-style-v1';
  style.textContent = css;
- style.textContent += companyOverviewCss;
+ style.textContent += (window.__kgCompanyOverviewCss || '');
  document.head.append(style);
  function make(tag, cls, text) {
   const n=document.createElement(tag);n.className=cls;
@@ -41996,14 +41996,16 @@ body.cms-focus-editor-v1 #mainContent #fwScreen.cfu-screen #fwBody .cfe-footer {
   function x(v){return typeof ihE==='function'?ihE(v):String(v==null?'':v);}
   function hrView(){return ['hr','hohr'].includes(APP.currentRole);}
   function rowFor(id){return (IH.rows||[]).find(function(r){return String(r.id)===String(id);});}
-  function dateLabel(v){
-    if(!v)return 'Not set';
-    var d=new Date(v+'T00:00:00');
-    return isNaN(d)?String(v):d.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});
+  function today(){return typeof ihToday==='function'?ihToday():new Date().toISOString().slice(0,10);}
+  function day(v){return String(v||'').slice(0,10);}
+  // Returns '' when the date is fine, otherwise a plain message.
+  function dateProblem(value,current){
+    if(!/^\d{4}-\d{2}-\d{2}$/.test(value))return 'Choose the new deadline date.';
+    if(value<today())return 'The new deadline cannot be in the past.';
+    if(value===day(current))return 'That is already the deadline. Choose a different date.';
+    return '';
   }
-  function dateOk(value,current){
-    return /^\d{4}-\d{2}-\d{2}$/.test(value)&&value>String(current||'');
-  }
+  function kindOf(value,current){return value>day(current)?'extend':'earlier';}
   function addButtons(){
     if(!hrView()||IH.view!=='sent')return;
     var host=document.getElementById('ihRegister');
@@ -42017,7 +42019,7 @@ body.cms-focus-editor-v1 #mainContent #fwScreen.cfu-screen #fwBody .cfe-footer {
       if(!cell)return;
       var b=document.createElement('button');
       b.type='button';b.className='ad-btn';b.dataset.cmsExtendDeadline=id;
-      b.textContent='Extend deadline';
+      b.textContent='Change deadline';
       cell.appendChild(b);
     });
   }
@@ -42028,31 +42030,48 @@ body.cms-focus-editor-v1 #mainContent #fwScreen.cfu-screen #fwBody .cfe-footer {
     closeEditor();
     var host=document.getElementById('ihRegister');if(!host)return;
     var box=document.createElement('section');box.id='cmsExtendDeadlineEditor';box.className='ih-confirm';
-    box.innerHTML='<h3>Extend submission deadline</h3>'+
+    box.innerHTML='<h3>Change submission deadline</h3>'+
       '<p><b>Invitee:</b> '+x(row.recipient_email)+'</p>'+
       '<p><b>Work:</b> '+x(typeof ihWork==='function'?ihWork(row):row.kind)+'</p>'+
-      '<p><b>Current deadline:</b> '+x(row.due_date)+' | end of day, Nairobi</p>'+ 
-      '<label>New deadline<input id="cmsExtendDeadlineDate" type="date" min="'+x(new Date().toISOString().slice(0,10))+'" value=""></label>'+
-      '<label>Reason (optional)<textarea id="cmsExtendDeadlineReason" rows="3" maxlength="2000" placeholder="Why is more time being granted?"></textarea></label>'+
-      '<p class="ih-note">The invitee keeps the same invitation and saved work. A renewed email will be queued automatically.</p>'+
-      '<button type="button" class="ad-btn ad-primary" data-cms-extend-action="save" data-id="'+x(id)+'">Confirm extension</button>'+ 
+      '<p><b>Current deadline:</b> '+x(row.due_date)+' | end of day, Nairobi</p>'+
+      '<label>New deadline<input id="cmsExtendDeadlineDate" type="date" min="'+x(today())+'" value=""></label>'+
+      '<p id="cmsExtendDeadlineKind" class="ih-note"></p>'+
+      '<label>Reason (optional)<textarea id="cmsExtendDeadlineReason" rows="3" maxlength="2000" placeholder="Why is the deadline changing?"></textarea></label>'+
+      '<p class="ih-note">A later date gives the invitee more time. An earlier date brings the deadline forward. The invitee keeps the same invitation and saved work, and a renewed email is queued automatically.</p>'+
+      '<p id="cmsExtendDeadlineMsg" role="alert"></p>'+
+      '<button type="button" class="ad-btn ad-primary" data-cms-extend-action="save" data-id="'+x(id)+'" style="margin-right:8px">Confirm change</button>'+
       '<button type="button" class="ad-btn" data-cms-extend-action="cancel">Cancel</button>';
     host.after(box);box.scrollIntoView({block:'nearest'});
-    document.getElementById('cmsExtendDeadlineDate')?.focus();
+    var input=document.getElementById('cmsExtendDeadlineDate');
+    input?.addEventListener('input',function(){
+      var k=document.getElementById('cmsExtendDeadlineKind');if(!k)return;
+      if(!/^\d{4}-\d{2}-\d{2}$/.test(input.value)){k.textContent='';return;}
+      k.textContent=input.value>day(row.due_date)?'This extends the deadline (more time).':input.value<day(row.due_date)?'This brings the deadline forward (less time).':'';
+    });
+    input?.focus();
   }
-  async function saveExtension(button){
+  function showMessage(text,ok){
+    var m=document.getElementById('cmsExtendDeadlineMsg');
+    if(!m){alert(text);return;}
+    m.textContent=text;
+    m.style.cssText=(ok?'color:#047857':'color:#b91c1c')+';font-weight:700;margin:8px 0';
+  }
+  async function saveChange(button){
     var id=button.dataset.id,row=rowFor(id),date=document.getElementById('cmsExtendDeadlineDate')?.value||'',reason=document.getElementById('cmsExtendDeadlineReason')?.value.trim()||'';
     if(!row)throw Error('Invitation not found. Refresh Sent invitations.');
-    if(row.state!=='Pending')throw Error('Only a pending invitation can be extended.');
-    if(!dateOk(date,row.due_date))throw Error('Choose a new date later than '+row.due_date+'.');
-    if(!confirm('Extend '+row.recipient_email+' from '+row.due_date+' to '+date+'? A renewed email will be queued.'))return;
+    if(row.state!=='Pending')throw Error('Only a pending invitation can be changed.');
+    var problem=dateProblem(date,row.due_date);
+    if(problem)throw Error(problem);
+    var kind=kindOf(date,row.due_date);
+    var verb=kind==='extend'?'Extend':'Bring forward';
+    if(!confirm(verb+' the deadline for '+row.recipient_email+' from '+row.due_date+' to '+date+'? A renewed email will be queued.'))return;
     button.disabled=true;
     try{
       var q=await _supabase.rpc('cms_invitation_extend_deadline',{p_invitation_id:id,p_due_date:date,p_reason:reason});
       if(q.error)throw Error(q.error.message);
       closeEditor();
       await ihOpen('sent');
-      if(typeof ihNotice==='function')ihNotice('Deadline extended to '+date+' for '+row.recipient_email+'.');
+      if(typeof ihNotice==='function')ihNotice('Deadline '+(kind==='extend'?'extended':'brought forward')+' to '+date+' for '+row.recipient_email+'.');
     }finally{if(button.isConnected)button.disabled=false;}
   }
   var oldRegister=ihRegister;
@@ -42063,7 +42082,7 @@ body.cms-focus-editor-v1 #mainContent #fwScreen.cfu-screen #fwBody .cfe-footer {
     var action=e.target.closest('[data-cms-extend-action]');
     if(!action)return;
     if(action.dataset.cmsExtendAction==='cancel'){closeEditor();return;}
-    if(action.dataset.cmsExtendAction==='save')saveExtension(action).catch(function(err){if(typeof ihNotice==='function')ihNotice(err.message);});
+    if(action.dataset.cmsExtendAction==='save')saveChange(action).catch(function(err){showMessage(err.message,false);});
   });
   var oldOpen=ihOpen;
   ihOpen=async function(){var result=await oldOpen.apply(this,arguments);addButtons();return result;};
@@ -47557,6 +47576,126 @@ html:not(:has(.header[style*="display: none"])):not(:has(#loginEmail)):not(:has(
  window.senderOf=function(r){
   return r.issued_by_name||r.sent_by_name||r.issued_by_email||r.sent_by_email||r.created_by_email||r.invited_by_email||'';
  };
+})();
+</script>
+<style id="cms-submit-guide-style-v1">
+.cfe-nav-button.cmsfix-flag{border-left:4px solid #dc2626!important;background:#fef2f2!important}
+.cfe-nav-button.cmsfix-flag::after{content:"Fix";margin-left:auto;background:#dc2626;color:#fff;font-size:10px;font-weight:800;padding:2px 8px;border-radius:10px}
+#cmsFixListV1{margin-top:16px;border:2px solid #dc2626;background:#fef2f2;border-radius:10px;padding:14px 16px}
+#cmsFixListV1.ok{border-color:#059669;background:#ecfdf5}
+#cmsFixListV1 h4{font-size:14px;font-weight:800;color:#991b1b;margin:0 0 8px}
+#cmsFixListV1.ok h4{color:#065f46;margin:0}
+#cmsFixListV1 .fx-row{display:flex;gap:12px;align-items:center;justify-content:space-between;padding:8px 0;border-top:1px solid #fecaca}
+#cmsFixListV1 .fx-row:first-of-type{border-top:0}
+#cmsFixListV1 .fx-txt{font-size:13px;color:#1e293b}
+#cmsFixListV1 .fx-help{font-size:12px;color:#64748b;margin-top:2px}
+#cmsFixListV1 button{flex:none;background:#dc2626;color:#fff;border:0;border-radius:6px;padding:8px 14px;font-size:12px;font-weight:700;cursor:pointer}
+.cmsfix-note{background:#fef2f2;border:1px solid #fca5a5;color:#991b1b;border-radius:8px;padding:10px 12px;margin-bottom:12px;font-size:13px;font-weight:600}
+.cmsfix-flash{outline:3px solid #dc2626!important;outline-offset:3px;border-radius:8px}
+</style>
+<script id="cms-submit-guide-v1">
+(function(){
+ 'use strict';
+ if(window.__cmsSubmitGuideV1)return;window.__cmsSubmitGuideV1=true;
+ var lastSig='',busy=false;
+ function esc(t){return String(t).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+ function norm(t){return String(t||'').trim().toLowerCase();}
+ function problems(){
+  var out=[],seen={},r=FW.revision,list=[];
+  try{list=fwMinimums(r)||[];}catch(e){return out;}
+  list.forEach(function(m){
+   var x=/^(.*): (\d+)\/(\d+)( Critical experiences)?$/.exec(m);
+   if(x){
+    var k=norm(x[1]);if(seen[k])return;seen[k]=1;
+    var have=Number(x[2]),need=Number(x[3]);
+    out.push({name:x[1],text:x[1]+' has '+have+' Critical experience'+(have===1?'':'s')+'. It needs at least '+need+'.',help:'Change the type of one experience to Critical, or add a Critical experience.'});
+   }else if(/empty optional/i.test(m)){
+    var byCode={};
+    (r.items||[]).forEach(function(i){
+     if(!String(i.text||'').trim()||!String(i.classification||'').trim()){
+      if(!byCode[i.code])byCode[i.code]={n:0,focus:'fwt-'+i.id};byCode[i.code].n++;
+     }
+    });
+    Object.keys(byCode).forEach(function(code){
+     var nm=compNameOf(code),b=byCode[code];
+     out.push({name:nm,focus:b.focus,text:nm+' has '+b.n+' experience'+(b.n===1?'':'s')+' that is blank or has no type.',help:'Write it and choose Critical, Important or Value-Add, or remove it.'});
+    });
+   }else{
+    out.push({name:'',text:m,help:''});
+   }
+  });
+  return out;
+ }
+ function buttons(){return Array.prototype.slice.call(document.querySelectorAll('#fwBody .cfe-nav .cfe-nav-button')).filter(function(b){return b.querySelectorAll('span').length>=2;});}
+ function btnFor(name){
+  if(!name)return null;var n=norm(name),bs=buttons();
+  for(var i=0;i<bs.length;i++){var t=norm(bs[i].querySelectorAll('span')[1].textContent);if(t===n)return bs[i];}
+  for(var j=0;j<bs.length;j++){var u=norm(bs[j].querySelectorAll('span')[1].textContent);if(u&&(u.indexOf(n)===0||n.indexOf(u)===0))return bs[j];}
+  return null;
+ }
+ function flash(el){if(!el)return;el.classList.add('cmsfix-flash');setTimeout(function(){el.classList.remove('cmsfix-flash');},4000);}
+ function go(p){
+  var b=btnFor(p.name);if(b)b.click();
+  setTimeout(function(){
+   var sec=b?document.getElementById(b.getAttribute('aria-controls')):null;
+   var el=p.focus?document.getElementById(p.focus):null;
+   var tgt=el||sec;if(!tgt)return;
+   tgt.scrollIntoView({behavior:'auto',block:'center'});
+   if(el&&el.focus)el.focus({preventScroll:true});
+   flash(el||sec);
+  },200);
+ }
+ function render(){
+  if(busy)return;busy=true;
+  try{
+   var review=document.querySelector('#fwBody .cfe-review');
+   if(typeof FW==='undefined'||!FW.revision||FW.revision.state!=='Draft'||!review||typeof fwMinimums!=='function'){return;}
+   var ps=problems();
+   var sig=JSON.stringify(ps.map(function(p){return p.text;}))+'|'+(document.getElementById('cmsFixListV1')?1:0)+'|'+buttons().length;
+   if(sig===lastSig)return;lastSig=sig;
+   var box=document.getElementById('cmsFixListV1');
+   if(!box){box=document.createElement('div');box.id='cmsFixListV1';review.appendChild(box);}
+   box.classList.toggle('ok',!ps.length);
+   if(!ps.length){box.innerHTML='<h4>Everything required is complete. You can submit.</h4>';}
+   else{
+    box.innerHTML='<h4>Fix '+ps.length+' thing'+(ps.length===1?'':'s')+' before you can submit</h4>'+ps.map(function(p,i){
+     return '<div class="fx-row"><div><div class="fx-txt">'+esc(p.text)+'</div>'+(p.help?'<div class="fx-help">'+esc(p.help)+'</div>':'')+'</div>'+(p.name?'<button type="button" data-cmsfix="'+i+'">Go and fix</button>':'')+'</div>';
+    }).join('');
+   }
+   var flagged={};
+   ps.forEach(function(p){var b=btnFor(p.name);if(b){flagged[b.getAttribute('aria-controls')]=p;}});
+   buttons().forEach(function(b){b.classList.toggle('cmsfix-flag',!!flagged[b.getAttribute('aria-controls')]);});
+   document.querySelectorAll('#fwBody .cfe-step').forEach(function(sec){
+    var p=flagged[sec.id],note=sec.querySelector(':scope > .cmsfix-note');
+    if(!p){if(note)note.remove();return;}
+    if(!note){note=document.createElement('div');note.className='cmsfix-note';sec.insertBefore(note,sec.firstChild);}
+    var t='To submit: '+p.text+' '+p.help;if(note.textContent!==t)note.textContent=t;
+   });
+  }catch(e){}finally{busy=false;}
+ }
+ document.addEventListener('click',function(e){
+  var b=e.target&&e.target.closest?e.target.closest('[data-cmsfix]'):null;if(!b)return;
+  var ps;try{ps=problems();}catch(x){return;}
+  var p=ps[Number(b.getAttribute('data-cmsfix'))];if(p)go(p);
+ });
+ setInterval(function(){try{render();}catch(e){}},500);
+
+ // Saved-copy question: for a Set competencies draft, keep what is on screen and carry on.
+ // The older saved version is not deleted: it stays in Saved work history, and a copy is set aside in this browser.
+ var keeping=false;
+ setInterval(async function(){
+  if(keeping)return;
+  try{
+   if(typeof WC==='undefined'||!WC.active||typeof wcSame!=='function'||!wcSame(WC.active))return;
+   var s=WC.active;
+   if(!s.offer||s.conflict||!s.offer.body||s.offer.body.kind!=='framework'||!document.getElementById('fwBody'))return;
+   keeping=true;
+   try{localStorage.setItem('cms_set_aside_'+Date.now(),JSON.stringify({scope:s.scope,offer:s.offer}));}catch(e){}
+   s.offer=null;s.savedSignature='';
+   if(typeof wcPanel==='function')wcPanel(s);
+   if(typeof wcSave==='function')await wcSave(s);
+  }catch(e){}finally{keeping=false;}
+ },800);
 })();
 </script>
 </body>
