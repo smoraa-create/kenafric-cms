@@ -5370,11 +5370,12 @@ errEl.textContent = error.message;
 errEl.style.display = 'block';
 return;
 }
-await enterApp(email);
+CMS_FP_TMP = pass; await enterApp(email);
 }
 async function enterApp(email) {
 if(!await suBeforeEnter(email))return;
 if(await cmsNeedsFirstPassword()){await cmsShowFirstPassword(email);return;}
+CMS_FP_TMP = '';
 try{localStorage.setItem(CMS_KNOWN_DEVICE_KEY,'1');}catch(e){}
 APP._photoOf={}; APP._avaByName=null;
 var boot = await Promise.all([
@@ -5476,7 +5477,7 @@ function cmsLoginPersonalise() {
   if (!submit || document.getElementById('cmsFirstHint')) return;
   var hint = document.createElement('p');
   hint.id = 'cmsFirstHint';
-  hint.innerHTML = '<span>First time? Your password is your <b>Employee ID</b>.</span>';
+ hint.innerHTML = '<span>First time? Use the temporary password in your invitation email.</span>';
   submit.parentNode.insertBefore(hint, submit);
 }
 // ===== END LOGIN PAGE POLISH =====
@@ -5491,7 +5492,7 @@ async function cmsNeedsFirstPassword() {
   } catch (e) { return false; }
 }
 
-var CMS_FP = { email: '', empId: '' };
+var CMS_FP_TMP = '';
 
 async function cmsShowFirstPassword(email) {
   CMS_FP.email = email;
@@ -5526,7 +5527,7 @@ async function cmsShowFirstPassword(email) {
   '<div style="margin-top:14px;font-size:14px;font-weight:600;color:#334155;line-height:2;">' +
   '<div id="fpR1"><span style="' + dot + '"></span>At least 8 characters</div>' +
   '<div id="fpR2"><span style="' + dot + '"></span>Includes a number</div>' +
-  '<div id="fpR3"><span style="' + dot + '"></span>Different from your Employee ID</div>' +
+  '<div id="fpR3"><span style="' + dot + '"></span>Different from your temporary password</div>' +
   '<div id="fpR4"><span style="' + dot + '"></span>Both entries match</div></div>' +
   '<p id="fpErr" role="alert" style="display:none;margin:10px 0 0;color:#b91c1c;font-size:14px;font-weight:700;"></p>' +
   '<button type="button" id="fpBtn" onclick="cmsFpSave()" disabled style="margin-top:18px;width:100%;height:52px;border:0;border-radius:12px;background:#94a3b8;color:#fff;font-size:17px;font-weight:800;cursor:not-allowed;">Save and continue</button>' +
@@ -5550,7 +5551,7 @@ function cmsFpCheck() {
   var ok = [
     p.length >= 8,
     /[0-9]/.test(p),
-    p.length > 0 && low !== CMS_FP.empId && low !== String(CMS_FP.email || '').toLowerCase(),
+      p.length > 0 && low !== CMS_FP.empId && low !== String(CMS_FP.email || '').toLowerCase() && p !== CMS_FP_TMP,
     p.length > 0 && p === c
   ];
   for (var i = 0; i < 4; i++) {
@@ -5583,7 +5584,7 @@ async function cmsFpSave() {
     cmsFpCheck();
     return;
   }
-  showToast('Password saved. Welcome to CMS.');
+  CMS_FP_TMP = ''; showToast('Password saved. Welcome to CMS.');;
   await enterApp(CMS_FP.email);
 }
 /* ===== END FIRST-TIME LOGIN BLOCK ===== */
@@ -44852,7 +44853,7 @@ body.cms-focus-editor-v1 #mainContent #fwScreen.cfu-screen #fwBody .cfe-footer {
    '<div id="lpBlocks">'+blocksHTML(f,r)+'</div>'+
    '<p class="li-note" id="lpTrusted" style="margin:6px 18px"></p>'+
    '<p class="li-note" id="lpScope" style="margin:6px 18px"><b>'+E(scopeText(f))+'</b></p>'+
-   '<div style="margin:14px 18px">'+(st==='pending'?'<button type="button" class="btn btn-outline" data-li="resend" data-id="'+E(String(r.employee_id).trim())+'">Resend invite</button> ':'')+(f.manager?'<button type="button" class="btn btn-outline" data-li="rmmgr" data-id="'+E(String(r.employee_id).trim())+'" style="color:#b91c1c;border-color:#b91c1c">Remove manager access</button>':'')+'</div><div id="lpRemove"></div>';
+ '<div style="margin:14px 18px">'+(st==='pending'?'<button type="button" class="btn btn-outline" data-li="resend" data-id="'+E(String(r.employee_id).trim())+'">Resend invite</button> ':'')+(st==='has'?'<button type="button" class="btn btn-outline" data-li="resetpw" data-id="'+E(String(r.employee_id).trim())+'">Issue new temporary password</button> ':'')+(f.manager?'<button type="button" class="btn btn-outline" data-li="rmmgr" data-id="'+E(String(r.employee_id).trim())+'" style="color:#b91c1c;border-color:#b91c1c">Remove manager access</button>':'')+'</div><div id="lpRemove"></div>';
   document.body.appendChild(p);
   if(window.CMS_ACCESS&&CMS_ACCESS.can_manage&&typeof uaRPC==='function'){
    try{
@@ -44900,10 +44901,15 @@ body.cms-focus-editor-v1 #mainContent #fwScreen.cfu-screen #fwBody .cfe-footer {
   closeAccess();
   try{await loadAll();refresh();}catch(e){}
  }
- async function resendFor(id){
+  async function resendFor(id,force){
   var r=LI.rows.find(function(x){return String(x.employee_id).trim()===String(id).trim();});if(!r)return;
-  if(!confirm('Send the login email again to '+r.email+'?'))return;
-  try{await welcome(r);showToast('Email sent to '+r.email);}catch(e){showToast('Email failed');}
+  if(!confirm((force?'Their current password will stop working. ':'')+'Email a new temporary password to '+r.email+'?'))return;
+  try{
+   var o=await callFn({action:'reset',employee_ids:[String(r.employee_id).trim()],force:!!force});
+   var x=(o.results||[])[0]||{};
+   if(x.status!=='reset'||!x.password){showToast(x.status==='already_active'?'This person has already signed in. Use Issue new temporary password.':'Could not issue a password: '+(x.error||x.status||'unknown'));return;}
+   await welcome(r,x.password,!!force);showToast('New temporary password emailed to '+r.email);
+  }catch(e){showToast('Failed: '+(e&&e.message?e.message:'error'));}
  }
   function pickedRows(){return LI.rows.filter(function(r){return LI.picked[r.employee_id];});}
  function pgSlice(rows){return rows.slice(LI.page*LI.size,LI.page*LI.size+LI.size);}
@@ -44920,7 +44926,7 @@ function tableHTML(){
  function barHTML(){
   var p=pickedRows(),nNew=p.filter(function(r){return stateOf(r)==='none';}).length,nRe=p.length-nNew;
   var txt=p.length?('<b>'+p.length+' ticked</b> | '+nNew+' new login'+(nNew===1?'':'s')+(nRe?' | '+nRe+' resend email':'')):'<b>Nobody ticked</b>';
-  return '<div>'+txt+'<div class="li-note">Each person gets an email with the sign-in link. Their first password is their Employee ID, and they create their own right after. Nothing is sent until you confirm.</div></div>'+
+  return '<div>'+txt+'<div class="li-note">Each person gets an email with the sign-in link. The email gives each person a temporary password, and they create their own right after. Nothing is sent until you confirm.</div></div>'+
    '<button type="button" class="btn btn-primary" data-li="send" '+(p.length&&!LI.busy?'':'disabled')+'>Send login invite to '+p.length+'</button>';
  }
  function reportHTML(){
@@ -44980,9 +44986,10 @@ function tableHTML(){
   catch(e){var box=document.getElementById('liBox');if(box)box.innerHTML='<div class="li-head"><div><b>Access Center</b><span>Could not load</span></div></div><section class="li-card"><p>'+E(e.message)+'</p></section>';}
  }
  function closePanel(){closeAccess();LI.open=false;navigateTo(APP.currentRole==='hohr'?'hohr-dash':'hr-dashboard');}
- function welcome(r){
+ function welcome(r,pw,reset){
+  if(!pw)throw new Error('No temporary password');
   var NL=String.fromCharCode(10),first=String(r.employee_name||'').trim().split(' ')[0]||'there';
-  var msg='Hi '+first+','+NL+NL+'Your Kenafric Competency Management System (CMS) account is ready.'+NL+NL+'Sign in here:'+NL+APP_LINK+NL+NL+'Email: '+em(r.email)+NL+'First-time password: your Employee ID.'+NL+'You will be asked to create your own password straight after you sign in.'+NL+NL+'Regards,'+NL+'HR Department';
+  var msg='Hi '+first+','+NL+NL+(reset?'A new temporary password has been issued for your Kenafric Competency Management System (CMS) account.':'Your Kenafric Competency Management System (CMS) account is ready.')+NL+NL+'Sign in here:'+NL+APP_LINK+NL+NL+'Email: '+em(r.email)+NL+'Temporary password: '+pw+NL+'Copy the password exactly as shown (it is case sensitive). You will be asked to create your own password straight after you sign in.'+NL+NL+'Regards,'+NL+'HR Department';
   return sendCMSemail(em(r.email),'Your CMS login is ready',msg,{page:'emp-profile'});
  }
  async function send(){
@@ -44992,22 +44999,33 @@ function tableHTML(){
   if(!confirm('Send login invitations to '+p.length+' people?\n\n'+fresh.length+' new login(s) will be created and emailed.\n'+again.length+' existing login(s) will get the email again.'))return;
   LI.busy=true;var rep={created:0,emailed:0,exists:0,noemail:0,failed:[]};refresh();
   try{
-   var toEmail=again.slice();
+   vvar toEmail=[],PW={};
    for(var i=0;i<fresh.length;i+=BATCH){
     var chunk=fresh.slice(i,i+BATCH);
     say('Creating logins '+(i+1)+' to '+(i+chunk.length)+' of '+fresh.length+'...');
     var out=await callFn({action:'create',employee_ids:chunk.map(function(r){return r.employee_id;})});
     (out.results||[]).forEach(function(x){
      var row=LI.rows.find(function(r){return String(r.employee_id).trim()===String(x.employee_id).trim();});
-     if(x.status==='created'){rep.created++;if(row)toEmail.push(row);}
+     if(x.status==='created'){rep.created++;if(row&&x.password){PW[String(x.employee_id).trim()]=x.password;toEmail.push(row);}else rep.failed.push((x.name||x.employee_id)+': login created but no temporary password came back. Deploy the new invite-login function.');}
      else if(x.status==='exists'){rep.exists++;}
      else if(x.status==='no_email'){rep.noemail++;}
      else rep.failed.push((x.name||x.employee_id)+': '+(x.error||x.status));
     });
    }
+   for(var k=0;k<again.length;k+=BATCH){
+    var ch2=again.slice(k,k+BATCH);
+    say('Issuing temporary passwords '+(k+1)+' to '+(k+ch2.length)+' of '+again.length+'...');
+    var o2=await callFn({action:'reset',employee_ids:ch2.map(function(r){return r.employee_id;})});
+    (o2.results||[]).forEach(function(x){
+     var row=again.find(function(r){return String(r.employee_id).trim()===String(x.employee_id).trim();});
+     if(x.status==='reset'&&x.password&&row){PW[String(x.employee_id).trim()]=x.password;toEmail.push(row);}
+     else if(x.status==='already_active')rep.exists++;
+     else rep.failed.push((x.name||x.employee_id)+': '+(x.error||x.status));
+    });
+   }
    for(var j=0;j<toEmail.length;j++){
     say('Sending email '+(j+1)+' of '+toEmail.length+'...');
-    try{await welcome(toEmail[j]);rep.emailed++;}catch(e){rep.failed.push((toEmail[j].employee_name||toEmail[j].email)+': email failed');}
+    try{await welcome(toEmail[j],PW[String(toEmail[j].employee_id).trim()]);rep.emailed++;}catch(e){rep.failed.push((toEmail[j].employee_name||toEmail[j].email)+': email failed');}
    }
   }catch(e){rep.failed.push(e.message);}
   finally{
@@ -45035,7 +45053,7 @@ function tableHTML(){
  var t;new MutationObserver(function(){if(t)return;t=setTimeout(function(){t=null;try{ensure();}catch(e){}},150);}).observe(document.body,{childList:true,subtree:true});
  document.addEventListener('click',function(e){
   var b=e.target.closest('[data-li]');
-  if(b){var a=b.getAttribute('data-li');if(a==='open')openPanel();if(a==='close')closePanel();if(a==='send')send();if(a==='useraccess')navigateTo(APP.currentRole==='hohr'?'hohr-user-access':'hr-user-access');if(a==='view')showAccess(b.getAttribute('data-id'));if(a==='viewclose')closeAccess();if(a==='prev'){LI.page=Math.max(0,LI.page-1);refresh();}if(a==='next'){LI.page++;refresh();}if(a==='resend')resendFor(b.getAttribute('data-id'));if(a==='rmmgr')openRemoveManager(b.getAttribute('data-id'));if(a==='rmmgr_cancel'){var rb=document.getElementById('lpRemove');if(rb)rb.innerHTML='';}if(a==='rmmgr_go')confirmRemoveManager(b.getAttribute('data-id'));return;}
+   if(b){var a=b.getAttribute('data-li');if(a==='open')openPanel();if(a==='close')closePanel();if(a==='send')send();if(a==='useraccess')navigateTo(APP.currentRole==='hohr'?'hohr-user-access':'hr-user-access');if(a==='view')showAccess(b.getAttribute('data-id'));if(a==='viewclose')closeAccess();if(a==='prev'){LI.page=Math.max(0,LI.page-1);refresh();}if(a==='next'){LI.page++;refresh();}if(a==='resend')resendFor(b.getAttribute('data-id'));if(a==='resetpw')resendFor(b.getAttribute('data-id'),true);if(a==='rmmgr')openRemoveManager(b.getAttribute('data-id'));if(a==='rmmgr_cancel'){var rb=document.getElementById('lpRemove');if(rb)rb.innerHTML='';}if(a==='rmmgr_go')confirmRemoveManager(b.getAttribute('data-id'));return;}
   var f=e.target.closest('[data-li-filter]');
   if(f){LI.filter=f.getAttribute('data-li-filter');LI.page=0;draw();return;}
   if(e.target.id==='liOverlay')closePanel();
@@ -45360,11 +45378,17 @@ function tableHTML(){
  }
  async function remind(email,name){
   if(typeof sendCMSemail!=='function'){showToast('Email sending is not available on this page.');return;}
-  if(!confirm('Send a sign-in reminder to '+name+'?'))return;
+  if(!confirm('Send a sign-in reminder with a new temporary password to '+name+'?'))return;
   var NL=String.fromCharCode(10),first=String(name||'').trim().split(' ')[0]||'there';
-  var msg='Hi '+first+','+NL+NL+'This is a reminder that your Kenafric Competency Management System (CMS) account is ready and you have not signed in yet.'+NL+NL+'Sign in here:'+NL+APP_URL+NL+NL+'Email: '+email+NL+'First-time password: your Employee ID.'+NL+'You will be asked to create your own password straight after you sign in.'+NL+NL+'Regards,'+NL+'HR Department';
-  try{await sendCMSemail(email,'Reminder: sign in to the CMS',msg,{page:'emp-profile'});showToast('Reminder sent to '+name);}
-  catch(e){showToast('Could not send the reminder: '+(e&&e.message?e.message:'error'));}
+  try{
+   var res=await _supabase.functions.invoke('invite-login',{body:{action:'reset',emails:[String(email||'').trim().toLowerCase()]}});
+   if(res.error){var em2=res.error.message||'Request failed';try{if(res.error.context&&res.error.context.json){var j2=await res.error.context.json();if(j2&&j2.error)em2=j2.error;}}catch(e){}throw new Error(em2);}
+   if(res.data&&res.data.error)throw new Error(res.data.error);
+   var x=((res.data&&res.data.results)||[])[0]||{};
+   if(x.status!=='reset'||!x.password){showToast(x.status==='already_active'?name+' has already signed in.':'Could not issue a password: '+(x.error||x.status||'unknown'));return;}
+   var msg='Hi '+first+','+NL+NL+'This is a reminder that your Kenafric Competency Management System (CMS) account is ready and you have not signed in yet.'+NL+NL+'Sign in here:'+NL+APP_URL+NL+NL+'Email: '+email+NL+'Temporary password: '+x.password+NL+'Copy the password exactly as shown (it is case sensitive). You will be asked to create your own password straight after you sign in.'+NL+NL+'Regards,'+NL+'HR Department';
+   await sendCMSemail(email,'Reminder: sign in to the CMS',msg,{page:'emp-profile'});showToast('Reminder sent to '+name);
+  }catch(e){showToast('Could not send the reminder: '+(e&&e.message?e.message:'error'));}
  }
  function ensure(){
   if(!allowed())return;
@@ -46742,6 +46766,21 @@ function tableHTML(){
   finally{S.busy=false;}
  }
 
+async function resetOne(r){
+  if(S.busy||!r||!r.empId||!r.email)return;
+  var signed=r.login==='signed';
+  if(!confirm((signed?'This person has already signed in. Their current password will stop working. ':'')+'Email a new temporary password to '+r.email+'?'))return;
+  S.busy=true;
+  try{
+   var o=await callFn({action:'reset',employee_ids:[String(r.empId).trim()],force:true});
+   var x=(o.results||[])[0]||{};
+   if(x.status!=='reset'||!x.password){toast('Could not issue a password: '+(x.error||x.status||'unknown'));return;}
+   await welcome(r,x.password,true);toast('New temporary password emailed to '+r.email);
+   try{_supabase.rpc('cms_log_invite',{p_email:r.email,p_kind:'resend'});}catch(x2){}
+  }catch(e){toast('Failed: '+(e&&e.message?e.message:'error'));}
+  finally{S.busy=false;}
+ }
+
  function closeMenu(){var m=document.getElementById('ualMenu');if(m)m.remove();}
  function openMenu(btn){
   closeMenu();css();
@@ -46750,7 +46789,7 @@ function tableHTML(){
   var label=r.login==='invited'?'Resend invite':'Send invite';
   var m=document.createElement('div');m.id='ualMenu';m.setAttribute('data-email',email);
   var h='';
-  if(r.login==='signed')h+='<button type="button" disabled>Already signed in</button>';
+  if(r.login==='signed')h+='<button type="button" data-ual-act="resetpw">Issue new temporary password<small>Already signed in</small></button>';
   else if(can)h+='<button type="button" data-ual-act="invite">'+label+'</button>';
   else h+='<button type="button" disabled>'+label+'<small>'+(r.emp?'No email on file':'Needs an employee record')+'</small></button>';
   h+='<button type="button" data-ual-act="manage">View and manage access</button>';
@@ -46770,9 +46809,10 @@ function tableHTML(){
   if(res.data&&res.data.error)throw new Error(res.data.error);
   return res.data;
  }
- function welcome(r){
+ function welcome(r,pw,reset){
+  if(!pw)throw new Error('No temporary password');
   var NL=String.fromCharCode(10),first=String(r.name||'').trim().split(' ')[0]||'there';
-  var msg='Hi '+first+','+NL+NL+'Your Kenafric Competency Management System (CMS) account is ready.'+NL+NL+'Sign in here:'+NL+APP_LINK+NL+NL+'Email: '+r.email+NL+'First-time password: your Employee ID.'+NL+'You will be asked to create your own password straight after you sign in.'+NL+NL+'Regards,'+NL+'HR Department';
+  var msg='Hi '+first+','+NL+NL+(reset?'A new temporary password has been issued for your Kenafric Competency Management System (CMS) account.':'Your Kenafric Competency Management System (CMS) account is ready.')+NL+NL+'Sign in here:'+NL+APP_LINK+NL+NL+'Email: '+r.email+NL+'Temporary password: '+pw+NL+'Copy the password exactly as shown (it is case sensitive). You will be asked to create your own password straight after you sign in.'+NL+NL+'Regards,'+NL+'HR Department';
   return sendCMSemail(r.email,'Your CMS login is ready',msg,{page:'emp-profile'});
  }
  async function sendInvites(rows){
@@ -46780,7 +46820,7 @@ function tableHTML(){
   var fresh=rows.filter(function(r){return r.login==='none';}),again=rows.filter(function(r){return r.login==='invited';});
   if(!confirm('Send login invitations to '+rows.length+' '+(rows.length===1?'person':'people')+'?\n\n'+fresh.length+' new login(s) will be created and emailed.\n'+again.length+' existing login(s) will get the email again.'))return;
   S.busy=true;refresh();
-  var rep={created:0,emailed:0,exists:0,noemail:0,failed:[]},toEmail=again.slice();
+  var rep={created:0,emailed:0,exists:0,noemail:0,failed:[]},toEmail=[],PW={};;
   try{
    for(var i=0;i<fresh.length;i+=BATCH){
     var chunk=fresh.slice(i,i+BATCH);
@@ -46788,15 +46828,26 @@ function tableHTML(){
     var out=await callFn({action:'create',employee_ids:chunk.map(function(r){return r.empId;})});
     (out.results||[]).forEach(function(x){
      var row=fresh.filter(function(r){return String(r.empId).trim()===String(x.employee_id).trim();})[0];
-     if(x.status==='created'){rep.created++;if(row)toEmail.push(row);}
+       if(x.status==='created'){rep.created++;if(row&&x.password){PW[String(x.employee_id).trim()]=x.password;toEmail.push(row);}else rep.failed.push((x.name||x.employee_id)+': login created but no temporary password came back. Deploy the new invite-login function.');}
      else if(x.status==='exists')rep.exists++;
      else if(x.status==='no_email')rep.noemail++;
      else rep.failed.push((x.name||x.employee_id)+': '+(x.error||x.status));
     });
    }
+   for(var k=0;k<again.length;k+=BATCH){
+    var ch2=again.slice(k,k+BATCH);
+    toast('Issuing temporary passwords '+(k+1)+' to '+(k+ch2.length)+' of '+again.length+'...');
+    var o2=await callFn({action:'reset',employee_ids:ch2.map(function(r){return r.empId;})});
+    (o2.results||[]).forEach(function(x){
+     var row=again.filter(function(r){return String(r.empId).trim()===String(x.employee_id).trim();})[0];
+     if(x.status==='reset'&&x.password&&row){PW[String(x.employee_id).trim()]=x.password;toEmail.push(row);}
+     else if(x.status==='already_active')rep.exists++;
+     else rep.failed.push((x.name||x.employee_id)+': '+(x.error||x.status));
+    });
+   }
    for(var j=0;j<toEmail.length;j++){
     toast('Sending email '+(j+1)+' of '+toEmail.length+'...');
-    try{await welcome(toEmail[j]);rep.emailed++;try{_supabase.rpc('cms_log_invite',{p_email:toEmail[j].email,p_kind:fresh.indexOf(toEmail[j])>=0?'invite':'resend'});}catch(x){}}catch(e){rep.failed.push((toEmail[j].name||toEmail[j].email)+': email failed');}
+    try{await welcome(toEmail[j],PW[String(toEmail[j].empId).trim()]);rep.emailed++;try{_supabase.rpc('cms_log_invite',{p_email:toEmail[j].email,p_kind:fresh.indexOf(toEmail[j])>=0?'invite':'resend'});}catch(x){}}catch(e){rep.failed.push((toEmail[j].name||toEmail[j].email)+': email failed');}
    }
   }catch(e){rep.failed.push(e.message);}
   finally{
@@ -47696,6 +47747,142 @@ html:not(:has(.header[style*="display: none"])):not(:has(#loginEmail)):not(:has(
    if(typeof wcSave==='function')await wcSave(s);
   }catch(e){}finally{keeping=false;}
  },800);
+})();
+</script>
+<script id="cms-clean-markup-v3">
+(function(){
+ 'use strict';
+ if(window.__cmsCleanMarkupV3)return;window.__cmsCleanMarkupV3=true;
+ var TAGS='span|b|i|u|em|strong|p|br|div|sup|sub|a|li|ul|ol|h[1-6]|font|table|thead|tbody|tr|td|th|code|pre|mark|small|section|article';
+ var CUSTOM='[a-z][a-z0-9]*-[a-z0-9-]+';
+ var tagRe=new RegExp('<\\/?(?:'+TAGS+')\\b[^>]*>','gi');
+ var ENT=/&(?:amp|lt|gt|nbsp|quot|apos|#39);/i;
+ function dirty(t){
+  t=String(t==null?'':t);
+  return /<!--/.test(t)||ENT.test(t)||new RegExp('<\\/?(?:'+TAGS+'|'+CUSTOM+')(?:[\\s/>])','i').test(t);
+ }
+ function strip(t){
+  t=t.replace(/<!--[\s\S]*?-->/g,'');
+  t=t.replace(/<(source-footnote|sources-carousel-inline)(?:\s[^>]*)?>[\s\S]*?<\/\1>/gi,'');
+  t=t.replace(new RegExp('<\\/?'+CUSTOM+'(?:\\s[^>]*)?>','gi'),'');
+  t=t.replace(/<br\s*\/?>/gi,' ');
+  // keep bold: <b>..</b> and <strong>..</strong> become **..**
+  t=t.replace(/<(?:b|strong)(?:\s[^>]*)?>(?:\s|&nbsp;)*/gi,'<b>').replace(/(?:\s|&nbsp;)*<\/(?:b|strong)>/gi,'</b> ');
+  t=t.replace(/<b>([\s\S]*?)<\/b>/gi,'**$1**').replace(/\*\*\s*\*\*/g,'');
+  t=t.replace(tagRe,'');
+  return t;
+ }
+ function clean(t){
+  t=String(t==null?'':t);
+  if(!dirty(t))return t;
+  t=strip(t);
+  t=t.replace(/&nbsp;/gi,' ').replace(/&lt;/gi,'<').replace(/&gt;/gi,'>').replace(/&quot;/gi,'"').replace(/&#39;|&apos;/gi,"'").replace(/&amp;/gi,'&');
+  t=strip(t);
+  t=t.replace(/\s+/g,' ').replace(/\s+([.,;:])/g,'$1').trim();
+  return t;
+ }
+ window.cmsCleanMarkupV3=clean;
+
+ // 1. Everything the framework editor sends to the database is cleaned first (bold is kept as **bold**).
+ if(typeof fwRPC==='function'){
+  var oldRPC=fwRPC;
+  fwRPC=async function(action,data){
+   try{
+    if(data&&Array.isArray(data.items))data.items.forEach(function(i){if(i&&i.text!=null)i.text=clean(i.text);});
+    if(data&&data.item&&data.item.text!=null)data.item.text=clean(data.item.text);
+   }catch(e){}
+   return oldRPC.apply(this,arguments);
+  };
+ }
+
+ // 2. Pasted text is cleaned as it goes into a text box, only when it really contains markup.
+ document.addEventListener('paste',function(e){
+  try{
+   var t=e.target;if(!t||t.tagName!=='TEXTAREA')return;
+   var txt=e.clipboardData&&e.clipboardData.getData('text/plain');
+   if(!txt||!dirty(txt))return;
+   e.preventDefault();e.stopImmediatePropagation();
+   document.execCommand('insertText',false,clean(txt));
+  }catch(x){}
+ },true);
+
+ // 3. Show **text** as bold on every screen (never inside a text box).
+ var BOLD=/\*\*([^*\n]+?)\*\*/;
+ var timer=null;
+ function boldify(){
+  timer=null;
+  var root=document.getElementById('mainContent')||document.body;
+  if(!root||root.textContent.indexOf('**')<0)return;
+  var w=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,{acceptNode:function(n){
+   if(n.nodeValue.indexOf('**')<0||!BOLD.test(n.nodeValue))return NodeFilter.FILTER_REJECT;
+   var p=n.parentElement;if(!p||p.closest('textarea,input,script,style,[contenteditable="true"]'))return NodeFilter.FILTER_REJECT;
+   return NodeFilter.FILTER_ACCEPT;}});
+  var nodes=[],n;while((n=w.nextNode()))nodes.push(n);
+  nodes.forEach(function(node){
+   var parts=node.nodeValue.split(/\*\*([^*\n]+?)\*\*/);
+   if(parts.length<3)return;
+   var frag=document.createDocumentFragment();
+   parts.forEach(function(p,i){
+    if(!p)return;
+    if(i%2===1){var s=document.createElement('strong');s.textContent=p;frag.appendChild(s);}
+    else frag.appendChild(document.createTextNode(p));
+   });
+   node.parentNode.replaceChild(frag,node);
+  });
+ }
+ function queue(){if(timer)return;timer=setTimeout(boldify,120);}
+ try{new MutationObserver(queue).observe(document.body,{childList:true,subtree:true,characterData:true});}catch(e){}
+ queue();
+
+ // 4. Draft: clean what is already saved. Review: one button cleans every affected experience.
+ function reviewer(){try{return typeof fwIsReviewer==='function'&&fwIsReviewer();}catch(e){return false;}}
+ function bar(){
+  var host=document.getElementById('fwBody');if(!host||typeof FW==='undefined'||!FW.revision)return;
+  var items=FW.revision.items||[],bad=items.filter(function(i){return dirty(i.text);});
+  var old=document.getElementById('cmsMarkupBarV1');if(old)old.remove();
+  var hint=document.getElementById('cmsBoldHintV1');if(hint)hint.remove();
+  if(FW.revision.state==='Draft'){
+   var h=document.createElement('p');h.id='cmsBoldHintV1';
+   h.style.cssText='font-size:12px;color:#475569;margin:8px 0';
+   h.textContent='Tip: put two stars on each side of words to make them bold, for example **Planning:** Has prepared the weekly plan.';
+   host.insertBefore(h,host.firstChild);
+   return;
+  }
+  if(!bad.length||!reviewer())return;
+  var b=document.createElement('div');b.id='cmsMarkupBarV1';
+  b.style.cssText='background:#fff7ed;border:1px solid #fdba74;border-radius:10px;padding:12px 14px;margin:10px 0;display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap;font-size:13px;color:#7c2d12';
+  b.innerHTML='<span><b>'+bad.length+' experience'+(bad.length===1?'':'s')+' contain pasted web markup</b> (tags like &lt;span&gt; or &lt;!----&gt;). One click removes the markup and keeps the wording and the bold.</span>';
+  var btn=document.createElement('button');btn.type='button';btn.className='btn btn-primary';btn.textContent='Clean markup in '+bad.length;
+  btn.onclick=async function(){
+   if(!confirm('Remove the web markup from '+bad.length+' experience(s)? The wording and bold stay.'))return;
+   btn.disabled=true;
+   for(var k=0;k<bad.length;k++){
+    btn.textContent='Cleaning '+(k+1)+' of '+bad.length+'...';
+    var cur=(FW.revision.items||[]).find(function(i){return String(i.id)===String(bad[k].id);});
+    if(!cur||!dirty(cur.text))continue;
+    var ok=await fwMutate('edit_item',{item:{id:cur.id,text:clean(cur.text),classification:String(cur.classification||'').trim()}});
+    if(!ok){alert('Stopped at experience '+(k+1)+'. Reload the page and click the button again.');return;}
+   }
+   showToast('Markup removed.');
+  };
+  b.appendChild(btn);host.insertBefore(b,host.firstChild);
+ }
+ if(typeof fwRenderRevision==='function'){
+  var oldRender=fwRenderRevision;
+  fwRenderRevision=function(){
+   try{
+    var r=FW.revision;
+    if(r&&r.state==='Draft'&&Array.isArray(r.items)){
+     var changed=false;
+     r.items.forEach(function(i){if(dirty(i.text)){i.text=clean(i.text);changed=true;}});
+     if(changed)FW.dirty=true;
+    }
+   }catch(e){}
+   var out=oldRender.apply(this,arguments);
+   try{bar();}catch(e){}
+   return out;
+  };
+ }
 })();
 </script>
 </body>
