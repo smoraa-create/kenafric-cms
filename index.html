@@ -44999,7 +44999,7 @@ function tableHTML(){
   if(!confirm('Send login invitations to '+p.length+' people?\n\n'+fresh.length+' new login(s) will be created and emailed.\n'+again.length+' existing login(s) will get the email again.'))return;
   LI.busy=true;var rep={created:0,emailed:0,exists:0,noemail:0,failed:[]};refresh();
   try{
-   vvar toEmail=[],PW={};
+   var toEmail=[],PW={};
    for(var i=0;i<fresh.length;i+=BATCH){
     var chunk=fresh.slice(i,i+BATCH);
     say('Creating logins '+(i+1)+' to '+(i+chunk.length)+' of '+fresh.length+'...');
