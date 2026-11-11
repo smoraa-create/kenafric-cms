@@ -49221,5 +49221,413 @@ html:root:root:root:root:root:root:root:root:root body #mainContent:has(#loginEm
   setInterval(tick,700);
 })();
 </script>
+<script id="cms-library-view-v4">
+(function(){
+  'use strict';
+  if(window.__cmsLibViewV4)return;
+  window.__cmsLibViewV4=true;
+  var PAGE='mgr-complib';
+
+  function esc(s){return typeof escapeHtml==='function'?escapeHtml(String(s==null?'':s)):String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+  function tierOf(cls){
+    var s=String(cls||'');
+    if(/Critical|Must-Have/.test(s))return 'c';
+    if(/Important|Performance/.test(s))return 'i';
+    return 'v';
+  }
+  var TIER={c:{name:'Critical',cls:'lv-c'},i:{name:'Important',cls:'lv-i'},v:{name:'Value-Add',cls:'lv-v'}};
+  function refsOf(i){return String(i.duty_ref||'').split(/[\s,;]+/).filter(Boolean).map(function(s){return s.toUpperCase();});}
+
+  function css(){
+    if(document.getElementById('lv-css'))return;
+    var st=document.createElement('style');st.id='lv-css';
+    st.textContent=
+      '.lv-hero{background:linear-gradient(120deg,#312e81,#4338ca);color:#fff;border-radius:14px;padding:18px 22px;margin-bottom:14px}'+
+      '.lv-hero h2{font-size:20px;margin:0 0 4px;color:#fff}.lv-hero p{margin:0;font-size:13px;opacity:.9}'+
+      '.lv-pick{margin:0 0 14px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}.lv-pick select{width:auto;min-width:260px}'+
+      '.lv-strip{margin:0 0 12px;padding:11px 14px;border:1px solid #ddd6fe;background:#f5f3ff;border-radius:10px;font-size:13px;color:#312e81;line-height:1.6}.lv-strip b{color:#4c1d95}'+
+      '.lv-bar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:0 0 12px}'+
+      '.lv-chip{border:1px solid #cbd5e1;background:#fff;color:#334155;border-radius:999px;padding:6px 14px;font-weight:700;font-size:12px;cursor:pointer}'+
+      '.lv-chip.on{background:#4338ca;border-color:#4338ca;color:#fff}'+
+      '.lv-gap{flex:1}.lv-link{border:0;background:transparent;color:#4338ca;font-weight:700;font-size:12px;cursor:pointer;padding:6px 8px}'+
+      '.lv-sec{margin:16px 0 8px;font-size:12px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#475569}'+
+      '.lv-comp{background:#fff;border:1px solid #cbd5e1;border-radius:14px;margin-bottom:12px;overflow:hidden}'+
+      '.lv-comp>summary{list-style:none;cursor:pointer;background:#3447b8;color:#fff;padding:13px 18px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}'+
+      '.lv-comp>summary::-webkit-details-marker{display:none}'+
+      '.lv-no{border:1px solid rgba(255,255,255,.55);border-radius:8px;padding:2px 7px;font-size:12px;font-weight:700}'+
+      '.lv-name{font-weight:800;font-size:15px;flex:1;min-width:200px}'+
+      '.lv-pill{background:#fff;color:#1e3a8a;border-radius:999px;padding:4px 11px;font-size:12px;font-weight:800}'+
+      '.lv-pill.big{background:#fde68a;color:#78350f}'+
+      '.lv-head,.lv-row{display:grid;grid-template-columns:44px minmax(0,1fr) 120px 86px;gap:12px;align-items:center;padding:11px 18px}'+
+      '.lv-head{background:#f1f5f9;border-bottom:1px solid #e2e8f0;font-size:11px;font-weight:800;color:#64748b;letter-spacing:.5px;text-transform:uppercase}'+
+      '.lv-head span:nth-child(3),.lv-head span:nth-child(4){text-align:center}'+
+      '.lv-row{border-bottom:1px solid #e9eef5;background:#fff}'+
+      '.lv-row .n{color:#64748b;font-weight:800;text-align:center}'+
+      '.lv-row .t{font-size:14px;line-height:1.6;color:#1c2d43;overflow-wrap:anywhere}'+
+      '.lv-r{display:inline-block;margin-left:6px;background:#e0e7ff;color:#3730a3;border:1px solid #c7d2fe;border-radius:6px;padding:0 7px;font-size:10px;font-weight:800;cursor:help}'+
+      '.lv-lvl{display:inline-block;margin-left:6px;background:#eef2ff;color:#4338ca;border-radius:6px;padding:0 7px;font-size:10px;font-weight:700;text-transform:uppercase}'+
+      '.lv-badge{display:inline-block;min-width:92px;text-align:center;border-radius:8px;padding:6px 10px;font-size:11px;font-weight:800;white-space:nowrap}'+
+      '.lv-c{background:#b91c1c;color:#fff}.lv-i{background:#f0b429;color:#422006}.lv-v{background:#047857;color:#fff}'+
+      '.lv-w{text-align:center;font-size:15px;font-weight:800;color:#4c1d95}'+
+      '.lv-empty{background:#f8fafc;border:1px dashed #cbd5e1;border-radius:12px;padding:20px;color:#475569}'+
+      '@media(max-width:700px){.lv-head{display:none}.lv-row{grid-template-columns:30px minmax(0,1fr)}.lv-row .b,.lv-row .lv-w{grid-column:2;text-align:left}}';
+    document.head.appendChild(st);
+  }
+
+  function css2(){
+    if(document.getElementById('lv-css2'))return;
+    var st=document.createElement('style');st.id='lv-css2';
+    st.textContent=
+      '.lv-tabs{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 14px}'+
+      '.lv-tab{display:inline-block;padding:10px 20px;border-radius:10px;background:#fff;border:1.5px solid #cfd8ea;font-weight:800;color:#334155;cursor:pointer;font-size:14px;line-height:1.3}'+
+      '.lv-tab.on{background:#2740c9;border-color:#2740c9;color:#fff}'+
+      '.lv-card{background:#fff;border:1px solid #dbe2ef;border-radius:14px;padding:18px 22px;margin-bottom:14px}'+
+      '.lv-card h3{font-size:16px;color:#0f1b4d;margin:0 0 10px}'+
+      '.lv-tbl{width:100%;border-collapse:collapse;font-size:13px}'+
+      '.lv-tbl th{background:#f1f5f9;color:#475569;font-size:11px;text-transform:uppercase;padding:9px;text-align:left}'+
+      '.lv-tbl td{padding:10px 9px;border-bottom:1px solid #eef2f8;vertical-align:top;line-height:1.45}'+
+      '.lv-ref{display:inline-block;background:#eef2ff;color:#2740c9;border:1px solid #b9c5fa;border-radius:7px;padding:2px 9px;font-weight:800;font-size:12.5px;cursor:pointer}'+
+      '.lv-tag{display:inline-block;background:#f1f5f9;color:#334155;border-radius:7px;padding:2px 8px;font-size:12px;font-weight:700;margin:0 4px 3px 0}'+
+      '.lv-prio{display:inline-block;border-radius:10px;padding:3px 11px;font-weight:800;font-size:12px;border:1px solid #cbd5e1;background:#f1f5f9;color:#475569}'+
+      '.lv-prio.c{background:#fee2e2;color:#dc2626;border-color:#fca5a5}.lv-prio.i{background:#fef3c7;color:#d97706;border-color:#fcd34d}.lv-prio.v{background:#d1fae5;color:#059669;border-color:#6ee7b7}'+
+      '.lv-crumb{color:#2740c9;font-weight:800;cursor:pointer;margin-bottom:10px;display:inline-block}'+
+      '.lv-fld{font-size:13.5px;line-height:1.6;margin:4px 0}.lv-fld b{color:#0f1b4d}'+
+      '.lv-note{background:#fff7ed;border:1.5px solid #fdba74;border-radius:12px;padding:14px 18px;color:#7c4a1d}'+
+      '.lv-r{cursor:pointer}';
+    document.head.appendChild(st);
+  }
+  function nameOf(code){
+    var m=((window.APP&&APP.competencies)||[]).filter(function(c){return c.code===code;})[0];
+    return (m&&m.competency)||code;
+  }
+  function prio(p){
+    var s=String(p||'');if(!s)return '<span class="lv-prio">-</span>';
+    return '<span class="lv-prio '+(/critical|must/i.test(s)?'c':/important/i.test(s)?'i':/value/i.test(s)?'v':'')+'">'+esc(s)+'</span>';
+  }
+  function refNum(r){return parseInt(String(r).replace(/\D/g,''),10)||0;}
+
+  /* ---------- pure renderers (return strings) ---------- */
+  function calc(data){
+    var P=data.points||{c:3,i:2,v:1};
+    var all=(data.items||[]).concat(data.core_items||[]);
+    var total=0;all.forEach(function(i){total+=Number(P[tierOf(i.classification)])||0;});
+    function w(i){return total>0?100*(Number(P[tierOf(i.classification)])||0)/total:0;}
+    return {P:P,all:all,total:total,w:w};
+  }
+  function dutyMap(data){var m={};(data.duties||[]).forEach(function(d){if(d&&d.ref)m[String(d.ref).toUpperCase()]=d;});return m;}
+
+  function compHTML(data){
+    var c=calc(data),P=c.P,all=c.all,total=c.total,dm=dutyMap(data);
+    var groups={};all.forEach(function(i){(groups[i.code]=groups[i.code]||[]).push(i);});
+    var codes=Object.keys(groups);
+    if(typeof compareCompetencyDisplay==='function')codes.sort(compareCompetencyDisplay);else codes.sort();
+    var counts={c:0,i:0,v:0};all.forEach(function(i){counts[tierOf(i.classification)]++;});
+    var h='<div class="lv-strip"><b>How the score works.</b> Each experience earns points by how critical it is: Critical = '+P.c+', Important = '+P.i+', Value-Add = '+P.v+
+       '. Its weight is its points divided by all the points for this role ('+total+'), so everything adds up to 100%.</div>';
+    h+='<div class="lv-bar" id="lvBar"><button type="button" class="lv-chip on" data-f="All">All ('+all.length+')</button>'+
+       '<button type="button" class="lv-chip" data-f="c">Critical ('+counts.c+')</button>'+
+       '<button type="button" class="lv-chip" data-f="i">Important ('+counts.i+')</button>'+
+       '<button type="button" class="lv-chip" data-f="v">Value-Add ('+counts.v+')</button>'+
+       '<span class="lv-gap"></span><button type="button" class="lv-link" id="lvOpen">Expand all</button><button type="button" class="lv-link" id="lvShut">Collapse all</button></div>';
+    var n=0;
+    [{t:'Functional competencies',list:codes.filter(function(x){return x.indexOf('CC')!==0;})},{t:'Core competencies',list:codes.filter(function(x){return x.indexOf('CC')===0;})}].forEach(function(g){
+      if(!g.list.length)return;
+      h+='<div class="lv-sec">'+g.t+' ('+g.list.length+')</div>';
+      g.list.forEach(function(code){
+        var meta=((window.APP&&APP.competencies)||[]).filter(function(x){return x.code===code;})[0]||{};
+        var its=groups[code],pct=0;its.forEach(function(i){pct+=c.w(i);});
+        n++;
+        h+='<details class="lv-comp"'+(n===1?' open':'')+'><summary><span class="lv-no">'+String(n).padStart(2,'0')+'</span><span class="lv-name">'+esc(meta.competency||code)+'</span>'+
+           (meta.category?'<span class="lv-pill">'+esc(meta.category)+'</span>':'')+'<span class="lv-pill big">'+pct.toFixed(1)+'% of the role</span><span class="lv-pill">'+its.length+' experiences</span></summary>';
+        h+='<div class="lv-head"><span>#</span><span>Experience</span><span>Criticality</span><span>Weight</span></div>';
+        its.forEach(function(i,k){
+          var t=tierOf(i.classification);
+          var chips=refsOf(i).map(function(r){return '<span class="lv-r" data-ref="'+esc(r)+'" title="'+esc((dm[r]&&dm[r].text)||('JD responsibility '+r))+'">'+esc(r)+'</span>';}).join('');
+          h+='<div class="lv-row" data-t="'+t+'"><span class="n">'+String(k+1).padStart(2,'0')+'</span><span class="t">'+esc(i.text)+chips+(i.level?'<span class="lv-lvl">'+esc(i.level)+'</span>':'')+'</span>'+
+             '<span class="b" style="text-align:center"><span class="lv-badge '+TIER[t].cls+'">'+TIER[t].name+'</span></span><span class="lv-w">'+c.w(i).toFixed(2)+'%</span></div>';
+        });
+        h+='</details>';
+      });
+    });
+    return h;
+  }
+
+  function dutyList(data){
+    var dm=dutyMap(data),list=[];
+    Object.keys(dm).forEach(function(k){list.push(dm[k]);});
+    var c=calc(data);
+    c.all.forEach(function(i){refsOf(i).forEach(function(r){if(!dm[r]){dm[r]={ref:r,text:''};list.push(dm[r]);}});});
+    list.sort(function(a,b){return refNum(a.ref)-refNum(b.ref);});
+    return list;
+  }
+  function itemsFor(data,ref){return calc(data).all.filter(function(i){return refsOf(i).indexOf(ref)>=0;});}
+
+  function jdHTML(data,ref){
+    var list=dutyList(data),c=calc(data);
+    if(!list.length)return '<div class="lv-note">No JD responsibilities are saved for this role yet.</div>';
+    if(ref){
+      var d=list.filter(function(x){return String(x.ref).toUpperCase()===ref;})[0]||{ref:ref,text:''};
+      var its=itemsFor(data,ref),sum=0;its.forEach(function(i){sum+=c.w(i);});
+      var h='<span class="lv-crumb" data-act="jdlist">&larr; All responsibilities</span><div class="lv-card"><h3><span class="lv-ref">'+esc(d.ref)+'</span> '+esc(d.text||'')+'</h3>'+
+        '<div style="margin-bottom:10px">Priority: '+prio(d.prio)+' &nbsp; Experiences: <b>'+its.length+'</b> &nbsp; Weight in the role: <b>'+sum.toFixed(2)+'%</b></div>';
+      if(!its.length)h+='<div class="lv-note">No experience is linked to this responsibility.</div>';
+      else{
+        h+='<table class="lv-tbl"><tr><th>Competency</th><th>Experience</th><th>Criticality</th><th>Weight</th></tr>';
+        its.forEach(function(i){var t=tierOf(i.classification);
+          h+='<tr><td><span class="lv-tag">'+esc(nameOf(i.code))+'</span></td><td>'+esc(i.text)+'</td><td style="text-align:center"><span class="lv-badge '+TIER[t].cls+'">'+TIER[t].name+'</span></td><td style="text-align:center;font-weight:800;color:#4c1d95">'+c.w(i).toFixed(2)+'%</td></tr>';});
+        h+='</table>';
+      }
+      return h+'</div>';
+    }
+    var covered=list.filter(function(d){return itemsFor(data,String(d.ref).toUpperCase()).length>0;}).length;
+    var h2='<div class="lv-card"><h3>All JD responsibilities <span style="font-size:13px;margin-left:10px;color:'+(covered===list.length?'#0f7a55':'#b91c1c')+'">'+covered+' of '+list.length+' covered</span></h3>'+
+      '<table class="lv-tbl"><tr><th style="width:56px">Ref</th><th>Responsibility (word for word from the approved JD)</th><th>Priority</th><th style="text-align:center">Experiences</th><th style="text-align:center">Weight</th><th>Competencies</th></tr>';
+    list.forEach(function(d){
+      var r=String(d.ref).toUpperCase(),its=itemsFor(data,r),sum=0,seen={},tags='';
+      its.forEach(function(i){sum+=c.w(i);if(!seen[i.code]){seen[i.code]=1;tags+='<span class="lv-tag">'+esc(nameOf(i.code))+'</span>';}});
+      h2+='<tr><td><span class="lv-ref" data-ref="'+esc(r)+'">'+esc(r)+'</span></td><td>'+(d.text?esc(d.text):'<i style="color:#94a3b8">Wording not loaded yet</i>')+'</td><td>'+prio(d.prio)+
+          '</td><td style="text-align:center;font-weight:800">'+its.length+'</td><td style="text-align:center;font-weight:800;color:#4c1d95">'+sum.toFixed(2)+'%</td><td>'+tags+'</td></tr>';
+    });
+    return h2+'</table></div>';
+  }
+
+  function toolHTML(data){
+    var list=dutyList(data);
+    if(!list.length)return '<div class="lv-note">No manager\u2019s tool is saved for this role yet.</div>';
+    var F=[['entails','What it entails'],['tasks','Activities and tasks'],['outputs','Expected outputs'],['know','Knowledge'],['skills','Skills'],['abil','Abilities'],['beh','Behaviours'],['attr','Attributes']];
+    var h='<div class="lv-card"><h3>The manager\u2019s tool for this role</h3><p style="color:#64748b;font-size:13px;margin:0 0 6px">What the line manager provided for each JD responsibility.</p></div>';
+    list.forEach(function(d){
+      h+='<div class="lv-card"><h3><span class="lv-ref" data-ref="'+esc(String(d.ref).toUpperCase())+'">'+esc(d.ref)+'</span> '+esc(d.text||'')+'</h3>';
+      F.forEach(function(f){if(d[f[0]])h+='<div class="lv-fld"><b>'+f[1]+':</b> '+esc(d[f[0]])+'</div>';});
+      h+='<div class="lv-fld"><b>Priority:</b> '+prio(d.prio)+'</div></div>';
+    });
+    return h;
+  }
+
+  window.cmsLibViewRender={comp:compHTML,jd:jdHTML,tool:toolHTML,calc:calc};
+
+  /* ---------- page ---------- */
+  var cur=null,tab='comp',refSel=null,paint=null;
+  function wireComp(){
+    var bar=document.getElementById('lvBar');if(!bar)return;
+    bar.querySelectorAll('.lv-chip').forEach(function(b){
+      b.onclick=function(){
+        var f=b.getAttribute('data-f');
+        bar.querySelectorAll('.lv-chip').forEach(function(x){x.classList.toggle('on',x===b);});
+        document.querySelectorAll('.lv-comp').forEach(function(d){
+          var shown=0;
+          d.querySelectorAll('.lv-row').forEach(function(r){var ok=f==='All'||r.getAttribute('data-t')===f;r.style.display=ok?'':'none';if(ok)shown++;});
+          d.style.display=shown?'':'none';
+          if(f!=='All'&&shown)d.open=true;
+        });
+      };
+    });
+    var o=document.getElementById('lvOpen'),s=document.getElementById('lvShut');
+    if(o)o.onclick=function(){document.querySelectorAll('.lv-comp').forEach(function(d){d.open=true;});};
+    if(s)s.onclick=function(){document.querySelectorAll('.lv-comp').forEach(function(d){d.open=false;});};
+  }
+  function drawBody(){
+    var host=document.getElementById('lvBody');if(!host||!cur)return;
+    document.querySelectorAll('#lvTabs .lv-tab').forEach(function(t){t.classList.toggle('on',t.getAttribute('data-tab')===tab);});
+    host.innerHTML=tab==='comp'?compHTML(cur):tab==='jd'?jdHTML(cur,refSel):toolHTML(cur);
+    if(tab==='comp')wireComp();
+  }
+  function onBodyClick(e){
+    var r=e.target.closest&&e.target.closest('[data-ref]');
+    if(r){refSel=r.getAttribute('data-ref');tab='jd';drawBody();window.scrollTo(0,0);return;}
+    var a=e.target.closest&&e.target.closest('[data-act="jdlist"]');
+    if(a){refSel=null;drawBody();}
+  }
+
+  var CO_ORDER=['KIL','KBBL','KML SD','KML FD'];
+  function coSort(a,b){var x=CO_ORDER.indexOf(a),y=CO_ORDER.indexOf(b);return (x<0?99:x)-(y<0?99:y)||String(a).localeCompare(String(b));}
+  function css3(){
+    if(document.getElementById('lv-css4'))return;
+    var st=document.createElement('style');st.id='lv-css4';
+    st.textContent=
+      '.lv-lbl{margin:18px 2px 8px;font-size:11px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:#5b6a93}'+
+      '.lv-own{background:#fff;border:2px solid #7c3aed;border-radius:14px;padding:14px 18px;cursor:pointer;display:flex;align-items:center;gap:12px;flex-wrap:wrap}'+
+      '.lv-own.on{background:#f5f3ff;box-shadow:0 0 0 3px #c4b5fd}'+
+      '.lv-own b{font-size:16px;color:#4c1d95}.lv-own span.m{color:#64748b;font-size:12.5px;flex:1;min-width:220px}'+
+      '.lv-tagp{display:inline-block;font-size:11px;font-weight:800;padding:3px 10px;border-radius:999px;background:#ede9fe;color:#5b21b6}'+
+      '.lv-tagp.ok{background:#d1fae5;color:#047857}.lv-tagp.no{background:#fef3c7;color:#b45309}'+
+      '.lv-cos{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px}'+
+      '.lv-co{--c:#4f46e5;--t:#eeecff;border:1.5px solid #d6dcf0;border-top:5px solid var(--c);border-radius:12px;background:linear-gradient(135deg,var(--t),#fff);padding:12px 14px;cursor:pointer}'+
+      '.lv-co:nth-child(4n+2){--c:#0891a4;--t:#e9f8fa}.lv-co:nth-child(4n+3){--c:#7c3aed;--t:#f3edff}.lv-co:nth-child(4n+4){--c:#d58a09;--t:#fff6e7}'+
+      '.lv-co b{display:block;color:var(--c);font-size:16px;font-weight:900}.lv-co span{display:block;color:#52678c;font-size:12px;margin-top:3px}'+
+      '.lv-co.on{border-color:var(--c);box-shadow:0 0 0 3px var(--c)}'+
+      '.lv-depts{display:flex;flex-wrap:wrap;gap:10px}'+
+      '.lv-dept{background:#fff;border:1.5px solid #cfd6ee;border-radius:11px;padding:9px 16px;font-size:13px;font-weight:800;color:#1e2a4a;cursor:pointer}'+
+      '.lv-dept small{font-weight:600;color:#64748b;font-size:11px;margin-left:8px}'+
+      '.lv-dept.on{background:#0e7490;border-color:#0e7490;color:#fff}.lv-dept.on small{color:#cffafe}'+
+      '.lv-posgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px}'+
+      '.lv-pos{background:#fff;border:1.5px solid #d6dcf0;border-radius:14px;padding:14px 16px;cursor:pointer}'+
+      '.lv-pos b{display:block;font-size:14px;color:#1e2a4a;margin-bottom:6px}.lv-pos span.m{display:block;font-size:12px;color:#64748b;margin-bottom:8px}'+
+      '.lv-pos.on{border:2px solid #4338ca;background:#f6f4ff;box-shadow:0 0 0 3px #c7d2fe}'+
+      '.lv-crumbs{margin:0 0 12px;font-size:13px;color:#51608a;display:flex;flex-wrap:wrap;gap:6px;align-items:center}.lv-cr{font-weight:800;color:#2740c9;cursor:pointer}.lv-cr.cur{color:#1e2a4a;cursor:default}.lv-sep{color:#94a3b8}'+
+      '.lv-showing{margin:18px 0 12px;padding:10px 16px;border-radius:10px;background:#fff;border:1.5px solid #d6dcf0;font-size:13px;color:#51608a}.lv-showing b{color:#1e2a4a}';
+    document.head.appendChild(st);
+  }
+
+  /* ---------- employee page ---------- */
+  async function show(title,employeeId){
+    css();css2();css3();
+    if(typeof setContent==='function')setContent('<div class="card"><p>Loading competencies...</p></div>');
+    try{
+      if(typeof fwCatalogue==='function')await fwCatalogue();
+      var r=await _supabase.rpc('cms_library_view',{p_action:'view',p_employee_id:employeeId||null});
+      if(r.error)throw new Error(r.error.message);
+      var d=r.data;
+      if(!d||!d.published){
+        setContent('<div class="lv-hero"><h2>'+esc(title)+'</h2><p>'+esc((d&&d.position)||'')+'</p></div><div class="lv-empty">No published competencies for this role yet. HR will let you know once they are approved and published.</div>');
+        return;
+      }
+      cur=d;tab='comp';refSel=null;
+      setContent('<div class="lv-hero"><h2>'+esc(title)+'</h2><p>'+esc(d.position+' | '+d.department+(d.role_only?'':' | Core level: '+d.level))+'</p></div>'+tabsHTML(d)+'<div id="lvBody"></div>');
+      wireBody();
+    }catch(e){
+      setContent('<div class="card"><p>'+esc(e.message||'Could not load the competencies.')+'</p></div>');
+    }
+  }
+  function tabsHTML(d){
+    var nd=(d.duties||[]).length;
+    return '<div class="lv-tabs" id="lvTabs"><span class="lv-tab on" data-tab="comp">Competencies</span>'+
+      (nd?'<span class="lv-tab" data-tab="jd">JD Responsibilities ('+nd+')</span><span class="lv-tab" data-tab="tool">Manager\u2019s tool</span>':'')+'</div>';
+  }
+  function wireBody(){
+    document.querySelectorAll('#lvTabs .lv-tab').forEach(function(t){t.onclick=function(){tab=t.getAttribute('data-tab');refSel=null;drawBody();};});
+    var body=document.getElementById('lvBody');if(body)body.addEventListener('click',onBodyClick);
+    drawBody();
+  }
+
+  /* ---------- manager page: own role, then company > department > position ---------- */
+  function norm(o){
+    var lab=String(o.label||''),m=lab.match(/^(.*?)\s*\(([^)]*)\)\s*$/);
+    return {
+      emp:o.employee_id,company:o.company||'',self:!!o.self,published:!!o.published,
+      dept:String(o.department||(m?m[2]:'')||'No department'),
+      pos:String(o.position||(m?m[1]:lab)||'Position'),
+      people:Number(o.people)||0
+    };
+  }
+  var posCache=null;
+  function crumbs(title,parts){
+    var h='<div class="lv-crumbs"><span class="lv-cr" data-go="home">'+esc(title)+'</span>';
+    parts.forEach(function(p,i){
+      var last=i===parts.length-1;
+      h+='<span class="lv-sep">/</span>'+(last?'<span class="lv-cr cur">'+esc(p.t)+'</span>':'<span class="lv-cr" data-go="'+p.go+'">'+esc(p.t)+'</span>');
+    });
+    return h+'</div>';
+  }
+  async function showMgr(title,sel){
+    css();css2();css3();
+    sel=sel||{};
+    if(typeof setContent==='function')setContent('<div class="card"><p>Loading competencies...</p></div>');
+    try{
+      if(typeof fwCatalogue==='function')await fwCatalogue();
+      if(!posCache||sel.refresh){
+        var pr=await _supabase.rpc('cms_library_view',{p_action:'positions'});
+        if(pr.error)throw new Error(pr.error.message);
+        posCache=(pr.data||[]).map(norm);
+      }
+      var me=posCache.filter(function(o){return o.self;})[0]||null;
+      var team=[];
+      posCache.forEach(function(o){
+        var n=o.self?Math.max(o.people-1,0):o.people;
+        if(n>0){var c={};for(var k in o)c[k]=o[k];c.people=n;team.push(c);}
+      });
+      var companies=[];team.forEach(function(o){if(companies.indexOf(o.company)<0)companies.push(o.company);});
+      companies.sort(coSort);
+
+      var level=sel.level||'home',company=sel.company,dept=sel.dept,emp=sel.emp;
+      if(level==='own'&&!me)level='home';
+      if(level!=='home'&&level!=='own'){
+        if(companies.indexOf(company)<0){level='home';}
+      }
+      var inCo=team.filter(function(o){return o.company===company;});
+      var depts=[];inCo.forEach(function(o){if(depts.indexOf(o.dept)<0)depts.push(o.dept);});depts.sort();
+      if((level==='pos'||level==='comp')&&depts.indexOf(dept)<0)level='dept';
+      var rows=inCo.filter(function(o){return o.dept===dept;});
+      rows.sort(function(a,b){return String(a.pos).localeCompare(String(b.pos));});
+      var row=rows.filter(function(o){return o.emp===emp;})[0];
+      if(level==='comp'&&!row)level='pos';
+
+      var h='';
+      if(level==='home'){
+        h+='<div class="lv-hero"><h2>'+esc(title)+'</h2><p>Your own role first, then the people you manage by company.</p></div>';
+        h+='<div class="lv-lbl">My own role</div>';
+        if(me){
+          h+='<div class="lv-own" data-own="1"><b>'+esc(me.pos)+'</b><span class="lv-tagp">My role</span>'+
+             '<span class="m">'+esc(me.dept+' | '+me.company)+'</span><span class="lv-tagp '+(me.published?'ok':'no')+'">'+(me.published?'Published':'Not published yet')+'</span></div>';
+        }else h+='<div class="lv-empty">Your own role was not found in the roster.</div>';
+        h+='<div class="lv-lbl">Select a company</div>';
+        if(!team.length)h+='<div class="lv-empty">No one reports to you in the roster yet.</div>';
+        else h+='<div class="lv-cos">'+companies.map(function(c){
+          var inC=team.filter(function(o){return o.company===c;}),ppl=0,ds=[];
+          inC.forEach(function(o){ppl+=o.people;if(ds.indexOf(o.dept)<0)ds.push(o.dept);});
+          return '<div class="lv-co" data-co="'+esc(c)+'"><b>'+esc(c)+'</b><span>'+ppl+' people | '+ds.length+' department'+(ds.length===1?'':'s')+' | '+inC.length+' role'+(inC.length===1?'':'s')+'</span></div>';
+        }).join('')+'</div>';
+        setContent(h);
+      }else if(level==='dept'){
+        h+=crumbs(title,[{t:company}]);
+        h+='<div class="lv-hero"><h2>'+esc(company)+'</h2><p>Select a department</p></div><div class="lv-cos">'+depts.map(function(d){
+          var inD=inCo.filter(function(o){return o.dept===d;}),ppl=0;inD.forEach(function(o){ppl+=o.people;});
+          return '<div class="lv-co" data-dept="'+esc(d)+'"><b>'+esc(d)+'</b><span>'+ppl+' people | '+inD.length+' role'+(inD.length===1?'':'s')+'</span></div>';
+        }).join('')+'</div>';
+        setContent(h);
+      }else if(level==='pos'){
+        h+=crumbs(title,[{t:company,go:'dept'},{t:dept}]);
+        h+='<div class="lv-hero"><h2>'+esc(dept)+'</h2><p>'+esc(company)+' | Select a position</p></div><div class="lv-posgrid">'+rows.map(function(o){
+          return '<div class="lv-pos" data-emp="'+esc(o.emp)+'"><b>'+esc(o.pos)+'</b><span class="m">'+o.people+' '+(o.people===1?'person':'people')+'</span>'+
+            '<span class="lv-tagp '+(o.published?'ok':'no')+'">'+(o.published?'Published':'Not published yet')+'</span></div>';
+        }).join('')+'</div>';
+        setContent(h);
+      }else{
+        var own=level==='own';
+        var id=own?me.emp:row.emp;
+        var r=await _supabase.rpc('cms_library_view',{p_action:'view',p_employee_id:id});
+        if(r.error)throw new Error(r.error.message);
+        var d=r.data;
+        h+=own?crumbs(title,[{t:'My own role'}]):crumbs(title,[{t:company,go:'dept'},{t:dept,go:'pos'},{t:row.pos}]);
+        if(!d||!d.published){
+          h+='<div class="lv-hero"><h2>'+esc(own?me.pos:row.pos)+'</h2><p>'+esc(own?me.dept+' | '+me.company:dept+' | '+company)+'</p></div>'+
+             '<div class="lv-empty">No published competencies for this role yet. HR will let you know once they are approved and published.</div>';
+          setContent(h);
+        }else{
+          cur=d;tab='comp';refSel=null;
+          h+='<div class="lv-hero"><h2>'+esc(d.position)+'</h2><p>'+esc(d.department+' | '+(own?me.company+' | my own role':company))+'</p></div>'+tabsHTML(d)+'<div id="lvBody"></div>';
+          setContent(h);
+          wireBody();
+        }
+      }
+      wireMgr(title,{company:company,dept:dept,emp:emp});
+    }catch(e){
+      setContent('<div class="card"><p>'+esc(e.message||'Could not load the competencies.')+'</p></div>');
+    }
+  }
+  window.cmsLibViewShowMgr=showMgr;
+  function wireMgr(title,s){
+    var own=document.querySelector('[data-own]');
+    if(own)own.onclick=function(){showMgr(title,{level:'own'});};
+    document.querySelectorAll('[data-co]').forEach(function(c){c.onclick=function(){showMgr(title,{level:'dept',company:c.getAttribute('data-co')});};});
+    document.querySelectorAll('.lv-co[data-dept]').forEach(function(c){c.onclick=function(){showMgr(title,{level:'pos',company:s.company,dept:c.getAttribute('data-dept')});};});
+    document.querySelectorAll('.lv-pos').forEach(function(c){c.onclick=function(){showMgr(title,{level:'comp',company:s.company,dept:s.dept,emp:c.getAttribute('data-emp')});};});
+    document.querySelectorAll('.lv-cr[data-go]').forEach(function(c){c.onclick=function(){
+      var g=c.getAttribute('data-go');
+      showMgr(title,g==='home'?{level:'home'}:g==='dept'?{level:'dept',company:s.company}:{level:'pos',company:s.company,dept:s.dept});
+    };});
+  }
+
+  /* Employee: replace the existing "My Competency Library" page */
+  window.loadEmpCompLibrary=function(){return show('My Competency Library',null);};
+
+  /* Manager: the existing "Competency Library (View)" menu item (mgr-comp) opens this page */
+  var oldLoad=window.loadPage;
+  if(typeof oldLoad==='function')window.loadPage=function(id){
+    if(id==='mgr-comp'||id===PAGE)return showMgr('Competency Library',{refresh:true});
+    return oldLoad.apply(this,arguments);
+  };
+})();
+</script>
 </body>
 </html>
