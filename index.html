@@ -50149,5 +50149,30 @@ html:root:root:root:root:root:root:root:root:root body #mainContent:has(#loginEm
  window.cmsOpenTrainingVideo=openModal;
 })();
 </script>
+<script id="cms-invite-link-role-v1">
+(function(){
+ if(window.__cmsInviteLinkRoleV1)return;window.__cmsInviteLinkRoleV1=true;
+ /* Old invitation emails always pointed at the employee page. Use the invitation itself to open the right view. */
+ async function fix(){
+  var q=new URLSearchParams(window.location.search||''),id=q.get('invitation_id'),page=q.get('cms_page')||'';
+  if(!id||!/-invitation-hub$/.test(page))return;
+  if(typeof ihAll!=='function'||!window.APP||!APP.user)return;
+  var rows=await ihAll('mine',200);
+  var row=(rows||[]).filter(function(r){return String(r.id)===String(id);})[0];
+  if(!row)return;
+  var kind=String(row.kind||'');
+  var want=(/^manager_/.test(kind)||kind==='framework')?'mgr-invitation-hub':'emp-invitation-hub';
+  if(want===page)return;
+  if(want==='mgr-invitation-hub'&&!(APP.user.modes&&APP.user.modes.isManager))return;
+  q.set('cms_page',want);
+  history.replaceState(null,'',window.location.pathname+'?'+q.toString()+'#'+want);
+ }
+ var priorEnter=cnEnter;
+ cnEnter=async function(){
+  try{await fix();}catch(e){}
+  return priorEnter.apply(this,arguments);
+ };
+})();
+</script>
 </body>
 </html>
