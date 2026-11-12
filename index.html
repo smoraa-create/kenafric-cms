@@ -49982,5 +49982,172 @@ html:root:root:root:root:root:root:root:root:root body #mainContent:has(#loginEm
   }
 })();
 </script>
+<script id="cms-training-videos-v1">
+(function(){
+ if(window.__cmsTrainingVideosV1)return;window.__cmsTrainingVideosV1=true;
+ /* ---- The only part you edit later: one line per video. Upload the MP4 to the training-videos bucket using the same file name. ---- */
+ var BUCKET='training-videos';
+ var VIDEOS=[
+  {id:'mgr-assess-team',title:'Assess My Team',roles:['manager'],length:'1:41',file:'manager-assess-my-team.mp4',ready:true,summary:'Assess a team member step by step: evidence, documents, links, rating, autosave and submit.'},
+  {id:'emp-self-assess',title:'Complete my self-assessment',roles:['employee'],length:'',file:'employee-self-assessment.mp4',ready:false,summary:'Answer each experience, add proof and submit.'},
+  {id:'library-guide',title:'Using the Competency Library',roles:['manager','hr','hohr'],length:'3:34',file:'competency-library.mp4',ready:true,summary:'Read a role with its points and weights, the JD responsibilities and the manager tool, then drill into your team by company, department and position.'}
+ ];
+ /* Which video the Watch how button opens, by who is viewing. */
+ var SHORTCUT={manager:'mgr-assess-team',employee:'emp-self-assess'};
+ /* ------------------------------------------------------------------------------ */
+ var PREFIX={employee:'emp',manager:'mgr',hr:'hr',hohr:'hohr'};
+ var ROLE_OF={emp:'employee',mgr:'manager',hr:'hr',hohr:'hohr'};
+ var TAG={employee:'Employee',manager:'Manager',hr:'HR',hohr:'HR'};
+ var PLAY_SVG='<svg class="nv3-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M10 8.5v7l6-3.5z"></path></svg>';
+ var state={filter:'All'};
+ function e(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+ function find(id){for(var i=0;i<VIDEOS.length;i++)if(VIDEOS[i].id===id)return VIDEOS[i];return null;}
+ function isAdmin(role){return role==='hr'||role==='hohr';}
+ function visible(role){return VIDEOS.filter(function(v){return isAdmin(role)||v.roles.indexOf(role)>=0;});}
+ function urlOf(file){try{var u=_supabase.storage.from(BUCKET).getPublicUrl(file).data.publicUrl;return typeof u==='string'?u:'';}catch(x){return '';}}
+ function css(){
+  if(document.getElementById('cms-training-videos-css'))return;
+  var s=document.createElement('style');s.id='cms-training-videos-css';
+  s.textContent=
+  '#tvRoot h2.tv-title{margin:0;font-size:28px;font-weight:800;color:#14246b}'+
+  '#tvRoot .tv-sub{margin:4px 0 18px;color:#6b768f;font-size:15px}'+
+  '#tvRoot .tv-chips{display:flex;gap:10px;flex-wrap:wrap;margin:0 0 18px}'+
+  '#tvRoot .tv-chip{border:0;border-radius:20px;padding:7px 16px;font-weight:700;background:#e8ecf7;color:#51608a;cursor:pointer}'+
+  '#tvRoot .tv-chip.on{background:#2f45d6;color:#fff;box-shadow:0 3px 8px rgba(47,69,214,.35)}'+
+  '#tvRoot .tv-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:18px}'+
+  '#tvRoot .tv-card{background:#fff;border:1px solid #d9dfee;border-radius:14px;overflow:hidden;box-shadow:0 3px 12px rgba(30,42,74,.08);display:flex;flex-direction:column}'+
+  '#tvRoot .tv-thumb{height:130px;position:relative;background:linear-gradient(135deg,#1c2c78,#0f8a8a)}'+
+  '#tvRoot .tv-card.c1 .tv-thumb{background:linear-gradient(135deg,#255c47,#2f45d6)}'+
+  '#tvRoot .tv-card.c2 .tv-thumb{background:linear-gradient(135deg,#6a3fb5,#1c2c78)}'+
+  '#tvRoot .tv-play{position:absolute;left:50%;top:50%;width:48px;height:48px;margin:-24px 0 0 -24px;border-radius:50%;background:rgba(255,255,255,.93)}'+
+  '#tvRoot .tv-play:after{content:"";position:absolute;left:19px;top:14px;border-left:16px solid #1c2c78;border-top:10px solid transparent;border-bottom:10px solid transparent}'+
+  '#tvRoot .tv-len{position:absolute;right:8px;bottom:8px;background:rgba(0,0,0,.68);color:#fff;font-size:12px;padding:2px 8px;border-radius:6px}'+
+  '#tvRoot .tv-body{padding:12px 14px;flex:1;display:flex;flex-direction:column;gap:8px}'+
+  '#tvRoot .tv-name{font-weight:800;color:#14246b;font-size:16px}'+
+  '#tvRoot .tv-tags span{display:inline-block;font-size:11px;font-weight:800;padding:2px 9px;border-radius:10px;margin-right:6px;background:#e3e8ff;color:#2f45d6}'+
+  '#tvRoot .tv-tags span.ok{background:#dcf5ea;color:#13795b}#tvRoot .tv-tags span.soon{background:#eceff6;color:#7a859f}'+
+  '#tvRoot .tv-sum{font-size:13px;color:#5b6784;flex:1}'+
+  '#tvRoot .tv-btn,.tv-watch{border:0;border-radius:9px;padding:9px 16px;font-weight:800;color:#fff;background:#2f45d6;box-shadow:0 3px 8px rgba(47,69,214,.4);cursor:pointer}'+
+  '#tvRoot .tv-btn[disabled]{background:#c4cbe0;box-shadow:none;cursor:default}'+
+  '.tv-watch{background:#f97316;box-shadow:0 3px 8px rgba(249,115,22,.45);margin-right:8px;font-size:14px}'+
+  '#tvRoot .tv-player{background:#fff;border:1px solid #d9dfee;border-radius:14px;padding:14px;margin:0 0 20px;box-shadow:0 3px 12px rgba(30,42,74,.1)}'+
+  '.tv-video{width:100%;aspect-ratio:16/9;background:#0b1236;border-radius:10px;display:block;margin:0 auto}'+
+  '.tv-bar{display:flex;justify-content:space-between;align-items:center;margin:0 0 10px;color:#14246b}'+
+  '.tv-note{color:#a63324;font-size:13px;margin:8px 0 0}'+
+  '.tv-modal{position:fixed;inset:0;background:rgba(11,18,54,.62);z-index:100000;display:flex;align-items:center;justify-content:center;padding:20px}'+
+  '.tv-modal-card{background:#fff;border-radius:16px;padding:16px;width:94%;max-width:1900px;box-shadow:0 12px 40px rgba(0,0,0,.35)}'+
+  '.tv-close{border:0;border-radius:9px;padding:8px 16px;font-weight:800;color:#fff;background:#2f45d6;box-shadow:0 3px 8px rgba(47,69,214,.4);cursor:pointer}';
+  document.head.appendChild(s);
+ }
+ function playerHtml(v){
+  var u=urlOf(v.file);
+  return '<video class="tv-video" controls autoplay playsinline preload="metadata" src="'+e(u)+'"></video><p class="tv-note" hidden>This video could not be loaded. Please tell HR.</p>';
+ }
+ function wireVideo(host){
+  var vd=host.querySelector('video'),note=host.querySelector('.tv-note');
+  if(vd)vd.style.maxHeight=Math.round(window.innerHeight*0.8)+'px';
+  if(vd&&note)vd.addEventListener('error',function(){note.hidden=false;});
+ }
+ function render(){
+  var root=document.getElementById('tvRoot');if(!root)return;
+  var role=APP.currentRole,list=visible(role),admin=isAdmin(role);
+  var chips='';
+  if(admin){chips='<div class="tv-chips">'+['All','Manager','Employee','HR'].map(function(c){return '<button type="button" class="tv-chip'+(state.filter===c?' on':'')+'" data-tv="filter" data-value="'+c+'">'+c+'</button>';}).join('')+'</div>';}
+  var shown=list.filter(function(v){
+   if(!admin||state.filter==='All')return true;
+   var want=state.filter.toLowerCase();return v.roles.some(function(r){return (r==='hohr'?'hr':r)===want;});
+  });
+  var cards=shown.map(function(v,i){
+   var tags=v.roles.filter(function(r,k,a){return a.map(function(x){return TAG[x];}).indexOf(TAG[r])===k;}).map(function(r){return '<span>'+e(TAG[r])+'</span>';}).join('');
+   tags+=v.ready?'<span class="ok">Ready</span>':'<span class="soon">Planned</span>';
+   return '<article class="tv-card c'+(i%3)+'"><div class="tv-thumb"><div class="tv-play"></div>'+(v.length?'<div class="tv-len">'+e(v.length)+'</div>':'')+'</div>'+
+    '<div class="tv-body"><div class="tv-name">'+e(v.title)+'</div><div class="tv-tags">'+tags+'</div><div class="tv-sum">'+e(v.summary)+'</div>'+
+    (v.ready?'<button type="button" class="tv-btn" data-tv="play" data-id="'+e(v.id)+'">Play</button>':'<button type="button" class="tv-btn" disabled>Coming soon</button>')+'</div></article>';
+  }).join('');
+  root.innerHTML='<h2 class="tv-title">Training Videos</h2><p class="tv-sub">Short guides, each under two minutes. Pick one and press play.</p>'+chips+
+   '<section id="tvPlayer" class="tv-player" hidden></section><div class="tv-grid">'+(cards||'<p class="tv-sub">No videos for your role yet.</p>')+'</div>';
+ }
+ function tvOpen(){
+  css();setContent('<div id="tvRoot"></div>');render();
+ }
+ function playInline(id){
+  var v=find(id),host=document.getElementById('tvPlayer');if(!v||!v.ready||!host)return;
+  host.hidden=false;
+  host.innerHTML='<div class="tv-bar"><strong>'+e(v.title)+'</strong><button type="button" class="tv-close" data-tv="stop">Close player</button></div>'+playerHtml(v);
+  wireVideo(host);host.scrollIntoView({block:'start',behavior:'smooth'});
+ }
+ function stopInline(){
+  var host=document.getElementById('tvPlayer');if(!host)return;
+  var vd=host.querySelector('video');if(vd)try{vd.pause();}catch(x){}
+  host.hidden=true;host.innerHTML='';
+ }
+ function closeModal(){
+  var m=document.getElementById('tvModal');if(!m)return;
+  var vd=m.querySelector('video');if(vd)try{vd.pause();}catch(x){}
+  m.remove();
+ }
+ function openModal(id){
+  var v=find(id);if(!v||!v.ready)return;css();closeModal();
+  var w=document.createElement('div');w.id='tvModal';w.className='tv-modal';w.setAttribute('role','dialog');w.setAttribute('aria-modal','true');w.setAttribute('aria-label',v.title);
+  w.innerHTML='<div class="tv-modal-card"><div class="tv-bar"><strong>'+e(v.title)+'</strong><button type="button" class="tv-close" data-tv="close">Close</button></div>'+playerHtml(v)+'</div>';
+  document.body.appendChild(w);wireVideo(w);
+  var cb=w.querySelector('.tv-close');if(cb)cb.focus();
+ }
+ document.addEventListener('click',function(ev){
+  var t=ev.target;if(!t||!t.closest)return;
+  var modal=document.getElementById('tvModal');
+  if(modal&&t===modal){closeModal();return;}
+  var w=t.closest('.tv-watch');if(w){ev.preventDefault();ev.stopPropagation();openModal(w.dataset.tvId);return;}
+  var b=t.closest('[data-tv]');if(!b)return;
+  var a=b.dataset.tv;
+  if(a==='close'){closeModal();}
+  else if(a==='play'){playInline(b.dataset.id);}
+  else if(a==='stop'){stopInline();}
+  else if(a==='filter'){state.filter=b.dataset.value;render();}
+ },true);
+ document.addEventListener('keydown',function(ev){if(ev.key==='Escape')closeModal();});
+ /* Watch how shortcuts: assessment page header and the invitation list. */
+ function decorate(){
+  if(typeof APP==='undefined'||!APP.currentRole)return;
+  var id=SHORTCUT[APP.currentRole],v=id&&find(id);if(!v||!v.ready)return;
+  var back=document.querySelector('#adRoot [data-ad="back"]');
+  if(back&&back.parentNode&&!back.parentNode.querySelector('.tv-watch'))back.parentNode.insertBefore(mk(v,'Watch how: '+v.length),back);
+  var reload=document.querySelector('.ih-header [data-ih="reload"]');
+  if(reload&&reload.parentNode&&!reload.parentNode.querySelector('.tv-watch'))reload.parentNode.insertBefore(mk(v,'Watch how: '+v.length),reload);
+ }
+ function mk(v,label){var b=document.createElement('button');b.type='button';b.className='tv-watch';b.dataset.tvId=v.id;b.textContent=label;return b;}
+ var timer=null;
+ function schedule(){if(timer)return;timer=setTimeout(function(){timer=null;try{css();decorate();}catch(x){}},200);}
+ new MutationObserver(schedule).observe(document.body,{childList:true,subtree:true});
+ /* Page, label and sidebar wiring, same pattern as My Invitations. */
+ var priorPage=loadPage;
+ loadPage=function(id){
+  if(typeof id==='string'&&/-training-videos$/.test(id))return tvOpen();
+  return priorPage.apply(this,arguments);
+ };
+ var priorRole=cnPageRole;
+ cnPageRole=function(page,preferred){
+  if(typeof page==='string'&&/-training-videos$/.test(page))return ROLE_OF[page.split('-')[0]]||priorRole.apply(this,arguments);
+  return priorRole.apply(this,arguments);
+ };
+ var priorLabel=getPageLabel;
+ getPageLabel=function(id){return (typeof id==='string'&&/-training-videos$/.test(id))?'Training Videos':priorLabel.apply(this,arguments);};
+ var priorNav=setupNav;
+ setupNav=function(role){
+  var result=priorNav.apply(this,arguments),prefix=PREFIX[role];if(!prefix)return result;
+  var nav=document.getElementById(role==='employee'?'mainNav':'sideNav'),pid=prefix+'-training-videos';if(!nav)return result;
+  if(!nav.querySelector('[data-page="'+pid+'"]')){
+   var b=document.createElement('button');b.type='button';b.className=role==='employee'?'nav-btn c2':'sb-item';b.dataset.page=pid;b.textContent='Training Videos';
+   b.onclick=function(){navigateTo(pid);};nav.appendChild(b);
+  }
+  if(role!=='employee'&&typeof cmsPolishNavigation==='function')cmsPolishNavigation();
+  var mine=nav.querySelector('[data-page="'+pid+'"]'),hub=nav.querySelector('[data-page="'+prefix+'-invitation-hub"]');
+  if((role==='employee'||role==='manager')&&mine&&hub&&hub.parentNode&&mine!==hub)hub.parentNode.insertBefore(mine,hub);
+  var ic=mine&&mine.querySelector('.nv3-icon');if(ic)ic.outerHTML=PLAY_SVG;
+  return result;
+ };
+ window.cmsOpenTrainingVideo=openModal;
+})();
+</script>
 </body>
 </html>
