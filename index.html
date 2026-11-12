@@ -49989,7 +49989,9 @@ html:root:root:root:root:root:root:root:root:root body #mainContent:has(#loginEm
  var BUCKET='training-videos';
  var VIDEOS=[
   {id:'mgr-assess-team',title:'Assess My Team',roles:['manager'],length:'1:41',file:'manager-assess-my-team.mp4',ready:true,summary:'Assess a team member step by step: evidence, documents, links, rating, autosave and submit.'},
-  {id:'emp-self-assess',title:'Complete my self-assessment',roles:['employee'],length:'',file:'employee-self-assessment.mp4',ready:false,summary:'Answer each experience, add proof and submit.'},
+  {id:'emp-self-assess',title:'Complete my self-assessment',roles:['employee'],length:'1:46',file:'employee-self-assessment.mp4',ready:true,summary:'Answer each experience, add proof and submit.'},
+  {id:'mgr-invitations',title:'Manager Invitations',roles:['manager'],length:'1:26',file:'manager-invitations.mp4',ready:true,summary:'Find your assigned assessments and competency-setting work, read the deadlines and open the work.'},
+  {id:'emp-invitations',title:'My Invitations and deadlines',roles:['employee','manager'],length:'1:15',file:'my-invitations-deadlines.mp4',ready:true,summary:'Open your invitation from the email, read the deadline and start the work.'},
   {id:'library-guide',title:'Using the Competency Library',roles:['manager','hr','hohr'],length:'3:34',file:'competency-library.mp4',ready:true,summary:'Read a role with its points and weights, the JD responsibilities and the manager tool, then drill into your team by company, department and position.'}
  ];
  /* Which video the Watch how button opens, by who is viewing. */
@@ -50171,6 +50173,66 @@ html:root:root:root:root:root:root:root:root:root body #mainContent:has(#loginEm
  cnEnter=async function(){
   try{await fix();}catch(e){}
   return priorEnter.apply(this,arguments);
+ };
+})();
+</script>
+<script id="cms-email-links-v1">
+(function(){
+ if(window.__cmsEmailLinksV1)return;window.__cmsEmailLinksV1=true;
+ /* Fixes the pages that a few CMS emails open. Everything else is left exactly as it was. */
+ var roleCache={};
+ async function rolesOf(email){
+  var key=String(email||'').trim().toLowerCase();
+  if(roleCache[key])return roleCache[key];
+  var roles=[];
+  try{
+   var r=await _supabase.from('user_profiles').select('role').eq('email',email);
+   roles=((r&&r.data)||[]).map(function(x){return x.role;});
+  }catch(e){roles=[];}
+  roleCache[key]=roles;return roles;
+ }
+ /* Sent only to HR admins, so the page is always an HR page. */
+ var HR_FIXED=[
+  [/^new development plan submitted/,'hr-devplans'],
+  [/^dp report approved by manager/,'hr-devplans'],
+  [/^redo request: .+ assessment$/,'hr-redo'],
+  [/^competency framework submitted/,'hr-comp-approvals']
+ ];
+ /* Sent to people with different roles, so the page follows the recipient. */
+ var BY_RECIPIENT=[
+  [/^competency library (ai generation|bulk sync|update|change)/,false],
+  [/^competency framework (approved|changes requested)/,true]
+ ];
+ function pageFor(roles,withManager){
+  if(roles.indexOf('HR_ADMIN')>=0)return 'hr-comp-approvals';
+  if(roles.indexOf('HEAD_HR')>=0)return 'hohr-comp-approvals';
+  return withManager?'mgr-setcomp':null;
+ }
+ function withPage(action,page){var a={};for(var k in (action||{}))a[k]=action[k];a.page=page;return a;}
+ var prior=window.sendCMSemail;
+ if(typeof prior!=='function')return;
+ window.sendCMSemail=function(to,subject,message,action){
+  var self=this,args=arguments,s=String(subject||'').toLowerCase().trim();
+  for(var i=0;i<HR_FIXED.length;i++){
+   if(HR_FIXED[i][0].test(s))return prior.call(self,to,subject,message,withPage(action,HR_FIXED[i][1]));
+  }
+  /* Copy of a report sent to the person who prepared it. */
+  if(/^assessment report: /.test(s)&&window.APP&&APP.currentRole==='hr')
+   return prior.call(self,to,subject,message,withPage(action,'hr-reports'));
+  /* Confirmation sent to the person who corrected their evidence. */
+  if(s==='correction sent to hr'&&window.APP){
+   if(APP.currentRole==='employee')return prior.call(self,to,subject,message,withPage(action,'emp-corrections'));
+   if(APP.currentRole==='manager')return prior.call(self,to,subject,message,withPage(action,'mgr-returned-details'));
+  }
+  for(var j=0;j<BY_RECIPIENT.length;j++){
+   if(BY_RECIPIENT[j][0].test(s)){
+    return rolesOf(to).then(function(roles){
+     var page=pageFor(roles,BY_RECIPIENT[j][1]);
+     return prior.call(self,to,subject,message,page?withPage(action,page):action);
+    });
+   }
+  }
+  return prior.apply(self,args);
  };
 })();
 </script>
