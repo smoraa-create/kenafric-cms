@@ -49539,6 +49539,16 @@ html:root:root:root:root:root:root:root:root:root body #mainContent:has(#loginEm
       var companies=[];team.forEach(function(o){if(companies.indexOf(o.company)<0)companies.push(o.company);});
       companies.sort(coSort);
 
+      if(sel.goto){
+        var g=sel.goto,cp=(window.FW&&FW.catalogue&&FW.catalogue.positions)||[],fp=null;
+        if(g.id)fp=cp.filter(function(p){return String(p.id)===String(g.id);})[0]||null;
+        var gd=String((fp&&fp.department)||g.department||'').trim().toUpperCase(),gp=String((fp&&fp.position)||g.position||'').trim().toUpperCase();
+        var hits=posCache.filter(function(o){return String(o.dept).trim().toUpperCase()===gd&&String(o.pos).trim().toUpperCase()===gp;});
+        var th=hits.filter(function(o){return !o.self&&o.people>0;})[0],sh=hits.filter(function(o){return o.self;})[0];
+        if(th)sel={level:'comp',company:th.company,dept:th.dept,emp:th.emp};
+        else if(sh)sel={level:'own'};
+        else{sel={};if(typeof showToast==='function')showToast('That role is not in your team, so it is not in your Library.');}
+      }
       var level=sel.level||'home',company=sel.company,dept=sel.dept,emp=sel.emp;
       if(level==='own'&&!me)level='home';
       if(level!=='home'&&level!=='own'){
@@ -49627,6 +49637,280 @@ html:root:root:root:root:root:root:root:root:root body #mainContent:has(#loginEm
     if(id==='mgr-comp'||id===PAGE)return showMgr('Competency Library',{refresh:true});
     return oldLoad.apply(this,arguments);
   };
+
+  /* ============ Published competencies: links that go straight to that position ============ */
+  var pending=null;
+  function normT(x){return String(x==null?'':x).trim().toUpperCase();}
+  function toast(m){if(typeof showToast==='function')showToast(m);}
+  function pageForRole(){
+    var r=window.APP&&APP.currentRole;
+    return r==='hr'?'hr-comp':r==='hohr'?'hohr-comp':r==='manager'?'mgr-comp':r==='employee'?'emp-complib':null;
+  }
+  /* Any page can call this with {id} or {department, position}. Each viewer lands in their own Library. */
+  window.cmsOpenPositionLibrary=function(target){
+    var page=pageForRole();
+    if(!page){toast('The Competency Library is not available for this view.');return;}
+    pending=target||null;
+    if(window.APP&&APP.currentPage===page&&typeof loadPage==='function')return loadPage(page);
+    return navigateTo(page);
+  };
+  /* Opening a link from an email: ?cms_page=hr-comp&position_id=... */
+  try{
+    var q=new URLSearchParams(window.location.search||''),qp=q.get('position_id'),qg=q.get('cms_page');
+    if(qp&&/^(hr-comp|hohr-comp|mgr-comp)$/.test(qg||''))pending={id:qp};
+  }catch(e){}
+
+  async function hrSelect(t){
+    var cat=null;
+    try{if(typeof fwCatalogue==='function')await fwCatalogue();}catch(e){}
+    cat=(window.FW&&FW.catalogue&&FW.catalogue.positions)||[];
+    var p=null;
+    if(t.id)p=cat.filter(function(x){return String(x.id)===String(t.id);})[0];
+    if(!p)p=cat.filter(function(x){return normT(x.department)===normT(t.department)&&normT(x.position)===normT(t.position);})[0];
+    if(!p||!p.live_version){toast('That role has no published competencies yet.');return;}
+    for(var i=0;i<40;i++){
+      var src=document.getElementById('fwPositionChoice');
+      if(src&&src.options&&src.options.length>1){
+        src.value=String(p.id);
+        if(src.value===String(p.id)&&typeof src.onchange==='function'){await src.onchange();}
+        return;
+      }
+      await new Promise(function(r){setTimeout(r,100);});
+    }
+  }
+  var prevLoad=window.loadPage;
+  if(typeof prevLoad==='function')window.loadPage=function(id){
+    if(pending&&(id==='mgr-comp'||id==='hr-comp'||id==='hohr-comp')){
+      var t=pending;pending=null;
+      if(id==='mgr-comp')return showMgr('Competency Library',{refresh:true,goto:t});
+      var res=prevLoad.apply(this,arguments);
+      return Promise.resolve(res).then(function(){return hrSelect(t);});
+    }
+    if(pending&&id==='emp-complib'){pending=null;}
+    return prevLoad.apply(this,arguments);
+  };
+
+  /* Emails that say competencies were published carry the position, so the link opens that position */
+  var prevNotify=window.cmsNotifyFrameworkPublished,prevSend=window.sendCMSemail,pubPos=null;
+  if(typeof prevNotify==='function')window.cmsNotifyFrameworkPublished=function(pos){
+    pubPos=pos&&pos.id?pos.id:null;
+    var p=prevNotify.apply(this,arguments);
+    return Promise.resolve(p).then(function(v){pubPos=null;return v;},function(e){pubPos=null;throw e;});
+  };
+  if(typeof prevSend==='function')window.sendCMSemail=function(to,subject,message,action){
+    if(pubPos&&action&&(action.page==='hr-comp'||action.page==='mgr-comp'||action.page==='hohr-comp')){
+      var params={};for(var k in (action.params||{}))params[k]=action.params[k];
+      params.position_id=pubPos;
+      action={page:action.page,params:params};
+    }
+    return prevSend.call(this,to,subject,message,action);
+  };
+
+  /* In-app lists that show "Published": make them open that position */
+  function linkify(){
+    var role=window.APP&&APP.currentRole;
+    if(!pageForRole())return;
+    if(!document.getElementById('lv-css-pl')){
+      var st=document.createElement('style');st.id='lv-css-pl';
+      st.textContent='.lv-link{border:0;background:transparent;color:#4338ca;font-weight:700;font-size:12px;cursor:pointer;padding:4px 8px;text-decoration:underline}';
+      document.head.appendChild(st);
+    }
+    /* HR overview: Recent framework updates */
+    document.querySelectorAll('.clo2-activity-row:not([data-pl])').forEach(function(r){
+      r.setAttribute('data-pl','1');
+      var ch=r.querySelector('.clo2-activity-change');if(!ch)return;
+      var m=String(ch.textContent||'').replace(/\s*framework available\s*$/i,'').split(' / ');
+      if(m.length<2)return;
+      var t={department:m[0],position:m.slice(1).join(' / ')};
+      r.style.cursor='pointer';r.title='Open this position in the Competency Library';
+      var st=r.querySelector('.clo2-activity-state');if(st)st.style.textDecoration='underline';
+      r.addEventListener('click',function(){window.cmsOpenPositionLibrary(t);});
+    });
+    /* Manager: Framework Status page */
+    document.querySelectorAll('.md-card p:not([data-pl])').forEach(function(p){
+      var txt=String(p.textContent||'');
+      if(!/\|\s*Published framework/.test(txt)){return;}
+      p.setAttribute('data-pl','1');
+      var st=p.querySelector('strong');if(!st)return;
+      var parts=txt.split('|').map(function(x){return x.trim();});
+      var t={position:st.textContent.trim(),department:parts[1]||''};
+      var a=document.createElement('button');a.type='button';a.className='lv-link';a.textContent='Open in Competency Library';
+      a.onclick=function(){window.cmsOpenPositionLibrary(t);};
+      p.appendChild(document.createTextNode(' '));p.appendChild(a);
+    });
+    /* Executive frameworks list (HR and Head of HR only) */
+    if(role==='hr'||role==='hohr'){
+      document.querySelectorAll('details:not([data-pl]) > summary').forEach(function(sm){
+        var d=sm.parentNode,txt=String(sm.textContent||'');
+        var m=txt.match(/^(.*?) \/ (.*?) - Published$/);
+        if(!m||d.hasAttribute('data-pl'))return;
+        d.setAttribute('data-pl','1');
+        var a=document.createElement('button');a.type='button';a.className='lv-link';a.textContent='Open in Competency Library';
+        a.onclick=function(){window.cmsOpenPositionLibrary({department:m[1],position:m[2]});};
+        sm.insertAdjacentElement('afterend',a);
+      });
+    }
+  }
+  if(window.MutationObserver&&document.body){
+    var busy=false;
+    new MutationObserver(function(){
+      if(busy)return;busy=true;
+      setTimeout(function(){busy=false;try{linkify();}catch(e){}},250);
+    }).observe(document.body,{childList:true,subtree:true});
+  }
+
+})();
+</script>
+<script id="cms-assessment-reference-v1">
+(function(){
+  'use strict';
+  if(window.__cmsAssessRefV1)return;
+  window.__cmsAssessRefV1=true;
+
+  var cache={},openSet={};
+  function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+  function norm(x){return String(x==null?'':x).replace(/\s+/g,' ').trim().toLowerCase();}
+  function tierOf(cls){
+    var s=String(cls||'');
+    if(/Critical|Must-Have/i.test(s))return 'c';
+    if(/Important|Performance/i.test(s))return 'i';
+    return 'v';
+  }
+  function pointsFrom(sc){
+    var P={c:3,i:2,v:1};
+    try{Object.keys(sc||{}).forEach(function(k){
+      var n=Number(sc[k]);if(!isFinite(n)||n<=0||/effective|version|created|updated|_id$|^id$/i.test(k))return;
+      if(/crit/i.test(k))P.c=n;else if(/imp/i.test(k))P.i=n;else if(/val|add/i.test(k))P.v=n;
+    });}catch(e){}
+    return P;
+  }
+  function refList(v){return String(v||'').split(/[\s,;]+/).filter(Boolean).map(function(x){return x.toUpperCase();});}
+  function key(code,text){return String(code||'')+'|'+norm(text);}
+
+  /* ---------- pure builders ---------- */
+  function build(items,data){
+    var P=pointsFrom(data.scoring),refMap={};
+    (data.refs||[]).forEach(function(r){refMap[key(r.code,r.text)]=r.duty_ref;});
+    var total=0;
+    var rows=items.map(function(it){
+      var t=tierOf(it.classification),pts=P[t];total+=pts;
+      var refs=refList(it.duty_ref||refMap[key(it.code,it.text)]);
+      return {id:String(it.id),code:it.code,t:t,pts:pts,refs:refs};
+    });
+    var byCode={};
+    rows.forEach(function(r){
+      r.pct=total>0?100*r.pts/total:0;
+      byCode[r.code]=(byCode[r.code]||0)+r.pct;
+    });
+    return {rows:rows,total:total,byCode:byCode,P:P};
+  }
+  function dutyMap(data){var m={};(data.duties||[]).forEach(function(d){if(d&&d.ref)m[String(d.ref).toUpperCase()]=d;});return m;}
+  var FIELDS=[['entails','What it entails'],['tasks','Activities and tasks'],['outputs','Expected outputs'],['know','Knowledge'],['skills','Skills'],['abil','Abilities'],['beh','Behaviours'],['attr','Attributes']];
+  function stripHTML(refs,dm,open){
+    var jd='',tl='';
+    refs.forEach(function(r){
+      var d=dm[r];
+      jd+='<div><b>'+esc(r)+'.</b> '+(d&&d.text?esc(d.text):'<i>Wording not loaded yet</i>')+'</div>';
+      var body='';
+      if(d)FIELDS.forEach(function(f){if(d[f[0]])body+='<div><b>'+f[1]+':</b> '+esc(d[f[0]])+'</div>';});
+      tl+='<div class="ar-duty">'+(refs.length>1?'<div class="ar-ref">'+esc(r)+'</div>':'')+(body||'<i>No manager\u2019s tool details saved for this responsibility.</i>')+'</div>';
+    });
+    return '<div class="ar-added ar-strip"'+(open?'':' hidden')+'><div class="ar-box ar-jd"><div class="ar-h">FROM THE JOB DESCRIPTION</div>'+jd+'</div>'+
+           '<div class="ar-box ar-tl"><div class="ar-h">FROM THE MANAGER\u2019S TOOL</div>'+tl+'</div></div>';
+  }
+  function chipsHTML(row,crit,hasStrip,open){
+    var h='<div class="ar-added ar-chips">';
+    if(crit)h+='<span class="ar-pt">'+row.pts+' point'+(row.pts===1?'':'s')+' | '+row.pct.toFixed(1)+'% weight</span>';
+    row.refs.forEach(function(r){h+='<span class="ar-r">'+esc(r)+'</span>';});
+    if(hasStrip)h+='<div><button type="button" class="ar-toggle" data-open="'+(open?'1':'0')+'">'+(open?'Hide':'Show')+' JD and manager\u2019s tool ('+esc(row.refs.join(', '))+')</button></div>';
+    else if(!row.refs.length)h+='<span class="ar-none">No JD responsibility linked</span>';
+    return h+'</div>';
+  }
+  window.cmsAssessRefBuild={build:build,stripHTML:stripHTML,chipsHTML:chipsHTML,pointsFrom:pointsFrom};
+
+  /* ---------- page glue ---------- */
+  function css(){
+    if(document.getElementById('ar-css'))return;
+    var st=document.createElement('style');st.id='ar-css';
+    st.textContent=
+      '.ar-chips{margin-top:8px}.ar-pt{display:inline-block;background:#ede9fe;color:#5b21b6;font-size:11px;font-weight:700;padding:3px 9px;border-radius:5px;margin:0 6px 4px 0}'+
+      '.ar-r{display:inline-block;background:#e0e7ff;color:#3730a3;border:1px solid #c7d2fe;border-radius:6px;padding:1px 8px;font-size:11px;font-weight:700;margin:0 6px 4px 0}'+
+      '.ar-none{font-size:12px;color:#94a3b8}'+
+      '.ar-toggle{border:0;background:transparent;color:#2740c9;font-weight:700;font-size:12.5px;cursor:pointer;padding:4px 0;text-align:left}'+
+      '.ar-strip{grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr;gap:14px;background:#f4f7ff;border-top:1px dashed #b9c5fa;margin:0 -16px -16px;padding:12px 16px 16px}'+
+      '.ar-strip[hidden]{display:none}'+
+      '.ar-box{border-radius:10px;padding:10px 14px;font-size:13px;line-height:1.6}.ar-jd{background:#eef2ff;border:1px solid #c7d2fe}.ar-tl{background:#f7f3ff;border:1px solid #ddd6fe}'+
+      '.ar-h{font-size:10.5px;font-weight:800;letter-spacing:.9px;margin-bottom:5px}.ar-jd .ar-h{color:#4c5fb5}.ar-tl .ar-h{color:#6d28d9}'+
+      '.ar-duty{margin-bottom:8px}.ar-ref{display:inline-block;background:#fff;border:1px solid #ddd6fe;border-radius:6px;padding:0 8px;font-size:11px;font-weight:800;color:#5b21b6;margin-bottom:3px}'+
+      '@media(max-width:1100px){.ar-strip{grid-template-columns:1fr}}';
+    document.head.appendChild(st);
+  }
+  function decorate(s){
+    var entry=cache[s.id];if(!entry||!entry.data)return;
+    var root=document.getElementById('adRoot');if(!root)return;
+    css();
+    var data=entry.data,crit=data.criticality===true,items=s.items||[];
+    var b=build(items,data),dm=dutyMap(data),byId={};
+    b.rows.forEach(function(r){byId[r.id]=r;});
+    if(!openSet[s.id]){openSet[s.id]={};if(items[0])openSet[s.id][String(items[0].id)]=1;}
+    var os=openSet[s.id];
+    root.querySelectorAll('[data-ad-item]').forEach(function(el){
+      el.querySelectorAll('.ar-added').forEach(function(n){n.remove();});
+      var row=byId[String(el.getAttribute('data-ad-item'))];if(!row)return;
+      var txt=el.querySelector('.fp-experience-text')||el.firstElementChild;if(!txt)return;
+      var has=row.refs.length>0,open=has&&!!os[row.id];
+      txt.insertAdjacentHTML('beforeend',chipsHTML(row,crit,has,open));
+      if(has)el.insertAdjacentHTML('beforeend',stripHTML(row.refs,dm,open));
+    });
+    if(crit){
+      root.querySelectorAll('.fp-competency').forEach(function(sec){
+        var sp=sec.querySelector('header span');if(!sp)return;
+        if(!sp.getAttribute('data-ar-orig'))sp.setAttribute('data-ar-orig',sp.textContent);
+        var m=String(sp.getAttribute('data-ar-orig')).match(/^\s*(\S+)\s*\|/);
+        if(m&&b.byCode[m[1]]!=null)sp.textContent=m[1]+' | '+b.byCode[m[1]].toFixed(1)+'% of the role';
+      });
+    }
+  }
+  function attach(s){
+    if(!s||!s.invitation)return;
+    var kind=String(s.invitation.kind||'');
+    if(kind!=='self_current'&&kind!=='manager_current')return;
+    var entry=cache[s.id];
+    if(!entry){
+      entry=cache[s.id]={data:null};
+      Promise.resolve(_supabase.rpc('cms_assessment_reference',{p_request_id:s.id})).then(function(r){
+        if(r.error)throw new Error(r.error.message);
+        entry.data=r.data;
+      }).catch(function(e){
+        if(window.console)console.warn('Assessment reference unavailable:',e&&e.message);
+      }).then(function(){
+        if(typeof AD!=='undefined'&&AD.state===s)try{decorate(s);}catch(e){}
+      });
+      return;
+    }
+    if(entry.data)decorate(s);
+  }
+  document.addEventListener('click',function(e){
+    var t=e.target&&e.target.closest&&e.target.closest('.ar-toggle');if(!t)return;
+    var el=t.closest('[data-ad-item]');if(!el)return;
+    var strip=el.querySelector('.ar-strip');if(!strip)return;
+    var open=strip.hasAttribute('hidden');
+    if(open)strip.removeAttribute('hidden');else strip.setAttribute('hidden','');
+    t.setAttribute('data-open',open?'1':'0');
+    t.textContent=t.textContent.replace(/^(Show|Hide)/,open?'Hide':'Show');
+    if(typeof AD!=='undefined'&&AD.state&&openSet[AD.state.id]){
+      var id=String(el.getAttribute('data-ad-item'));
+      if(open)openSet[AD.state.id][id]=1;else delete openSet[AD.state.id][id];
+    }
+  });
+  if(typeof adRender==='function'){
+    var prev=adRender;
+    adRender=function(s){
+      var r=prev.apply(this,arguments);
+      try{attach(s);}catch(e){if(window.console)console.warn('Assessment reference:',e&&e.message);}
+      return r;
+    };
+  }
 })();
 </script>
 </body>
