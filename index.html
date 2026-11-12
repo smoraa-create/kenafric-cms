@@ -6701,7 +6701,7 @@ var pages = [];
 if (role === 'employee') {
 pages = [{id:'emp-profile',label:'My Profile'},{id:'emp-selfassess',label:'Self Assessment'},{id:'emp-mgrview',label:'Assessment Results'},{id:'emp-gaps',label:'My Gaps'},{id:'emp-strengths',label:'My Strengths'},{id:'emp-devplans',label:'Development Plans'}];
 } else if (role === 'manager') {
-pages = [{id:'mgr-dashboard',label:'Dashboard'},{id:'mgr-team',label:'My Team'},{id:'mgr-prompool',label:'Progression-Ready Pool'},{id:'mgr-assess',label:'Assessment'},{id:'mgr-details',label:'All Assessment Details & Reviews'},{id:'mgr-requests',label:'Requests'},{id:'mgr-gaps',label:'Team Gaps'},{id:'mgr-devplans',label:'Development Plans'},{id:'mgr-repappr',label:'Report Approvals'},{id:'mgr-comp',label:'Competency Library (View)'}];
+pages = [{id:'mgr-dashboard',label:'Dashboard'},{id:'mgr-team',label:'My Team'},{id:'mgr-prompool',label:'Progression-Ready Pool'},{id:'mgr-assess',label:'Assess My Team'},{id:'mgr-details',label:'All Assessment Details & Reviews'},{id:'mgr-requests',label:'Requests'},{id:'mgr-gaps',label:'Team Gaps'},{id:'mgr-devplans',label:'Development Plans'},{id:'mgr-repappr',label:'Report Approvals'},{id:'mgr-comp',label:'Competency Library (View)'}];
 } else if (role === 'hohr') {
 pages = [{id:'hohr-dash',label:'Dashboard'},{id:'hohr-kpi',label:'Critical Roles'},{id:'hohr-positions',label:'Critical Positions Registry'},{id:'hohr-assessed',label:'Assessed'},{id:'hohr-pool',label:'Talent Pool'},{id:'hohr-reports',label:'All Reports'},{id:'hohr-assess',label:'All Assessments'},{id:'hohr-devplans',label:'Approved Dev Plans'},{id:'hohr-staff',label:'All Staff'},{id:'hohr-gaps',label:'All Gaps'},{id:'hohr-strengths',label:'All Strengths'},{id:'hohr-comp',label:'Competency Library'}];
 }
@@ -6811,7 +6811,7 @@ return loading;
 function getPageLabel(id) {
 if (id === 'hohr-comp-approvals') return 'Competency Approvals & Validation';
 if (id === 'hr-comp-approvals') return 'Competency Approvals & Validation'; if (id === 'hr-setcomp') return 'Set Competencies';
-var map = {'emp-profile':'My Profile','emp-selfassess':'Self Assessment','emp-mgrview':'Assessment Results','emp-gaps':'My Gaps','emp-strengths':'My Strengths','emp-devplans':'Development Plans','mgr-dashboard':'Dashboard','mgr-team':'My Team','mgr-prompool':'Progression-Ready Pool','mgr-assess':'Assessment','mgr-details':'All Assessment Details & Reviews','mgr-gaps':'Team Gaps','mgr-devplans':'Development Plans','mgr-requests':'Requests','mgr-repappr':'Report Approvals','mgr-setcomp':'Set Competencies','mgr-comp':'Competency Library (View)','hohr-reports':'Report Approvals','hohr-comp':'Competency Library','cs-reports':'Executive Recommendations','hr-dashboard':'Dashboard','hr-kpi':'KPI Dashboard','hr-departments':'Departments','hr-companies':'Companies','hr-prompool':'Progression-Ready Pool','hr-staff':'All Active Employees','hr-managers':'Line Managers','hr-review':'Assessment Review','hr-gaps':'Employee Gaps','hr-devplans':'Development Plans','hr-all':'All Assessments','hr-reports':'Reports','hr-repappr':'Report Approvals','hr-comp':'Competency Library','hr-redo':'Redo Requests','hr-positions':'Critical Positions Registry'}
+var map = {'emp-profile':'My Profile','emp-selfassess':'Self Assessment','emp-mgrview':'Assessment Results','emp-gaps':'My Gaps','emp-strengths':'My Strengths','emp-devplans':'Development Plans','mgr-dashboard':'Dashboard','mgr-team':'My Team','mgr-prompool':'Progression-Ready Pool','mgr-assess':'Assess My Team','mgr-details':'All Assessment Details & Reviews','mgr-gaps':'Team Gaps','mgr-devplans':'Development Plans','mgr-requests':'Requests','mgr-repappr':'Report Approvals','mgr-setcomp':'Set Competencies','mgr-comp':'Competency Library (View)','hohr-reports':'Report Approvals','hohr-comp':'Competency Library','cs-reports':'Executive Recommendations','hr-dashboard':'Dashboard','hr-kpi':'KPI Dashboard','hr-departments':'Departments','hr-companies':'Companies','hr-prompool':'Progression-Ready Pool','hr-staff':'All Active Employees','hr-managers':'Line Managers','hr-review':'Assessment Review','hr-gaps':'Employee Gaps','hr-devplans':'Development Plans','hr-all':'All Assessments','hr-reports':'Reports','hr-repappr':'Report Approvals','hr-comp':'Competency Library','hr-redo':'Redo Requests','hr-positions':'Critical Positions Registry'}
 return map[id] || '';
 }
 // Current-role decisions require both submissions; zero is a valid score.
@@ -49510,6 +49510,21 @@ html:root:root:root:root:root:root:root:root:root body #mainContent:has(#loginEm
       people:Number(o.people)||0
     };
   }
+  function css4(){
+    if(document.getElementById('lv-css5'))return;
+    var st=document.createElement('style');st.id='lv-css5';
+    st.textContent=
+      '.lv-secs{display:flex;flex-wrap:wrap;gap:10px;margin:0 0 14px}'+
+      '.lv-sec-tab{display:inline-block;padding:11px 20px;border-radius:11px;background:#fff;border:1.5px solid #cfd8ea;font-weight:800;font-size:14px;color:#334155;cursor:pointer}'+
+      '.lv-sec-tab small{font-weight:700;opacity:.8;margin-left:8px;font-size:12px}'+
+      '.lv-sec-tab.on{background:#2740c9;border-color:#2740c9;color:#fff;box-shadow:0 3px 8px rgba(39,64,201,.25)}';
+    document.head.appendChild(st);
+  }
+  function secTabs(active,people){
+    css4();
+    return '<div class="lv-secs"><span class="lv-sec-tab'+(active==='own'?' on':'')+'" data-sec="own">My competencies</span>'+
+      '<span class="lv-sec-tab'+(active==='team'?' on':'')+'" data-sec="team">My team\u2019s competencies<small>'+people+' '+(people===1?'person':'people')+'</small></span></div>';
+  }
   var posCache=null;
   function crumbs(title,parts){
     var h='<div class="lv-crumbs"><span class="lv-cr" data-go="home">'+esc(title)+'</span>';
@@ -49549,8 +49564,7 @@ html:root:root:root:root:root:root:root:root:root body #mainContent:has(#loginEm
         else if(sh)sel={level:'own'};
         else{sel={};if(typeof showToast==='function')showToast('That role is not in your team, so it is not in your Library.');}
       }
-      var level=sel.level||'home',company=sel.company,dept=sel.dept,emp=sel.emp;
-      if(level==='own'&&!me)level='home';
+      var level=sel.level||(me?'own':'home'),company=sel.company,dept=sel.dept,emp=sel.emp;
       if(level!=='home'&&level!=='own'){
         if(companies.indexOf(company)<0){level='home';}
       }
@@ -49562,14 +49576,11 @@ html:root:root:root:root:root:root:root:root:root body #mainContent:has(#loginEm
       var row=rows.filter(function(o){return o.emp===emp;})[0];
       if(level==='comp'&&!row)level='pos';
 
-      var h='';
+      var teamPeople=0;team.forEach(function(o){teamPeople+=o.people;});
+      var TEAM='My team\u2019s competencies';
+      var h=secTabs(level==='own'?'own':'team',teamPeople);
       if(level==='home'){
-        h+='<div class="lv-hero"><h2>'+esc(title)+'</h2><p>Your own role first, then the people you manage by company.</p></div>';
-        h+='<div class="lv-lbl">My own role</div>';
-        if(me){
-          h+='<div class="lv-own" data-own="1"><b>'+esc(me.pos)+'</b><span class="lv-tagp">My role</span>'+
-             '<span class="m">'+esc(me.dept+' | '+me.company)+'</span><span class="lv-tagp '+(me.published?'ok':'no')+'">'+(me.published?'Published':'Not published yet')+'</span></div>';
-        }else h+='<div class="lv-empty">Your own role was not found in the roster.</div>';
+        h+='<div class="lv-hero"><h2>'+esc(TEAM)+'</h2><p>The people who report to you, by company</p></div>';
         h+='<div class="lv-lbl">Select a company</div>';
         if(!team.length)h+='<div class="lv-empty">No one reports to you in the roster yet.</div>';
         else h+='<div class="lv-cos">'+companies.map(function(c){
@@ -49579,14 +49590,14 @@ html:root:root:root:root:root:root:root:root:root body #mainContent:has(#loginEm
         }).join('')+'</div>';
         setContent(h);
       }else if(level==='dept'){
-        h+=crumbs(title,[{t:company}]);
+        h+=crumbs(TEAM,[{t:company}]);
         h+='<div class="lv-hero"><h2>'+esc(company)+'</h2><p>Select a department</p></div><div class="lv-cos">'+depts.map(function(d){
           var inD=inCo.filter(function(o){return o.dept===d;}),ppl=0;inD.forEach(function(o){ppl+=o.people;});
           return '<div class="lv-co" data-dept="'+esc(d)+'"><b>'+esc(d)+'</b><span>'+ppl+' people | '+inD.length+' role'+(inD.length===1?'':'s')+'</span></div>';
         }).join('')+'</div>';
         setContent(h);
       }else if(level==='pos'){
-        h+=crumbs(title,[{t:company,go:'dept'},{t:dept}]);
+        h+=crumbs(TEAM,[{t:company,go:'dept'},{t:dept}]);
         h+='<div class="lv-hero"><h2>'+esc(dept)+'</h2><p>'+esc(company)+' | Select a position</p></div><div class="lv-posgrid">'+rows.map(function(o){
           return '<div class="lv-pos" data-emp="'+esc(o.emp)+'"><b>'+esc(o.pos)+'</b><span class="m">'+o.people+' '+(o.people===1?'person':'people')+'</span>'+
             '<span class="lv-tagp '+(o.published?'ok':'no')+'">'+(o.published?'Published':'Not published yet')+'</span></div>';
@@ -49594,20 +49605,24 @@ html:root:root:root:root:root:root:root:root:root body #mainContent:has(#loginEm
         setContent(h);
       }else{
         var own=level==='own';
-        var id=own?me.emp:row.emp;
-        var r=await _supabase.rpc('cms_library_view',{p_action:'view',p_employee_id:id});
-        if(r.error)throw new Error(r.error.message);
-        var d=r.data;
-        h+=own?crumbs(title,[{t:'My own role'}]):crumbs(title,[{t:company,go:'dept'},{t:dept,go:'pos'},{t:row.pos}]);
-        if(!d||!d.published){
-          h+='<div class="lv-hero"><h2>'+esc(own?me.pos:row.pos)+'</h2><p>'+esc(own?me.dept+' | '+me.company:dept+' | '+company)+'</p></div>'+
-             '<div class="lv-empty">No published competencies for this role yet. HR will let you know once they are approved and published.</div>';
-          setContent(h);
+        if(own&&!me){
+          setContent(h+'<div class="lv-empty">Your own role was not found in the roster.</div>');
         }else{
-          cur=d;tab='comp';refSel=null;
-          h+='<div class="lv-hero"><h2>'+esc(d.position)+'</h2><p>'+esc(d.department+' | '+(own?me.company+' | my own role':company))+'</p></div>'+tabsHTML(d)+'<div id="lvBody"></div>';
-          setContent(h);
-          wireBody();
+          var id=own?me.emp:row.emp;
+          var r=await _supabase.rpc('cms_library_view',{p_action:'view',p_employee_id:id});
+          if(r.error)throw new Error(r.error.message);
+          var d=r.data;
+          if(!own)h+=crumbs(TEAM,[{t:company,go:'dept'},{t:dept,go:'pos'},{t:row.pos}]);
+          if(!d||!d.published){
+            h+='<div class="lv-hero"><h2>'+esc(own?me.pos:row.pos)+'</h2><p>'+esc(own?me.dept+' | '+me.company+' | my own role':dept+' | '+company)+'</p></div>'+
+               '<div class="lv-empty">No published competencies for this role yet. HR will let you know once they are approved and published.</div>';
+            setContent(h);
+          }else{
+            cur=d;tab='comp';refSel=null;
+            h+='<div class="lv-hero"><h2>'+esc(d.position)+'</h2><p>'+esc(d.department+' | '+(own?me.company+' | my own role':company))+'</p></div>'+tabsHTML(d)+'<div id="lvBody"></div>';
+            setContent(h);
+            wireBody();
+          }
         }
       }
       wireMgr(title,{company:company,dept:dept,emp:emp});
@@ -49617,8 +49632,7 @@ html:root:root:root:root:root:root:root:root:root body #mainContent:has(#loginEm
   }
   window.cmsLibViewShowMgr=showMgr;
   function wireMgr(title,s){
-    var own=document.querySelector('[data-own]');
-    if(own)own.onclick=function(){showMgr(title,{level:'own'});};
+    document.querySelectorAll('.lv-sec-tab').forEach(function(t){t.onclick=function(){showMgr(title,{level:t.getAttribute('data-sec')==='own'?'own':'home'});};});
     document.querySelectorAll('[data-co]').forEach(function(c){c.onclick=function(){showMgr(title,{level:'dept',company:c.getAttribute('data-co')});};});
     document.querySelectorAll('.lv-co[data-dept]').forEach(function(c){c.onclick=function(){showMgr(title,{level:'pos',company:s.company,dept:c.getAttribute('data-dept')});};});
     document.querySelectorAll('.lv-pos').forEach(function(c){c.onclick=function(){showMgr(title,{level:'comp',company:s.company,dept:s.dept,emp:c.getAttribute('data-emp')});};});
@@ -49865,12 +49879,66 @@ html:root:root:root:root:root:root:root:root:root body #mainContent:has(#loginEm
     if(crit){
       root.querySelectorAll('.fp-competency').forEach(function(sec){
         var sp=sec.querySelector('header span');if(!sp)return;
-        if(!sp.getAttribute('data-ar-orig'))sp.setAttribute('data-ar-orig',sp.textContent);
-        var m=String(sp.getAttribute('data-ar-orig')).match(/^\s*(\S+)\s*\|/);
-        if(m&&b.byCode[m[1]]!=null)sp.textContent=m[1]+' | '+b.byCode[m[1]].toFixed(1)+'% of the role';
+        if(!sp.getAttribute('data-ar-base'))sp.setAttribute('data-ar-base',sp.textContent);
+        var m=String(sp.getAttribute('data-ar-base')).match(/^\s*(\S+)\s*\|/);
+        if(m&&b.byCode[m[1]]!=null)sp.setAttribute('data-ar-base',m[1]+' | '+b.byCode[m[1]].toFixed(1)+'% of the role');
       });
     }
+    refreshProgress();
   }
+  /* ---------- progress (all assessment types, all viewers) ---------- */
+  function answered(el){
+    var pick=el.querySelector('[data-fp-answer]:checked');
+    if(!pick)return false;
+    if(pick.value==='no')return true;
+    return !!el.querySelector('[data-sx-rating]:checked');
+  }
+  function progressCss(){
+    if(document.getElementById('ar-css-p'))return;
+    var st=document.createElement('style');st.id='ar-css-p';
+    st.textContent=
+      '#arProgress{background:linear-gradient(90deg,#0e7490,#2563eb);color:#fff;border-radius:12px;padding:12px 20px;margin:10px 0 14px;display:flex;gap:28px;align-items:center;flex-wrap:wrap}'+
+      '#arProgress .ar-pk{font-size:10.5px;letter-spacing:.8px;font-weight:800;color:#cffafe}#arProgress .ar-pv{font-size:17px;font-weight:800}'+
+      '#arProgress .ar-pm{flex:1;min-width:240px}#arProgress .ar-tr{height:9px;background:rgba(255,255,255,.28);border-radius:6px;margin-top:7px}'+
+      '#arProgress .ar-fl{height:9px;background:#fbbf24;border-radius:6px}';
+    document.head.appendChild(st);
+  }
+  function refreshProgress(){
+    var root=document.getElementById('adRoot');if(!root)return;
+    var all=root.querySelectorAll('[data-ad-item]');if(!all.length)return;
+    progressCss();
+    var total=0,done=0,secTotal=0,secDone=0;
+    root.querySelectorAll('.fp-competency').forEach(function(sec){
+      var its=sec.querySelectorAll('[data-ad-item]'),n=0;
+      its.forEach(function(el){if(answered(el))n++;});
+      total+=its.length;done+=n;secTotal++;if(its.length&&n===its.length)secDone++;
+      var sp=sec.querySelector('header span');
+      if(sp){
+        if(!sp.getAttribute('data-ar-base'))sp.setAttribute('data-ar-base',sp.textContent);
+        sp.textContent=sp.getAttribute('data-ar-base')+' | '+n+' of '+its.length+' answered';
+      }
+    });
+    if(!secTotal){total=all.length;all.forEach(function(el){if(answered(el))done++;});}
+    var pct=total?Math.round(100*done/total):0;
+    var html='<div class="ar-pm"><div class="ar-pk">PROGRESS</div><div class="ar-pv">'+done+' of '+total+' experiences answered</div><div class="ar-tr"><div class="ar-fl" style="width:'+pct+'%"></div></div></div>'+
+      (secTotal?'<div><div class="ar-pk">COMPETENCIES</div><div class="ar-pv">'+secDone+' of '+secTotal+' complete</div></div>':'');
+    var bar=document.getElementById('arProgress');
+    if(!bar){
+      bar=document.createElement('div');bar.id='arProgress';
+      var first=root.querySelector('.fp-competency');
+      var host=(root.querySelector('.ad-experiences')||(first&&first.parentNode));
+      if(host&&host.parentNode)host.parentNode.insertBefore(bar,host);else return;
+    }
+    bar.innerHTML=html;
+  }
+  var pTimer=null;
+  function soon(){clearTimeout(pTimer);pTimer=setTimeout(function(){try{refreshProgress();}catch(e){}},30);}
+  document.addEventListener('change',function(e){
+    var t=e.target;
+    if(t&&t.matches&&(t.matches('[data-fp-answer]')||t.matches('[data-sx-rating]')))soon();
+  });
+  window.cmsAssessProgress=refreshProgress;
+
   function attach(s){
     if(!s||!s.invitation)return;
     var kind=String(s.invitation.kind||'');
@@ -49907,6 +49975,7 @@ html:root:root:root:root:root:root:root:root:root body #mainContent:has(#loginEm
     var prev=adRender;
     adRender=function(s){
       var r=prev.apply(this,arguments);
+      try{refreshProgress();}catch(e){if(window.console)console.warn('Assessment progress:',e&&e.message);}
       try{attach(s);}catch(e){if(window.console)console.warn('Assessment reference:',e&&e.message);}
       return r;
     };
