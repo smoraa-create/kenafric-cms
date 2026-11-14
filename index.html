@@ -15365,7 +15365,7 @@ async function fwImportManagerTool(input){
    duties.push({ref:'R'+ref,text:txt,entails:String(row[2]||''),tasks:String(row[3]||''),outputs:String(row[4]||''),know:String(row[5]||''),skills:String(row[6]||''),abil:String(row[7]||''),beh:String(row[8]||''),attr:String(row[9]||''),prio:String(row[10]||'')});
   }
   if(!duties.length)throw new Error('No filled responsibilities were found in the tool. Field 1 must hold the JD wording.');
-  try{localStorage.setItem('cmsDuties:'+p.id,JSON.stringify(duties.map(function(u){return {ref:u.ref,text:u.text,prio:u.prio||''};})));}catch(e){}
+  try{localStorage.setItem('cmsDuties:'+p.id,JSON.stringify(duties));}catch(e){}
   var allowed={};
   var list=(APP.competencies||[]).filter(function(c){return /^(FC|PC|LC|CC)\d+$/.test(c.code);});
   list.forEach(function(c){allowed[c.code]=c.competency;});
@@ -37357,6 +37357,15 @@ const st=document.createElement('style');st.id='cms-manager-tabs-style-v1';st.te
   }
   throw Error('This list exceeds the page limit. No partial total is being shown.');
  }
+ async function prospRoles(s){
+  s.prospRole={};
+  try{
+   const ids=[...new Set(s.items.filter(it=>it.action.assessment_scope==='prospective').map(it=>it.action.employee_id))];
+   if(!ids.length)return;
+   const rows=await tableAll(s,()=>_supabase.from('assessments').select('id,employee_id,type,prospective_role').in('employee_id',ids).in('type',['Prospective','Prospective Self']).order('id'));
+   (rows||[]).forEach(r=>{const t=String(r.prospective_role||'').trim();if(t)s.prospRole[r.employee_id]=t;});
+  }catch(e){}
+ }
  async function fetchActions(s){
   const all=[],seen=new Set();
   for(let page=0;page<=2000;page++){
@@ -37364,7 +37373,7 @@ const st=document.createElement('style');st.id='cms-manager-tabs-style-v1';st.te
    if(!current(s))return;
    if(!Array.isArray(r.items)||Number(r.page)!==page)throw Error('Unexpected development page.');
    for(const it of r.items){if(!it?.action?.id||!Array.isArray(it.milestones))throw Error('Unexpected action data.');if(seen.has(it.action.id))throw Error('Plans changed during loading. Refresh to get a consistent list.');seen.add(it.action.id);all.push(it);}
-   if(!r.has_more){s.items=all;s.actionError='';return;}
+   if(!r.has_more){s.items=all;s.actionError='';await prospRoles(s);await mtLoadMeta(s);return;}
    msg(s,'Loading development actions: '+all.length+' read...');
   }
   throw Error('Development page limit exceeded. No partial total is shown.');
@@ -37409,10 +37418,11 @@ const st=document.createElement('style');st.id='cms-manager-tabs-style-v1';st.te
   msg(s,preview?'Read-only Manager view: no creation, saving, review decisions or file access.':'Development progress is separate from competency assessment scores.');
  }
  function shell(s){
+   const hero=node('div',null,'mt-hero',s.host);node('h2','Development Plans',null,hero);node('p','Create, track and report on development plans for your direct reports.',null,hero);
   const tabs=node('nav',null,'mt-tabs',s.host);tabs.setAttribute('role','tablist');tabs.setAttribute('aria-label','Development workspaces');
   s.tabs={};s.panels={};
-  for(const [key,label] of [['existing','Existing Plans'],['create','Create Plan'],['reports','Reports']]){
-   const b=button(s,tabs,label,()=>setTab(s,key));b.id='mt-tab-'+key;b.setAttribute('role','tab');b.setAttribute('aria-controls','mt-panel-'+key);s.tabs[key]=b;
+  for(const [key,label,desc,num] of [['create','Create a development plan','Start from the gaps in your assessment',1],['existing','Existing plans','Drafts, awaiting approval, active and completed',2],['reports','Reports','Monthly progress reports from your team',3]]){
+   const b=button(s,tabs,'',()=>setTab(s,key));node('span',num,'mt-tabnum',b);const tt=node('span',null,'mt-tabtext',b);node('b',label,null,tt);node('small',desc,null,tt);b.setAttribute('aria-label',label+'. '+desc);b.id='mt-tab-'+key;b.setAttribute('role','tab');b.setAttribute('aria-controls','mt-panel-'+key);s.tabs[key]=b;
    const p=node('section',null,'mt-workspace',s.host);p.id='mt-panel-'+key;p.setAttribute('role','tabpanel');p.setAttribute('aria-labelledby',b.id);s.panels[key]=p;
    b.addEventListener('keydown',e=>{const keys=Object.keys(s.tabs),i=keys.indexOf(key);let j;if(e.key==='ArrowRight')j=(i+1)%3;if(e.key==='ArrowLeft')j=(i+2)%3;if(e.key==='Home')j=0;if(e.key==='End')j=2;if(j!==undefined){e.preventDefault();if(!s.busy){setTab(s,keys[j]);s.tabs[keys[j]].focus();}}});
   }
@@ -37443,12 +37453,14 @@ const st=document.createElement('style');st.id='cms-manager-tabs-style-v1';st.te
     const badges=node('div',null,'mt-badges',head),statuses=[...new Set(items.map(it=>it.action.status||'Pending'))],hrs=[...new Set(items.map(it=>it.action.hr_approved||'Pending'))];
     pill(badges,statuses.length===1?statuses[0]:'Mixed action statuses',statuses[0]==='Active'?'mt-ok':'');
     pill(badges,hrs.length===1?'HR '+hrs[0]:'Mixed HR approvals',hrs[0]==='Approved'?'mt-ok':'');
+    if(a.assessment_scope==='prospective')pill(badges,'Prospective role'+(s.prospRole&&s.prospRole[a.employee_id]?': '+s.prospRole[a.employee_id]:''),'mt-warn');
     node('p',items.length+' action'+(items.length===1?'':'s'),'mt-count',c);
     const objectives=[...new Set(items.map(it=>it.action.task).filter(Boolean))];
     if(objectives.length){
      const objective=node('details',null,'mt-plan-objective',c);node('summary','Plan objective',null,objective);
      objectives.forEach(t=>node('p',t,'mt-objective',objective));
     }
+    mtMetaCard(c,items,s);
     const scroll=node('div',null,'mt-table-scroll',c);
     scroll.tabIndex=0;scroll.setAttribute('role','region');scroll.setAttribute('aria-label','Action plan columns for '+(a.employee_name||a.employee_id));
     const table=node('table',null,'mt-plan-table',scroll);node('caption','Plan actions',null,table);
@@ -37710,25 +37722,181 @@ const st=document.createElement('style');st.id='cms-manager-tabs-style-v1';st.te
   const results=await tableAll(s,()=>_supabase.from('assessments').select('*').eq('employee_id',id).order('id'));
   const assessmentType=scope==='prospective'?'Prospective':'Manager';
   const manager=latestOnly(results).filter(r=>r.type===assessmentType);
-  const formatted=manager.map(r=>({'Employee ID':r.employee_id,'Competency Code':r.comp_code,'Type':r.type,'Ticked':r.ticked,'Evidence':r.evidence,'HR_Status':r.hr_status,'Rating':r.proficiency_rating,'Scoring Rule':r.scoring_rule||'legacy-zero','Classification':r.scoring_rule==='floor-one-v1'?r.classification:undefined,'Weight Profile':r.weight_profile,'Weight Policy':r.weight_policy}));
+   const formatted=manager.map(r=>({'Employee ID':r.employee_id,'Competency Code':r.comp_code,'Type':r.type,'Ticked':r.ticked,'Evidence':r.evidence,'HR_Status':r.hr_status,'Rating':r.proficiency_rating,'Scoring Rule':r.scoring_rule||'legacy-zero','Classification':r.scoring_rule==='floor-one-v1'?r.classification:undefined,'Weight Profile':r.weight_profile,'Weight Policy':r.weight_policy}));
+  const selfType=scope==='prospective'?'Prospective Self':'Self';
+  const formattedSelf=latestOnly(results).filter(r=>r.type===selfType).map(r=>({'Employee ID':r.employee_id,'Competency Code':r.comp_code,'Type':r.type,'Ticked':r.ticked,'Evidence':r.evidence,'HR_Status':r.hr_status,'Rating':r.proficiency_rating,'Scoring Rule':r.scoring_rule||'legacy-zero','Classification':r.scoring_rule==='floor-one-v1'?r.classification:undefined,'Weight Profile':r.weight_profile,'Weight Policy':r.weight_policy}));
   const out=[];
   for(const c of APP.competencies||[]){
     const score=calculateCompetencyScore(id,c.code,assessmentType,formatted);
-    const pct=Math.round(score.score/5*100);
-    if(score.total>0&&pct<100){
-      const exps=manager.filter(r=>r.comp_code===c.code).map(r=>{
+   const mgrPct=Math.round(score.score/5*100);let pct=mgrPct,basis='manager';
+    if(formattedSelf.length){const ss=calculateCompetencyScore(id,c.code,selfType,formattedSelf);if(ss&&ss.total>0){pct=Math.round(mgrPct*0.70+Math.round(ss.score/5*100)*0.30);basis='final';}}
+    if(score.total>0&&mgrPct<100){
+      const allx=manager.filter(r=>r.comp_code===c.code).map(r=>{
         const t=r.ticked===true||r.ticked==='TRUE'||r.ticked===1;
         let v=0;try{v=Number(cmsEffectiveRating(r))||0;}catch(e){v=0;}
         return {text:String(r.experience_text||'').trim(),cls:String(r.classification||''),ticked:t,rating:v};
-      }).filter(x=>x.text&&(!x.ticked||(x.rating>0&&x.rating<=3)));
-      out.push({code:c.code,name:c.competency,pct,exps});
+      }).filter(x=>x.text);
+      const exps=allx.filter(x=>!x.ticked||x.rating<5),strengths=allx.filter(x=>x.ticked&&x.rating>=5);
+      out.push({code:c.code,name:c.competency,pct,basis,mgrPct,exps,strengths});
     }
   }
+  out.role=scope==='prospective'?String(((manager[0]||{}).prospective_role)||((latestOnly(results).filter(r=>r.type==='Prospective Self')[0]||{}).prospective_role)||'').trim():'';
   return out;
 }
 function draftScope(id,scope){
   return {page:'mgr-devplans',role:'manager',editor:'manager-three-tabs-v1',employee:id,assessment_scope:scope};
 }
+
+ /* ===== Step 56: expected reports, monthly plan, JD link, targets ===== */
+ const MT_REPORTS=['Work sample or project output','Manager observation note','Written summary or report','Presentation','Coaching or mentoring notes','Certificate or proof of completion','Reflection log'];
+ const MT_READY=['Ready Now (90% and above)','Ready in 6 to 12 months (80 to 89%)','Ready in 12 to 18 months (70 to 79%)'];
+ const MT_MONTHS=['January','February','March','April','May','June','July','August','September','October','November','December'];
+ function mtNorm(x){return String(x==null?'':x).replace(/\s+/g,' ').trim().toLowerCase();}
+ function mtMonthLabel(k){const m=String(k).match(/^(\d{4})-(\d{2})$/);return m&&MT_MONTHS[Number(m[2])-1]?MT_MONTHS[Number(m[2])-1]+' '+m[1]:String(k);}
+ function mtDisplayDate(v){const m=String(v||'').match(/^(\d{4})-(\d{2})-(\d{2})/);if(!m||!MT_MONTHS[Number(m[2])-1])return '';return m[3]+' '+MT_MONTHS[Number(m[2])-1].slice(0,3)+' '+m[1];}
+ function mtMonthList(acts){
+  let lo='',hi='';
+  (acts||[]).forEach(a=>{if(a&&a.start&&(!lo||a.start<lo))lo=a.start;if(a&&a.end&&(!hi||a.end>hi))hi=a.end;});
+  if(!lo||!hi||hi<lo)return {lo,hi,months:[]};
+  const out=[];let y=Number(lo.slice(0,4)),m=Number(lo.slice(5,7));const ey=Number(hi.slice(0,4)),em=Number(hi.slice(5,7));
+  while((y<ey||(y===ey&&m<=em))&&out.length<60){out.push(y+'-'+String(m).padStart(2,'0'));m++;if(m>12){m=1;y++;}}
+  return {lo,hi,months:out};
+ }
+ function mtPlanLength(lo,hi){if(!lo||!hi||hi<lo)return 0;const d=(new Date(hi+'T00:00:00Z')-new Date(lo+'T00:00:00Z'))/86400000;return Math.max(1,Math.round(d/30.4));}
+ function mtEffective(monthly,months){
+  const out=[];let prev={types:[],other:''};
+  months.forEach((k,i)=>{
+   const e=(monthly||[]).find(x=>x.month===k)||{month:k,types:[],other:'',same:false};
+   const eff=(i>0&&e.same)?{types:prev.types.slice(),other:prev.other}:{types:(e.types||[]).slice(),other:String(e.other||'')};
+   out.push({month:k,types:eff.types,other:eff.other,same:i>0&&!!e.same});prev=eff;
+  });
+  return out;
+ }
+ function mtAutoFill(monthly,months,plans){
+  const ord=[...MT_REPORTS,'Other'],autos=[];let pt=[],po='';
+  months.forEach(k=>{
+   let e=monthly.find(x=>x.month===k);if(!e){e={month:k,types:[],other:'',same:false};monthly.push(e);}
+   const types=[],others=[];
+   (plans||[]).forEach(x=>(x.actions||[]).forEach(a=>{
+    if(a&&a.start&&a.end&&a.start.slice(0,7)<=k&&a.end.slice(0,7)>=k){
+     (a.reps||[]).forEach(t=>{if(!types.includes(t))types.push(t);});
+     if((a.reps||[]).includes('Other')&&String(a.other||'').trim()){const o=String(a.other).trim();if(!others.includes(o))others.push(o);}
+    }
+   }));
+   types.sort((p,q)=>ord.indexOf(p)-ord.indexOf(q));
+   const au=types.length?{types:types,other:others.join('; ').slice(0,300)}:{types:pt.slice(),other:po};
+   autos.push(au);
+   if(!e.manual){e.types=au.types.slice();e.other=au.other;}
+   e.same=false;pt=au.types.slice();po=au.other;
+  });
+  return autos;
+ }
+ function mtRepsOk(a){const r=(a&&a.reps)||[];if(!r.length)return false;if(r.includes('Other')&&!String(a.other||'').trim())return false;return true;}
+ function mtRepsText(a){const r=((a&&a.reps)||[]).filter(x=>x!=='Other');if(((a&&a.reps)||[]).includes('Other')&&String(a.other||'').trim())r.push('Other: '+String(a.other).trim());return r;}
+ function mtMonthsOk(eff){return eff.length>0&&eff.every(e=>e.types.length&&(!e.types.includes('Other')||String(e.other||'').trim()));}
+ const mtJdCache={};
+ async function mtJdFor(emp,scope,roleTitle){
+  try{
+   if(typeof FW==='undefined'||!FW.catalogue){if(typeof fwCatalogue!=='function')return null;await fwCatalogue();}
+   const cat=(FW&&FW.catalogue&&FW.catalogue.positions)||[];
+   const dep=mtNorm(emp.department),pos=mtNorm(scope==='prospective'?roleTitle:emp.position);
+   if(!pos)return null;
+   const hits=cat.filter(p=>mtNorm(p.position)===pos),same=hits.filter(p=>mtNorm(p.department)===dep),p=(same.length?same:hits)[0];
+   if(!p||!(p.items||[]).length)return null;
+   const key=String(p.id);
+   if(!mtJdCache[key]){
+    let duties=[];
+    try{const r=await _supabase.rpc('cms_position_tool',{p_action:'get',p_position_id:p.id});if(!r.error&&r.data&&Array.isArray(r.data.duties))duties=r.data.duties;}catch(e){}
+    const dm={};duties.forEach(d=>{if(d&&d.ref)dm[String(d.ref).toUpperCase()]=d;});
+    mtJdCache[key]={position:p,dm};
+   }
+   const c=mtJdCache[key],refsOf=i=>String(i.duty_ref||'').split(/[\s,;]+/).filter(Boolean).map(x=>x.toUpperCase());
+   const clean=t=>String(t||'').replace(/[\u2022\r\n]+/g,' ').replace(/\s+/g,' ').trim();
+   return {
+    dutyFor(ref){const d=c.dm[String(ref).toUpperCase()];return d||null;},
+    forGap(code){const seen={},out=[];(c.position.items||[]).filter(i=>i.code===code).forEach(i=>refsOf(i).forEach(r=>{if(!seen[r]){seen[r]=1;out.push({ref:r,text:clean((c.dm[r]||{}).text)});}}));out.sort((a,b)=>(parseInt(a.ref.replace(/\D/g,''),10)||0)-(parseInt(b.ref.replace(/\D/g,''),10)||0));return out;},
+    forExp(code,text){const t=mtNorm(text),it=(c.position.items||[]).find(i=>i.code===code&&mtNorm(i.text)===t);return it?refsOf(it):[];},
+    outputsFor(refs){for(const r of refs||[]){const d=c.dm[String(r).toUpperCase()];const o=clean(d&&d.outputs);if(o)return o.length>170?o.slice(0,167)+'...':o;}return '';}
+   };
+  }catch(e){return null;}
+ }
+ function mtTypeFor(text){
+  const s=mtNorm(text);
+  if(/^(understand|know\b|knows\b|interpret|stay\b|stays\b|keep(s)? (up|abreast)|is (aware|familiar)|has (a )?(sound |good )?(knowledge|understanding)|demonstrate(s)? (a )?(sound |good )?(knowledge|understanding)|appl(y|ies) (the )?(knowledge|principles))/.test(s))return 'Study';
+  if(/^(coach|mentor|collaborat|communicat|influenc|listen|motivat|inspir|negotiat|engag|support|share|inform|advis|consult|liais|represent|escalat|facilitat|present|build(s)? (strong |good )?(relationship|trust)|work(s)? (closely )?with)/.test(s))return 'Learn from others';
+  return 'Do it';
+ }
+ function mtRisk(cls,rating){const c=/Critical|Must-Have/.test(cls),i=/Important|Performance/.test(cls);if(c&&rating<3)return 'High';if((c&&rating<=3)||(i&&rating<3))return 'Medium';return 'Low';}
+ function mtRiskRank(r){return r==='High'?3:r==='Medium'?2:1;}
+ function mtSuggestReps(period,cls){
+  if(period==='Learn from others')return ['Coaching or mentoring notes','Reflection log'];
+  if(period==='Study')return ['Certificate or proof of completion'];
+  return /Critical|Must-Have/.test(cls)?['Work sample or project output','Manager observation note']:['Work sample or project output'];
+ }
+ function mtActionExtras(box,grid,d,gapCode,jdGet){
+  const meta=node('div',null,'mtq-ameta');box.insertBefore(meta,grid);
+  const k=/Critical|Must-Have/.test(d.cls||'')?0:/Important|Performance/.test(d.cls||'')?1:2;
+  if(d.auto){
+   node('span',k===0?'Critical':k===1?'Important':'Value-Add','mtq-cl c'+(k+1),meta);
+   node('span',d.rating>=1&&d.rating<=5&&d.rating!==1?'Rated '+d.rating+' / 5':'Not demonstrated','mtq-rt r1',meta);
+   const rk=d.risk||'Low';
+   node('span','Risk: '+rk,'mtq-risk '+rk.toLowerCase(),meta);
+   const jd=jdGet(),refs=jd?jd.forExp(gapCode(),(d.exps||[])[0]||''):[];
+   if(refs.length){
+    node('span','JD '+refs.join(', '),'mtq-link',meta);
+    node('span','Responsibility','mtq-link',meta);
+    node('span',"Manager's tool",'mtq-link',meta);
+    const tb=node('button',null,'mtq-open',meta);tb.type='button';tb.textContent='Open';tb.setAttribute('aria-expanded','false');
+    const panel=node('div',null,'mtq-tool',box);panel.hidden=true;box.insertBefore(panel,grid);
+    const F=[['1','JD responsibility','text'],['2','What it entails','entails'],['3','Activities and tasks','tasks'],['4','Expected outputs and KPI','outputs'],['5','Knowledge','know'],['6','Skills','skills'],['7','Abilities','abil'],['8','Behaviours','beh'],['9','Attributes','attr']];
+    refs.forEach(r=>{
+     const du=jd.dutyFor(r);
+     const hd=node('div',null,'mtq-toolh',panel);node('b',r+(du&&du.text?': '+du.text:''),null,hd);
+     if(!du){node('p','The manager\'s tool for this role is not saved yet.','mtq-xsub',panel);return;}
+     const gd=node('div',null,'mtq-toolg',panel);
+     F.forEach(f=>{if(f[2]==='text')return;const b=node('div',null,'mtq-toolf',gd);node('small',f[0]+' '+f[1],null,b);node('span',String(du[f[2]]||'').trim()||'Not filled in the tool',null,b);});
+    });
+    tb.addEventListener('click',()=>{panel.hidden=!panel.hidden;tb.textContent=panel.hidden?'Open':'Close';tb.setAttribute('aria-expanded',String(!panel.hidden));});
+   }else if(jd)node('span','No JD link found for this experience','mtq-xsub',meta);
+  }else meta.remove();
+  const sec=node('div',null,'mtq-xsec',box);
+  node('h4','Expected reports (pick one or more)',null,sec);
+  node('p','The proof the employee brings back for this action.','mtq-xsub',sec);
+  const chips=node('div',null,'mtq-chips',sec),reps=new Set(Array.isArray(d.reps)?d.reps:[]),rcb=[];
+  const other=node('input',null,'mtq-other');other.type='text';other.maxLength=300;other.placeholder='Describe the other report';other.value=d.other||'';
+  [...MT_REPORTS,'Other'].forEach(t=>{
+   const lab=node('label',null,'mtq-chip'+(reps.has(t)?' on':''),chips),cb=node('input',null,null,lab);cb.type='checkbox';cb.checked=reps.has(t);cb.value=t;rcb.push(cb);
+   node('span',t,null,lab);
+   cb.addEventListener('change',()=>{lab.classList.toggle('on',cb.checked);if(t==='Other')other.hidden=!cb.checked;});
+  });
+  sec.append(other);other.hidden=!reps.has('Other');
+  return {read:()=>({exps:Array.isArray(d.exps)?d.exps:[],reps:rcb.filter(c=>c.checked).map(c=>c.value),other:other.value.trim(),rating:d.rating==null?null:d.rating,cls:d.cls||'',risk:d.risk||'',auto:!!d.auto,measureAuto:d.measureAuto||'',actionAuto:d.actionAuto||''})};
+ }
+ async function mtLoadMeta(s){
+  s.meta={};
+  try{
+   const ids=[...new Set(s.items.map(it=>it.action.plan_id).filter(Boolean))];
+   for(let i=0;i<ids.length;i+=40){
+    const part=ids.slice(i,i+40);
+    const rows=await tableAll(s,()=>_supabase.from('dev_plans').select('id,plan_meta').in('plan_id',part).not('plan_meta','is',null).order('id'));
+    (rows||[]).forEach(r=>{if(r.plan_meta)s.meta[r.id]=r.plan_meta;});
+   }
+  }catch(e){}
+ }
+ function mtMetaCard(c,items,s){
+  const metas=items.map(it=>(s.meta&&s.meta[it.action.id])||it.action.plan_meta||null),m0=metas.find(Boolean);
+  if(!m0)return;
+  const d=node('details',null,'mt-plan-objective',c);node('summary','Targets, expected reports and monthly plan',null,d);
+  const t=m0.target||{},gp=m0.gap||{};
+  node('p','Starting gap '+(gp.start_gap!=null?gp.start_gap+'%':'not recorded')+(t.readiness?' | Target: '+t.readiness:'')+(t.date?' | Target date '+mtDisplayDate(t.date):'')+(t.months?' | Plan length '+t.months+' month'+(t.months===1?'':'s'):''),'mt-objective',d);
+  (m0.responsibilities||[]).forEach(r=>node('p','JD '+r.ref+(r.text?': '+r.text:''),'mt-objective',d));
+  items.forEach((it,i)=>{
+   const m=metas[i];if(!m)return;
+   const rp=m.reports||{},ty=(rp.types||[]).filter(x=>x!=='Other');if((rp.types||[]).includes('Other')&&rp.other)ty.push('Other: '+rp.other);
+   node('p','Action '+(i+1)+(m.action&&m.action.risk?' (risk '+m.action.risk+(m.action.rating!=null?', rated '+m.action.rating+' / 5':'')+')':'')+': expected reports: '+(ty.join(', ')||'none')+((m.experiences||[]).length?' | develops: '+m.experiences.map(e=>e.text).join('; '):''),'mt-objective',d);
+  });
+  (m0.monthly||[]).forEach(e=>{const ty=(e.types||[]).filter(x=>x!=='Other');if((e.types||[]).includes('Other')&&e.other)ty.push('Other: '+e.other);node('p',mtMonthLabel(e.month)+': '+(ty.join(', ')||'none')+(e.same?' (same as last month)':''),'mt-objective',d);});
+ }
  function renderCreate(s){
   const p=s.panels.create;p.replaceChildren();node('h2','Create Development Plan',null,p);
   const steps=node('nav',null,'mt-steps',p);steps.setAttribute('aria-label','Plan preparation');
@@ -37762,12 +37930,13 @@ s.scopeSelect=role;
     body.replaceChildren();
     notice(body,'Loading assessed gaps and saved draft...');
     const available=await gaps(s,id,s.createScope);
+    let jdInfo=null;try{jdInfo=await mtJdFor(s.team.find(e=>e.employee_id===id)||{},s.createScope,available.role);}catch(e){}
     if(!current(s))return;
     let saved=null,error='';
     try{saved=await checkpoint('get',{scope:draftScope(id,s.createScope)});}
     catch(e){error=e.message;}
     if(!current(s))return;
-    buildForm(s,body,available,saved,error);
+    buildForm(s,body,available,saved,error,jdInfo);
   });
 });
 
@@ -37777,9 +37946,9 @@ role.addEventListener('change',()=>{
 });
   if(preview)buildForm(s,body,[],null,'');
  }
- function buildForm(s,p,available,saved,error){
+ function buildForm(s,p,available,saved,error,jdInfo){
   p.replaceChildren();
-  const form={available,saved,version:saved?.version||0,ready:!!saved,pending:null,submitted:false,uncertain:false};
+  const form={available,saved,version:saved?.version||0,ready:!!saved,pending:null,submitted:false,uncertain:false,jd:jdInfo||null};
   s.form=form;
   if(error)notice(p,'Server draft saving is unavailable: '+error+'. Do not leave unsaved work.','mt-error');
   const gap=field(p,'Competency gap','','select','mt-create-gap');option(gap,'','Select assessed gap');available.forEach(g=>option(gap,g.code,g.name+' ('+g.pct+'%)'));
@@ -37789,11 +37958,23 @@ role.addEventListener('change',()=>{
    if(rows.children.length>=20)throw Error('Maximum 20 actions per plan in this form.');
    const box=node('section',null,'mt-action-box',rows),i=n++;node('h3','Action '+(rows.children.length),null,box);
    const grid=node('div',null,'mt-form-grid',box),a=field(grid,'Action',d.action,'textarea','mt-create-action-'+i),m=field(grid,'Success measure',d.measure,'textarea','mt-create-measure-'+i);
-   a.placeholder='Describe the action';m.placeholder='What proves completion?';a.maxLength=m.maxLength=2000;[a,m].forEach(t=>{t.rows=2;t.style.resize='vertical';t.style.minHeight='64px';const fit=()=>{if(t.scrollHeight>0){t.style.height='auto';t.style.height=Math.max(64,t.scrollHeight+2)+'px';}};t.addEventListener('input',fit);t.addEventListener('focus',fit);setTimeout(fit,0);});
+   if(d.auto&&d.actionAuto){
+    const af=a.closest('.mt-field'),arow=node('div',null,'mtq-medit',af);
+    const arb=button(s,arow,'Reset to the suggested action',()=>{a.value=d.actionAuto;a.dispatchEvent(new Event('input',{bubbles:true}));asy();},'mt-text-button',true);
+    const asy=()=>{arb.hidden=a.value===d.actionAuto;};
+    a.addEventListener('input',asy);asy();
+   }
+   if(d.auto&&d.measureAuto){
+    const mf=m.closest('.mt-field'),row=node('div',null,'mtq-medit',mf);
+    const rb=button(s,row,'Reset to the suggested measure',()=>{m.value=d.measureAuto;m.dispatchEvent(new Event('input',{bubbles:true}));sync();},'mt-text-button',true);
+    const sync=()=>{rb.hidden=m.value===d.measureAuto;};
+    m.addEventListener('input',sync);sync();
+   }
    const responsible=field(grid,'Responsible person',d.responsible,'text','mt-create-responsible-'+i);responsible.placeholder='Employee / manager / supporting person';responsible.maxLength=300;
-   const start=field(grid,'Start date',d.start,'date','mt-create-start-'+i),end=field(grid,'Due date',d.end,'date','mt-create-end-'+i),period=field(grid,'Period (optional)',d.period,'text','mt-create-period-'+i);period.maxLength=100;
-   box.read=()=>({action:a.value.trim(),measure:m.value.trim(),responsible:responsible.value.trim(),start:start.value,end:end.value,period:period.value.trim()});
-   button(s,box,'Remove action',()=>{if(window.confirm('Remove this unsaved action?')){backed(s);box.remove();[...rows.children].forEach((c,j)=>c.querySelector('h3').textContent='Action '+(j+1));s.createDirty=true;}},'mt-text-button',true);
+  const start=field(grid,'Start date',d.start,'date','mt-create-start-'+i),end=field(grid,'Due date',d.end,'date','mt-create-end-'+i),period=field(grid,'Type of action',d.period,'select','mt-create-period-'+i);[['Do it','Do it (about 70%): learn by doing'],['Learn from others','Learn from others (about 20%): coaching, mentoring, shadowing'],['Study','Study (about 10%): course or reading, only if needed']].forEach(o=>option(period,o[0],o[1]));period.value=['Do it','Learn from others','Study'].includes(d.period)?d.period:'Do it';box.dataset.mtType=period.value;period.addEventListener('change',()=>{box.dataset.mtType=period.value;});
+   const mx=mtActionExtras(box,grid,d,()=>gap.value,()=>form.jd);
+   box.read=()=>Object.assign({action:a.value.trim(),measure:m.value.trim(),responsible:responsible.value.trim(),start:start.value,end:end.value,period:period.value.trim()},mx.read());
+   if(!d.auto)button(s,box,'Remove action',()=>{if(window.confirm('Remove this unsaved action?')){backed(s);box.remove();[...rows.children].forEach((c,j)=>c.querySelector('h3').textContent='Action '+(j+1));s.createDirty=true;}},'mt-text-button',true);
   }
   add();
   form.read=()=>({
@@ -37819,7 +38000,7 @@ role.addEventListener('change',()=>{
    button(s,offer,'Restore saved draft',()=>{if(window.confirm('Restore this saved draft into the form?')){restore(existing);form.offer=false;offer.remove();msg(s,'Draft restored for review. Nothing has been submitted.');}},'mt-outline',true);
    button(s,offer,'Start new draft',()=>{if(window.confirm('Start a new draft? Earlier saved versions remain in Saved work history.')){form.offer=false;offer.remove();s.createDirty=true;}},'mt-outline',true);
   }
-  const addButton=button(s,p,'+ Add action',()=>{add();s.createDirty=true;},'mt-text-button',true);
+  const addButton=button(s,p,'+ Add an action',()=>{const have=[...rows.children].map(x=>x.read().period);add({period:['Do it','Learn from others','Study'].find(t=>!have.includes(t))||'Do it'});s.createDirty=true;},'mt-text-button',true);
   const tools=node('div',null,'mt-footer',p);
   const saveButton=button(s,tools,'Save draft',()=>busy(s,async()=>{await savePlanDraft(s,form);if(current(s))msg(s,'Draft saved to your private server work backup. It is not an HR submission.');}),'mt-outline',true);
   const sendButton=button(s,tools,'Send to HR for approval',()=>submitPlan(s,form),'mt-primary',true);
@@ -37905,7 +38086,105 @@ role.addEventListener('change',()=>{
     '#cmsManagerTabsV1 .mtq-rt.r1{background:#ffedd5;color:#c2410c}',
     '#cmsManagerTabsV1 .mtq-exn{font-size:11px;color:#64748b;margin-top:6px}',
     '#cmsManagerTabsV1 button.mt-next{background:#4338ca;border-color:#4338ca;color:#fff}',
-    '#cmsManagerTabsV1 button.mt-next.fin{background:#059669;border-color:#059669}'
+    '#cmsManagerTabsV1 button.mt-next.fin{background:#059669;border-color:#059669}',
+    '#cmsManagerTabsV1 .mtq-strip{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:0 0 14px}',
+    '@media(max-width:900px){#cmsManagerTabsV1 .mtq-strip{grid-template-columns:1fr 1fr}}',
+    '#cmsManagerTabsV1 .mtq-tile{background:#fff;border:1px solid #d5dbe8;border-radius:12px;padding:12px 16px;min-width:0}',
+    '#cmsManagerTabsV1 .mtq-tile small{display:block;font-size:11px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:#64748b}',
+    '#cmsManagerTabsV1 .mtq-tile b{display:block;font-size:20px;margin-top:3px;color:#0b2467}',
+    '#cmsManagerTabsV1 .mtq-tile span{display:block;font-size:12px;color:#64748b;margin-top:2px}',
+    '#cmsManagerTabsV1 .mtq-tile select{margin:6px 0 2px;font-weight:700}',
+    '#cmsManagerTabsV1 .mtq-jd{background:#ecfeff;border:1px solid #67e8f9;border-radius:10px;padding:10px 14px;margin:0 0 14px;color:#155e75;font-size:13px}',
+    '#cmsManagerTabsV1 .mtq-jd b{display:block;margin-bottom:4px}',
+    '#cmsManagerTabsV1 .mtq-jdr{display:flex;gap:8px;align-items:flex-start;margin:3px 0}',
+    '#cmsManagerTabsV1 .mtq-jdr i{font-style:normal;font-weight:800;background:#cffafe;border-radius:6px;padding:1px 8px;flex:none}',
+    '#cmsManagerTabsV1 .mtq-xsec{margin-top:16px;padding-top:14px;border-top:1px dashed #93c5fd}',
+    '#cmsManagerTabsV1 .mtq-xsec h4{margin:12px 0 4px;font-size:14px}',
+    '#cmsManagerTabsV1 .mtq-xsec h4:first-child{margin-top:0}',
+    '#cmsManagerTabsV1 .mtq-xsub{font-size:12px;color:#64748b;margin:0 0 8px}',
+    '#cmsManagerTabsV1 .mtq-xl{display:flex;gap:10px;align-items:flex-start;padding:8px 12px;margin:0 0 6px;border:1px solid #dbe4f3;border-radius:8px;background:#fff;font-size:13px;font-weight:600;color:#1e293b;cursor:pointer}',
+    '#cmsManagerTabsV1 .mtq-xl.on{border-color:#4338ca;background:#f5f6ff}',
+    '#cmsManagerTabsV1 .mtq-xl input,#cmsManagerTabsV1 .mtq-chip input,#cmsManagerTabsV1 .mtq-same input{width:16px;min-width:16px;height:16px;flex:none;margin:2px 0 0;padding:0;accent-color:#4338ca}',
+    '#cmsManagerTabsV1 .mtq-xl em{font-style:normal;margin-left:8px}',
+    '#cmsManagerTabsV1 .mtq-chips{display:flex;flex-wrap:wrap;gap:8px}',
+    '#cmsManagerTabsV1 .mtq-chip{display:inline-flex;align-items:center;gap:8px;padding:7px 14px;border:1.5px solid #cbd5e1;border-radius:20px;background:#fff;font-size:13px;color:#334155;cursor:pointer;margin:0}',
+    '#cmsManagerTabsV1 .mtq-chip.on{border-color:#4338ca;background:#eef2ff;color:#1e1b4b;font-weight:700}',
+    '#cmsManagerTabsV1 .mtq-chip.dim{opacity:.55}',
+    '#cmsManagerTabsV1 .mtq-chip input{margin:0}',
+    '#cmsManagerTabsV1 .mtq-other{margin-top:8px;max-width:520px;width:100%}',
+    '#cmsManagerTabsV1 .mtq-month{background:#fff;border:1px solid #d5dbe8;border-radius:12px;padding:16px 18px;margin:0 0 14px}',
+    '#cmsManagerTabsV1 .mtq-month h4{margin:0 0 4px;font-size:16px}',
+    '#cmsManagerTabsV1 .mtq-mrow{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px 14px;align-items:start;padding:14px 0;border-top:1px solid #e5e9f2}',
+    '#cmsManagerTabsV1 .mtq-mrow>b{grid-column:1;grid-row:1;font-size:15px}',
+    '#cmsManagerTabsV1 .mtq-mrow>.mtq-same{grid-column:2;grid-row:1}',
+    '#cmsManagerTabsV1 .mtq-mrow>.mtq-mact,#cmsManagerTabsV1 .mtq-mrow>.mtq-chips{grid-column:1/-1}',
+    '#cmsManagerTabsV1 .mtq-mact{font-size:12.5px;color:#475569}',
+    '#cmsManagerTabsV1 .mtq-same{display:flex;gap:8px;align-items:center;font-size:13px;font-weight:700;color:#065f46;margin:0}',
+    '#cmsManagerTabsV1 .mtq-lock{background:#f1f5f9;color:#334155;cursor:default}',
+    '#cmsManagerTabsV1 .mtq-medit{display:flex;flex-wrap:wrap;gap:4px 16px;margin-top:2px}',
+    '#cmsManagerTabsV1 .mtq-medit button{padding:2px 0;min-height:24px;font-size:12.5px}',
+    '#cmsManagerTabsV1 .mtq-ameta{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:2px 0 10px}',
+    '#cmsManagerTabsV1 .mtq-risk{font-size:11px;font-weight:800;border-radius:6px;padding:3px 9px;text-transform:uppercase;color:#fff}',
+    '#cmsManagerTabsV1 .mtq-risk.high{background:#b91c1c}#cmsManagerTabsV1 .mtq-risk.medium{background:#d97706}#cmsManagerTabsV1 .mtq-risk.low{background:#059669}',
+    '#cmsManagerTabsV1 .mtq-link{font-size:11px;font-weight:800;border-radius:6px;padding:3px 9px;background:#cffafe;color:#155e75}',
+    '#cmsManagerTabsV1 .mtq-open{margin-left:auto;padding:4px 12px;min-height:28px;font-size:12.5px;border-color:#a5b4fc;color:#4338ca}',
+    '#cmsManagerTabsV1 .mtq-tool{background:#ecfeff;border:1px solid #67e8f9;border-radius:12px;padding:12px 14px;margin:0 0 12px}',
+    '#cmsManagerTabsV1 .mtq-toolh{font-size:13px;color:#155e75;margin:0 0 8px}',
+    '#cmsManagerTabsV1 .mtq-toolg{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px 16px}',
+    '#cmsManagerTabsV1 .mtq-toolf small{display:block;font-size:11px;font-weight:800;color:#0e7490;text-transform:uppercase;letter-spacing:.04em}',
+    '#cmsManagerTabsV1 .mtq-toolf span{font-size:12.5px;color:#134e4a;white-space:pre-line}',
+    '#cmsManagerTabsV1 .mtq-bulk{display:flex;flex-wrap:wrap;gap:8px;align-items:center;background:#f5f3ff;border:1px solid #ddd6fe;border-radius:10px;padding:10px 12px;margin:0 0 12px}',
+    '#cmsManagerTabsV1 .mtq-bulk input{width:auto;min-width:160px;flex:1 1 160px}',
+    '#cmsManagerTabsV1 .mtq-bulk small{flex-basis:100%;font-size:12px;color:#64748b}',
+    '#cmsManagerTabsV1 .mtq-mix{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:12px;align-items:center;background:#f5f3ff;border:1px solid #ddd6fe;border-radius:10px;padding:8px 14px;font-size:13px;color:#5b21b6}',
+    '#cmsManagerTabsV1 .mtq-mixbar{display:flex;width:280px;max-width:100%;height:12px;background:#e2e8f0;border-radius:8px;overflow:hidden}',
+    '#cmsManagerTabsV1 .mtq-mixbar i{display:block;height:100%}',
+    '#cmsManagerTabsV1 .mtq-auto{margin:0 0 12px}',
+    '#cmsManagerTabsV1 .mtq-why{border-radius:10px;padding:9px 14px;margin:0 0 8px;font-size:13px;font-weight:700}',
+    '#cmsManagerTabsV1 .mtq-why.high{background:#fff1f2;border:1px solid #fecdd3;color:#9f1239}',
+    '#cmsManagerTabsV1 .mtq-why.medium{background:#fffbeb;border:1px solid #fde68a;color:#92400e}',
+    '#cmsManagerTabsV1 .mtq-why.low{background:#f0fdf4;border:1px solid #bbf7d0;color:#166534}',
+    '#cmsManagerTabsV1 .mtq-mcard{background:#fff;border:2px solid #475569;border-radius:14px;padding:14px 18px;margin:0 0 12px}',
+    '#cmsManagerTabsV1 .mtq-mcard.chg{border-color:#c2410c}',
+    '#cmsManagerTabsV1 .mtq-mhd{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin:0 0 4px}',
+    '#cmsManagerTabsV1 .mtq-mhd b{font-size:18px;color:#0f172a}',
+    '#cmsManagerTabsV1 .mtq-msame{flex:1;font-size:13px;color:#1e293b}',
+    '#cmsManagerTabsV1 .mtq-mhd .mt-outline{margin-left:0}',
+    '#cmsManagerTabsV1 .mtq-tag{font-size:12px;font-weight:800;border-radius:999px;padding:5px 12px;border:1.5px solid}',
+    '#cmsManagerTabsV1 .mtq-tag.first{background:#dcfce7;color:#14532d;border-color:#15803d}',
+    '#cmsManagerTabsV1 .mtq-tag.auto{background:#e0e7ff;color:#312e81;border-color:#3730a3}',
+    '#cmsManagerTabsV1 .mtq-tag.chg{background:#ffedd5;color:#7c2d12;border-color:#c2410c}',
+    '#cmsManagerTabsV1 .mtq-grow{display:grid;grid-template-columns:minmax(150px,230px) 1fr;gap:14px;padding:9px 0;border-top:1.5px solid #cbd5e1;align-items:center}',
+    '#cmsManagerTabsV1 .mtq-gn{font-weight:800;font-size:14px;padding-left:10px}',
+    '#cmsManagerTabsV1 .mtq-ln{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:3px 0}',
+    '#cmsManagerTabsV1 .mtq-ac{font-size:12px;font-weight:800;color:#334155;flex-basis:100%}',
+    '#cmsManagerTabsV1 .mtq-rc{font-size:12px;font-weight:700;border-radius:999px;padding:5px 11px;background:#e0f2fe;border:1.5px solid #0369a1;color:#0c4a6e}',
+    '#cmsManagerTabsV1 .mtq-rvc{background:#fff;border:2px solid #475569;border-radius:16px;overflow:hidden;margin:0 0 16px}',
+    '#cmsManagerTabsV1 .mtq-rvh{display:flex;flex-wrap:wrap;align-items:center;gap:10px;padding:14px 18px;background:#eef2ff;border-bottom:2px solid #c7d2fe;border-left:8px solid #3730a3}',
+    '#cmsManagerTabsV1 .mtq-rvh h4{margin:0;flex:1;font-size:19px;color:#3730a3}',
+    '#cmsManagerTabsV1 .mtq-rvp{font-size:12px;font-weight:800;border-radius:999px;padding:5px 12px;border:2px solid #3730a3;background:#fff;color:#3730a3}',
+    '#cmsManagerTabsV1 .mtq-rvp.risk{color:#fff;border-color:#b91c1c;background:#b91c1c;text-transform:uppercase}',
+    '#cmsManagerTabsV1 .mtq-rvp.risk.medium{background:#c2410c;border-color:#c2410c}',
+    '#cmsManagerTabsV1 .mtq-rvp.risk.low{background:#15803d;border-color:#15803d}',
+    '#cmsManagerTabsV1 .mtq-rvb{padding:16px 18px;color:#0f172a}',
+    '#cmsManagerTabsV1 .mtq-rvl{font-size:12px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#334155;margin:0 0 8px}',
+    '#cmsManagerTabsV1 .mtq-rvprog{display:flex;align-items:center;gap:10px;margin:0 0 16px;font-size:13px}',
+    '#cmsManagerTabsV1 .mtq-rvbar{position:relative;flex:1;height:14px;background:#e2e8f0;border:1px solid #94a3b8;border-radius:99px}',
+    '#cmsManagerTabsV1 .mtq-rvbar i{position:absolute;left:0;top:0;bottom:0;background:#dc2626;border-radius:99px}',
+    '#cmsManagerTabsV1 .mtq-rvbar u{position:absolute;top:-5px;bottom:-5px;width:3px;background:#3730a3;text-decoration:none}',
+    '#cmsManagerTabsV1 .mtq-rvo{background:#f5f7ff;border:2px solid #c7d2fe;border-radius:12px;padding:12px 14px;font-size:14px;line-height:1.5;margin:0 0 16px;white-space:pre-wrap}',
+    '#cmsManagerTabsV1 .mtq-rva{display:flex;gap:12px;border:2px solid #475569;border-radius:12px;padding:14px;margin:0 0 12px;background:#fff}',
+    '#cmsManagerTabsV1 .mtq-rvn{flex:none;width:30px;height:30px;border-radius:50%;background:#3730a3;color:#fff;font-weight:800;display:flex;align-items:center;justify-content:center}',
+    '#cmsManagerTabsV1 .mtq-rvt{flex:1;min-width:0}',
+    '#cmsManagerTabsV1 .mtq-rvat{font-weight:800;font-size:15px;line-height:1.4;margin:0 0 8px;color:#0f172a}',
+    '#cmsManagerTabsV1 .mtq-rvm{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 8px}',
+    '#cmsManagerTabsV1 .mtq-rvg{font-size:12px;font-weight:700;border:1.5px solid #64748b;border-radius:8px;padding:4px 9px;background:#f8fafc;color:#0f172a}',
+    '#cmsManagerTabsV1 .mtq-rvg i{font-style:normal;color:#475569}',
+    '#cmsManagerTabsV1 .mtq-rvg.rep{background:#e0f2fe;border-color:#0369a1;color:#0c4a6e}',
+    '#cmsManagerTabsV1 .mtq-rvg.bad{background:#fee2e2;border-color:#b91c1c;color:#7f1d1d}',
+    '#cmsManagerTabsV1 .mtq-rvs{font-size:13px;line-height:1.5;color:#1e293b;border-top:1.5px dashed #94a3b8;padding-top:8px}',
+    '#cmsManagerTabsV1 .mtq-rvs b{color:#0f172a}',
+    '#cmsManagerTabsV1 .mtq-why.info{background:#eef2ff;border:1px solid #c7d2fe;color:#312e81}'
    ].join('\n');
    document.head.append(st);
   }
@@ -37923,16 +38202,16 @@ role.addEventListener('change',()=>{
   let internal=false,mode='plan';
   const skipped=new Set();
   const baseRead=form.read;
-  form.read=()=>Object.assign(baseRead(),{plans:form.plans.map(x=>({comp_code:x.comp_code,objective:x.objective,actions:x.actions}))});
-  function hasContent(){const d=baseRead();return !!(d.objective||d.actions.some(a=>a.action||a.measure||a.responsible||a.start||a.end));}
-  function complete(d){return !!(d&&d.comp_code&&d.objective&&d.actions&&d.actions.length&&d.actions.every(a=>a.action&&a.measure&&a.responsible&&a.start&&a.end&&a.end>=a.start));}
+  form.read=()=>Object.assign(baseRead(),{plans:form.plans.map(x=>({comp_code:x.comp_code,objective:x.objective,actions:x.actions})),monthly:form.monthly||[],target:form.target||{readiness:''}});
+  function hasContent(){const d=baseRead();return !!d.actions.some(a=>a.responsible||a.start||a.end||(!a.auto&&(a.action||a.measure)));}
+  function complete(d){return !!(d&&d.comp_code&&d.objective&&d.actions&&d.actions.length&&d.actions.every(a=>a.action&&a.measure&&a.responsible&&a.start&&a.end&&a.end>=a.start&&mtRepsOk(a))&&d.actions.some(a=>a.period==='Do it'));}
   function loadInto(d){
    internal=true;
    try{callRestore(Object.assign({employee_id:s.createEmployee,comp_code:'',objective:'',actions:[{}],pending:null,submitted:false},d));}
    finally{internal=false;}
    s.createDirty=true;
   }
-  function list(){return [...(form.available||[])].sort((a,b)=>a.pct-b.pct);}
+  function list(){return [...(form.available||[])].sort((a,b)=>((String(a.code).indexOf('CC')===0)-(String(b.code).indexOf('CC')===0))||a.pct-b.pct);}
   function gInfo(code){return (form.available||[]).find(x=>x.code===code);}
   function gapName(code){const g=gInfo(code);return g?g.name+' ('+g.pct+'%)':'gap not chosen';}
   function planOf(code){
@@ -37940,7 +38219,58 @@ role.addEventListener('change',()=>{
    return form.plans.find(x=>x.comp_code===code);
   }
   function isDone(code){return complete(planOf(code));}
-  function hasData(code){const x=planOf(code);return !!(x&&(x.objective||(x.actions||[]).some(a=>a.action||a.measure||a.responsible||a.start||a.end)));}
+  function hasData(code){const x=planOf(code);return !!(x&&(x.actions||[]).some(a=>a.responsible||a.start||a.end||(!a.auto&&(a.action||a.measure))));}
+  function gapRisk(g){
+   let best='Low';const why=[];
+   (g.exps||[]).forEach(x=>{const r=mtRisk(x.cls,x.rating);if(mtRiskRank(r)>mtRiskRank(best))best=r;});
+   const crit=(g.exps||[]).filter(x=>/Critical|Must-Have/.test(x.cls)&&x.rating<3).length;
+   if(best==='High')why.push(crit+' Critical experience'+(crit===1?' is':'s are')+' rated below 3 / 5. The toolkit defines Critical as non-negotiable for the role.');
+   else if(best==='Medium')why.push('A Critical experience is rated 3 / 5, or an Important one is rated below 3 / 5.');
+   else why.push('No Critical experience is rated below 4 / 5.');
+   return {level:best,why:why[0]};
+  }
+  function autoActions(code){
+   const g=gInfo(code);if(!g)return [];
+   const clsRank=c=>/Critical|Must-Have/.test(c)?0:/Important|Performance/.test(c)?1:2;
+   const xs=[...(g.exps||[])].sort((a,b)=>clsRank(a.cls)-clsRank(b.cls)||a.rating-b.rating);
+   const types=xs.map(x=>mtTypeFor(x.text));
+   if(xs.length&&!types.includes('Do it'))types[0]='Do it';
+   return xs.map((x,i)=>{
+    const period=types[i],rating=x.ticked?x.rating:1;
+    const phrase=mtActionText(x.text).replace(/[.\s]+$/,'');
+    const refs=form.jd?form.jd.forExp(code,x.text):[],kpi=form.jd?form.jd.outputsFor(refs):'';
+    const target=rating<=2?4:5;
+    const action=period==='Learn from others'?'Learn from a senior colleague how to '+phrase.charAt(0).toLowerCase()+phrase.slice(1)+'.':period==='Study'?'Study: '+phrase+'.':phrase+'.';
+    const lc=t=>t.charAt(0).toLowerCase()+t.slice(1),orig=x.text.replace(/[.\s]+$/,'');
+    const proof=period==='Learn from others'?'coaching notes or a reflection log show what the employee learned about how to '+lc(phrase):period==='Study'?'a certificate or short written summary shows that the employee has studied this and can explain how to '+lc(phrase):'a work sample or output shows that the employee '+lc(orig);
+    const measure='By the due date, '+proof+', confirmed by the manager.'+(kpi?' Expected output from the manager\'s tool: '+kpi.replace(/[.\s]+$/,'')+'.':'')+' Then rated at least '+target+' / 5 at the next assessment.';
+    return {action,actionAuto:action,measure,measureAuto:measure,responsible:'',start:'',end:'',period,exps:[x.text],reps:mtSuggestReps(period,x.cls),other:'',rating,cls:x.cls,risk:mtRisk(x.cls,rating),auto:true};
+   });
+  }
+  const autoObj=new Map();
+  function targetPct(){const r=(form.target&&form.target.readiness)||'';return /90/.test(r)?90:/80/.test(r)?80:/70/.test(r)?70:90;}
+  function autoObjective(code){
+   const g=gInfo(code);if(!g)return '';
+   const emp=s.team.find(e=>e.employee_id===s.createEmployee)||{},first=String(emp.employee_name||'the employee').split(/\s+/)[0];
+   const pl=planOf(code),ends=((pl&&pl.actions)||[]).map(a=>a.end).filter(Boolean).sort(),when=ends.length?mtDisplayDate(ends[ends.length-1]):'the end of the plan';
+   const clsRank=c=>/Critical|Must-Have/.test(c)?0:/Important|Performance/.test(c)?1:2;
+   const top=[...(g.exps||[])].sort((a,b)=>clsRank(a.cls)-clsRank(b.cls)||a.rating-b.rating).slice(0,2).map(x=>{const p=mtActionText(x.text).replace(/[.\s]+$/,'');return p.charAt(0).toLowerCase()+p.slice(1);});
+   const what=top.length>1?top[0]+', and '+top[1]:(top[0]||'close the gap');
+   const role=s.createScope==='prospective'?(form.available&&form.available.role?'a '+form.available.role:'the target role'):'their current role'+(emp.position?' ('+emp.position+')':'');
+   return 'By '+when+', '+first+' will consistently '+what+', moving '+g.name+' from '+g.pct+'% to at least '+targetPct()+'%, so that they meet the standard expected of '+role+'.';
+  }
+  function refreshObjective(){
+   const code=gap.value;if(!code||gap.disabled)return;
+   const last=autoObj.get(code),cur=objective.value;
+   if(cur!==''&&cur!==last){syncObj();return;}
+   const v=autoObjective(code);autoObj.set(code,v);if(cur!==v){objective.value=v;count();}
+   syncObj();
+  }
+  function fresh(code){
+   const acts=autoActions(code),o=autoObjective(code);
+   autoObj.set(code,o);
+   return {comp_code:code,objective:o,actions:acts.length?acts:[{}]};
+  }
   function commit(){
    const d=baseRead();
    if(!d.comp_code)return;
@@ -37950,19 +38280,39 @@ role.addEventListener('change',()=>{
   /* layout */
   const prog=node('div',null,'mtq-prog',wrap);
   const grid=node('div',null,'mtq-grid',wrap);
+  const strip=node('div',null,'mtq-strip');wrap.insertBefore(strip,grid);
+  form.target=form.target||{readiness:''};form.monthly=form.monthly||[];form.jd=form.jd||null;
   const queue=node('div',null,'mtq-queue',grid);
   const main=node('div',null,'mtq-main',grid);
   const planBox=node('section',null,null,main),revBox=node('section',null,null,main);
   const titleRow=node('div',null,'mtq-th',planBox);
+  const noteBox=node('div',null,'mtq-auto',planBox);noteBox.hidden=true;
+  const jdBox=node('div',null,'mtq-jd',planBox);jdBox.hidden=true;
   const gapField=gap.closest('.mt-field');gapField.style.display='none';planBox.append(gapField);
   planBox.append(objective.closest('.mt-field'));
   const counter=node('div',null,'mtq-count',planBox);
+  const objRow=node('div',null,'mtq-medit',planBox);counter.after(objRow);
+  const objReset=button(s,objRow,'Reset to the suggested objective',()=>{const v=autoObjective(gap.value);autoObj.set(gap.value,v);objective.value=v;syncObj();count();},'mt-text-button',true);
+  function syncObj(){objReset.hidden=!(gap.value&&autoObj.has(gap.value)&&objective.value!==autoObj.get(gap.value));}
+  objective.addEventListener('input',syncObj);
   function count(){counter.textContent=objective.value.length+' / 2000';}
   objective.addEventListener('input',count);count();
   const exBox=node('div',null,'mtq-ex',planBox);
   node('div','Actions','mtq-lb',planBox);
-  planBox.append(rows,addButton);
-  node('div','Each action needs a success measure, a person responsible and dates. The due date cannot be before the start date.','mtq-tip',planBox);
+  planBox.append(rows,addButton);planBox.append(exBox);
+  const bulk=node('div',null,'mtq-bulk');planBox.insertBefore(bulk,rows);
+  node('b','Fill in for all actions in this gap',null,bulk);
+  const bR=node('input',null,null,bulk);bR.type='text';bR.placeholder='Responsible person';bR.maxLength=300;
+  const bS=node('input',null,null,bulk);bS.type='date';bS.title='Start date';
+  const bE=node('input',null,null,bulk);bE.type='date';bE.title='Due date';
+  const bB=button(s,bulk,'Apply to all actions',()=>{
+   [...rows.children].forEach(bx=>{
+    [['[id^="mt-create-responsible-"]',bR.value],['[id^="mt-create-start-"]',bS.value],['[id^="mt-create-end-"]',bE.value]].forEach(([sel,v])=>{const el=bx.querySelector(sel);if(el&&v){el.value=v;el.dispatchEvent(new Event('input',{bubbles:true}));}});
+   });
+   s.createDirty=true;refreshLive();
+  },'mt-outline');
+  node('small','Then change any single action if it needs a different person or date.',null,bulk);
+  node('div','These actions come from the experiences rated below 5. You can edit any wording. Use Add an action for anything the experiences do not cover. Aim for about 70% Do it, 20% Learn from others and 10% Study. The due date cannot be before the start date.','mtq-tip',planBox);
   const foot=node('div',null,'mt-footer',planBox);
   const prevBtn=button(s,foot,'Previous gap',()=>stepGap(-1),'mt-outline');
   function saveDraft(){
@@ -37995,7 +38345,7 @@ role.addEventListener('change',()=>{
    commit();
    const found=form.plans.find(x=>x.comp_code===code);
    if(found){form.plans=form.plans.filter(x=>x!==found);loadInto({comp_code:code,objective:found.objective,actions:found.actions});}
-   else loadInto({comp_code:code});
+   else loadInto(fresh(code));
    skipped.delete(code);
    mode='plan';msg(s,'');render();
   }
@@ -38013,7 +38363,7 @@ role.addEventListener('change',()=>{
   function saveNext(){
    if(gap.disabled)return;
    const d=baseRead();
-   if(!complete(d)){msg(s,'Complete this gap plan first: objective, each action with a measure, a person responsible and valid dates.',true);return;}
+   if(!complete(d)){msg(s,'Complete this gap plan first: objective, each action with a measure, a person responsible, valid dates and at least one expected report.',true);return;}
    skipped.delete(d.comp_code);
    const nxt=nextPending(d.comp_code);
    if(!nxt){toReview();return;}
@@ -38029,12 +38379,108 @@ role.addEventListener('change',()=>{
    if(!nxt){toReview();return;}
    switchTo(nxt);
   }
+  /* Step 56 painters */
+  function allActions(){const out=[];form.plans.filter(x=>x.comp_code!==gap.value).forEach(x=>(x.actions||[]).forEach(a=>out.push(a)));baseRead().actions.forEach(a=>out.push(a));return out;}
+  function paintStrip(){
+   strip.replaceChildren();
+   const l=list();
+   if(!l.length){strip.hidden=true;return;}
+   strip.hidden=false;
+   const big=l.slice().sort((a,b)=>a.pct-b.pct)[0],span=mtMonthList(allActions()),len=mtPlanLength(span.lo,span.hi);
+   const tile=(h,v,sub)=>{const t=node('div',null,'mtq-tile',strip);node('small',h,null,t);node('b',v,null,t);node('span',sub,null,t);};
+   tile('Biggest gap',Math.max(0,100-big.pct)+'%',big.name);
+   const t2=node('div',null,'mtq-tile',strip);node('small','Target readiness',null,t2);
+   const sel=node('select',null,null,t2);option(sel,'','Choose a target');MT_READY.forEach(x=>option(sel,x,x));sel.value=form.target.readiness||'';sel.disabled=!!gap.disabled;
+   sel.addEventListener('change',()=>{form.target.readiness=sel.value;s.createDirty=true;refreshObjective();if(mode==='review')paintReview();});
+   node('span','Where the employee should be when the plan ends',null,t2);
+   tile('Target date',span.hi?mtDisplayDate(span.hi):'Set the dates','The latest due date in the plan');
+   tile('Plan length',len?len+' month'+(len===1?'':'s'):'Not set yet',span.lo?'From '+mtDisplayDate(span.lo):'Worked out from the action dates');
+   const acts=allActions().filter(a=>a.action),tot=acts.length,cnt={'Do it':0,'Learn from others':0,'Study':0};acts.forEach(a=>{if(cnt[a.period]!=null)cnt[a.period]++;});
+   const pc=k=>tot?Math.round(cnt[k]/tot*100):0;
+   const mix=node('div',null,'mtq-mix',strip);node('b','Plan mix now',null,mix);
+   const bar=node('div',null,'mtq-mixbar',mix);[['Do it','#4338ca'],['Learn from others','#7c3aed'],['Study','#0891b2']].forEach(([k,c])=>{const i=node('i',null,null,bar);i.style.width=pc(k)+'%';i.style.background=c;});
+   node('span','Do it '+pc('Do it')+'% | Learn from others '+pc('Learn from others')+'% | Study '+pc('Study')+'%  (target 70 / 20 / 10)',null,mix);
+  }
+  function paintJD(g){
+   jdBox.replaceChildren();jdBox.hidden=true;
+   if(!g||!form.jd)return;
+   const refs=form.jd.forGap(g.code);
+   if(!refs.length)return;
+   jdBox.hidden=false;
+   node('b','JD responsibility this gap supports:',null,jdBox);
+   refs.slice(0,4).forEach(r=>{const d=node('div',null,'mtq-jdr',jdBox);node('i',r.ref,null,d);node('span',r.text?(r.text.length>170?r.text.slice(0,167)+'...':r.text):'Wording not saved in the manager\'s tool',null,d);});
+   if(refs.length>4)node('small','and '+(refs.length-4)+' more responsibilities',null,jdBox);
+  }
+  function reviewMonths(){const acts=[];form.plans.forEach(x=>(x.actions||[]).forEach(a=>acts.push(a)));return mtMonthList(acts);}
+   function paintMonthly(host,onChange){
+    const span=reviewMonths(),months=span.months,sec=node('section',null,'mtq-month',host),open={};
+    function groups(k){
+     const out=[];
+     form.plans.forEach(x=>{
+      const by=[];
+      (x.actions||[]).forEach((a,j)=>{
+       if(!(a.start&&a.end&&a.start.slice(0,7)<=k&&a.end.slice(0,7)>=k))return;
+       const chips=(a.reps||[]).filter(t=>t!=='Other');
+       if((a.reps||[]).includes('Other')&&String(a.other||'').trim())chips.push('Other: '+String(a.other).trim());
+       const sig=chips.join('|');let g=by.find(q=>q.sig===sig);if(!g){g={sig:sig,chips:chips,ns:[]};by.push(g);}g.ns.push(j+1);
+      });
+      if(by.length){const gi=gInfo(x.comp_code);out.push({name:gi?gi.name:x.comp_code,color:'#3730a3',by:by});}
+     });
+     return out;
+    }
+    function sigOf(k){return JSON.stringify(groups(k).map(g=>[g.name,g.by.map(q=>[q.ns,q.sig])]));}
+    function build(){
+     sec.replaceChildren();
+     node('h4','Monthly report plan',null,sec);
+     node('p','Filled in from the reports picked for each action. Change a month only if it needs something different.','mtq-exn',sec);
+     if(!months.length){node('p','Set a start and due date on every action to build the monthly plan.','mt-notice',sec);return;}
+     form.monthly=form.monthly.filter(e=>months.includes(e.month));
+     const autos=mtAutoFill(form.monthly,months,form.plans);
+     months.forEach((k,i)=>{
+      const e=form.monthly.find(x=>x.month===k);
+      const same=i>0&&!e.manual&&sigOf(k)===sigOf(months[i-1]);
+      const card=node('div',null,'mtq-mcard'+(e.manual?' chg':''),sec),head=node('div',null,'mtq-mhd',card);
+      node('b',mtMonthLabel(k),null,head);
+      if(same&&!open[k])node('span','Same reports as '+mtMonthLabel(months[i-1]),'mtq-msame',head);
+      if(i===0)node('span','First month','mtq-tag first',head);
+      node('span',e.manual?'Changed by the manager':'Filled from the actions','mtq-tag '+(e.manual?'chg':'auto'),head);
+      if(same)button(s,head,open[k]?'Hide':'View',()=>{open[k]=!open[k];build();},'mt-outline');
+      if(!gap.disabled){
+       if(e.manual)button(s,head,'Back to the actions',()=>{e.manual=false;s.createDirty=true;build();if(onChange)onChange();},'mt-outline');
+       else button(s,head,'Change this month',()=>{e.manual=true;e.types=autos[i].types.slice();e.other=autos[i].other;s.createDirty=true;build();if(onChange)onChange();},'mt-outline');
+      }
+      if(same&&!open[k])return;
+      const gs=groups(k);
+      if(!gs.length){
+       node('p','No action runs this month. Reports carried over from last month: '+(autos[i].types.join(', ')||'none'),'mtq-exn',card);
+      }
+      gs.forEach(g=>{
+       const r=node('div',null,'mtq-grow',card),n=node('div',g.name,'mtq-gn',r);n.style.color=g.color;n.style.borderLeft='6px solid '+g.color;
+       const col=node('div',null,null,r);
+       g.by.forEach(q=>{const ln=node('div',null,'mtq-ln',col);node('span','Action'+(q.ns.length===1?' ':'s ')+q.ns.join(', '),'mtq-ac',ln);q.chips.forEach(c=>node('span',c,'mtq-rc',ln));});
+      });
+      if(e.manual){
+       node('div','Reports expected this month (you can tick more or fewer than the actions):','mtq-lb',card);
+       const mid=node('div',null,'mtq-chips',card);
+       const other=node('input',null,'mtq-other');other.type='text';other.maxLength=300;other.placeholder='Describe the other report';other.value=e.other||'';
+       [...MT_REPORTS,'Other'].forEach(t=>{
+        const lab=node('label',null,'mtq-chip'+(e.types.includes(t)?' on':''),mid),cb=node('input',null,null,lab);cb.type='checkbox';cb.checked=e.types.includes(t);cb.disabled=!!gap.disabled;
+        node('span',t,null,lab);
+        cb.addEventListener('change',()=>{e.types=e.types.filter(x=>x!==t);if(cb.checked)e.types.push(t);lab.classList.toggle('on',cb.checked);other.hidden=!e.types.includes('Other');s.createDirty=true;if(onChange)onChange();});
+       });
+       other.hidden=!e.types.includes('Other');other.addEventListener('input',()=>{e.other=other.value;s.createDirty=true;if(onChange)onChange();});
+       mid.append(other);
+      }
+     });
+    }
+    build();
+   }
   /* painting */
   function paintProg(){
    const l=list(),ready=l.filter(g=>isDone(g.code)).length;
    prog.replaceChildren();
    const emp=s.team.find(e=>e.employee_id===s.createEmployee)||{};
-   node('b',(emp.employee_name||'Employee')+' | '+(s.createScope==='prospective'?'Prospective role':'Current role'),null,prog);
+   node('b',(emp.employee_name||'Employee')+' | '+(s.createScope==='prospective'?'Prospective role'+(form.available&&form.available.role?': '+form.available.role:''):'Current role'),null,prog);
    const pb=node('div',null,'mtq-pb',prog),sm=node('small',null,null,pb);
    node('span','Gap plans ready',null,sm);node('span',ready+' of '+l.length,null,sm);
    const bar=node('div',null,'mtq-bar',pb),fill=node('i',null,null,bar);
@@ -38043,7 +38489,7 @@ role.addEventListener('change',()=>{
   }
   function paintQueue(){
    queue.replaceChildren();
-   node('div','Gaps for this employee (lowest first)','mtq-lb',queue);
+   node('div','All gaps: Functional first, then Core. Biggest gap first.','mtq-lb',queue);
    const l=list();
    if(!l.length)node('p','No eligible assessed gaps were found for this employee and role.','mt-notice',queue);
    l.forEach((g,i)=>{
@@ -38056,7 +38502,7 @@ role.addEventListener('change',()=>{
     node('b',g.name,null,body);
     const r=node('span',null,'mtq-r',body);
     const pl=planOf(g.code),na=pl&&pl.actions?pl.actions.filter(a=>a.action).length:0;
-    node('span',g.pct+'%'+(na?' | '+na+' action'+(na===1?'':'s'):''),null,r);
+    node('span','Gap '+Math.max(0,100-g.pct)+'% | score '+g.pct+'%'+(na?' | '+na+' action'+(na===1?'':'s'):''),null,r);
     node('span',label,'mtq-pill',r);
     const sc=node('span',null,'mtq-sc',body),f=node('span',null,null,sc);
     f.style.width=Math.max(0,Math.min(100,g.pct))+'%';f.style.background=g.pct<40?'#dc2626':g.pct<60?'#ea580c':'#d97706';
@@ -38087,6 +38533,7 @@ role.addEventListener('change',()=>{
    let k=0;
    if(/ly$/i.test(words[0])&&words.length>1)k=1;
    words[k]=mtBaseVerb(words[k]);
+   if(/^[A-Za-z]{3,}s$/.test(words[k])&&!/(ss|us|is|ous)$/i.test(words[k])){const w0=words[k],lw=w0.toLowerCase(),sp={has:'have',does:'do',goes:'go'};words[k]=sp[lw]?(w0[0]===w0[0].toUpperCase()?sp[lw][0].toUpperCase()+sp[lw].slice(1):sp[lw]):/ies$/i.test(w0)?w0.slice(0,-3)+'y':/(sses|shes|ches|xes|zes|oes)$/i.test(w0)?w0.slice(0,-2):w0.slice(0,-1);}
    const notVerbs=/^(approved|agreed|disputed|validated|required|designated|defined|assigned|specified|existing|published|scheduled|planned|expected|targeted|associated|selected|qualified|skilled|experienced|detailed|structured|unresolved|incomplete|outstanding|related|combined|limited|advanced|united|need|speed|feed|proceed|exceed|succeed|seed|bed|red|shed|embed|hundred|sacred|used)$/i;
    for(let i=k+1;i<words.length;i++){
     const prev=(words[i-1]||'').toLowerCase();
@@ -38098,13 +38545,16 @@ role.addEventListener('change',()=>{
     const b=mtBaseVerb(w);
     if(b!==w)words[i]=b+tail;
    }
-   return words.join(' ');
+   let jn=words.join(' ');
+   const vv='track|monitor|prepare|review|escalate|coordinate|ensure|manage|develop|analyse|analyze|report|communicate|maintain|identify|resolve|implement|deliver|support|lead|plan|build|present|validate|approve|update|document|negotiate|evaluate|facilitate|oversee|drive|apply|assess|schedule|align|agree|resolve|measure|control|improve|design|execute|reconcile|submit|train|coach|mentor|escalate|consult|advise|check|verify|investigate|recommend|provide|run|hold|set|keep';
+   jn=jn.replace(new RegExp('\\b(and|then) ('+vv+')(s|es) ','g'),(m,j,w)=>j+' '+w+' ');
+   return jn;
   }
   function useExperience(x){
    if(gap.disabled)return;
    const d=baseRead(),acts=d.actions.map(a=>Object.assign({},a));
    const blank=acts.findIndex(a=>!(a.action||a.measure||a.responsible||a.start||a.end||a.period));
-   const fresh={action:mtActionText(x.text),measure:'Demonstrated with evidence and rated at least 4 / 5 at the next assessment'};
+   const fresh={action:mtActionText(x.text),measure:'Demonstrated with evidence and rated at least 4 / 5 at the next assessment',exps:[x.text]};
    if(blank>=0)acts[blank]=Object.assign(acts[blank],fresh);else acts.push(fresh);
    loadInto({comp_code:gap.value,objective:d.objective,actions:acts});
    render();
@@ -38112,28 +38562,17 @@ role.addEventListener('change',()=>{
   function paintEx(){
    exBox.replaceChildren();
    const g=gInfo(gap.value);
-   if(!g){exBox.hidden=true;return;}
-   exBox.hidden=false;
-   const clsRank=c=>/Critical|Must-Have/.test(c)?0:/Important|Performance/.test(c)?1:2;
-   const exps=[...(g.exps||[])].sort((a,b)=>clsRank(a.cls)-clsRank(b.cls)||(a.ticked?1:0)-(b.ticked?1:0)||a.rating-b.rating);
-   const h=node('div',null,'mtq-exh',exBox);
-   node('div','Experiences to develop in '+g.name,null,h);
-   node('span','From the manager assessment | Critical first | '+exps.length+' to develop',null,h);
-   if(!exps.length){node('p','No weak experiences were found for this gap. Write the objective and actions from the competency itself.','mtq-exn',exBox);return;}
-   const acts=baseRead().actions;
-   exps.forEach(x=>{
-    const r=node('div',null,'mtq-er',exBox);
+   if(!g||!(g.strengths||[]).length){exBox.hidden=true;return;}
+   exBox.hidden=false;exBox.style.cssText='border-color:#a7f3d0;background:#f0fdf9';
+   const h=node('div',null,'mtq-exh',exBox);h.style.color='#065f46';
+   node('div','Strengths in '+g.name+' (rated 5 / 5: no gap, no action)',null,h);
+   node('span',g.strengths.length+' strength'+(g.strengths.length===1?'':'s'),null,h);
+   g.strengths.forEach(x=>{
+    const r=node('div',null,'mtq-er',exBox);r.style.borderColor='#bbf7d0';
     node('div',x.text,null,r);
-    const m=node('div',null,'mtq-em',r);
-    const k=clsRank(x.cls);
-    node('span',k===0?'Critical':k===1?'Important':'Value-Add','mtq-cl c'+(k+1),m);
-    node('span',x.ticked?'Rated '+x.rating+' / 5':'Not demonstrated','mtq-rt '+(x.ticked?'r1':'r0'),m);
-    node('span',null,'sp',m);
-    const at=acts.findIndex(a=>a.action===mtActionText(x.text));
-    if(at>=0)node('span','Added as Action '+(at+1),'mtq-rt',m).style.cssText='background:#ecfdf5;color:#047857';
-    else button(s,m,'Use as action',()=>useExperience(x),'mt-outline',true);
+    const rf=form.jd?form.jd.forExp(g.code,x.text):[];
+    if(rf.length){const m=node('div',null,'mtq-em',r);node('span','JD '+rf.join(', '),'mtq-rt',m).style.cssText='background:#ecfeff;color:#155e75';}
    });
-   node('div','Use as action copies the experience into an action as a starting point. You can edit the wording, measure, person responsible and dates.','mtq-exn',exBox);
   }
   function paintPlan(){
    titleRow.replaceChildren();
@@ -38143,7 +38582,13 @@ role.addEventListener('change',()=>{
    node('span',g.pct<40?'Critical gap':g.pct<60?'Large gap':'Gap','mtq-tag '+(g.pct<40?'r':g.pct<60?'o':'y'),titleRow);
    const sc=node('div',null,'mtq-sco',titleRow),b=node('b',g.pct+'%',null,sc);
    b.style.color=g.pct<40?'#b91c1c':g.pct<60?'#c2410c':'#b45309';
-   node('span','manager score',null,sc);
+   node('span',g.basis==='final'?'final score':'manager score (no self-assessment yet)',null,sc);
+   const rk=gapRisk(g);
+   const rkTag=node('span','Business risk: '+rk.level,'mtq-risk '+rk.level.toLowerCase(),sc);rkTag.style.cssText='display:block;width:max-content;margin:6px 0 0 auto';
+   noteBox.hidden=false;noteBox.replaceChildren();
+   node('div',rk.why,'mtq-why '+rk.level.toLowerCase(),noteBox);
+   node('div',(g.exps||[]).length+' experience'+((g.exps||[]).length===1?'':'s')+' rated below 5 became actions. '+((g.strengths||[]).length?(g.strengths||[]).length+' rated 5 '+((g.strengths||[]).length===1?'is a strength':'are strengths')+'.':'None are rated 5 yet.'),'mtq-why info',noteBox);
+   const gp=node('span','Gap: '+Math.max(0,100-g.pct)+'%',null,sc);gp.style.cssText='display:block;width:max-content;margin:6px 0 0 auto;padding:3px 12px;border-radius:12px;background:#fee2e2;color:#b91c1c;font-weight:800;font-size:13px;';
    prevBtn.disabled=i<=0;
    const nxt=nextPending(g.code);
    nextBtn.textContent=nxt?'Save and go to next gap ('+gInfo(nxt).name+')':'Review all and send to HR';
@@ -38154,46 +38599,78 @@ role.addEventListener('change',()=>{
    const emp=s.team.find(e=>e.employee_id===s.createEmployee)||{};
    const all=list().filter(g=>form.plans.some(x=>x.comp_code===g.code)).map(g=>form.plans.find(x=>x.comp_code===g.code));
    const sum=node('div',null,'mtq-sum',rev);
-   node('b','Review: '+(emp.employee_name||'Employee')+' | '+(s.createScope==='prospective'?'Prospective role':'Current role'),null,sum);
+    node('b','Review: '+(emp.employee_name||'Employee')+' | '+(s.createScope==='prospective'?'Prospective role'+(form.available&&form.available.role?': '+form.available.role:''):'Current role'),null,sum);
    node('p',all.length+' gap plan'+(all.length===1?'':'s')+' will be sent to HR together in one submission.'+(skipped.size?' Skipped gaps: '+skipped.size+'.':''),null,sum);
-   all.forEach(x=>{
-    const card=node('div',null,'mtq-pl',rev);
-    node('h4',gapName(x.comp_code),null,card);
-    node('p','Objective: '+(x.objective||'not written'),null,card);
-    x.actions.forEach((a,k)=>node('p',(k+1)+'. '+(a.action||'(no action written)')+' | '+(a.start||'?')+' to '+(a.end||'?')+' | '+(a.responsible||'no one responsible')+' | Measure: '+(a.measure||'not written'),null,card));
-    if(!gap.disabled){const row=node('div',null,'mtq-row',card);button(s,row,'Edit this gap',()=>switchTo(x.comp_code),'mt-outline');}
-   });
+    const tpct=(()=>{const m=String(form.target.readiness||'').match(/\((\d+)/);return m?Number(m[1]):0;})();
+    all.forEach(x=>{
+     const gg=gInfo(x.comp_code),card=node('div',null,'mtq-rvc',rev),hd=node('div',null,'mtq-rvh',card);
+     node('h4',gg?gg.name:gapName(x.comp_code),null,hd);
+     if(gg){node('span','Score '+gg.pct+'%','mtq-rvp score',hd);node('span','Risk: '+gapRisk(gg).level,'mtq-rvp risk '+gapRisk(gg).level.toLowerCase(),hd);}
+     const body=node('div',null,'mtq-rvb',card);
+     if(gg){
+      node('div','Where this gap stands','mtq-rvl',body);
+      const pr=node('div',null,'mtq-rvprog',body);
+      node('b',gg.pct+'% now',null,pr);
+      const bar=node('div',null,'mtq-rvbar',pr),fl=node('i',null,null,bar);fl.style.width=Math.max(0,Math.min(100,gg.pct))+'%';
+      if(tpct){const mk=node('u',null,null,bar);mk.style.left=tpct+'%';node('b','Target '+tpct+'%',null,pr);}
+     }
+     node('div','Development objective','mtq-rvl',body);
+     node('div',x.objective||'not written','mtq-rvo',body);
+     node('div','Actions ('+x.actions.length+')','mtq-rvl',body);
+     x.actions.forEach((a,k)=>{
+      const ac=node('div',null,'mtq-rva',body);
+      node('span',String(k+1),'mtq-rvn',ac);
+      const in2=node('div',null,'mtq-rvt',ac);
+      node('div',a.action||'(no action written)','mtq-rvat',in2);
+      const meta=node('div',null,'mtq-rvm',in2);
+      const tag=(l,v,c)=>{const t=node('span',null,'mtq-rvg'+(c?' '+c:''),meta);if(l)node('i',l+' ',null,t);t.append(v);};
+      tag('Type:',a.period||'Do it');
+      tag('Who:',a.responsible||'no one responsible');
+      tag('When:',(mtDisplayDate(a.start)||'?')+' to '+(mtDisplayDate(a.end)||'?'));
+      const rt=mtRepsText(a);
+      if(rt.length)rt.forEach(t=>tag('',t,'rep'));else tag('','No expected report chosen','bad');
+      const sm=node('div',null,'mtq-rvs',in2);node('b','Success measure: ',null,sm);sm.append(a.measure||'not written');
+     });
+     if(!gap.disabled){const row=node('div',null,'mtq-row',body);button(s,row,'Edit this gap',()=>switchTo(x.comp_code),'mt-outline');}
+    });
+   let redrawChecks=()=>{};
+   paintMonthly(rev,()=>redrawChecks());
    node('div','Ready to send','mtq-lb',rev);
-   const checks=[
+   const chkBox=node('div',null,null,rev);
+   const mkChecks=()=>[
     [all.length>0,'At least one gap plan'],
-    [all.length>0&&all.every(complete),'Every gap plan has an objective, actions with measures, a person responsible and valid dates']
+    [all.length>0&&all.every(complete),'Every gap plan has an objective, actions with measures, a person responsible, valid dates and at least one expected report'],
+    [!!form.target.readiness,'Target readiness is chosen'],
+    [(mtAutoFill(form.monthly,reviewMonths().months,form.plans),mtMonthsOk(mtEffective(form.monthly,reviewMonths().months))),'Every month in the monthly report plan has at least one expected report']
    ];
-   checks.forEach(c=>{const r=node('div',null,'mtq-ck '+(c[0]?'ok':'no'),rev);node('i',c[0]?'OK':'Fix',null,r);node('span',c[1],null,r);});
+   redrawChecks=()=>{chkBox.replaceChildren();mkChecks().forEach(c=>{const r=node('div',null,'mtq-ck '+(c[0]?'ok':'no'),chkBox);node('i',c[0]?'OK':'Fix',null,r);node('span',c[1],null,r);});};
+   redrawChecks();
    node('div','After you send, all plans show as Pending Approval until HR approves them.','mtq-tip',rev);
    const sendBtn=[...tools.querySelectorAll('button')].find(b=>/^Send/.test(b.textContent));
    if(sendBtn)sendBtn.textContent=all.length>1?'Send all '+all.length+' gap plans to HR':'Send to HR for approval';
   }
   function render(){
    planBox.hidden=mode!=='plan';revBox.hidden=mode!=='review';
-   paintProg();paintQueue();
-   if(mode==='plan'){paintPlan();paintEx();}else paintReview();
+   paintProg();paintStrip();paintQueue();
+   if(mode==='plan'){paintPlan();paintEx();paintJD(gInfo(gap.value));refreshObjective();}else paintReview();
    count();
   }
   let refreshTimer=null;
   function refreshLive(){
    clearTimeout(refreshTimer);
-   refreshTimer=setTimeout(()=>{if(mode==='plan'&&planBox.isConnected){paintEx();paintQueue();paintProg();}},120);
+   refreshTimer=setTimeout(()=>{if(mode==='plan'&&planBox.isConnected){paintEx();paintQueue();paintProg();paintStrip();refreshObjective();}},120);
   }
   ['input','click','change'].forEach(ev=>planBox.addEventListener(ev,refreshLive));
   if(hookRestore)hookRestore(d=>{
    if(!internal){
     form.plans=Array.isArray(d&&d.plans)?d.plans.map(x=>({comp_code:x.comp_code,objective:x.objective,actions:Array.isArray(x.actions)?x.actions:[]})):[];
-    if(!gap.value){const f=list().find(g=>!isDone(g.code));if(f)loadInto({comp_code:f.code});}
+    form.monthly=Array.isArray(d&&d.monthly)?d.monthly:[];form.target=d&&d.target&&typeof d.target==='object'?d.target:{readiness:''};
+    if(!gap.value){const f=list().find(g=>!isDone(g.code));if(f)loadInto(fresh(f.code));}
     mode='plan';
    }
    render();
   });
-  if(!gap.value&&list().length){loadInto({comp_code:list()[0].code});}
+  if(!gap.value&&list().length){loadInto(fresh(list()[0].code));}
   s.createDirty=false;
   render();
  }
@@ -38212,14 +38689,19 @@ role.addEventListener('change',()=>{
   const started=data.objective||(data.actions||[]).some(a=>a.action||a.measure||a.responsible||a.start||a.end);
   if(started||!sets.length)sets.push({comp_code:data.comp_code,objective:data.objective,actions:data.actions||[]});
   const today=new Date().toISOString().slice(0,10),seen=new Set(),out=[];
+  const allActs=sets.flatMap(x=>x.actions||[]),span=mtMonthList(allActs),len=mtPlanLength(span.lo,span.hi),eff=(mtAutoFill(data.monthly=data.monthly||[],span.months,sets),mtEffective(data.monthly,span.months));
+  if(!data.target||!data.target.readiness)throw Error('Choose the target readiness for this plan.');
+  if(!mtMonthsOk(eff))throw Error('Choose at least one expected report for every month in the monthly report plan.');
   sets.forEach(set=>{
    const g=s.form.available.find(x=>x.code===set.comp_code);
    if(!g)throw Error('Select an eligible competency gap for every plan.');
    if(seen.has(g.code))throw Error('The gap '+g.name+' appears twice. Each gap can have only one plan in a submission.');
    seen.add(g.code);
-   if(!set.objective||!set.actions.length||set.actions.some(a=>!a.action||!a.measure||!a.responsible||!a.start||!a.end||a.end<a.start))throw Error('Complete the objective, each action, success measure, responsible person and valid start/due dates for '+g.name+'.');
+  if(!set.objective||!set.actions.length||set.actions.some(a=>!a.action||!a.measure||!a.responsible||!a.start||!a.end||a.end<a.start))throw Error('Complete the objective, each action, success measure, responsible person and valid start/due dates for '+g.name+'.');
+   if(set.actions.some(a=>!mtRepsOk(a)))throw Error('Choose at least one expected report for every action in '+g.name+' (and describe Other if you ticked it).');
+   if(!set.actions.some(a=>a.period==='Do it'))throw Error(g.name+' needs at least one Do it action.');
    const plan='DP-'+crypto.randomUUID();
-   set.actions.forEach(a=>out.push({id:crypto.randomUUID(),plan_id:plan,employee_id:emp.employee_id,employee_name:emp.employee_name,position:emp.position,assessment_scope:data.assessment_scope||s.createScope||'current',comp_code:g.code,comp_name:g.name,task:set.objective,action:a.action,measure:a.measure,responsible_party:a.responsible,period:a.period,start_date:a.start,end_date:a.end,status:'Pending Approval',progress_notes:'',hr_approved:'',created_date:today,created_by:APP.user.email}));
+   set.actions.forEach(a=>out.push({id:crypto.randomUUID(),plan_id:plan,employee_id:emp.employee_id,employee_name:emp.employee_name,position:emp.position,assessment_scope:data.assessment_scope||s.createScope||'current',comp_code:g.code,comp_name:g.name,task:set.objective,action:a.action,measure:a.measure,responsible_party:a.responsible,period:a.period,start_date:a.start,end_date:a.end,status:'Pending Approval',progress_notes:'',hr_approved:'',created_date:today,created_by:APP.user.email,plan_meta:{v:1,role_title:(s.form.available&&s.form.available.role)||'',gap:{start_gap:Math.max(0,100-g.pct),score:g.pct,manager_score:g.mgrPct==null?null:g.mgrPct,basis:g.basis||'manager'},responsibilities:s.form.jd?s.form.jd.forGap(g.code).slice(0,8):[],action:{rating:a.rating==null?null:a.rating,cls:a.cls||'',risk:a.risk||'',auto:!!a.auto,measure_edited:!!(a.measureAuto&&a.measure!==a.measureAuto),action_edited:!!(a.actionAuto&&a.action!==a.actionAuto)},strengths:(g.strengths||[]).map(x=>x.text),experiences:(a.exps||[]).map(t=>({text:t,refs:s.form.jd?s.form.jd.forExp(g.code,t):[]})),reports:{types:a.reps||[],other:a.other||''},target:{readiness:data.target.readiness,date:span.hi,start:span.lo,months:len},monthly:eff}}));
   });
   return out;
  }
@@ -38237,7 +38719,8 @@ role.addEventListener('change',()=>{
    form.pending.attempted=true;
    try{await savePlanDraft(s,form);}catch(e){form.uncertain=true;throw e;}
    if(!current(s))return;
-   const result=await _supabase.from('dev_plans').insert(rows);
+   let result=await _supabase.from('dev_plans').insert(rows);
+   if(result.error&&/plan_meta/i.test(String(result.error.message||''))){const bare=rows.map(r=>{const c=Object.assign({},r);delete c.plan_meta;return c;});form.pending.rows=bare;form.metaDropped=true;result=await _supabase.from('dev_plans').insert(bare);}
    if(!current(s))return;
    if(result.error){form.uncertain=true;throw Error('Plan insert was not confirmed: '+result.error.message+'. Use Check submission.');}
    await finishSubmission(s,form,true);
@@ -38261,10 +38744,11 @@ role.addEventListener('change',()=>{
  async function finishSubmission(s,form,notify){
   if(!current(s))return;form.submitted=true;form.uncertain=false;form.lock();s.createDirty=false;
   let note='Plan saved with Pending Approval. ';
+  if(form.metaDropped)note+='The expected reports, monthly plan and targets were NOT saved because the database column is missing. Run the Step 56 SQL file, then tell Brain. ';
   try{await savePlanDraft(s,form);}catch{note+='The draft completion marker could not be saved; keep the submission reference. ';}
   if(!current(s))return;
   if(notify&&typeof notifyHR==='function'){
-   try{await notifyHR('New Development Plan Submitted','Development plans for '+(form.pending.rows[0].employee_name||'your employee')+' ('+(form.pending.plan_ids||[form.pending.plan_id]).length+' gap plan(s)) have been submitted together and await HR approval.');note+='The existing HR notification handler was called; delivery is not verified.';}catch{note+='HR notification was not confirmed. The plan itself is saved.';}
+   try{await notifyHR('New Development Plan Submitted','Development plans for '+(form.pending.rows[0].employee_name||'your employee')+' ('+(form.pending.plan_ids||[form.pending.plan_id]).length+' gap plan(s)) have been submitted together and await HR approval.',{page:'hr-devplans'});note+='The existing HR notification handler was called; delivery is not verified.';}catch{note+='HR notification was not confirmed. The plan itself is saved.';}
   }else note+='No notification was replayed during the recovery check.';
   try{await fetchActions(s);}catch(e){s.actionError=e.message;}
   if(current(s)){renderExisting(s);renderReports(s);msg(s,note);}
@@ -38276,7 +38760,7 @@ role.addEventListener('change',()=>{
    if(!window.confirm('Reload development plans and leave unsaved edits? Save draft first if needed.'))return;backed(active);
   }
   const old=active,main=document.getElementById('mainContent');if(!main)return;
-  const s={key:identity(),items:[],team:[],reports:[],busy:false,tab:old&&current(old)?old.tab:'existing',reportTab:old&&current(old)?old.reportTab:'deliverables',createDirty:false,detailDirty:false};
+  const s={key:identity(),items:[],team:[],reports:[],busy:false,tab:old&&current(old)?old.tab:'create',reportTab:old&&current(old)?old.reportTab:'deliverables',createDirty:false,detailDirty:false};
   main.replaceChildren();s.host=node('section',null,null,main);s.host.id='cmsManagerTabsV1';active=s;shell(s);
   for(const [k,p] of Object.entries(s.panels))p.hidden=k!==s.tab;
   await busy(s,async()=>{
@@ -50351,5 +50835,35 @@ html:root:root:root:root:root:root:root:root:root body #mainContent:has(#loginEm
  setTimeout(addNav,1500);
 })();
 </script>
+<style id="cms-plan-types-v1">
+/* Colours for the three kinds of development action on the Create plan screen. */
+#cmsManagerTabsV1 .mt-action-box[data-mt-type="Do it"]{border-left:6px solid #0284c7;background:#f0f9ff}
+#cmsManagerTabsV1 .mt-action-box[data-mt-type="Learn from others"]{border-left:6px solid #9333ea;background:#faf5ff}
+#cmsManagerTabsV1 .mt-action-box[data-mt-type="Study"]{border-left:6px dashed #16a34a;background:#f0fdf4}
+#cmsManagerTabsV1 .mt-action-box[data-mt-type="Do it"] h3{color:#0369a1}
+#cmsManagerTabsV1 .mt-action-box[data-mt-type="Learn from others"] h3{color:#7e22ce}
+#cmsManagerTabsV1 .mt-action-box[data-mt-type="Study"] h3{color:#15803d}
+</style>
+<style id="cms-dev-plan-layout-v1">
+/* Development Plans for managers: three large tab cards under a banner, and a wide page below. */
+#cmsManagerTabsV1{max-width:1600px!important;padding:0 0 24px!important;background:transparent!important;border:0!important;box-shadow:none!important}
+#cmsManagerTabsV1 .mt-hero{background:linear-gradient(100deg,#0b2467,#13307f);border-radius:14px;color:#fff;padding:20px 28px;margin:0 0 18px}
+#cmsManagerTabsV1 .mt-hero h2{color:#fff;margin:0 0 4px;font-size:24px}
+#cmsManagerTabsV1 .mt-hero p{color:#cbd5e1;margin:0;font-size:14px}
+#cmsManagerTabsV1 .mt-tabs{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px!important;border-bottom:0!important;margin:0 0 20px!important}
+#cmsManagerTabsV1 .mt-tabs>button{display:flex!important;align-items:center;gap:14px;text-align:left;flex:none!important;border:2px solid #d5dbe8!important;border-radius:14px!important;padding:16px 20px!important;background:#fff!important;min-height:78px;color:#0b2467}
+#cmsManagerTabsV1 .mt-tabs>button:hover{border-color:#a5b4fc!important}
+#cmsManagerTabsV1 .mt-tabs>button[aria-selected=true]{border-color:#4338ca!important;background:#eef2ff!important;box-shadow:0 4px 14px rgba(67,56,202,.18)!important;color:#0b2467!important}
+#cmsManagerTabsV1 .mt-tabnum{width:40px;height:40px;flex:0 0 40px;border-radius:50%;background:#e2e8f0;color:#475569;font-weight:900;font-size:18px;display:flex;align-items:center;justify-content:center}
+#cmsManagerTabsV1 .mt-tabs>button[aria-selected=true] .mt-tabnum{background:#4338ca;color:#fff}
+#cmsManagerTabsV1 .mt-tabtext{display:flex;flex-direction:column;gap:2px}
+#cmsManagerTabsV1 .mt-tabtext b{font-size:16px;font-weight:800}
+#cmsManagerTabsV1 .mt-tabtext small{font-size:12.5px;font-weight:500;color:#64748b;line-height:1.35}
+#cmsManagerTabsV1 .mt-workspace{background:#fff;border:1px solid #d5dbe8;border-radius:14px;padding:22px 26px 26px!important}
+@media(min-width:1050px){#cmsManagerTabsV1 #mt-panel-create{max-width:none!important;margin:0!important}}
+#cmsManagerTabsV1 #mt-panel-create>.mt-field{display:inline-flex;width:calc(50% - 10px);vertical-align:top;margin-right:16px}
+#cmsManagerTabsV1 #mt-panel-create>.mt-field:has(#mt-create-employee){margin-right:0}
+@media(max-width:900px){#cmsManagerTabsV1 .mt-tabs{grid-template-columns:1fr}#cmsManagerTabsV1 #mt-panel-create>.mt-field{width:100%;margin-right:0}}
+</style>
 </body>
 </html>
