@@ -15403,6 +15403,7 @@ async function fwImportManagerTool(input){
    });
   }
   FW.dirty=true;
+  var capNote=window.cmsExpCapV1?cmsExpCapV1(r.items):'';
   var mins={FC001:3,FC002:3,FC003:3,FC004:3,FC005:2,PC001:2,LC001:2};
   var gaps=[];
   Object.keys(mins).forEach(function(c){
@@ -15420,6 +15421,7 @@ async function fwImportManagerTool(input){
   if(failed.length)rep+='The AI gave no usable answer for: '+failed.join(', ')+'. Click upload again to retry those.'+NL+NL;
   if(noDuty.length)rep+='Responsibilities with no experience yet: '+noDuty.join(', ')+NL+NL;
   rep+=gaps.length?'Still to fix before you can submit:'+NL+'- '+gaps.join(NL+'- '):'Every competency minimum is met.';
+  if(capNote)rep+=capNote+NL+NL;
   rep+=NL+NL+'Read every drafted experience, edit the wording, then click Save private draft.';
   FW.busy=false;
   fwRenderRevision();
@@ -48711,7 +48713,7 @@ html:root:root:root:root:root:root:root:root:root body #mainContent:has(#loginEm
  function norm(s){return String(s||'').replace(/\s+/g,' ').trim();}
  function nm(c){try{return compNameOf(c)||c;}catch(e){return c;}}
  function refsOf(i){return String(i.duty_ref||'').split(/[\s,;]+/).filter(Boolean).map(function(s){return s.toUpperCase();});}
- function isHR(){return typeof APP!=='undefined'&&(APP.currentRole==='hr'||APP.currentRole==='hohr');}
+ function isHR(){return typeof APP!=='undefined'&&(APP.currentRole==='hr'||APP.currentRole==='hohr'||APP.currentRole==='csuite');}
  function inLibrary(){
   try{return typeof FW!=='undefined'&&FW.mode==='library'&&!FW.revision&&FW.position&&FW.position.live_version&&isHR();}catch(e){return false;}
  }
@@ -50234,6 +50236,119 @@ html:root:root:root:root:root:root:root:root:root body #mainContent:has(#loginEm
   }
   return prior.apply(self,args);
  };
+})();
+</script>
+<script id="cms-expcap-v1">
+(function(){
+ 'use strict';
+ if(window.__cmsExpCapV1)return;window.__cmsExpCapV1=true;
+ /* Keeps AI-drafted experiences to a maximum of 7 per competency, with a
+    70% Critical / 20% Important / 10% Value-Add shape.
+    Runs on the experiences the AI wrote from the manager's tool (rows with a responsibility reference).
+    Experiences typed by hand are never removed or re-labelled. */
+ var MAX=7;
+ var RECLASSIFY=true; /* set to false to only trim and leave each label as the AI wrote it */
+ var MIX={1:[1,0,0],2:[1,1,0],3:[2,1,0],4:[3,1,0],5:[4,1,0],6:[4,1,1],7:[5,1,1]};
+ var CRIT='Must-Have (Critical)',IMP='Important (Performance Enhancing)',VAL='Value-Add (Developmental)';
+ function tierOf(c){var s=String(c||'');if(/Critical|Must/i.test(s))return 0;if(/Important|Performance/i.test(s))return 1;return 2;}
+ function filled(i){return !!String(i.text||'').trim();}
+ window.cmsExpCapV1=function(items){
+  var notes=[],byCode={};
+  (items||[]).forEach(function(i){if(filled(i)){(byCode[i.code]=byCode[i.code]||[]).push(i);}});
+  var drop={},changed=0,trimmed=0,lostDuties={};
+  Object.keys(byCode).forEach(function(code){
+   var all=byCode[code],manual=all.filter(function(i){return !i.duty_ref;}),gen=all.filter(function(i){return !!i.duty_ref;});
+   if(!gen.length)return;
+   var room=Math.max(0,MAX-manual.length),kept=gen;
+   if(gen.length>room){
+    kept=[];var seen={};
+    [0,1,2].forEach(function(t){
+     var pool=gen.filter(function(i){return tierOf(i.classification)===t;});
+     pool.forEach(function(i){if(kept.length<room&&!seen[i.duty_ref]){kept.push(i);seen[i.duty_ref]=1;}});
+     pool.forEach(function(i){if(kept.length<room&&kept.indexOf(i)<0){kept.push(i);}});
+    });
+    gen.forEach(function(i){if(kept.indexOf(i)<0){drop[i.id]=1;trimmed++;}});
+    var keptDuty={};kept.forEach(function(i){keptDuty[i.duty_ref]=1;});
+    gen.forEach(function(i){if(!keptDuty[i.duty_ref])lostDuties[i.duty_ref]=1;});
+   }
+   if(RECLASSIFY&&!manual.length&&kept.length){
+    var m=MIX[Math.min(kept.length,MAX)];
+    /* kept is already ordered most important first when trimmed; otherwise order by the label the AI gave */
+    var ordered=kept.slice().sort(function(a,b){return tierOf(a.classification)-tierOf(b.classification)||gen.indexOf(a)-gen.indexOf(b);});
+    ordered.forEach(function(i,k){
+     var want=k<m[0]?CRIT:(k<m[0]+m[1]?IMP:VAL);
+     if(i.classification!==want){i.classification=want;changed++;}
+    });
+   }
+  });
+  if(trimmed){
+   for(var k=items.length-1;k>=0;k--){if(drop[items[k].id])items.splice(k,1);}
+  }
+  if(trimmed)notes.push('Kept to a maximum of '+MAX+' experiences per competency: '+trimmed+' extra experience'+(trimmed===1?'':'s')+' left out.');
+  if(changed)notes.push(changed+' experience'+(changed===1?'':'s')+' re-labelled to the 70% Critical / 20% Important / 10% Value-Add shape (7 = 5 Critical, 1 Important, 1 Value-Add).');
+  var ld=Object.keys(lostDuties);
+  if(ld.length)notes.push('Responsibilities that no longer have an experience: '+ld.join(', ')+'. Add one by hand if they still need covering.');
+  return notes.join(String.fromCharCode(10));
+ };
+})();
+</script>
+<script id="cms-csuite-library-v1">
+(function(){
+ if(window.__cmsCsLibV1)return;window.__cmsCsLibV1=true;
+ /* C-suite Competency Library: the same published library HR Admin and Head of HR see,
+    shown to the C-suite as view only. Company, department, position, competencies,
+    JD responsibilities and the manager's tool are all included. Nothing can be edited. */
+ var PAGE='cs-comp';
+ function isCs(){return typeof APP!=='undefined'&&APP.currentRole==='csuite';}
+
+ /* hide every edit control for the C-suite */
+ function readOnlyCss(on){
+  var st=document.getElementById('cs-lib-readonly');
+  if(on){
+   if(!st){
+    st=document.createElement('style');st.id='cs-lib-readonly';
+    st.textContent='[data-jdx="load"],#jdx-file,.fw-library-actions,.clo2-actions .clo2-action.primary,.clo2-metric:nth-child(5),.clo2-status-row:nth-child(n+2){display:none!important}';
+    document.head.appendChild(st);
+   }
+  }else if(st){st.remove();}
+ }
+
+ /* no position can be edited by the C-suite, whatever the server says */
+ var oldCatalogue=fwCatalogue;
+ fwCatalogue=async function(){
+  var c=await oldCatalogue.apply(this,arguments);
+  if(isCs()&&c&&Array.isArray(c.positions)){
+   c.positions=c.positions.map(function(p){return Object.assign({},p,{can_edit:false});});
+  }
+  return c;
+ };
+
+ /* open the library page */
+ var oldLoad=loadPage;
+ loadPage=function(id){
+  readOnlyCss(isCs()&&id===PAGE);
+  if(id===PAGE&&isCs())return fwOpen('library');
+  return oldLoad.apply(this,arguments);
+ };
+ var oldLabel=getPageLabel;
+ getPageLabel=function(id){return id===PAGE?'Competency Library':oldLabel.apply(this,arguments);};
+ try{pfLightPages.add(PAGE);}catch(e){}
+
+ /* add the menu item */
+ function addNav(){
+  if(!isCs())return;
+  var side=document.getElementById('sideNav');if(!side)return;
+  if(side.querySelector('[data-page="'+PAGE+'"],[data-nv-page="'+PAGE+'"]'))return;
+  var b=document.createElement('button');
+  b.type='button';b.className='sb-item';b.dataset.page=PAGE;b.textContent='Competency Library';
+  b.onclick=function(){navigateTo(PAGE);};
+  side.appendChild(b);
+  if(typeof cmsPolishNavigation==='function')cmsPolishNavigation();
+  if(typeof cmsSyncNavigation==='function')cmsSyncNavigation();
+ }
+ var oldSetup=setupNav;
+ setupNav=function(){var r=oldSetup.apply(this,arguments);addNav();return r;};
+ setTimeout(addNav,1500);
 })();
 </script>
 </body>
