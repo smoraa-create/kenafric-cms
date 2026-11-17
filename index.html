@@ -10094,6 +10094,7 @@ if (ok && prow) {
 await generateDPReports(prow.plan_id);
 const { data: emp } = await _supabase.from('employees').select('*').eq('employee_id', prow.employee_id).single();
 if (emp) sendCMSemail(emp.email, 'Development Plan Approved - Monthly Reports Created', 'Your development plan "' + (prow.task||'') + '" was approved by HR. Monthly progress reports were created - submit each by its due date in the CMS: ' + APP_LINK);
+if(emp&&emp.manager_email)sendCMSemail(emp.manager_email,'Development Plan Approved: '+(emp.employee_name||''),'HR approved '+ids.length+' action'+(ids.length===1?'':'s')+' in the development plan for '+(emp.employee_name||'your team member')+'. Monthly progress reports have been created. Open the CMS to follow progress.',{page:'mgr-devplans'});
 }
 showToast(ok ? 'Plan approved! Monthly reports created.' : 'Plan disapproved.');
 loadHRDPEmp();
@@ -15297,27 +15298,38 @@ function fwImportTool(input){
    if(!json.length)throw Error('The file has no data rows');
    var norm=function(s){return String(s).toLowerCase().replace(/[^a-z]/g,'');};
    var p=FW.position,r=FW.revision;
-   var allowed=p.department?['FC001','FC002','FC003','FC004','FC005','PC001','LC001']:[];
+   var allowed=p.department?['FC001','FC002','FC003','FC004','FC005','PC001','LC001','CC001','CC002','CC003','CC004']:[];
    var clsOf=function(x){var s=String(x||'').toLowerCase();if(s.indexOf('critical')>=0||s.indexOf('must')>=0)return 'Must-Have (Critical)';if(s.indexOf('important')>=0||s.indexOf('performance')>=0)return 'Important (Performance Enhancing)';if(s.indexOf('value')>=0||s.indexOf('developmental')>=0)return 'Value-Add (Developmental)';return '';};
+   var refsOf=function(v){var out=[];String(v||'').split(/[\s,;&\/]+/).forEach(function(t){var m=/^R?0*(\d+)$/i.exec(t.trim());if(m&&out.indexOf('R'+m[1])<0)out.push('R'+m[1]);});return out;};
+   var known=[];try{known=(JSON.parse(localStorage.getItem('cmsDuties:'+p.id)||'[]')||[]).map(function(d){return String(d.ref).toUpperCase();});}catch(e){known=[];}
    var rows=[];
    json.forEach(function(row){
     var m={};for(var k in row)m[norm(k)]=row[k];
-    rows.push({code:String(m['competencycode']||m['code']||'').trim().toUpperCase(),text:String(m['experiencetext']||m['experience']||m['text']||'').trim(),cls:clsOf(m['classification']),dep:String(m['department']||'').trim(),pos:String(m['position']||'').trim()});
+    rows.push({code:String(m['competencycode']||m['code']||'').trim().toUpperCase(),text:String(m['experiencetext']||m['experience']||m['text']||'').trim(),cls:clsOf(m['classification']),refs:refsOf(m['responsibility']||m['responsibilityref']||m['ref']||m['dutyref']),dep:String(m['department']||'').trim(),pos:String(m['position']||'').trim()});
    });
    var wrong=rows.filter(function(x){return (x.dep&&!sameText(x.dep,p.department))||(x.pos&&!sameText(x.pos,p.position));});
    if(wrong.length)throw Error('This file is for '+wrong[0].dep+' / '+wrong[0].pos+' but you opened '+p.department+' / '+p.position+'. Nothing was imported.');
-   var added=0,dup=0,skipped=0;
+   var real=rows.filter(function(x){return x.code&&x.text;});
+   var noRef=real.filter(function(x){return !x.refs.length;});
+   if(noRef.length)throw Error(noRef.length+' row(s) have no Responsibility (R1, R2 ...). Every experience must be linked to a responsibility. Nothing was imported.');
+   if(known.length){var bad=[];real.forEach(function(x){x.refs.forEach(function(q){if(known.indexOf(q)<0&&bad.indexOf(q)<0)bad.push(q);});});if(bad.length)throw Error('These responsibilities are not in the manager\'s tool for this role: '+bad.join(', ')+'. Nothing was imported.');}
+   var added=0,dup=0,skipped=0,seen={};
    rows.forEach(function(x){
     if(!x.code||!x.text||!x.cls||allowed.indexOf(x.code)<0){skipped++;return;}
     var same=r.items.some(function(i){return i.code===x.code&&String(i.text||'').trim().toLowerCase()===x.text.toLowerCase();});
     if(same){dup++;return;}
-    var empty=r.items.find(function(i){return i.code===x.code&&!String(i.text||'').trim();});
+    var ref=x.refs.join(', ');
+    var empty=r.items.find(function(i){return i.code===x.code&&!String(i.text||'').trim()&&String(i.duty_ref||'').toUpperCase().replace(/\s/g,'')===ref.toUpperCase().replace(/\s/g,'');});
     if(empty){empty.text=x.text;empty.classification=x.cls;empty.ai_note=null;}
-    else r.items.push({id:crypto.randomUUID(),code:x.code,text:x.text,classification:x.cls,level:'',ai_note:null});
+    else r.items.push({id:crypto.randomUUID(),code:x.code,text:x.text,classification:x.cls,level:'',ai_note:null,duty_ref:ref});
+    x.refs.forEach(function(q){seen[q]=1;});
     added++;
    });
+   var before=r.items.length;
+   r.items=r.items.filter(function(i){return String(i.text||'').trim()||!String(i.duty_ref||'').split(/[\s,;]+/).some(function(q){return seen[q.toUpperCase()];});});
+   var removed=before-r.items.length;
    FW.dirty=true;fwRenderRevision();
-   showToast('Imported '+added+' experiences. Skipped '+skipped+' (core, unknown code or blank). Duplicates ignored: '+dup+'. Review, then Save private draft.');
+   showToast('Imported '+added+' experiences, each linked to its responsibility. Removed '+removed+' leftover blank rows. Skipped '+skipped+'. Duplicates ignored: '+dup+'. Review, then Save private draft.');
   }catch(e){showToast(e.message);}
   input.value='';
  });
@@ -44314,7 +44326,7 @@ body.cms-focus-editor-v1 #mainContent #fwScreen.cfu-screen #fwBody .cfe-footer {
   if(FW&&FW.revision&&FW.revision.state==='Draft'&&FW.position&&FW.position.department){
    var tools=make('div','cfu-tools',null,header);
    tools.style.cssText='display:flex;gap:10px;flex-wrap:wrap;margin-top:12px';
-   var toolFile=make('input',null,null,tools);toolFile.type='file';toolFile.accept='.xlsx,.xls';toolFile.style.display='none';
+   var toolFile=make('input',null,null,tools);toolFile.type='file';toolFile.accept='.xlsx,.xls,.csv';toolFile.style.display='none';
    toolFile.onchange=function(){fwImportManagerTool(toolFile);};
    var upBtn=make('button','btn btn-primary',"Upload manager's tool",tools);upBtn.type='button';upBtn.onclick=function(){toolFile.click();};
    var sheetFile=make('input',null,null,tools);sheetFile.type='file';sheetFile.accept='.xlsx,.xls,.csv';sheetFile.style.display='none';
@@ -46640,7 +46652,11 @@ body.cms-focus-editor-v1 #mainContent #fwScreen.cfu-screen #fwBody .cfe-footer {
   var roleMoved=['company','department','position'].some(function(k){return changed.indexOf(k)>=0;});
   if(!confirm('Save changes to '+name+'?'+(roleMoved?' Their role details change; past assessments stay on record.':'')))return;
   btn.disabled=true;
-  var r=await _supabase.from('employees').update(rec).eq('employee_id',e.employee_id);
+    var r=await _supabase.from('employees').update(rec).eq('employee_id',e.employee_id).select('employee_id');
+  if(!r.error&&!(r.data&&r.data.length)){
+   var r3=await _supabase.rpc('cms_employee_edit',{p_employee_id:String(e.employee_id),p_rec:rec});
+   if(r3.error){say('Not saved: the database blocked this change. Run the Step69 SQL in Supabase, then try again. ('+r3.error.message+')');btn.disabled=false;return;}
+  }
   if(r.error){say('Not saved: '+r.error.message);btn.disabled=false;return;}
   var oldEmail=String(e.email||'').toLowerCase();
   if((changed.indexOf('email')>=0||changed.indexOf('employee_name')>=0)&&oldEmail){
@@ -50587,9 +50603,8 @@ html:root:root:root:root:root:root:root:root:root body #mainContent:has(#loginEm
   });
   var duties=dutyList(),uncovered=duties.filter(function(d){return !its.some(function(i){return filled(i)&&refsOf(i).indexOf(d.ref)>=0;});});
   var blank=its.filter(function(i){return !filled(i);}).length;
-  var none=totalFilled===0;
-  var fix=gaps.length+uncovered.length+blank+(none?1:0);
-  return {per:per,gaps:gaps,opt:opt,complete:used,total:total,duties:duties,uncovered:uncovered,blank:blank,fix:fix,none:none};
+  var none=totalFilled===0;var unlinked=its.filter(function(i){return filled(i)&&!refsOf(i).length;}).length;  var fix=gaps.length+uncovered.length+blank+(unlinked?1:0)+(none?1:0);
+  return {per:per,gaps:gaps,opt:opt,complete:used,total:total,duties:duties,uncovered:uncovered,blank:blank,unlinked:unlinked,fix:fix,none:none};
  }
 
  var GUESS=[
@@ -50666,9 +50681,167 @@ html:root:root:root:root:root:root:root:root:root body #mainContent:has(#loginEm
    openMap={};
    render();
    showToast(createRows?'Read '+res.duties.length+' responsibilities. Added '+added+' empty rows to write. Saving...':'Loaded notes for '+res.duties.length+' responsibilities.');
-   if(createRows)await fwMutate('save',{items:FW.revision.items});
-  }catch(e){showToast(e.message);}
+   if(createRows){await fwMutate('save',{items:FW.revision.items});await autoDraft2(res.duties,true);}  }catch(e){showToast(e.message);}
   input.value='';
+ }
+  async function autoDraft(duties){
+  duties=duties.filter(function(u){return items().some(function(i){return !filled(i)&&refsOf(i).indexOf(u.ref)>=0;});});
+  if(!duties.length)return;
+  var NL=String.fromCharCode(10);
+  var allowed={};
+  allCodes().forEach(function(c){if(/^(FC|PC|LC|CC)\d+$/.test(c))allowed[c]=nm(c);});
+  var listText=Object.keys(allowed).map(function(c){return c+': '+allowed[c];}).join(NL);
+  var p=FW.position,added=0,failed=[],filledRows=0,done=0;
+  function clsOf(x){var s=String(x||'').toLowerCase();if(s.indexOf('critical')>=0||s.indexOf('must')>=0)return CR;if(s.indexOf('important')>=0||s.indexOf('performance')>=0)return IM;if(s.indexOf('value')>=0||s.indexOf('developmental')>=0)return VA;return '';}
+  async function one(u){
+   var prompt='You are an HR competency expert for Kenafric Group. A line manager has described ONE job responsibility. Turn it into assessable experience statements.'+NL+NL+
+    'Role: '+p.position+' ('+p.department+')'+NL+'Responsibility from the approved JD: '+u.text+NL+'What it entails: '+u.entails+NL+'Activities and tasks: '+u.tasks+NL+'Expected outputs: '+u.outputs+NL+
+    'Knowledge needed: '+u.know+NL+'Skills needed: '+u.skills+NL+'Abilities needed: '+u.abil+NL+'Behaviours needed: '+u.beh+NL+'Attributes needed: '+u.attr+NL+'Manager priority for this responsibility: '+(u.prio||'not stated')+NL+NL+
+    'The ONLY competencies you may use (code: name):'+NL+listText+NL+NL+
+    'Rules:'+NL+'- Write 3 to 6 statements. Each starts with the word "Has" and describes something the person has actually done that can be shown with evidence.'+NL+
+    '- Base every statement on what the manager wrote. Do not invent duties, tools, systems or numbers.'+NL+
+    '- Choose exactly one code per statement, from the list only. Use the functional codes for the technical work. Use a core or behavioural code only where the manager\'s behaviours or attributes clearly point to it.'+NL+
+    '- classification must be exactly one of: "Must-Have (Critical)", "Important (Performance Enhancing)", "Value-Add (Developmental)". Use the manager\'s priority for the most important statements and a lower classification for supporting ones.'+NL+
+    '- Plain English.'+NL+'Return ONLY JSON in this shape: {"items":[{"code":"FC001","text":"Has ...","classification":"Must-Have (Critical)"}]}';
+   var list=null;
+   for(var a=0;a<2&&!list;a++){
+    var out=await orCall(prompt,true,1800);
+    try{var s=out.indexOf('{'),e=out.lastIndexOf('}');var j=JSON.parse(out.slice(s,e+1));if(j&&Array.isArray(j.items)&&j.items.length)list=j.items;}catch(x){list=null;}
+   }
+   done++;showToast('Writing experiences: '+done+' of '+duties.length+' responsibilities...');
+   if(!list){failed.push(u.ref);return;}
+   var sm=sugGet();
+   list.forEach(function(x){
+    var code=String(x.code||'').trim().toUpperCase(),text=String(x.text||'').trim();
+    if(!allowed[code]||!/^Has\s/.test(text))return;
+    if(items().some(function(it){return it.code===code&&String(it.text||'').trim().toLowerCase()===text.toLowerCase();}))return;
+    var cls=clsOf(x.classification)||tierFromPrio(u.prio);
+    var mine=items().filter(function(it){return !filled(it)&&refsOf(it).indexOf(u.ref)>=0;});
+    var row=mine.filter(function(it){return it.code===code;})[0]||mine[0];
+    if(row){row.code=code;row.text=text;row.classification=cls;row.ai_note=null;delete sm[row.id];filledRows++;}
+    else{FW.revision.items.push({id:crypto.randomUUID(),code:code,text:text,classification:cls,level:'',ai_note:null,duty_ref:u.ref});}
+    added++;
+   });
+   sugSet(sm);
+  }
+  FW.busy=true;try{fwButtons();}catch(e){}
+  try{
+   var queue=duties.slice(),workers=[];
+   for(var w=0;w<3;w++)workers.push((async function(){while(queue.length){var u=queue.shift();try{await one(u);}catch(e){failed.push(u.ref);}}})());
+   await Promise.all(workers);
+  }finally{FW.busy=false;try{fwButtons();}catch(e){}}
+  FW.dirty=true;
+  render();
+  var left=items().filter(function(i){return !filled(i);}).length;
+  showToast('Wrote '+added+' experiences.'+(failed.length?' No answer for '+failed.join(', ')+': upload again to retry.':'')+(left?' '+left+' empty rows left to write or delete.':'')+' Read them, edit, then save.');
+  await fwMutate('save',{items:FW.revision.items});
+ }
+ async function autoDraft2(duties,fresh){
+  var NL=String.fromCharCode(10);
+  if(!duties){try{duties=JSON.parse(localStorage.getItem('cmsDuties:'+FW.position.id)||'[]');}catch(e){duties=[];}}
+  if(!duties.length){showToast('Upload the manager\'s tool first so I can read the responsibilities.');return;}
+  duties=duties.filter(function(u){return items().some(function(i){return !filled(i)&&refsOf(i).indexOf(u.ref)>=0;});});
+  if(!duties.length){showToast('There are no empty rows to write.');return;}
+  if(FW.busy)return;
+  var allowed={};
+  allCodes().forEach(function(c){if(/^(FC|PC|LC|CC)\d+$/.test(c))allowed[c]=nm(c);});
+  var listText=Object.keys(allowed).map(function(c){return c+': '+allowed[c];}).join(NL);
+  var p=FW.position,added=0,failed=[],done=0,errs=[];
+  function clsOf(x){var s=String(x||'').toLowerCase();if(s.indexOf('critical')>=0||s.indexOf('must')>=0)return CR;if(s.indexOf('important')>=0||s.indexOf('performance')>=0)return IM;if(s.indexOf('value')>=0||s.indexOf('developmental')>=0)return VA;return '';}
+  async function ask(prompt){
+   if(typeof OR_KEY==='undefined'||!OR_KEY||OR_KEY.indexOf('PASTE')>=0){errs.push('No AI key is set');return '';}
+   for(var m=0;m<OR_MODELS.length;m++){
+    try{
+     var r=await fetch('https://openrouter.ai/api/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+OR_KEY,'HTTP-Referer':'https://cms.kenafricgroup.com','X-Title':'Kenafric CMS'},body:JSON.stringify({model:OR_MODELS[m],messages:[{role:'user',content:prompt}],temperature:0.3,max_tokens:2500})});
+     if(!r.ok){var tx='';try{tx=(await r.text()).slice(0,120);}catch(e){}errs.push(OR_MODELS[m]+': HTTP '+r.status+' '+tx);continue;}
+     var j=await r.json();var c=j&&j.choices&&j.choices[0]&&j.choices[0].message&&j.choices[0].message.content;
+     if(c)return String(c);
+     errs.push(OR_MODELS[m]+': empty answer');
+    }catch(e){errs.push(OR_MODELS[m]+': '+(e.message||e));}
+   }
+   return '';
+  }
+  function parse(out){
+   try{var a=out.indexOf('{'),b=out.lastIndexOf('}');var j=JSON.parse(out.slice(a,b+1));if(j&&Array.isArray(j.items)&&j.items.length)return j.items;}catch(e){}
+   return null;
+  }
+  async function one(u){
+   var prompt='You are an HR competency expert for Kenafric Group. A line manager has described ONE job responsibility. Turn it into assessable experience statements.'+NL+NL+
+    'Role: '+p.position+' ('+p.department+')'+NL+'Responsibility from the approved JD: '+u.text+NL+'What it entails: '+(u.entails||'')+NL+'Activities and tasks: '+(u.tasks||'')+NL+'Expected outputs: '+(u.outputs||'')+NL+
+    'Knowledge needed: '+(u.know||'')+NL+'Skills needed: '+(u.skills||'')+NL+'Abilities needed: '+(u.abil||'')+NL+'Behaviours needed: '+(u.beh||'')+NL+'Attributes needed: '+(u.attr||'')+NL+'Manager priority for this responsibility: '+(u.prio||'not stated')+NL+NL+
+    'The ONLY competencies you may use (code: name):'+NL+listText+NL+NL+
+    'Rules:'+NL+'- Write 3 to 6 statements. Each starts with the word "Has" and describes something the person has actually done that can be shown with evidence.'+NL+
+    '- Base every statement on what the manager wrote. Do not invent duties, tools, systems or numbers.'+NL+
+    '- Choose exactly one code per statement, from the list only. Use the functional codes for the technical work. Use a core or behavioural code only where the manager\'s behaviours or attributes clearly point to it.'+NL+
+    '- classification must be exactly one of: "Must-Have (Critical)", "Important (Performance Enhancing)", "Value-Add (Developmental)". Use the manager\'s priority for the most important statements and a lower classification for supporting ones.'+NL+
+    '- Plain English.'+NL+'Return ONLY JSON in this shape: {"items":[{"code":"FC001","text":"Has ...","classification":"Must-Have (Critical)"}]}';
+   var list=null;
+   for(var a=0;a<3&&!list;a++){
+    var out=await ask(prompt);
+    list=out?parse(out):null;
+    if(!list&&a<2)await new Promise(function(r){setTimeout(r,2000);});
+   }
+   done++;showToast('Writing experiences: '+done+' of '+duties.length+' responsibilities...');
+   if(!list){failed.push(u.ref);return;}
+   var sm=sugGet();
+   list.forEach(function(x){
+    var code=String(x.code||'').trim().toUpperCase(),text=String(x.text||'').trim();
+    if(!allowed[code]||!/^Has\s/.test(text))return;
+    if(items().some(function(it){return it.code===code&&String(it.text||'').trim().toLowerCase()===text.toLowerCase();}))return;
+    var cls=clsOf(x.classification)||tierFromPrio(u.prio);
+    var mine=items().filter(function(it){return !filled(it)&&refsOf(it).indexOf(u.ref)>=0;});
+    var row=mine.filter(function(it){return it.code===code;})[0]||mine[0];
+    if(row){row.code=code;row.text=text;row.classification=cls;row.ai_note=null;delete sm[row.id];}
+    else{FW.revision.items.push({id:crypto.randomUUID(),code:code,text:text,classification:cls,level:'',ai_note:null,duty_ref:u.ref});}
+    added++;
+   });
+   sugSet(sm);
+  }
+  FW.busy=true;try{fwButtons();}catch(e){}
+  try{
+   var queue=duties.slice(),workers=[];
+   for(var w=0;w<2;w++)workers.push((async function(){while(queue.length){var u=queue.shift();try{await one(u);}catch(e){failed.push(u.ref);errs.push(e.message||String(e));}}})());
+   await Promise.all(workers);
+  }finally{FW.busy=false;try{fwButtons();}catch(e){}}
+  FW.dirty=true;
+  render();
+  var left=items().filter(function(i){return !filled(i);}).length;
+  if(added)await fwMutate('save',{items:FW.revision.items});
+  var msg='Wrote '+added+' experiences.'+(left?' '+left+' empty rows are still blank.':'');
+  if(failed.length)msg+=NL+NL+'The AI gave no answer for: '+failed.join(', ')+'.'+NL+'Press "Write experiences with AI" to try those again.'+(errs.length?NL+NL+'Reason: '+errs.slice(-3).join(' | '):'');
+  if(failed.length||!added)alert(msg);else showToast(msg+' Read them, edit, then save.');
+ }
+  var LSTOP={have:1,that:1,with:1,from:1,this:1,their:1,been:1,were:1,such:1,into:1,when:1,them:1,which:1,also:1,under:1,over:1,across:1,within:1,between:1,while:1,more:1,most:1,other:1,using:1,through:1,about:1,after:1,before:1,work:1,team:1,teams:1};
+ function lWords(t){
+  return String(t||'').toLowerCase().replace(/[^a-z0-9 ]/g,' ').split(/\s+/).filter(function(w){return w.length>3&&!LSTOP[w];}).map(function(w){return w.replace(/(ations|ation|ings|ing|ions|ion|ed|es|s)$/,'');}).filter(function(w){return w.length>2;});
+ }
+ function suggestRef(i){
+  var ws=lWords(i.text);if(!ws.length)return null;
+  var best=null,bs=0;
+  dutyList().forEach(function(d){
+   var set={},tset={},sc=0;
+   lWords([d.text,d.entails,d.tasks,d.outputs,d.know,d.skills,d.abil,d.beh,d.attr].join(' ')).forEach(function(w){set[w]=1;});
+   lWords(d.text).forEach(function(w){tset[w]=1;});
+   ws.forEach(function(w){if(set[w])sc+=1;if(tset[w])sc+=1.5;});
+   if(sc>bs){bs=sc;best=d.ref;}
+  });
+  return bs>=2.5?best:null;
+ }
+ function linkSel(i){
+  var sg=suggestRef(i),list=dutyList(),h='<div class="sc-mini">Link to: <select data-act="link" data-id="'+esc(i.id)+'" style="width:auto;max-width:100%;font-size:12px;padding:3px 6px"><option value="">Choose a responsibility...</option>';
+  function lab(d){var t=String(d.text||'').replace(/\s+/g,' ');return d.ref+' - '+esc(t.length>70?t.slice(0,70)+'...':t);}
+  if(sg){var d0=list.filter(function(d){return d.ref===sg;})[0];if(d0)h+='<option value="'+esc(sg)+'">Suggested: '+lab(d0)+'</option>';}
+  list.forEach(function(d){if(d.ref!==sg)h+='<option value="'+esc(d.ref)+'">'+lab(d)+'</option>';});
+  return h+'</select></div>';
+ }
+ function linkAll(){
+  if(FW.busy)return;
+  var un=items().filter(function(i){return filled(i)&&!refsOf(i).length;}),n=0;
+  un.forEach(function(i){var r=suggestRef(i);if(r){i.duty_ref=r;i.ai_note=null;n++;}});
+  if(n)FW.dirty=true;
+  openMap['d:NONE']=true;
+  render();
+  showToast('Linked '+n+' of '+un.length+' to the closest responsibility.'+(un.length-n?' Link the other '+(un.length-n)+' with the dropdown on each row.':'')+' Check them, then Save draft.');
  }
  function tierSel(i){
   var c=i.classification,cls=c===CR?'t-c':c===IM?'t-i':c===VA?'t-v':'';
@@ -50681,7 +50854,7 @@ html:root:root:root:root:root:root:root:root:root body #mainContent:has(#loginEm
   var opts=allCodes().map(function(c){return '<option value="'+c+'"'+(c===i.code?' selected':'')+'>'+esc(nm(c))+'</option>';}).join('');
   var refs=refsOf(i),extra='',sg=sugGet()[i.id],sugHtml=sg?'<div class="sc-sug">Suggested from: '+esc(sg)+'</div>':'';
   if(showFrom)extra='<div class="sc-mini">'+(refs.length?'From responsibility: '+esc(refs.join(', ')):'Not linked to a responsibility')+'</div>';
-  else if(refs.length>1)extra='<div class="sc-mini">Also linked to '+esc(refs.slice(1).join(', '))+'</div>';
+  if(!refs.length&&filled(i))extra+=linkSel(i);
   return '<div class="sc-ex '+(i.classification===CR?'t-c':i.classification===IM?'t-i':i.classification===VA?'t-v':'')+'"><div class="sc-t"><textarea class="'+(filled(i)?'':'em')+'" data-act="text" data-id="'+esc(i.id)+'" placeholder="Write what the person has done, starting with Has ...">'+esc(i.text||'')+'</textarea>'+extra+'</div>'+
    '<div class="sc-c"><select data-act="code" data-id="'+esc(i.id)+'">'+opts+'</select>'+sugHtml+'</div>'+
    '<div class="sc-k">'+tierSel(i)+'<button type="button" class="sc-del" data-act="del" data-id="'+esc(i.id)+'">Delete</button></div></div>';
@@ -50700,6 +50873,7 @@ html:root:root:root:root:root:root:root:root:root body #mainContent:has(#loginEm
    var g='<div class="sc-acc'+(isOpen?' open':'')+'"><div class="sc-ah" data-act="toggle" data-key="'+esc(key)+'"><span class="sc-rb">'+esc(ref)+'</span><span class="sc-ti">'+esc(title)+'</span><span class="sc-rt" data-cnt="'+esc(key)+'">'+right+' &nbsp;'+(isOpen?'&#9652;':'&#9662;')+'</span></div>';
    if(isOpen){
     g+='<div class="sc-cap">'+(isNone?'These experiences are not linked to any responsibility yet.':'Each experience below came from this responsibility. Change the competency or the importance if it looks wrong.')+'</div>';
+    if(isNone)g+='<div class="sc-cap"><button type="button" class="sc-btn" data-act="linkall">Link all to the closest responsibility</button></div>';
     if(!isNone){
      var dd=list.find(function(x){return x.ref===ref;})||{};
      var nf=[['What it entails',dd.entails],['Activities and tasks',dd.tasks],['Expected outputs',dd.outputs],['Knowledge',dd.know],['Skills',dd.skills],['Abilities',dd.abil],['Behaviours',dd.beh],['Attributes',dd.attr]].filter(function(x){return x[1];});
@@ -50750,7 +50924,7 @@ html:root:root:root:root:root:root:root:root:root body #mainContent:has(#loginEm
    '<div class="sc-box"><div class="sc-big '+(dTot?(dCov===dTot?'g':'a'):'a')+'">'+(dTot?dCov+' of '+dTot:'-')+'</div><div class="sc-lbl">JD responsibilities covered</div></div>'+
    '<div class="sc-box"><div class="sc-big g">'+s.complete+' of '+s.total+'</div><div class="sc-lbl">competencies used by this role</div></div>'+
    '<div class="sc-box"><div class="sc-big '+(s.fix?'r':'g')+'">'+s.fix+'</div><div class="sc-lbl">things to fix before publishing</div></div>'+
-   '<div class="sc-box" style="text-align:right"><input type="file" id="scToolFile" accept=".xlsx,.xls" style="display:none"><input type="file" id="scWordFile" accept=".xlsx,.xls" style="display:none"><button type="button" class="sc-out" data-act="upload">Upload manager\'s tool</button>'+(s.duties.length&&s.duties.some(function(d){return !d.text||d.entails===undefined;})?'<div style="margin-top:8px"><button type="button" class="sc-link" data-act="wording">Load manager\'s notes only (adds no rows)</button></div>':'')+'</div></div>';
+   '<div class="sc-box" style="text-align:right"><input type="file" id="scToolFile" accept=".xlsx,.xls,.csv" style="display:none"><input type="file" id="scWordFile" accept=".xlsx,.xls,.csv" style="display:none"><button type="button" class="sc-out" <button type="button" class="sc-out" data-act="draft" style="margin-left:8px">Write experiences with AI</button>'+(s.duties.length&&s.duties.some(function(d){return !d.text||d.entails===undefined;})?'<div style="margin-top:8px"><button type="button" class="sc-link" data-act="wording">Load manager\'s notes only (adds no rows)</button></div>':'')+'</div></div>';
  }
  function gapsHTML(s){
   var h='';
@@ -50759,6 +50933,7 @@ html:root:root:root:root:root:root:root:root:root body #mainContent:has(#loginEm
    if(s.none)h+='<div class="sc-fx"><div class="n">Experiences</div><div class="w">Add at least one experience.</div><div></div></div>';
    s.gaps.forEach(function(g){h+='<div class="sc-fx"><div class="n">'+esc(nm(g.code))+'</div><div class="w">'+esc(g.msg)+'</div><div><button type="button" class="sc-btn" data-act="addc" data-code="'+g.code+'">Add experience</button></div></div>';});
    s.uncovered.forEach(function(d){h+='<div class="sc-fx"><div class="n">'+esc(d.ref)+'</div><div class="w">'+esc((d.text||'This responsibility')+': no experience yet')+'</div><div><button type="button" class="sc-btn" data-act="add" data-ref="'+esc(d.ref)+'">Add experience</button></div></div>';});
+   if(s.unlinked)h+='<div class="sc-fx"><div class="n">Not linked</div><div class="w">'+s.unlinked+' experience'+(s.unlinked===1?' is':'s are')+' not linked to a responsibility. Delete '+(s.unlinked===1?'it':'them')+' and add again under the responsibility '+(s.unlinked===1?'it belongs':'they belong')+' to, or import the linked tool.</div><div></div></div>';
    if(s.blank)h+='<div class="sc-fx"><div class="n">Empty experiences</div><div class="w">'+s.blank+' row'+(s.blank===1?' is':'s are')+' blank. Write them or delete them.</div><div></div></div>';
    h+='</div>';
   }
@@ -50822,7 +50997,7 @@ html:root:root:root:root:root:root:root:root:root body #mainContent:has(#loginEm
  async function publishAll(){
   if(FW.busy)return;
   var s=stats();
-  if(s.gaps.length||s.blank||s.none){showToast('Fix the items in the orange box first.');return;}
+  if(s.gaps.length||s.blank||s.none||s.unlinked){showToast('Fix the items in the orange box first.');return;}
   var msg='Publish this framework for '+FW.position.position+' ('+FW.position.department+')? It replaces the live version for everyone.';
   if(s.uncovered.length)msg+=' Note: '+s.uncovered.length+' JD responsibilities still have no experience.';
   if(!confirm(msg))return;
@@ -50841,8 +51016,9 @@ html:root:root:root:root:root:root:root:root:root body #mainContent:has(#loginEm
   root.addEventListener('click',function(e){
    var t=e.target.closest('[data-act]');if(!t||!root.contains(t))return;
    var act=t.getAttribute('data-act');
-   if(act==='text'||act==='code'||act==='tier')return;
+   if(act==='text'||act==='code'||act==='tier'||act==='link')return;
    if(act==='toggle'){var k=t.getAttribute('data-key');openMap[k]=!openMap[k];render();}
+   else if(act==='linkall'){linkAll();}
    else if(act==='view'){view=t.getAttribute('data-v');render();}
    else if(act==='del'){
     var id=t.getAttribute('data-id'),it=items().find(function(x){return x.id===id;});if(!it||FW.busy)return;
@@ -50857,6 +51033,7 @@ html:root:root:root:root:root:root:root:root:root body #mainContent:has(#loginEm
    else if(act==='upload'){
     var f=document.getElementById('scToolFile');if(f){f.onchange=function(){loadTool(f,true);};f.click();}
    }
+   else if(act==='draft'){autoDraft2(null,false);}
    else if(act==='wording'){
     var wf=document.getElementById('scWordFile');if(wf){wf.onchange=function(){loadTool(wf,false);};wf.click();}
    }
@@ -50874,7 +51051,8 @@ html:root:root:root:root:root:root:root:root:root body #mainContent:has(#loginEm
    }
   });
   root.addEventListener('change',function(e){
-   var t=e.target;if(!t.getAttribute)return;var a=t.getAttribute('data-act');if(a==='code'){fwInput(t.getAttribute('data-id'),'code',t.value);render();}else if(a==='tier'){var v=t.value;fwInput(t.getAttribute('data-id'),'classification',v==='C'?CR:v==='I'?IM:VA);render();}
+   var t=e.target;if(!t.getAttribute)return;var a=t.getAttribute('data-act');if(a==='code'){fwInput(t.getAttribute('data-id'),'code',t.value);render();}else if(a==='link'){if(t.value){fwInput(t.getAttribute('data-id'),'duty_ref',t.value);showToast('Linked to '+t.value+'. Save draft to keep it.');render();}}else if(a==='tier'){var v=t.value;
+fwInput(t.getAttribute('data-id'),'classification',v==='C'?CR:v==='I'?IM:VA);render();}
   });
  }
  var prev=window.fwRenderRevision;
@@ -51132,7 +51310,7 @@ html:root:root:root:root:root:root:root:root:root body #mainContent:has(#loginEm
    if(!frame.querySelector('.jdx-load')){
     var b=document.createElement('span');b.className='jdx-load';b.setAttribute('role','button');b.tabIndex=0;b.setAttribute('data-jdx','load');b.textContent='Load manager\'s tool';
     frame.appendChild(b);
-    var f=document.createElement('input');f.type='file';f.id='jdx-file';f.accept='.xlsx,.xls';f.style.display='none';f.onchange=function(){loadFile(f);};frame.appendChild(f);
+    var f=document.createElement('input');f.type='file';f.id='jdx-file';f.accept='.xlsx,.xls,.csv';f.style.display='none';f.onchange=function(){loadFile(f);};frame.appendChild(f);
    }
    refresh();
   }else chips();
@@ -52189,7 +52367,7 @@ html:root:root:root:root:root:root:root:root:root body #mainContent:has(#loginEm
   function attach(s){
     if(!s||!s.invitation)return;
     var kind=String(s.invitation.kind||'');
-    if(kind!=='self_current'&&kind!=='manager_current')return;
+    if(!/^(self|manager)_(current|target)$/.test(kind))return;
     var entry=cache[s.id];
     if(!entry){
       entry=cache[s.id]={data:null};
@@ -53191,6 +53369,370 @@ html:root:root:root:root:root:root:root:root:root body #mainContent:has(#loginEm
  var nav=navigateTo;
  navigateTo=function(){var r=nav.apply(this,arguments);selected();if(r&&typeof r.then==='function')r.then(selected,function(){});return r;};
  add();
+})();
+</script>
+<script id="cms-mgr-study-requests-v1">
+/* Study Requests page for line managers: ask for training, follow every request, close the action after the study.
+   Uses the same database function as the buttons inside the action details. */
+(function(){
+ var PAGE='mgr-study-requests';
+ var ST={token:0,rows:[],actions:[],loaded:false,error:'',mode:'',pick:null,busy:false,reply:{}};
+ var STYLE_ID='ms-style-v1';
+ var MODES=['Classroom','Online','Workshop','Self-study','Other'];
+ function esc(v){return String(v==null?'':v).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+ function money(n){return 'KES '+Number(n||0).toLocaleString('en-US');}
+ function dsp(v){var m=/^(\d{4})-(\d{2})-(\d{2})/.exec(String(v||''));if(!m)return 'Not set';var M=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];return (+m[3])+' '+M[+m[2]-1]+' '+m[1];}
+ function today(){return new Date().toLocaleDateString('en-CA',{timeZone:'Africa/Nairobi'});}
+ function addDays(iso,n){var d=new Date(iso+'T00:00:00Z');d.setUTCDate(d.getUTCDate()+n);return d.toISOString().slice(0,10);}
+ var LAB={'Pending':'With HR Admin','Info needed':'HR needs more information','With Head of HR':'With the Head of HR','With C-Suite':'With the C-Suite','Approved':'Approved','Declined':'Declined','Cancelled':'Cancelled','Completed':'Completed'};
+ var COL={'Pending':'#b45309','Info needed':'#7c3aed','With Head of HR':'#1d4ed8','With C-Suite':'#4338ca','Approved':'#166534','Declined':'#b91c1c','Cancelled':'#6b7280','Completed':'#0f766e'};
+ var STEPS=['Requested','HR Admin','Head of HR','Executive','Approved','Studied'];
+ function stepState(r){
+  /* returns array of 'd' (done), 'o' (current) or '' for the six steps */
+  var s=['d','','','','',''],st=r.status;
+  if(st==='Info needed')st=r.info_return_to==='With Head of HR'?'With Head of HR':'Pending';
+  if(st==='Pending'){s[1]='o';}
+  else if(st==='With Head of HR'){s[1]='d';s[2]='o';}
+  else if(st==='With C-Suite'){s[1]='d';s[2]='d';s[3]='o';}
+  else if(st==='Approved'){s=['d','d','d','d','d',''];s[5]='o';s[4]='d';}
+  else if(st==='Completed'){s=['d','d','d','d','d','d'];}
+  return s;
+ }
+ function css(){
+  if(document.getElementById(STYLE_ID))return;
+  var s=document.createElement('style');s.id=STYLE_ID;
+  s.textContent=[
+   '#msRoot{max-width:1200px;margin:0 auto;padding:6px 4px 30px}',
+   '#msRoot .ms-hdr{background:linear-gradient(90deg,#3730a3,#4f46e5,#6366f1);color:#fff;border-radius:18px;padding:18px 26px;display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap}',
+   '#msRoot .ms-hdr h1{margin:0;font-size:26px;color:#fff}#msRoot .ms-hdr p{margin:4px 0 0;opacity:.9;font-size:14px;color:#fff}',
+   '#msRoot .ms-btn{border:0;border-radius:8px;padding:9px 16px;font-weight:700;font-size:13px;cursor:pointer;background:#e0e7ff;color:#3730a3;margin:8px 8px 0 0}',
+   '#msRoot .ms-btn.w{background:#fff;color:#3730a3;border-radius:22px;padding:10px 20px;font-size:14px;margin:0;box-shadow:0 2px 6px rgba(0,0,0,.2)}',
+   '#msRoot .ms-btn.p{background:#4f46e5;color:#fff}#msRoot .ms-btn.g{background:#16a34a;color:#fff}#msRoot .ms-btn.o{background:#fff;color:#92400e;border:1.5px solid #f59e0b}#msRoot .ms-btn.s{background:#fff;color:#4b5563;border:1.5px solid #cbd5e1}',
+   '#msRoot .ms-btn:disabled{opacity:.5;cursor:not-allowed}',
+   '#msRoot .ms-tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin-top:14px}',
+   '#msRoot .ms-tile{background:#fff;border-radius:12px;padding:14px;border-top:5px solid #4f46e5;box-shadow:0 2px 8px rgba(30,58,138,.08)}#msRoot .ms-tile b{display:block;font-size:28px}#msRoot .ms-tile span{font-size:12.5px;color:#4b5563}',
+   '#msRoot .ms-panel{background:#fff;border:2px solid #4f46e5;border-radius:14px;padding:16px 18px;margin-top:14px}#msRoot .ms-panel h3{margin:0 0 3px;color:#1e3a8a;font-size:17px}#msRoot .ms-panel .s{font-size:12px;color:#6b7280;margin-bottom:10px}',
+   '#msRoot .ms-row{border:1px solid #e5e7eb;border-radius:10px;padding:9px 12px;margin:6px 0;display:flex;justify-content:space-between;gap:10px;align-items:center;font-size:13px}#msRoot .ms-row b{color:#1e3a8a}#msRoot .ms-row.no{opacity:.6}',
+   '#msRoot .ms-card{background:#fff;border-radius:14px;padding:16px 18px;margin-top:14px;box-shadow:0 2px 8px rgba(30,58,138,.08);border-left:6px solid #4f46e5}',
+   '#msRoot .ms-top{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:baseline}#msRoot .ms-top b{font-size:15.5px;color:#1e3a8a}#msRoot .ms-top small{color:#6b7280;font-size:12px}',
+   '#msRoot .ms-chip{display:inline-block;color:#fff;font-size:11px;font-weight:700;border-radius:10px;padding:2px 10px;margin-left:8px}',
+   '#msRoot .ms-meta{font-size:13px;color:#374151;margin:6px 0}',
+   '#msRoot .ms-steps{display:grid;grid-template-columns:repeat(6,1fr);margin:8px 0 4px}#msRoot .ms-steps div{text-align:center;font-size:11.5px;font-weight:700;padding:6px 3px;color:#9ca3af;border-bottom:4px solid #e5e7eb}#msRoot .ms-steps div.d{color:#166534;border-color:#16a34a}#msRoot .ms-steps div.o{color:#3730a3;border-color:#4f46e5}',
+   '#msRoot .ms-msg{background:#f5f3ff;border:1px solid #c4b5fd;border-radius:10px;padding:8px 12px;font-size:12.5px;margin-top:8px;color:#4c1d95}',
+   '#msRoot .ms-f{margin:8px 0;font-size:12px}#msRoot .ms-f label{display:block;font-weight:700;color:#374151;margin-bottom:3px;font-size:12px}',
+   '#msRoot input,#msRoot select,#msRoot textarea{width:100%;padding:8px 10px;border:1.5px solid #cbd5e1;border-radius:8px;font-size:13px;font-family:inherit}',
+   '#msRoot input[type=checkbox]{width:auto;margin-right:6px}',
+   '#msRoot .ms-two{display:grid;grid-template-columns:1fr 1fr;gap:10px}@media(max-width:700px){#msRoot .ms-two{grid-template-columns:1fr}}',
+   '#msRoot .ms-err{background:#fef2f2;border:1px solid #fca5a5;color:#b91c1c;border-radius:8px;padding:8px 12px;font-size:12.5px;margin-top:8px}',
+   '#msRoot .ms-empty{background:#fff;border-radius:14px;padding:26px;text-align:center;color:#4b5563;margin-top:14px}'
+  ].join('\n');
+  document.head.appendChild(s);
+ }
+ async function call(a,d){var r=await _supabase.rpc('cms_dp_study',{p_action:a,p_data:d});if(r.error)throw Error(r.error.message);return r.data;}
+ async function listActions(){
+  var c=window.__mtDpCache,items=null;
+  if(c&&Array.isArray(c.items)&&c.items.length&&Date.now()-(c.at||0)<600000)items=c.items;
+  if(!items){
+   items=[];var page=0,done=false;
+   while(!done&&page<=200){
+    var batch=[];for(var j=0;j<4;j++)batch.push(_supabase.rpc('cms_development_v1',{p_action:'list',p_data:{scope:'team',page:page+j}}));
+    var res=await Promise.all(batch);
+    for(var i=0;i<res.length&&!done;i++){
+     var x=res[i];if(x.error)throw Error(x.error.message);
+     var d=x.data||{};(d.items||[]).forEach(function(it){items.push(it);});
+     if(!d.has_more)done=true;
+    }
+    page+=4;
+   }
+  }
+  return items.filter(function(it){
+   var a=it&&it.action;if(!a)return false;
+   return it.is_manager&&!it.is_employee&&String(a.hr_approved||'').toLowerCase()==='approved'&&String(a.status||'').toLowerCase()==='active'&&String(a.period||'').trim().toLowerCase()==='study';
+  }).map(function(it){return it.action;});
+ }
+ function isOpen(r){return ['Pending','Info needed','With Head of HR','With C-Suite','Approved'].indexOf(r.status)>=0;}
+ function head(){return '<div class="ms-hdr"><div><h1>Study requests</h1><p>Ask for training your team needs. See where every request stands.</p></div><button type="button" class="ms-btn w" data-ms="new">Request study support</button></div>';}
+ function field(label,id,type,val,extra){return '<div class="ms-f"><label for="'+id+'">'+esc(label)+'</label>'+(type==='textarea'?'<textarea id="'+id+'" rows="3">'+esc(val||'')+'</textarea>':type==='select'?'<select id="'+id+'">'+MODES.map(function(m){return '<option>'+esc(m)+'</option>';}).join('')+'</select>':'<input id="'+id+'" type="'+type+'" value="'+esc(val||'')+'" '+(extra||'')+'>')+'</div>';}
+ function picker(){
+  var open={};ST.rows.forEach(function(r){if(isOpen(r))open[r.action_id]=1;});
+  var h='<div class="ms-panel"><h3>Which action is the study for?</h3><div class="s">Only approved Study actions are listed. Pick one to open the request form.</div>';
+  if(!ST.actions.length)h+='<div class="ms-meta">You have no approved Study actions yet. An action must be marked Study in the IDP and approved by HR.</div>';
+  ST.actions.forEach(function(a){
+   var no=open[a.id];
+   h+='<div class="ms-row'+(no?' no':'')+'"><div><b>'+esc(a.employee_name||'')+'</b> | '+esc(a.comp_name||'')+'<br>'+esc(String(a.action||'').slice(0,150))+' | due '+esc(dsp(a.end_date))+(no?' | a request is already open':'')+'</div>'+(no?'':'<button type="button" class="ms-btn p" style="margin:0" data-ms="form" data-id="'+esc(a.id)+'">Request</button>')+'</div>';
+  });
+  return h+'<button type="button" class="ms-btn s" data-ms="close-panel">Close</button></div>';
+ }
+ function form(){
+  var a=ST.pick;if(!a)return '';
+  var h='<div class="ms-panel"><h3>Request study support</h3><div class="s">'+esc(a.employee_name||'')+' | '+esc(a.comp_name||'')+'. HR decides. Ask at least 4 weeks before the course starts.</div>';
+  h+=field('What needs to be studied','ms-topic','text','')+'<div class="ms-two">'+field('Provider or institution','ms-prov','text','')+field('How it will be studied','ms-mode','select','')+'</div>';
+  h+='<div class="ms-two">'+field('Start date','ms-start','date','','min="'+today()+'"')+field('End date','ms-end','date','')+'</div>';
+  h+='<div class="ms-two">'+field('Days away from work','ms-days','number','0','min="0" max="90"')+field('Estimated cost (KES)','ms-cost','number','0','min="0"')+'</div>';
+  h+=field('Why this is needed (required, at least 10 characters)','ms-reason','textarea','')+field('Link to quote or brochure (optional)','ms-link','text','');
+  h+='<div id="ms-late-wrap" hidden>'+field('This course starts in less than 4 weeks. Why could it not be requested earlier?','ms-late','textarea','')+'</div>';
+  h+='<div id="ms-err" class="ms-err" hidden></div><button type="button" class="ms-btn p" data-ms="send">Send to HR</button><button type="button" class="ms-btn s" data-ms="close-panel">Cancel</button></div>';
+  return h;
+ }
+ function stepsHtml(r){
+  var s=stepState(r);
+  return '<div class="ms-steps">'+STEPS.map(function(t,i){return '<div class="'+s[i]+'">'+t+'</div>';}).join('')+'</div>';
+ }
+ function card(r){
+  var col=COL[r.status]||'#4f46e5',h='<div class="ms-card" style="border-left-color:'+col+'"><div class="ms-top"><div><b>'+esc(r.employee_name||'')+' | '+esc(r.topic||'')+'</b><span class="ms-chip" style="background:'+col+'">'+esc(LAB[r.status]||r.status)+'</span></div><small>Asked '+esc(dsp(r.created_at))+' | '+esc(money(r.cost))+' | '+(r.days_away||0)+' day'+(r.days_away===1?'':'s')+' away</small></div>';
+  h+='<div class="ms-meta">'+esc(r.comp_name||'')+' | '+esc(r.provider||'Provider not given')+(r.mode?' | '+esc(r.mode):'')+' | '+esc(dsp(r.start_date))+' to '+esc(dsp(r.end_date))+'</div>';
+  if(['Declined','Cancelled'].indexOf(r.status)<0)h+=stepsHtml(r);
+  if(r.status==='Info needed'&&r.hr_comment)h+='<div class="ms-msg">Question: '+esc(r.hr_comment)+'</div>';
+  if(r.status==='Declined'&&r.hr_comment)h+='<div class="ms-msg" style="background:#fef2f2;border-color:#fca5a5;color:#7f1d1d">Declined: '+esc(r.hr_comment)+'</div>';
+  if(r.status==='With C-Suite'&&r.escalation_note)h+='<div class="ms-msg" style="background:#eef2ff;border-color:#a5b4fc;color:#312e81">Escalated to an executive for a decision.</div>';
+  if(r.evidence)h+='<div class="ms-meta"><b>Evidence:</b> '+esc(r.evidence)+'</div>';
+  if(r.applied_note&&r.status==='Completed')h+='<div class="ms-meta">'+esc(r.applied_note)+'</div>';
+  if(r.status==='Info needed')h+='<div class="ms-f"><label for="ms-r-'+esc(r.id)+'">Your reply</label><textarea id="ms-r-'+esc(r.id)+'" rows="2"></textarea></div><button type="button" class="ms-btn p" data-ms="reply" data-id="'+esc(r.id)+'">Reply to HR</button>';
+  if(['Pending','Info needed','With Head of HR','With C-Suite'].indexOf(r.status)>=0)h+='<button type="button" class="ms-btn s" data-ms="cancel" data-id="'+esc(r.id)+'">Cancel request</button>';
+  if(r.status==='Approved'){
+   if(ST.done===r.id)h+='<div class="ms-panel" style="margin-top:10px"><h3>Close this action after the study</h3><div class="s">Closing needs evidence: a short summary of what was learned, or a link to the certificate. HR can see it.</div>'+field('Evidence (at least 10 characters)','ms-ev','textarea','')+'<label style="font-size:12.5px;font-weight:700"><input type="checkbox" id="ms-ok">I have checked this evidence</label><div id="ms-err" class="ms-err" hidden></div><button type="button" class="ms-btn p" data-ms="complete" data-id="'+esc(r.id)+'">Close the action</button><button type="button" class="ms-btn s" data-ms="done-cancel">Back</button></div>';
+   else h+='<button type="button" class="ms-btn g" data-ms="done" data-id="'+esc(r.id)+'">Study finished: close this action</button>';
+  }
+  return h+'</div>';
+ }
+ function page(){
+  css();
+  var h='<div id="msRoot">'+head();
+  if(!ST.loaded)return h+'<div class="ms-empty">Loading study requests...</div></div>';
+  if(ST.error)return h+'<div class="ms-empty">'+esc(ST.error)+'<br><br><button type="button" class="ms-btn p" data-ms="reload">Try again</button></div></div>';
+  var w=ST.rows.filter(function(r){return ['Pending','With Head of HR','With C-Suite'].indexOf(r.status)>=0;}).length,
+      n=ST.rows.filter(function(r){return r.status==='Info needed';}).length,
+      a=ST.rows.filter(function(r){return r.status==='Approved';}).length,
+      d=ST.rows.filter(function(r){return ['Declined','Cancelled','Completed'].indexOf(r.status)>=0;}).length;
+  h+='<div class="ms-tiles"><div class="ms-tile" style="border-top-color:#f59e0b"><b>'+w+'</b><span>With HR or an executive</span></div><div class="ms-tile" style="border-top-color:#7c3aed"><b>'+n+'</b><span>Needs your reply</span></div><div class="ms-tile" style="border-top-color:#16a34a"><b>'+a+'</b><span>Approved, study under way</span></div><div class="ms-tile" style="border-top-color:#6b7280"><b>'+d+'</b><span>Decided or closed</span></div></div>';
+  if(ST.mode==='pick')h+=picker();
+  if(ST.mode==='form')h+=form();
+  if(!ST.rows.length)h+='<div class="ms-empty">No study request yet. Press "Request study support" to ask for training for someone in your team.</div>';
+  else{
+   var order={'Info needed':0,'Pending':1,'With Head of HR':1,'With C-Suite':1,'Approved':2,'Completed':3,'Declined':3,'Cancelled':4};
+   h+=ST.rows.slice().sort(function(x,y){return (order[x.status]||0)-(order[y.status]||0)||String(y.created_at).localeCompare(String(x.created_at));}).map(card).join('');
+  }
+  return h+'</div>';
+ }
+ function draw(){
+  var keep={};['ms-topic','ms-prov','ms-mode','ms-start','ms-end','ms-days','ms-cost','ms-reason','ms-link','ms-late','ms-ev'].forEach(function(id){var e=document.getElementById(id);if(e)keep[id]=e.value;});
+  setContent(page());
+  Object.keys(keep).forEach(function(id){var e=document.getElementById(id);if(e)e.value=keep[id];});
+  lateCheck();
+ }
+ function lateCheck(){
+  var s=document.getElementById('ms-start'),w=document.getElementById('ms-late-wrap');
+  if(s&&w)w.hidden=!(s.value&&s.value<addDays(today(),28));
+ }
+ async function open(){
+  var t=++ST.token;css();ST.loaded=false;ST.error='';ST.mode='';ST.pick=null;ST.done=null;draw();
+  try{
+   var res=await Promise.all([call('history',{scope:'team'}),listActions().catch(function(){return [];})]);
+   if(t!==ST.token||APP.currentPage!==PAGE)return;
+   ST.rows=Array.isArray(res[0])?res[0]:[];ST.actions=res[1]||[];ST.loaded=true;draw();
+  }catch(e){if(t!==ST.token)return;ST.loaded=true;ST.error='Could not load study requests: '+(e.message||e);draw();}
+ }
+ function showErr(m){var e=document.getElementById('ms-err');if(e){e.textContent=m;e.hidden=false;}else showToast(m);}
+ async function notify(subject,text){try{if(typeof notifyHR==='function')await notifyHR(subject,text,{page:'hr-study-requests'});}catch(e){}}
+ function val(id){var e=document.getElementById(id);return e?e.value:'';}
+ document.addEventListener('click',async function(e){
+  if(APP.currentPage!==PAGE||!e.target||!e.target.closest)return;
+  var b=e.target.closest('[data-ms]');if(!b)return;
+  var a=b.dataset.ms,id=b.dataset.id;
+  if(a==='reload')return open();
+  if(a==='new'){ST.mode='pick';ST.pick=null;draw();return;}
+  if(a==='close-panel'){ST.mode='';ST.pick=null;draw();return;}
+  if(a==='form'){ST.pick=ST.actions.filter(function(x){return x.id===id;})[0]||null;ST.mode='form';draw();return;}
+  if(a==='done'){ST.done=id;draw();return;}
+  if(a==='done-cancel'){ST.done=null;draw();return;}
+  if(ST.busy)return;
+  try{
+   if(a==='send'){
+    ST.busy=true;
+    var x=ST.pick;if(!x)throw Error('Pick an action first.');
+    if(!val('ms-start')||!val('ms-end'))throw Error('Enter the start and end dates');
+    var d={action_id:x.id,topic:val('ms-topic'),provider:val('ms-prov'),mode:val('ms-mode'),start_date:val('ms-start'),end_date:val('ms-end'),days_away:val('ms-days'),cost:val('ms-cost'),reason:val('ms-reason'),link:val('ms-link'),short_notice_reason:val('ms-late')};
+    await call('create',d);
+    await notify('Study Support Requested: '+(x.employee_name||''),'A manager asked for study support for '+(x.employee_name||'an employee')+': '+d.topic+' ('+d.start_date+' to '+d.end_date+', '+money(d.cost)+'). Reason: '+d.reason);
+    showToast('Study request sent to HR. You will get an email when it moves.');
+    ST.busy=false;return open();
+   }
+   if(a==='reply'){
+    ST.busy=true;var m=val('ms-r-'+id);await call('reply',{id:id,message:m});
+    var r=ST.rows.filter(function(y){return y.id===id;})[0]||{};
+    await notify('Study Request Reply: '+(r.employee_name||''),'The manager replied about the study request "'+(r.topic||'')+'": '+m);
+    showToast('Reply sent.');ST.busy=false;return open();
+   }
+   if(a==='cancel'){
+    if(!window.confirm('Cancel this study request?'))return;
+    ST.busy=true;await call('cancel',{id:id});showToast('Request cancelled.');ST.busy=false;return open();
+   }
+   if(a==='complete'){
+    ST.busy=true;
+    var out=await call('complete',{id:id,evidence:val('ms-ev'),verified:!!(document.getElementById('ms-ok')||{}).checked});
+    var rr=ST.rows.filter(function(y){return y.id===id;})[0]||{};
+    await notify('Study Completed: '+(rr.employee_name||''),'The study "'+(rr.topic||'')+'" for '+(rr.employee_name||'an employee')+' was completed and the action closed. Evidence: '+val('ms-ev'));
+    window.__mtDpCache=null;
+    showToast('Study recorded. '+((out&&out.note)||''));ST.busy=false;return open();
+   }
+  }catch(err){ST.busy=false;showErr(err.message||String(err));}
+ });
+ document.addEventListener('change',function(e){if(APP.currentPage===PAGE&&e.target&&e.target.id==='ms-start')lateCheck();});
+ function selected(){
+  document.querySelectorAll('#sideNav [data-page="'+PAGE+'"]').forEach(function(x){
+   var on=APP.currentPage===PAGE;x.classList.toggle('active',on);x.classList.toggle('nv3-current',on);
+   if(on)x.setAttribute('aria-current','page');else x.removeAttribute('aria-current');
+  });
+ }
+ function add(){
+  try{
+   var side=document.getElementById('sideNav');if(!side||APP.currentRole!=='manager')return;
+   var btn=side.querySelector('[data-page="'+PAGE+'"]');
+   if(!btn){btn=document.createElement('button');btn.type='button';btn.className='sb-item';btn.dataset.page=PAGE;btn.textContent='Study Requests';btn.onclick=function(){navigateTo(PAGE);};side.appendChild(btn);}
+   if(typeof cmsPolishNavigation==='function')cmsPolishNavigation();
+   btn=side.querySelector('[data-page="'+PAGE+'"]')||btn;
+   var label=btn.querySelector('.nv3-label');if(label)label.textContent='Study Requests';
+   var icon=btn.querySelector('.nv3-icon');if(icon&&typeof rptIcon==='function')icon.outerHTML=rptIcon('people').replace('rpt-icon','nv3-icon');
+   var dev=side.querySelector('[data-page="mgr-devplans"],[data-nv-page="mgr-devplans"]');
+   if(dev&&dev.parentNode)dev.after(btn);
+   btn.title='Ask for training and follow your requests';
+   selected();
+  }catch(err){}
+ }
+ var setup=setupNav;
+ setupNav=function(){var r=setup.apply(this,arguments);add();return r;};
+ var route=cnPageRole;
+ cnPageRole=function(page,preferred){return page===PAGE?'manager':route.apply(this,arguments);};
+ var lab=getPageLabel;
+ getPageLabel=function(id){return id===PAGE?'Study Requests':lab.apply(this,arguments);};
+ var load=loadPage;
+ loadPage=function(id){
+  if(id!==PAGE)return load.apply(this,arguments);
+  if(!APP.user||APP.currentRole!=='manager')return;
+  return open();
+ };
+ var nav=navigateTo;
+ navigateTo=function(){var r=nav.apply(this,arguments);selected();if(r&&typeof r.then==='function')r.then(selected,function(){});return r;};
+ add();
+})();
+</script>
+<script id="cms-screen-zoom-v1">
+/* Screen size for projectors and big screens.
+   Keeps your normal 70% display size on laptops. On big screens it makes the whole page bigger
+   (the page re-fits, so nothing goes off the left or right). Buttons: A- , A+ , Fit (bottom left).
+   To change the normal laptop size, edit the two places that say 0.7 (this script and the style below). */
+(function(){
+ 'use strict';
+ if(window.__cmsScreenZoomV1)return;window.__cmsScreenZoomV1=true;
+ var KEY='cmsScreenZoomV2',BASE=0.7,REF_W=1536,AUTO_FROM=1700,MIN=0.5,MAX=3;
+ var de=document.documentElement,Zc=1,pill=null,lastKey='';
+ var UNIT=/url\([^)]*\)|(-?\d*\.?\d+)(vh|dvh|svh|lvh|vw|dvw|svw|lvw)\b/g;
+ function fixText(t){
+  return String(t).replace(UNIT,function(m,n,u){
+   if(!n)return m;
+   return 'calc('+n+' * var(--'+(/h$/.test(u)?'cms-uh':'cms-uw')+'))';
+  });
+ }
+ function hasUnit(t){return /\d(vh|dvh|svh|lvh|vw|dvw|svw|lvw)\b/.test(t);}
+ function fixStyleEl(el){
+  try{
+   if(el.__czDone||el.id==='cms-fixed-scale-v1'||el.id==='cms-screen-zoom-css')return;
+   var t=el.textContent;
+   if(!t||!hasUnit(t))return;
+   el.__czDone=true;
+   el.textContent=fixText(t);
+  }catch(e){}
+ }
+ function fixInline(el){
+  try{
+   var v=el.getAttribute&&el.getAttribute('style');
+   if(v&&hasUnit(v))el.setAttribute('style',fixText(v));
+  }catch(e){}
+ }
+ function scan(root){
+  try{
+   if(root.nodeType!==1)return;
+   if(root.tagName==='STYLE')fixStyleEl(root);else fixInline(root);
+   var a=root.querySelectorAll?root.querySelectorAll('style,[style*="vh"],[style*="vw"]'):[];
+   for(var i=0;i<a.length;i++){if(a[i].tagName==='STYLE')fixStyleEl(a[i]);else fixInline(a[i]);}
+  }catch(e){}
+ }
+ function trueW(){return window.visualViewport?window.visualViewport.width:(window.innerWidth*Zc);}
+ function trueH(){return window.visualViewport?window.visualViewport.height:(window.innerHeight*Zc);}
+ function stored(){
+  try{var v=localStorage.getItem(KEY);if(!v||v==='auto')return 'auto';var n=parseFloat(v);return n>=MIN&&n<=MAX?n:'auto';}catch(e){return 'auto';}
+ }
+ function save(v){try{localStorage.setItem(KEY,String(v));}catch(e){}}
+ function autoTarget(){
+  var w=trueW();
+  if(w<AUTO_FROM)return BASE;
+  return Math.min(MAX,Math.round(BASE*w/REF_W*20)/20);
+ }
+ function target(){
+  if(trueW()<900)return BASE;
+  var s=stored();return s==='auto'?autoTarget():s;
+ }
+ function readZoom(){var v=parseFloat(getComputedStyle(de).zoom);return(v>0&&v<=5)?v:1;}
+ function vars(){
+  Zc=readZoom();
+  var h=trueH(),w=trueW();
+  var key=Zc+'|'+w+'|'+h;if(key===lastKey)return;lastKey=key;
+  de.style.setProperty('--cms-uh',(h/100/Zc)+'px');
+  de.style.setProperty('--cms-uw',(w/100/Zc)+'px');
+  paint();
+ }
+ function apply(){
+  var t=target();
+  de.style.setProperty('--cms-fit',String(t/BASE));
+  lastKey='';vars();
+ }
+ function paint(){
+  if(!pill)return;
+  var s=stored(),t=target();
+  pill.style.zoom=String((1/Zc)*(trueW()>=2200?1.5:1));
+  var lab=pill.querySelector('[data-z="lab"]');if(lab)lab.textContent=Math.round(t*100)+'%'+(s==='auto'?' auto':'');
+ }
+ function step(d){
+  var cur=Math.round(target()*20)/20,n=Math.min(MAX,Math.max(MIN,Math.round((cur+d)*20)/20));
+  save(n);apply();
+ }
+ function build(){
+  if(document.getElementById('cmsZoomPill')||!document.body)return;
+  var st=document.createElement('style');st.id='cms-screen-zoom-css';
+  st.textContent=
+   'html:not(:has(.header[style*="display: none"])):not(:has(#loginEmail)):not(:has(#cmsFirstPw)){zoom:calc(0.7 * var(--cms-fit,1))!important}'+
+   'html:has(#loginEmail),html:has(#cmsFirstPw),html:has(.header[style*="display: none"]){zoom:var(--cms-fit,1)!important}'+
+   'html:not(:has(.header[style*="display: none"])):not(:has(#loginEmail)):not(:has(#cmsFirstPw)) .pr-page,html:not(:has(.header[style*="display: none"])):not(:has(#loginEmail)):not(:has(#cmsFirstPw)) .lm-page,html:not(:has(.header[style*="display: none"])):not(:has(#loginEmail)):not(:has(#cmsFirstPw)) .tg-page{min-height:calc(100 * var(--cms-uh,1vh) - 150px)!important}'+
+   '#cmsZoomPill{position:fixed;left:12px;bottom:12px;z-index:2147483000;display:flex;gap:4px;align-items:center;background:rgba(30,41,90,.88);color:#fff;padding:5px 7px;border-radius:999px;font:600 12px Arial,sans-serif;box-shadow:0 4px 14px rgba(0,0,0,.28);opacity:.5;transition:opacity .15s}#cmsZoomPill:hover,#cmsZoomPill:focus-within{opacity:1}#cmsZoomPill button{border:0;border-radius:999px;background:#fff;color:#1e2a78;font:700 12px Arial,sans-serif;min-width:30px;height:26px;padding:0 9px;cursor:pointer}#cmsZoomPill button:hover{background:#dbe4ff}#cmsZoomPill [data-z="lab"]{min-width:74px;text-align:center}@media print{#cmsZoomPill{display:none!important}html{zoom:1!important}}';
+  document.body.appendChild(st);
+  pill=document.createElement('div');pill.id='cmsZoomPill';pill.setAttribute('role','group');pill.setAttribute('aria-label','Screen size');
+  pill.innerHTML='<button type="button" data-z="dn" title="Make everything smaller">A-</button><span data-z="lab"></span><button type="button" data-z="up" title="Make everything bigger">A+</button><button type="button" data-z="auto" title="Fit to this screen automatically">Fit</button>';
+  pill.addEventListener('click',function(e){
+   var b=e.target.closest&&e.target.closest('[data-z]');if(!b)return;
+   var k=b.getAttribute('data-z');
+   if(k==='up')step(0.05);else if(k==='dn')step(-0.05);else if(k==='auto'){save('auto');apply();}
+  });
+  document.body.appendChild(pill);
+ }
+ function start(){
+  build();
+  scan(document.documentElement);
+  apply();
+  try{
+   new MutationObserver(function(list){
+    for(var i=0;i<list.length;i++){
+     var r=list[i];
+     if(r.type==='attributes'){fixInline(r.target);}
+     else if(r.addedNodes){for(var j=0;j<r.addedNodes.length;j++)scan(r.addedNodes[j]);}
+    }
+   }).observe(document.documentElement,{subtree:true,childList:true,attributes:true,attributeFilter:['style']});
+  }catch(e){}
+  var t=null;
+  window.addEventListener('resize',function(){clearTimeout(t);t=setTimeout(apply,120);});
+  setInterval(vars,600);
+  window.__cmsScreenZoom={apply:apply,set:function(v){save(v);apply();},target:target};
+ }
+ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start);else start();
 })();
 </script>
 </body>
