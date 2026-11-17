@@ -53735,5 +53735,204 @@ fwInput(t.getAttribute('data-id'),'classification',v==='C'?CR:v==='I'?IM:VA);ren
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start);else start();
 })();
 </script>
+<script id="cms-score-breakdown-v1">
+/* Competency Library: step-by-step breakdown of how a role's score adds up.
+   Method (criticality-points-v1): each experience earns points by criticality (Critical 3, Important 2, Value-Add 1, read from the
+   points setting). Weight of an experience = its points / all points of the role. A competency's share = the sum of its experiences.
+   Display only. Nothing here changes how scores are calculated. Shares are shown so they add up to exactly 100. */
+(function(){
+ 'use strict';
+ if(window.__cmsScoreBreakdownV1)return;window.__cmsScoreBreakdownV1=true;
+ var P0={c:3,i:2,v:1},Pnow=null;
+ function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+ function tier(s){s=String(s||'');if(/critical|must-have/i.test(s))return 'c';if(/important|performance/i.test(s))return 'i';return 'v';}
+ function P(){return Pnow||P0;}
+ function isOpen(){try{return localStorage.getItem('cmsSbkOpen')!=='0';}catch(e){return true;}}
+ /* shares that add up to exactly 100 (largest remainder), d = decimals */
+ function share(pts,total,d){
+  var f=Math.pow(10,d),units=100*f,vals=pts.map(function(p){return total>0?p*units/total:0;});
+  var fl=vals.map(function(v){return Math.floor(v+1e-9);}),rem=vals.map(function(v,i){return v-fl[i];});
+  var left=units-fl.reduce(function(a,b){return a+b;},0);
+  if(total<=0)return fl.map(function(x){return 0;});
+  vals.map(function(v,i){return i;}).sort(function(a,b){return rem[b]-rem[a]||a-b;}).slice(0,Math.max(0,left)).forEach(function(i){fl[i]++;});
+  return fl.map(function(x){return x/f;});
+ }
+ function css(){
+  if(document.getElementById('sbk-css'))return;
+  var s=document.createElement('style');s.id='sbk-css';
+  s.textContent='.sbk{border:2px solid #6366f1;background:#fff;border-radius:14px;margin:0 0 16px;overflow:hidden}'+
+  '.sbk summary{cursor:pointer;padding:13px 18px;font-weight:800;color:#312e81;font-size:15px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;background:#eef2ff;list-style:none}'+
+  '.sbk summary::-webkit-details-marker{display:none}'+
+  '.sbk-btn{margin-left:auto;background:#4338ca;color:#fff;border-radius:999px;padding:7px 16px;font-size:12px;font-weight:800;box-shadow:0 2px 6px rgba(67,56,202,.35);white-space:nowrap}'+
+  '.sbk-btn:hover{background:#312e81}.sbk[open] .sbk-btn .c,.sbk:not([open]) .sbk-btn .o{display:none}'+
+  '.sbk-off .sbk-calc{display:none!important}'+
+  '.sbk summary small{font-weight:600;color:#64748b;font-size:12.5px}'+
+  '.sbk-steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;padding:14px 18px 6px}'+
+  '.sbk-st{border-radius:10px;padding:11px 14px;font-size:13px;line-height:1.55;color:#1e293b}'+
+  '.sbk-st b.t{display:block;font-size:10.5px;letter-spacing:.8px;margin-bottom:3px}'+
+  '.sbk-1{background:#eef2ff;border:1px solid #c7d2fe}.sbk-1 b.t{color:#4c5fb5}'+
+  '.sbk-2{background:#f0fdf4;border:1px solid #bbf7d0}.sbk-2 b.t{color:#15803d}'+
+  '.sbk-3{background:#fff7ed;border:1px solid #fed7aa}.sbk-3 b.t{color:#c2410c}'+
+  '.sbk-4{background:#fdf2f8;border:1px solid #fbcfe8}.sbk-4 b.t{color:#be185d}'+
+  '.sbk table{border-collapse:collapse;width:calc(100% - 36px);margin:8px 18px 14px;font-size:13px}'+
+  '.sbk th{background:#e0e7ff;color:#312e81;text-align:left;padding:7px 10px;font-size:12px}'+
+  '.sbk td{padding:6px 10px;border-bottom:1px solid #e2e8f0}.sbk tr.tot td{background:#f1f5f9;font-weight:800}'+
+  '.sbk .bar{display:inline-block;width:100px;height:9px;background:#e2e8f0;border-radius:6px;margin-right:8px;vertical-align:middle;overflow:hidden}'+
+  '.sbk .bar i{display:block;height:9px;background:#6366f1}'+
+  '.sbk-calc{margin:8px 0;padding:8px 12px;border-radius:8px;background:#f5f3ff;border:1px solid #ddd6fe;font-size:13px;color:#3b2d86}';
+  document.head.appendChild(s);
+ }
+ /* model: comps = [{code,name,c,i,v}] */
+ function build(comps){
+  var p=P(),total=0;
+  comps.forEach(function(x){x.pts=x.c*p.c+x.i*p.i+x.v*p.v;total+=x.pts;});
+  var sh=share(comps.map(function(x){return x.pts;}),total,1);
+  comps.forEach(function(x,k){x.share=sh[k];});
+  var n=comps.reduce(function(a,x){return a+x.c+x.i+x.v;},0);
+  return {comps:comps,total:total,n:n,p:p};
+ }
+ function panel(m,open){
+  var p=m.p,per=m.total>0?100/m.total:0,ex=null;
+  m.comps.forEach(function(x){if(!ex||x.pts>ex.pts)ex=x;});
+  var rows=m.comps.map(function(x){
+   return '<tr><td><b>'+esc(x.name)+'</b></td><td>'+x.c+'</td><td>'+x.i+'</td><td>'+x.v+'</td><td>'+(x.c+x.i+x.v)+'</td><td><b>'+x.pts+'</b></td><td><span class="bar"><i style="width:'+Math.min(100,x.share*5)+'px"></i></span><b>'+x.share.toFixed(1)+'%</b></td></tr>';
+  }).join('');
+  return '<details class="sbk"'+(open?' open':'')+'><summary><span>How the score for this role adds up</span><small>'+m.n+' experiences | '+m.total+' points | 100.0%</small><span class="sbk-btn"><span class="o">Hide calculations</span><span class="c">Show calculations</span></span></summary>'+
+   '<div class="sbk-steps">'+
+   '<div class="sbk-st sbk-1"><b class="t">STEP 1. POINTS BY CRITICALITY</b>Each experience earns points from how critical it is: <b>Critical '+p.c+', Important '+p.i+', Value-Add '+p.v+'</b>.</div>'+
+   '<div class="sbk-st sbk-2"><b class="t">STEP 2. TOTAL AND VALUE OF A POINT</b>All the points of this role added up: <b>'+m.total+'</b>. So 1 point = 100% / '+m.total+' = <b>'+per.toFixed(2)+'%</b> of the role.</div>'+
+   '<div class="sbk-st sbk-3"><b class="t">STEP 3. SHARE OF EACH COMPETENCY</b>Its points divided by '+m.total+'.'+(ex?' Example: '+esc(ex.name)+' has '+ex.c+' Critical x '+p.c+' + '+ex.i+' Important x '+p.i+' + '+ex.v+' Value-Add x '+p.v+' = '+ex.pts+' points, so '+ex.pts+' / '+m.total+' = <b>'+ex.share.toFixed(1)+'%</b>.':'')+'</div>'+
+   '<div class="sbk-st sbk-4"><b class="t">STEP 4. FROM RATINGS TO THE SCORE</b>A rating of 1 to 5 becomes 20% to 100%. Each competency score is the points-weighted average of its ratings. An experience with no tick or no evidence counts as 1 (20%). Role score = each competency score x its share. Manager 70% + self 30%.</div></div>'+
+   '<table><tr><th>Competency</th><th>Critical (x'+p.c+')</th><th>Important (x'+p.i+')</th><th>Value-Add (x'+p.v+')</th><th>Experiences</th><th>Points</th><th>Share of the role</th></tr>'+rows+
+   '<tr class="tot"><td>Total for this role</td><td>'+m.comps.reduce(function(a,x){return a+x.c;},0)+'</td><td>'+m.comps.reduce(function(a,x){return a+x.i;},0)+'</td><td>'+m.comps.reduce(function(a,x){return a+x.v;},0)+'</td><td>'+m.n+'</td><td>'+m.total+'</td><td>100.0%</td></tr></table></details>';
+ }
+ function loadPoints(){
+  if(window.__sbkPtsAsked||typeof _supabase==='undefined')return;window.__sbkPtsAsked=true;
+  try{_supabase.rpc('cms_library_view',{p_action:'view',p_employee_id:null}).then(function(r){
+   var pt=r&&r.data&&r.data.points;
+   if(pt&&Number(pt.c)>0){Pnow={c:Number(pt.c),i:Number(pt.i),v:Number(pt.v)};hr();lv();fwb();}
+  },function(){});}catch(e){}
+ }
+ /* ---------- HR Admin / Head of HR library ---------- */
+ function nameOf(code){var m=((window.APP&&APP.competencies)||[]).filter(function(c){return c.code===code;})[0];return (m&&m.competency)||code;}
+ function hr(){
+  try{
+   var page=document.getElementById('frameworkPage'),host=document.getElementById('fwRows');
+   if(!page||!host||page.dataset.review==='true')return;
+   var old=host.querySelector('.sbk-hr');if(old)old.remove();
+   var dep=(document.getElementById('fwDep')||{}).value||'',pos=(document.getElementById('fwPos')||{}).value||'';
+   if(!pos){host.insertAdjacentHTML('afterbegin','<div class="sbk-calc sbk-hr">Pick a position to see how its score adds up.</div>');return;}
+   var rows=frameworkRows(false).filter(function(x){return sameText(x.position_name,pos)&&(!dep||sameText(x.department,dep));});
+   if(!rows.length)return;
+   var by={};rows.forEach(function(x){var c=String(x.comp_code||'');var t=tier(x.classification);(by[c]=by[c]||{code:c,name:nameOf(c),c:0,i:0,v:0})[t]++;});
+   var codes=Object.keys(by);
+   if(typeof compareCompetencyDisplay==='function')codes.sort(compareCompetencyDisplay);else codes.sort();
+   var m=build(codes.map(function(c){return by[c];}));
+   var wrap=document.createElement('div');wrap.className='sbk-hr';wrap.innerHTML=panel(m,isOpen());
+   host.insertBefore(wrap,host.firstChild);
+   var shareBy={};m.comps.forEach(function(x){shareBy[x.name]=x.share;});
+   host.querySelectorAll('section.competency-block').forEach(function(sec){
+    var nm=(sec.querySelector('.competency-name')||{}).textContent,cat=sec.querySelector('.competency-cat');
+    if(cat&&shareBy[nm]!=null&&!cat.getAttribute('data-sbk')){cat.textContent=String(cat.textContent).replace(/Competency weight:\s*[\d.]+%/,'Share of this role: '+shareBy[nm].toFixed(1)+'%');cat.setAttribute('data-sbk','1');}
+   });
+  }catch(e){}
+ }
+ /* ---------- HR Admin / Head of HR library (cards with weights) ---------- */
+ function fwb(){
+  try{
+   var body=document.getElementById('fwBody'),strip=document.getElementById('wt-strip');
+   if(!body||!strip)return;
+   var cards=Array.prototype.filter.call(body.querySelectorAll('.cla-card'),function(c){return c.classList.contains('wt-on');});
+   if(!cards.length)return;
+   var mm=String(strip.textContent).match(/Critical\s*=\s*(\d+)\s*points?,\s*Important\s*=\s*(\d+)\s*points?,\s*Value-Add\s*=\s*(\d+)\s*points?/i);
+   if(mm)Pnow={c:+mm[1],i:+mm[2],v:+mm[3]};
+   var comps=[],all=[];
+   cards.forEach(function(card){
+    var x={code:'',name:((card.querySelector('.cla-toggle strong')||{}).textContent||'').trim(),c:0,i:0,v:0,card:card};
+    Array.prototype.forEach.call(card.querySelectorAll('.exp-item'),function(r){
+     if(r.closest('.cla-card')!==card)return;
+     var cell=r.querySelector(':scope > .wt-cell');
+     if(!cell||cell.classList.contains('wt-off'))return;
+     var t=tier(r.getAttribute('data-classification'));
+     x[t]++;all.push({cell:cell,t:t});
+    });
+    if(x.c+x.i+x.v>0)comps.push(x);
+   });
+   if(!comps.length)return;
+   var m=build(comps),p=m.p;
+   var sig=[m.total,m.n,p.c,p.i,p.v,comps.map(function(x){return x.name+x.c+x.i+x.v;}).join(',')].join('|');
+   var pn=document.getElementById('sbk-fw');
+   if(!pn||pn.getAttribute('data-sig')!==sig){
+    if(pn)pn.remove();
+    pn=document.createElement('div');pn.id='sbk-fw';pn.setAttribute('data-sig',sig);pn.innerHTML=panel(m,isOpen());
+    strip.parentNode.insertBefore(pn,strip.nextSibling);
+   }
+   m.comps.forEach(function(x){
+    var pill=x.card.querySelector('.cla-meta .wt-pill');
+    if(pill){var want=(/^New:/.test(pill.textContent)?'New: ':'')+x.share.toFixed(1)+'% of the role';if(pill.textContent!==want)pill.textContent=want;}
+    var parts=[];if(x.c)parts.push(x.c+' Critical x '+p.c);if(x.i)parts.push(x.i+' Important x '+p.i);if(x.v)parts.push(x.v+' Value-Add x '+p.v);
+    var html=parts.join(' + ')+' = <b>'+x.pts+' points</b>. '+x.pts+' / '+m.total+' = <b>'+x.share.toFixed(1)+'% of the role</b>.';
+    var line=x.card.querySelector('.sbk-calc');
+    if(!line){var cols=x.card.querySelector('.cla-columns');if(cols){line=document.createElement('div');line.className='sbk-calc';line.style.margin='10px 16px';cols.parentNode.insertBefore(line,cols);}}
+    if(line&&line.getAttribute('data-h')!==html){line.innerHTML=html;line.setAttribute('data-h',html);}
+   });
+   var w=share(all.map(function(r){return p[r.t];}),m.total,2);
+   all.forEach(function(r,k){var want=w[k].toFixed(2)+'%';if(r.cell.textContent!==want)r.cell.textContent=want;});
+  }catch(e){}
+ }
+
+ /* ---------- Manager / employee library view ---------- */
+ function lv(){
+  try{
+   var body=document.getElementById('lvBody');if(!body)return;
+   var strip=body.querySelector('.lv-strip');
+   if(!strip||strip.getAttribute('data-sbk'))return;
+   var mm=String(strip.textContent).match(/Critical\s*=\s*(\d+),\s*Important\s*=\s*(\d+),\s*Value-Add\s*=\s*(\d+)/);
+   var keep=Pnow;if(mm)Pnow={c:+mm[1],i:+mm[2],v:+mm[3]};
+   var comps=[],rowsAll=[];
+   body.querySelectorAll('details.lv-comp').forEach(function(d){
+    var x={code:'',name:(d.querySelector('.lv-name')||{}).textContent||'',c:0,i:0,v:0,el:d,rows:[]};
+    d.querySelectorAll('.lv-row').forEach(function(r){var t=r.getAttribute('data-t')||'v';x[t]++;x.rows.push({el:r,t:t});rowsAll.push({el:r,t:t});});
+    comps.push(x);
+   });
+   if(!comps.length){Pnow=keep;return;}
+   var m=build(comps),p=m.p;
+   var wrap=document.createElement('div');wrap.innerHTML=panel(m,isOpen());
+   strip.parentNode.insertBefore(wrap,strip);strip.setAttribute('data-sbk','1');strip.style.display='none';
+   m.comps.forEach(function(x){
+    var pill=x.el.querySelector('.lv-pill.big');if(pill)pill.textContent=x.share.toFixed(1)+'% of the role';
+    var head=x.el.querySelector('.lv-head');
+    if(head&&!x.el.querySelector('.sbk-calc')){
+     var parts=[];if(x.c)parts.push(x.c+' Critical x '+p.c);if(x.i)parts.push(x.i+' Important x '+p.i);if(x.v)parts.push(x.v+' Value-Add x '+p.v);
+     head.insertAdjacentHTML('beforebegin','<div class="sbk-calc">'+parts.join(' + ')+' = <b>'+x.pts+' points</b>. '+x.pts+' / '+m.total+' = <b>'+x.share.toFixed(1)+'% of the role</b>.</div>');
+    }
+   });
+   var w=share(rowsAll.map(function(r){return p[r.t];}),m.total,2);
+   rowsAll.forEach(function(r,k){var cell=r.el.querySelector('.lv-w');if(cell)cell.textContent=w[k].toFixed(2)+'%';});
+  }catch(e){}
+ }
+ function install(){
+  css();loadPoints();
+  document.body.classList.toggle('sbk-off',!isOpen());
+  document.addEventListener('toggle',function(e){
+   var t=e.target;
+   if(!t||!t.classList||!t.classList.contains('sbk'))return;
+   var open=!!t.open;
+   try{localStorage.setItem('cmsSbkOpen',open?'1':'0');}catch(x){}
+   document.body.classList.toggle('sbk-off',!open);
+   document.querySelectorAll('details.sbk').forEach(function(d){if(d!==t&&d.open!==open)d.open=open;});
+  },true);
+  if(typeof window.renderFrameworkRows==='function'&&!window.renderFrameworkRows.__sbk){
+   var orig=window.renderFrameworkRows;
+   window.renderFrameworkRows=function(){var r=orig.apply(this,arguments);hr();return r;};
+   window.renderFrameworkRows.__sbk=true;
+  }
+  var q=false;
+  new MutationObserver(function(){if(q)return;q=true;requestAnimationFrame(function(){q=false;lv();fwb();});}).observe(document.body,{childList:true,subtree:true});
+  lv();hr();fwb();
+ }
+ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',install);else install();
+})();
+</script>
 </body>
 </html>
