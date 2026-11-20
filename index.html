@@ -15305,7 +15305,7 @@ function fwImportTool(input){
    var rows=[];
    json.forEach(function(row){
     var m={};for(var k in row)m[norm(k)]=row[k];
-    rows.push({code:String(m['competencycode']||m['code']||'').trim().toUpperCase(),text:String(m['experiencetext']||m['experience']||m['text']||'').trim(),cls:clsOf(m['classification']),refs:refsOf(m['responsibility']||m['responsibilityref']||m['ref']||m['dutyref']),dep:String(m['department']||'').trim(),pos:String(m['position']||'').trim()});
+    rows.push({code:String(m['competencycode']||m['code']||'').trim().toUpperCase(),text:String(m['experiencetext']||m['experience']||m['text']||'').trim(),cls:clsOf(m['classification']),refs:refsOf(m['responsibility']||m['responsibilityref']||m['ref']||m['dutyref']),lvl:String(m['level']||m['corelevel']||'').trim(),lvl:String(m['level']||m['corelevel']||'').trim(),acts:String(m['sourceactivities']||m['activities']||'').trim(),outs:String(m['sourceoutputs']||m['outputs']||'').trim(),dep:String(m['department']||'').trim(),pos:String(m['position']||'').trim()});
    });
    var wrong=rows.filter(function(x){return (x.dep&&!sameText(x.dep,p.department))||(x.pos&&!sameText(x.pos,p.position));});
    if(wrong.length)throw Error('This file is for '+wrong[0].dep+' / '+wrong[0].pos+' but you opened '+p.department+' / '+p.position+'. Nothing was imported.');
@@ -15320,8 +15320,8 @@ function fwImportTool(input){
     if(same){dup++;return;}
     var ref=x.refs.join(', ');
     var empty=r.items.find(function(i){return i.code===x.code&&!String(i.text||'').trim()&&String(i.duty_ref||'').toUpperCase().replace(/\s/g,'')===ref.toUpperCase().replace(/\s/g,'');});
-    if(empty){empty.text=x.text;empty.classification=x.cls;empty.ai_note=null;}
-    else r.items.push({id:crypto.randomUUID(),code:x.code,text:x.text,classification:x.cls,level:'',ai_note:null,duty_ref:ref});
+    if(empty){empty.text=x.text;empty.classification=x.cls;empty.ai_note=null;empty.acts=x.acts||'';empty.outs=x.outs||'';if(x.code.indexOf('CC')===0)empty.level=x.lvl||'';}
+    else r.items.push({id:crypto.randomUUID(),code:x.code,text:x.text,classification:x.cls,level:(x.code.indexOf('CC')===0?(x.lvl||''):''),ai_note:null,duty_ref:ref,acts:x.acts||'',outs:x.outs||'',level:(x.code.indexOf('CC')===0?(x.lvl||''):'')});
     x.refs.forEach(function(q){seen[q]=1;});
     added++;
    });
@@ -15427,8 +15427,7 @@ async function fwImportManagerTool(input){
   });
   Object.keys(allowed).filter(function(c){return c.indexOf('CC')===0;}).forEach(function(c){
    var n=r.items.filter(function(it){return it.code===c&&String(it.text||'').trim();}).length;
-   if(n===1)gaps.push(allowed[c]+': only 1 experience (a role needs 2, or none)');
-  });
+   /* A core competency may have 1 or more experiences. */  });
   var noDuty=duties.filter(function(u){return !perDuty[u.ref];}).map(function(u){return u.ref;});
   var rep='Read '+duties.length+' responsibilities. Drafted '+added+' experiences ('+dup+' already there, '+rejected+' rejected as invalid).'+NL+NL;
   if(failed.length)rep+='The AI gave no usable answer for: '+failed.join(', ')+'. Click upload again to retry those.'+NL+NL;
@@ -50605,7 +50604,7 @@ html:root:root:root:root:root:root:root:root:root body #mainContent:has(#loginEm
   allCodes().forEach(function(c){
    var p=per[c];totalFilled+=p.n;
    if(p.n>0)used++;
-   if(FUNC.indexOf(c)<0&&p.n===1)gaps.push({code:c,msg:'Has 1 experience. A core competency needs 2, or none.'});
+   /* A core competency may have 1 or more experiences. It depends on the experiences the manager wrote. */
    if(p.n===0)opt.push({code:c});
   });
   var duties=dutyList(),uncovered=duties.filter(function(d){return !its.some(function(i){return filled(i)&&refsOf(i).indexOf(d.ref)>=0;});});
@@ -51130,7 +51129,7 @@ html:root:root:root:root:root:root:root:root:root body #mainContent:has(#loginEm
    '<div class="sc-box"><div class="sc-big '+(dTot?(dCov===dTot?'g':'a'):'a')+'">'+(dTot?dCov+' of '+dTot:'-')+'</div><div class="sc-lbl">JD responsibilities covered</div></div>'+
    '<div class="sc-box"><div class="sc-big g">'+s.complete+' of '+s.total+'</div><div class="sc-lbl">competencies used by this role</div></div>'+
    '<div class="sc-box"><div class="sc-big '+(s.fix?'r':'g')+'">'+s.fix+'</div><div class="sc-lbl">things to fix before publishing</div></div>'+
-   '<div class="sc-box" style="text-align:right"><input type="file" id="scToolFile" accept=".xlsx,.xls,.csv" style="display:none"><input type="file" id="scWordFile" accept=".xlsx,.xls,.csv" style="display:none"><button type="button" class="sc-out" <button type="button" class="sc-out" data-act="draft" style="margin-left:8px">Write experiences with AI</button><button type="button" class="sc-out" data-act="balance" style="margin-left:8px">Check balance and suggest more</button>'+(s.duties.length&&s.duties.some(function(d){return !d.text||d.entails===undefined;})?'<div style="margin-top:8px"><button type="button" class="sc-link" data-act="wording">Load manager\'s notes only (adds no rows)</button></div>':'')+'</div></div>';
+   '<div class="sc-box" style="text-align:right"><input type="file" id="scToolFile" accept=".xlsx,.xls,.csv" style="display:none"><input type="file" id="scWordFile" accept=".xlsx,.xls,.csv" style="display:none"><button type="button" class="sc-out" data-act="upload">Upload manager\'s tool</button><button type="button" class="sc-out" data-act="draft" style="margin-left:8px">Write experiences with AI</button><button type="button" class="sc-out" data-act="balance" style="margin-left:8px">Check balance and suggest more</button>'+(s.duties.length&&s.duties.some(function(d){return !d.text||d.entails===undefined;})?'<div style="margin-top:8px"><button type="button" class="sc-link" data-act="wording">Load manager\'s notes only (adds no rows)</button></div>':'')+'</div></div>';
  }
  function gapsHTML(s){
   var h='';
@@ -51295,7 +51294,7 @@ fwInput(t.getAttribute('data-id'),'classification',v==='C'?CR:v==='I'?IM:VA);ren
   its.forEach(function(i){if(filled(i)){nF++;counts[i.code]=(counts[i.code]||0)+1;}});
   if(!nF)out.push('Add at least one experience');
   if(its.some(function(i){return !filled(i)||!String(i.classification||'').trim();}))out.push('Complete or remove every empty experience');
-  Object.keys(counts).forEach(function(c){if(/^CC/.test(c)&&counts[c]===1)out.push(nm(c)+': 1 experience (needs 2, or none)');});
+   /* A core competency may have 1 or more experiences. */
   return out;
  };
  fwMinimums=window.fwMinimums;
@@ -55516,6 +55515,439 @@ fwInput(t.getAttribute('data-id'),'classification',v==='C'?CR:v==='I'?IM:VA);ren
    },60);
   }catch(x){}
  },false);
+})();
+</script>
+<style id="cms-draft-list-v38-css">
+.dl-row{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+.dl-btn{border:2px solid #2756b8;background:#fff;color:#2756b8;border-radius:8px;padding:7px 12px;font:700 12.5px system-ui,Segoe UI,Arial,sans-serif;cursor:pointer}
+.dl-keep{background:#1f7a4f;border-color:#1f7a4f;color:#fff}
+.dl-del{border-color:#b42332;color:#b42332}
+.dl-bar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;background:#fff7e6;border:2px solid #f5b301;border-radius:12px;padding:12px 16px;margin:0 0 16px;font:13.5px system-ui,Segoe UI,Arial,sans-serif;color:#5b4a2a}
+.dl-bar b{color:#7a4a00}
+.dl-all{border:2px solid #b42332;background:#fff;color:#b42332;border-radius:8px;padding:8px 14px;font:700 13px system-ui,Segoe UI,Arial,sans-serif;cursor:pointer}
+</style>
+<script id="cms-draft-list-v38-js">
+(function(){
+ 'use strict';
+ if(window.__cmsDraftListV38)return;window.__cmsDraftListV38=true;
+ var busy=false,timer=null;
+ function q(s,r){return (r||document).querySelector(s);}
+ function qa(s,r){return Array.prototype.slice.call((r||document).querySelectorAll(s));}
+ function posOfCard(card){
+  try{
+   var st=q('strong',card),ps=qa('p',card);
+   var name=st?String(st.textContent||'').trim():'',dept=ps[0]?String(ps[0].textContent||'').trim():'';
+   var list=(FW.catalogue&&FW.catalogue.positions)||[];
+   for(var i=0;i<list.length;i++){if(String(list[i].position||'').trim()===name&&String(list[i].department||'').trim()===dept)return list[i];}
+  }catch(e){}
+  return null;
+ }
+ function isDraftCard(card){return String(card.textContent||'').indexOf('Draft in progress')>=0;}
+ async function discardOne(p){
+  var rev=await fwRPC('open',{position_id:p.id});
+  if(!rev||rev.state!=='Draft')return 'none';
+  var r=await _supabase.rpc('cms_framework_discard',{p_id:rev.id});
+  if(r.error)throw new Error(r.error.message);
+  try{sessionStorage.removeItem('cmsKeepDraft:'+rev.id);}catch(e){}
+  return 'ok';
+ }
+ async function discardPosition(p){
+  if(busy||FW.busy)return;
+  if(!confirm('Discard the private draft for '+p.position+' ('+p.department+')?\n\nEverything written in this draft is deleted and cannot be brought back. The published version is not changed. You can start a new draft from it afterwards.'))return;
+  busy=true;
+  try{
+   var res=await discardOne(p);
+   showToast(res==='ok'?'Draft discarded. The published version is unchanged.':'There was no draft to discard.');
+   FW.dirty=false;await fwOpen('draft');
+  }catch(e){showToast(e.message||'Could not discard');}finally{busy=false;}
+ }
+ async function discardAll(){
+  if(busy||FW.busy)return;
+  var cards=qa('#fwDashboard .fw-dash-card').filter(isDraftCard),list=[];
+  cards.forEach(function(c){var p=posOfCard(c);if(p)list.push(p);});
+  if(!list.length){showToast('No drafts to discard.');return;}
+  var names=list.slice(0,8).map(function(p){return '- '+p.position;}).join('\n')+(list.length>8?'\n- and '+(list.length-8)+' more':'');
+  if(!confirm('Discard ALL '+list.length+' private drafts shown here?\n\n'+names+'\n\nEverything written in these drafts is deleted and cannot be brought back. Published versions are not changed. Drafts owned by someone else are skipped.'))return;
+  busy=true;
+  var ok=0,skipped=0;
+  try{
+   for(var i=0;i<list.length;i++){
+    try{var r=await discardOne(list[i]);if(r==='ok')ok++;else skipped++;}catch(e){skipped++;}
+   }
+   showToast('Discarded '+ok+' draft'+(ok===1?'':'s')+(skipped?'. Skipped '+skipped+'.':'.'));
+   FW.dirty=false;await fwOpen('draft');
+  }catch(e){showToast(e.message||'Could not discard');}finally{busy=false;}
+ }
+ function inject(){
+  try{
+   var dash=document.getElementById('fwDashboard');if(!dash)return;
+   var cards=qa('.fw-dash-card',dash),draftCount=0;
+   cards.forEach(function(card){
+    if(!isDraftCard(card))return;
+    draftCount++;
+    if(q('.dl-row',card))return;
+    var p=posOfCard(card);if(!p)return;
+    var row=document.createElement('div');row.className='dl-row';
+    var keep=document.createElement('button');keep.type='button';keep.className='dl-btn dl-keep';keep.textContent='Keep draft and continue';
+    var del=document.createElement('button');del.type='button';del.className='dl-btn dl-del';del.textContent='Discard this draft';
+    keep.addEventListener('click',function(e){e.stopPropagation();try{fwDashOpen(p);}catch(x){}},false);
+    del.addEventListener('click',function(e){e.stopPropagation();discardPosition(p);},false);
+    row.appendChild(keep);row.appendChild(del);card.appendChild(row);
+   });
+   var bar=q('.dl-bar',dash.parentNode);
+   if(draftCount>0&&!bar){
+    bar=document.createElement('div');bar.className='dl-bar';
+    bar.innerHTML='<span><b>You have '+draftCount+' private draft'+(draftCount===1?'':'s')+'.</b> Keep the ones you are still working on and discard the rest.</span>';
+    var b=document.createElement('button');b.type='button';b.className='dl-all';b.textContent='Discard all my drafts';
+    b.addEventListener('click',discardAll,false);bar.appendChild(b);
+    dash.parentNode.insertBefore(bar,dash);
+   }else if(draftCount===0&&bar){bar.remove();}
+  }catch(e){}
+ }
+ function schedule(){clearTimeout(timer);timer=setTimeout(inject,150);}
+ try{new MutationObserver(schedule).observe(document.body,{childList:true,subtree:true});}catch(e){}
+ schedule();
+ window.__cmsDraftList={inject:inject,discardAll:discardAll,discardPosition:discardPosition};
+})();
+</script>
+<style id="cms-draft-choice-v40-css">
+#cms-sc .dc-bar{background:#fff7e6;border:2px solid #f5b301;border-radius:12px;padding:14px 18px;margin:0 0 14px;font-family:system-ui,Segoe UI,Arial,sans-serif}
+#cms-sc .dc-t{font-weight:800;font-size:15px;color:#7a4a00;margin:0 0 4px}
+#cms-sc .dc-s{font-size:13px;color:#5b4a2a;margin:0 0 10px;line-height:1.5}
+#cms-sc .dc-row{display:flex;flex-wrap:wrap;gap:10px}
+#cms-sc .dc-btn{border:2px solid #2756b8;background:#fff;color:#2756b8;border-radius:8px;padding:9px 16px;font-weight:700;font-size:13.5px;cursor:pointer}
+#cms-sc .dc-keep{background:#1f7a4f;border-color:#1f7a4f;color:#fff}
+#cms-sc .dc-clear{border-color:#b35c12;color:#b35c12}
+#cms-sc .dc-del{border-color:#b42332;color:#b42332}
+#cms-sc .dc-btn:disabled{opacity:.5;cursor:not-allowed}
+
+#cms-sc .dc-bar.dc-small{padding:10px 16px}
+#cms-sc .dc-bar.dc-small .dc-s{display:none}
+#cms-sc .dc-bar.dc-small .dc-t{margin:0 0 8px}
+#cms-sc .dc-more{border:0;background:transparent;color:#7a4a00;text-decoration:underline;font-weight:700;font-size:12.5px;cursor:pointer;padding:9px 6px}
+</style>
+<script id="cms-draft-choice-v40-js">
+(function(){
+ 'use strict';
+ if(window.__cmsDraftChoiceV40)return;window.__cmsDraftChoiceV40=true;
+ var busy=false,timer=null;
+ function q(s,r){return (r||document).querySelector(s);}
+ function posId(){try{return FW&&FW.position&&FW.position.id;}catch(e){return null;}}
+ function posName(){try{var p=FW.position;return (p.department?p.department+' - ':'')+(p.position||'Company core');}catch(e){return 'this position';}}
+ function dismissKey(){try{return 'cmsKeepDraft:'+FW.revision.id;}catch(e){return '';}}
+ function dismissed(){try{return !!sessionStorage.getItem(dismissKey());}catch(e){return false;}}
+ function itemCount(){try{return (FW.revision.items||[]).length;}catch(e){return 0;}}
+ function filledCount(){try{return (FW.revision.items||[]).filter(function(i){return String(i.text||'').trim();}).length;}catch(e){return 0;}}
+ function small(){try{return sessionStorage.getItem('cmsDraftBarSmall')==='1';}catch(e){return false;}}
+ function inject(){
+  try{
+   var sc=document.getElementById('cms-sc');if(!sc)return;
+   var has=q('.dc-bar',sc);
+   if(typeof FW==='undefined'||!FW||!FW.revision||FW.revision.state!=='Draft'){if(has)has.remove();return;}
+   if(has){
+    var s=small();if(has.classList.contains('dc-small')!==s)has.classList.toggle('dc-small',s);
+    var mb=q('[data-dc="more"]',has);if(mb&&mb.textContent!==(s?'Show details':'Hide details'))mb.textContent=s?'Show details':'Hide details';
+    return;
+   }
+   var bar=document.createElement('div');bar.className='dc-bar'+(small()?' dc-small':'');
+   bar.innerHTML='<div class="dc-t">You are working on a private draft</div>'+
+    '<div class="dc-s">'+String(posName()).replace(/&/g,'&amp;').replace(/</g,'&lt;')+' has a draft with '+itemCount()+' rows ('+filledCount()+' written). The published version is not changed until you publish. Choose what to do with this draft.</div>'+
+    '<div class="dc-row"><button type="button" class="dc-btn dc-keep" data-dc="keep">Keep this draft</button>'+
+    '<button type="button" class="dc-btn dc-clear" data-dc="clear">Clear all experiences in this draft</button>'+
+    '<button type="button" class="dc-btn dc-clear" data-dc="clearnotes">Clear experiences and manager notes</button>'+
+    '<button type="button" class="dc-btn dc-del" data-dc="discard">Discard this draft completely</button>'+
+    '<button type="button" class="dc-more" data-dc="more">'+(small()?'Show details':'Hide details')+'</button></div>';
+   sc.insertBefore(bar,sc.firstChild);
+  }catch(e){}
+ }
+ function schedule(){if(timer)return;timer=setTimeout(function(){timer=null;inject();},150);}
+ async function keep(){try{sessionStorage.setItem('cmsDraftBarSmall','1');}catch(e){}showToast('Draft kept. You can still clear or discard it any time from the bar at the top.');inject();}
+ function more(){try{sessionStorage.setItem('cmsDraftBarSmall',small()?'0':'1');}catch(e){}inject();}
+ async function clearAll(){
+  if(busy||FW.busy)return;
+  var n=filledCount();
+  if(!confirm('Clear all experiences in this draft for '+posName()+'?\n\nThis removes '+itemCount()+' rows ('+n+' written). The draft stays open and empty so you can upload the manager tool again. The published version is not changed. A backup is kept in this browser.'))return;
+  busy=true;
+  try{
+   try{localStorage.setItem('cmsRewriteBackup:'+posId(),JSON.stringify({at:Date.now(),refs:['ALL'],items:JSON.parse(JSON.stringify(FW.revision.items||[]))}));}catch(e){}
+   FW.revision.items=[];FW.dirty=true;
+   var ok=await fwMutate('save',{items:[]});
+   if(!ok)showToast('Cleared on screen but not saved. Press Save draft.');
+   else showToast('All experiences cleared. Upload the manager tool again to write new ones.');
+  }catch(e){showToast(e.message||'Could not clear');}finally{busy=false;}
+ }
+ async function clearNotes(){
+  if(busy||FW.busy)return;
+  if(!confirm('Clear everything in this draft for '+posName()+'?\n\nThis removes all '+itemCount()+' rows AND the manager notes saved from the uploaded tool (R1, R2 and so on). Nothing is published or changed live. Afterwards press Upload manager tool to load the tool again. A backup is kept in this browser.'))return;
+  busy=true;
+  try{
+   try{localStorage.setItem('cmsRewriteBackup:'+posId(),JSON.stringify({at:Date.now(),refs:['ALL'],items:JSON.parse(JSON.stringify(FW.revision.items||[]))}));}catch(e){}
+   try{var dk='cmsDuties:'+posId(),dv=localStorage.getItem(dk);if(dv){localStorage.setItem('cmsDutiesBackup:'+posId(),dv);}localStorage.removeItem(dk);}catch(e){}
+   FW.revision.items=[];FW.dirty=true;
+   var ok=await fwMutate('save',{items:[]});
+   if(!ok)showToast('Cleared on screen but not saved. Press Save draft.');
+   else showToast('Cleared. Press Upload manager tool to load the tool again.');
+  }catch(e){showToast(e.message||'Could not clear');}finally{busy=false;}
+ }
+ async function discard(){
+   if(busy||FW.busy)return;
+  if(!confirm('Discard this draft completely for '+posName()+'?\n\nEverything written in this private draft is deleted and cannot be brought back. The published version stays exactly as it is. You can start a new draft from it afterwards.'))return;
+  busy=true;
+  try{
+   var id=FW.revision.id,mode=FW.mode||'edit';
+   var r=await _supabase.rpc('cms_framework_discard',{p_id:id});
+   if(r.error){showToast(r.error.message);return;}
+   try{sessionStorage.removeItem('cmsKeepDraft:'+id);}catch(e){}
+   FW.dirty=false;FW.revision=null;
+   showToast('Draft discarded. The published version is unchanged.');
+   await fwOpen(mode);
+  }catch(e){showToast(e.message||'Could not discard');}finally{busy=false;}
+ }
+ document.addEventListener('click',function(e){
+  var b=e.target&&e.target.closest?e.target.closest('[data-dc]'):null;if(!b)return;
+  var k=b.getAttribute('data-dc');
+  if(k==='keep')keep();else if(k==='more')more();else if(k==='clear')clearAll();else if(k==='clearnotes')clearNotes();else if(k==='discard')discard();
+ },false);
+ try{new MutationObserver(schedule).observe(document.body,{childList:true,subtree:true});}catch(e){}
+ try{setInterval(inject,1200);}catch(e){}
+ schedule();
+ window.__cmsDraftChoice={keep:keep,clear:clearAll,discard:discard,inject:inject};
+})();
+</script>
+<style id="cms-sum-buttons-v42">
+/* V42: summary tile buttons on Set Competencies */
+#cms-sc #sc-sum .sc-box:has(.sc-out){text-align:center!important}
+#cms-sc #sc-sum .sc-out{display:block!important;width:100%!important;max-width:100%!important;box-sizing:border-box!important;margin:0 0 10px 0!important;padding:13px 14px!important;min-height:46px;border-radius:10px!important;font-size:14px!important;font-weight:800!important;line-height:1.25!important;text-align:center!important;cursor:pointer!important;color:#fff!important;border:2px solid #3b49b5!important;background:#3b49b5!important;box-shadow:0 4px 10px rgba(59,73,181,.30);transition:transform .12s ease,box-shadow .12s ease}
+#cms-sc #sc-sum .sc-out:hover{transform:translateY(-1px);box-shadow:0 7px 14px rgba(59,73,181,.38)}
+#cms-sc #sc-sum .sc-out:active{transform:translateY(0)}
+#cms-sc #sc-sum .sc-out:focus-visible{outline:3px solid #f5b301;outline-offset:2px}
+#cms-sc #sc-sum .sc-out[data-act="draft"]{background:#6a3fb5!important;border-color:#6a3fb5!important;box-shadow:0 4px 10px rgba(106,63,181,.30)}
+#cms-sc #sc-sum .sc-out[data-act="draft"]:hover{box-shadow:0 7px 14px rgba(106,63,181,.40)}
+#cms-sc #sc-sum .sc-out[data-act="balance"]{background:#fff!important;color:#3b49b5!important;box-shadow:none}
+#cms-sc #sc-sum .sc-out[data-act="balance"]:hover{background:#eef0ff!important;box-shadow:0 4px 10px rgba(59,73,181,.18)}
+#cms-sc #sc-sum .sc-link{display:block;margin:2px auto 0;font-size:13px;text-align:center}
+</style>
+<script id="cms-hold-until-invited-v44">
+(function(){
+ 'use strict';
+ if(window.__cmsHoldUntilInvitedV44)return;window.__cmsHoldUntilInvitedV44=true;
+ var CACHE=null,LOADING=null,TTL=5*60*1000;
+ function em(x){return String(x||'').trim().toLowerCase();}
+ async function load(){
+  if(CACHE&&Date.now()-CACHE.at<TTL)return CACHE;
+  if(LOADING)return LOADING;
+  LOADING=(async function(){
+   var c={at:Date.now(),managers:{},invited:{},signed:{},haveInvites:false,haveLogins:false};
+   try{var e=await _supabase.from('employees').select('manager_email');(e.data||[]).forEach(function(r){var m=em(r.manager_email);if(m)c.managers[m]=1;});}catch(x){}
+   try{var l=await _supabase.from('line_managers').select('email');(l.data||[]).forEach(function(r){var m=em(r.email);if(m)c.managers[m]=1;});}catch(x){}
+   try{var iv=await _supabase.rpc('cms_invite_dates');if(!iv.error){c.haveInvites=true;(iv.data||[]).forEach(function(r){if(r&&r.last_sent)c.invited[em(r.email)]=1;});}}catch(x){}
+   try{var ov=await _supabase.rpc('cms_login_overview');if(!ov.error){c.haveLogins=true;(ov.data||[]).forEach(function(u){if(u&&u.u_last_sign_in)c.signed[em(u.u_email)]=1;});}}catch(x){}
+   CACHE=c;LOADING=null;return c;
+  })();
+  return LOADING;
+ }
+ async function mustHold(to){
+  var addr=em(to);
+  if(!addr)return false;
+  var c=await load();
+  if(!c.haveInvites&&!c.haveLogins)return false;
+  if(!c.managers[addr])return false;
+  if(c.signed[addr]||c.invited[addr])return false;
+  return true;
+ }
+ function wrap(){
+  var prev=window.sendCMSemail;
+  if(typeof prev!=='function'||prev.__cmsHeld)return;
+  var fn=function(to,subject,message,action){
+   var self=this,args=arguments;
+   return mustHold(to).then(function(hold){
+    if(hold){
+     try{console.info('Email held: '+em(to)+' has not been invited to log in yet. Subject: '+subject);}catch(e){}
+     try{if(typeof showToast==='function')showToast('Email to '+em(to)+' not sent: this manager has not been invited to log in yet.');}catch(e){}
+     return null;
+    }
+    return prev.apply(self,args);
+   },function(){return prev.apply(self,args);});
+  };
+  fn.__cmsHeld=true;
+  window.sendCMSemail=fn;
+ }
+ wrap();
+ window.__cmsHoldUntilInvited={mustHold:mustHold,reload:function(){CACHE=null;return load();}};
+})();
+</script>
+<style id="cms-r-popup-v46-css">
+#cmsRPop{position:fixed;inset:0;z-index:99999;display:none;align-items:flex-start;justify-content:center;background:rgba(15,26,61,.6);overflow:auto;padding:40px 14px;font-family:Segoe UI,Arial,sans-serif}
+#cmsRPop.on{display:flex}
+#cmsRPop .rp-box{width:100%;max-width:820px;background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.35);color:#1e293b}
+#cmsRPop .rp-h{background:#1d2d8f;color:#fff;padding:16px 24px;position:relative}
+#cmsRPop .rp-k{font-size:11px;letter-spacing:1.5px;color:#c8d2ff;font-weight:700}
+#cmsRPop .rp-t{font-size:20px;font-weight:800;margin-top:4px;padding-right:90px}
+#cmsRPop .rp-x{position:absolute;right:20px;top:16px;border:1px solid #8fa0f0;background:transparent;color:#fff;border-radius:8px;padding:6px 14px;font-size:13px;font-weight:700;cursor:pointer}
+#cmsRPop .rp-b{padding:18px 24px}
+#cmsRPop .rp-ctx{background:#f1f5ff;border:1px solid #cbd6f7;border-left:6px solid #2b3fd1;border-radius:8px;padding:10px 14px;font-size:13px;margin-bottom:14px}
+#cmsRPop .rp-ctx b{display:block;font-size:10px;letter-spacing:1.2px;color:#2b3fd1;margin-bottom:3px}
+#cmsRPop .rp-s{font-size:11px;letter-spacing:1.2px;font-weight:800;color:#4a5b85;margin:14px 0 6px}
+#cmsRPop .rp-jd{background:#eef2ff;border-radius:8px;padding:10px 14px;font-size:14px;line-height:1.5}
+#cmsRPop .rp-it{padding:7px 12px;border-radius:7px;font-size:14px;margin:3px 0;border:1px solid transparent;line-height:1.45}
+#cmsRPop .rp-it.y{background:#fde047;border-color:#eab308;font-weight:700;color:#1e293b}
+#cmsRPop .rp-tag{float:right;margin-left:10px;background:#1e293b;color:#fde047;font-size:10px;font-weight:800;letter-spacing:1px;border-radius:5px;padding:2px 8px}
+#cmsRPop .rp-leg{margin-top:14px;font-size:12px;color:#475569}
+#cmsRPop .rp-sw{display:inline-block;width:14px;height:14px;background:#fde047;border:1px solid #eab308;border-radius:3px;vertical-align:middle;margin-right:6px}
+#cmsRPop .rp-f{background:#f6f8fd;border-top:1px solid #e3e8f4;padding:12px 24px;text-align:right}
+#cmsRPop .rp-btn{background:#2b3fd1;color:#fff;font-weight:700;border:0;border-radius:8px;padding:9px 22px;font-size:14px;cursor:pointer}
+.lv-r{cursor:pointer}
+</style>
+<script id="cms-r-popup-v46-js">
+(function(){
+ 'use strict';
+ if(window.__cmsRPopupV46)return;window.__cmsRPopupV46=true;
+ var LAST=null;
+ function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+ function norm(s){return String(s==null?'':s).replace(/\s+/g,' ').trim().toLowerCase();}
+ function lines(t){
+  return String(t||'').replace(/\r/g,'').split('\n').map(function(x){return x.replace(/^\s*(?:[\u2022\u25cf\u25aa*\-]|\d{1,2}[.)])\s*/,'').trim();}).filter(function(x){return x.length>1;});
+ }
+ function nums(v){var o=[];String(v||'').split(/[\s,;]+/).forEach(function(t){var n=parseInt(t,10);if(n>0&&o.indexOf(n)<0)o.push(n);});return o;}
+ function words(t){
+  var stop={that:1,with:1,from:1,have:1,this:1,were:1,their:1,they:1,been:1,each:1,every:1,into:1,when:1,which:1,than:1,also:1,them:1,before:1,after:1,within:1,through:1,about:1,agreed:1};
+  var o={};String(t||'').toLowerCase().replace(/[^a-z\s]/g,' ').split(/\s+/).forEach(function(w){
+   if(w.length>=4&&!stop[w]){w=w.replace(/(ing|ed|es|s)$/,'');if(w.length>=3)o[w]=1;}
+  });return o;
+ }
+ function closest(expText,list,maxN){
+  var ew=words(expText),sc=[];
+  list.forEach(function(a,i){var aw=words(a),n=0;for(var k in aw)if(ew[k])n++;sc.push({i:i+1,n:n});});
+  sc.sort(function(a,b){return b.n-a.n||a.i-b.i;});
+  var out=[];if(!sc.length||sc[0].n<2)return out;
+  sc.forEach(function(s){if(out.length<maxN&&s.n>=2&&s.n>=sc[0].n*0.6)out.push(s.i);});
+  return out;
+ }
+ function build(data,rowText,ref){
+  var duties=(data&&data.duties)||[],d=null;
+  duties.forEach(function(x){if(String(x.ref||'').toUpperCase()===String(ref).toUpperCase())d=x;});
+  var items=((data&&data.items)||[]).concat((data&&data.core_items)||[]);
+  var it=null,key=norm(rowText);
+  items.forEach(function(x){if(!it&&norm(x.text)===key)it=x;});
+  var tasks=lines(d&&d.tasks),outs=lines(d&&d.outputs);
+  var refsOfItem=it?String(it.duty_ref||'').split(/[\s,;]+/).filter(Boolean):[];
+  var exactA=[],exactO=[],mode='none';
+  if(it&&refsOfItem.length===1){exactA=nums(it.acts);exactO=nums(it.outs);}
+  var hiA=[],hiO=[];
+  if(exactA.length||exactO.length){hiA=exactA;hiO=exactO;mode='exact';}
+  else{hiA=closest(rowText,tasks,2);hiO=closest(rowText,outs,1);mode=(hiA.length||hiO.length)?'closest':'none';}
+  var h='<div class="rp-h"><div class="rp-k">RESPONSIBILITY '+esc(ref)+'</div><div class="rp-t">'+esc((d&&d.text)||('JD responsibility '+ref))+'</div><button type="button" class="rp-x" data-rp="close">Close</button></div><div class="rp-b">';
+  h+='<div class="rp-ctx"><b>OPENED FROM THIS EXPERIENCE</b>'+esc(rowText)+'</div>';
+  h+='<div class="rp-s">FROM THE JOB DESCRIPTION</div><div class="rp-jd"><b>'+esc(ref)+'.</b> '+esc((d&&d.text)||'Wording not loaded for this responsibility yet.')+'</div>';
+  if(d&&d.entails)h+='<div class="rp-s">WHAT IT ENTAILS</div><div class="rp-jd">'+esc(d.entails)+'</div>';
+  h+='<div class="rp-s">MANAGER\u2019S TOOL: ACTIVITIES AND TASKS</div>';
+  if(!tasks.length)h+='<div class="rp-it">No activities are saved for this responsibility.</div>';
+  tasks.forEach(function(t,i){var y=hiA.indexOf(i+1)>=0;h+='<div class="rp-it'+(y?' y':'')+'">'+(i+1)+'. '+esc(t)+(y?'<span class="rp-tag">BEHIND THIS EXPERIENCE</span>':'')+'</div>';});
+  if(outs.length){h+='<div class="rp-s">EXPECTED OUTPUTS</div>';
+   outs.forEach(function(t,i){var y=hiO.indexOf(i+1)>=0;h+='<div class="rp-it'+(y?' y':'')+'">'+esc(t)+(y?'<span class="rp-tag">RESULT OF THIS EXPERIENCE</span>':'')+'</div>';});}
+  h+='<div class="rp-leg">'+(mode==='none'?'No activity could be matched to this experience.':'<span class="rp-sw"></span>Yellow = '+(mode==='exact'?'the activities and output this experience was written from.':'the closest activities by wording (this experience has no saved link yet).'))+' Press Close or Esc to return to the library.</div>';
+  h+='</div><div class="rp-f"><button type="button" class="rp-btn" data-rp="close">Close</button></div>';
+  return h;
+ }
+ function ensure(){
+  var el=document.getElementById('cmsRPop');
+  if(!el){el=document.createElement('div');el.id='cmsRPop';el.innerHTML='<div class="rp-box" role="dialog" aria-modal="true"></div>';document.body.appendChild(el);
+   el.addEventListener('click',function(e){var t=e.target;if(t===el||(t.closest&&t.closest('[data-rp="close"]')))close();});}
+  return el;
+ }
+ function close(){var el=document.getElementById('cmsRPop');if(el)el.classList.remove('on');}
+ function open(data,rowText,ref){
+  var el=ensure();el.querySelector('.rp-box').innerHTML=build(data,rowText,ref);el.classList.add('on');el.scrollTop=0;
+ }
+ function rowTextOf(chip){
+  var row=chip.closest('.lv-row'),cell=row&&row.querySelector('.t');if(!cell)return '';
+  var c=cell.cloneNode(true);Array.prototype.slice.call(c.querySelectorAll('.lv-r,.lv-lvl')).forEach(function(n){n.remove();});
+  return String(c.textContent||'').replace(/\s+/g,' ').trim();
+ }
+ document.addEventListener('click',function(e){
+  try{
+   var t=e.target;if(!t||!t.closest)return;
+   var chip=t.closest('.lv-r');
+   if(!chip||!chip.closest('#lvBody'))return;
+   if(!LAST)return;
+   e.preventDefault();e.stopPropagation();
+   open(LAST,rowTextOf(chip),String(chip.getAttribute('data-ref')||chip.textContent||'').trim());
+  }catch(x){if(window.console)console.warn('R popup:',x&&x.message);}
+ },true);
+ document.addEventListener('keydown',function(e){if(e.key==='Escape')close();});
+ function hook(){
+  try{
+   if(typeof _supabase==='undefined'||!_supabase||typeof _supabase.rpc!=='function'||_supabase.rpc.__rp)return;
+   var orig=_supabase.rpc.bind(_supabase);
+   var fn=function(name,args){
+    var p=orig(name,args);
+    if(name!=='cms_library_view')return p;
+    return Promise.resolve(p).then(function(r){
+     try{if(r&&r.data&&typeof r.data==='object'&&(r.data.duties||r.data.items))LAST=r.data;}catch(x){}
+     return r;
+    });
+   };
+   fn.__rp=true;_supabase.rpc=fn;
+  }catch(x){}
+ }
+ hook();
+ window.__cmsRPopup={build:build,open:open,close:close,last:function(){return LAST;},set:function(d){LAST=d;}};
+})();
+</script>
+<script id="cms-r-popup-v47-js">
+(function(){
+ 'use strict';
+ if(window.__cmsRPopupV47)return;window.__cmsRPopupV47=true;
+ var TOOLS={};
+ function norm(s){return String(s==null?'':s).replace(/\s+/g,' ').trim().toLowerCase();}
+ function posId(){try{return FW&&FW.position&&FW.position.id;}catch(e){return null;}}
+ function posItems(){try{return (FW.position&&FW.position.items)||[];}catch(e){return [];}}
+ function localDuties(id){
+  try{var raw=localStorage.getItem('cmsDuties:'+id);var l=raw?JSON.parse(raw):null;return Array.isArray(l)&&l.length?l:null;}catch(e){return null;}
+ }
+ function getDuties(id){
+  if(TOOLS[id])return Promise.resolve(TOOLS[id]);
+  return Promise.resolve(_supabase.rpc('cms_position_tool',{p_action:'get',p_position_id:id})).then(function(r){
+   var d=r&&r.data&&Array.isArray(r.data.duties)?r.data.duties:null;
+   if(d){TOOLS[id]=d;return d;}
+   return localDuties(id)||[];
+  },function(){return localDuties(id)||[];});
+ }
+ function rowTextOf(chip){
+  var p=chip.parentNode;
+  while(p&&p.tagName!=='P'&&p.className!=='cla-row-copy'&&p.parentNode&&p.className.indexOf('exp-item')<0)p=p.parentNode;
+  var holder=(chip.closest&&chip.closest('p'))||p;
+  if(!holder)return '';
+  var c=holder.cloneNode(true);
+  Array.prototype.slice.call(c.querySelectorAll('.jdx-chips,.jdx-chip')).forEach(function(n){n.remove();});
+  return String(c.textContent||'').replace(/\s+/g,' ').trim();
+ }
+ function openFor(chip){
+  var id=posId(),ref=String(chip.getAttribute('data-ref')||chip.textContent||'').trim();
+  var rowText=rowTextOf(chip);
+  if(!id||!window.__cmsRPopup){return false;}
+  getDuties(id).then(function(duties){
+   var items=posItems();
+   try{window.__cmsRPopup.open({duties:duties,items:items},rowText,ref);}
+   catch(x){if(window.console)console.warn('R popup:',x&&x.message);}
+  });
+  return true;
+ }
+ function handle(e){
+  try{
+   var t=e.target;if(!t||!t.closest)return;
+   var chip=t.closest('.jdx-chip');
+   if(!chip)return;
+   var fb=document.getElementById('fwBody');if(!fb||!fb.contains(chip))return;
+   if(!window.__cmsRPopup)return;
+   e.preventDefault();e.stopPropagation();
+   openFor(chip);
+  }catch(x){if(window.console)console.warn('R popup:',x&&x.message);}
+ }
+ document.addEventListener('click',handle,true);
+ document.addEventListener('keydown',function(e){if(e.key==='Enter')handle(e);},true);
+ var css=document.createElement('style');css.id='cms-r-popup-v47-css';
+ css.textContent='#fwBody .jdx-chip{cursor:pointer}';document.head.appendChild(css);
 })();
 </script>
 </body>
