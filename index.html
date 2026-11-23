@@ -23984,7 +23984,7 @@ function adRender(s){
  '<section class="ad-savebar" aria-label="Assessment save and submit controls"><div><strong>Draft protection</strong><p id="adSaveStatus" role="status" aria-live="polite">'+adText(s.message||('Server saved: '+adTime(s.savedAt)))+'</p></div>'+
  '<div class="ad-buttons">'+adBtn('save','Save draft')+adBtn('preview','Submit assessment',true)+adBtn('export','Download backup')+adBtn('import','Import backup')+adBtn('history','Saved versions')+'</div><input id="adImportFile" type="file" accept=".json,application/json" hidden></section>'+
  (s.blocked?'<aside class="ad-warning"><b>Submission unavailable</b><p>'+adText(s.blocked)+'</p><p>Your saved answers are retained. A published-framework change does not erase this invitation\u2019s draft; HR must review the appropriate next step.</p></aside>':'')+
- '<div id="adRecovery"></div><div id="adConfirm"></div><div id="adVersions"></div>'+
+ '<div id="adRecovery"></div><div id="adVersions"></div>'+
  '<p class="ad-instruction">Answers save automatically after editing. Look for \u201cSaved to server\u201d before leaving. Save draft does not submit; Submit assessment opens a confirmation. Uploaded proof is retained; a file still uploading is not yet saved.</p>'+
  (r.instructions?'<p>'+adText(r.instructions)+'</p>':'')+
  '<section class="ad-experiences">';
@@ -24003,7 +24003,7 @@ html+='<article class="ad-experience" data-ad-item="'+adText(item.id)+'"><h2>'+a
 '<div data-evidence-links="'+adText(item.id)+'" style="margin-top:8px"><label>Supporting links, optional</label>'+linkRows+'</div>'+ 
 '<button type="button" class="ad-btn" style="margin-top:6px" onclick="addEvidenceLink(this)">Add another link</button></article>';
 });
- html+='</section><footer class="ad-footer">'+adBtn('save','Save draft')+adBtn('preview','Submit assessment',true)+'<p>One complete submission per invitation. Redos require a reason, approval and a fresh invitation.</p></footer>';
+ html+='</section><footer class="ad-footer">'+adBtn('save','Save draft')+adBtn('preview','Submit assessment',true)+'<p>One complete submission per invitation. Redos require a reason, approval and a fresh invitation.</p></footer><div id="adConfirm"></div>';
  document.getElementById('adRoot').innerHTML=html;
  adStickyOffset();
  if(s.recovery)adRecoveryPanel(s);
@@ -56930,6 +56930,8 @@ body:has(#adRoot.fp-assessment) .content{max-width:none!important;padding-left:1
   if(i<0)return;
   if(b.classList.contains('px-prev')){goto_(root,i-1);return;}
   if(i===secs.length-1){
+   var rv=root.querySelector('[data-ad="preview"]');
+   if(rv&&!rv.disabled){rv.click();return;}
    var bar=q('.ad-savebar',root)||q('.ad-footer',root);
    if(bar&&bar.scrollIntoView)bar.scrollIntoView({block:'center',behavior:'smooth'});
    return;
@@ -58011,6 +58013,59 @@ function fixOne(el,fs0){
  sched(500);
 })();
 </script>
+<style id="cms-no-flash-v83-css">
+#adRoot:not(.v83-ready){position:relative;min-height:70vh}
+#adRoot:not(.v83-ready) > *{visibility:hidden!important}
+#adRoot:not(.v83-ready)::before{content:"";position:absolute;left:calc(50% - 150px);top:118px;width:22px;height:22px;border:4px solid #cdd9ee;border-top-color:#3979C9;border-radius:50%;animation:v83spin .8s linear infinite;z-index:3}
+#adRoot:not(.v83-ready)::after{content:"Loading your assessment...";position:absolute;left:50%;top:100px;transform:translateX(-50%);width:300px;box-sizing:border-box;padding:14px 20px 14px 56px;background:#fff;border:2px solid #cdd9ee;border-radius:14px;font:700 16px system-ui,Segoe UI,Arial,sans-serif;color:#24558A;box-shadow:0 6px 20px rgba(20,40,100,.12);z-index:2;visibility:visible}
+@keyframes v83spin{to{transform:rotate(360deg)}}
+</style>
+<script id="cms-no-flash-v83-js">
+(function(){
+ 'use strict';
+ if(window.__cmsNoFlashV83)return;
+ window.__cmsNoFlashV83=true;
+ var QUIET=350,MAXWAIT=5000,NOBUILD=2600;
+ function arm(root){
+  var st={t0:Date.now(),last:Date.now(),obs:null};
+  root.__v83=st;
+  try{
+   st.obs=new MutationObserver(function(){st.last=Date.now();});
+   st.obs.observe(root,{childList:true,subtree:true,attributes:true,characterData:true});
+  }catch(e){}
+ }
+ function reveal(root){
+  if(root.__v83&&root.__v83.obs){try{root.__v83.obs.disconnect();}catch(e){}}
+  root.__v83=null;
+  root.classList.add('v83-ready');
+ }
+ function tick(){
+  var root=document.getElementById('adRoot');
+  if(!root||root.classList.contains('v83-ready'))return;
+  if(!root.__v83){arm(root);return;}
+  var st=root.__v83,now=Date.now();
+  var strips=root.querySelectorAll('.ar-strip').length,tabs=root.querySelectorAll('.fm-tabs').length,built=root.classList.contains('fp-assessment')&&root.classList.contains('fm-on')&&!!root.querySelector('.px-etab')&&(strips?tabs>=strips:now-st.t0>3000);
+  if(built&&now-st.last>=QUIET){reveal(root);return;}
+  if(!root.classList.contains('fp-assessment')&&now-st.t0>NOBUILD){reveal(root);return;}
+  if(now-st.t0>MAXWAIT){reveal(root);return;}
+ }
+ setInterval(tick,100);
+ /* every time the assessment is drawn again, hide it again until the patches have finished */
+ try{
+  if(typeof adRender==='function'){
+   var prev=adRender;
+   adRender=function(){
+    var r=document.getElementById('adRoot');
+    if(r){if(r.__v83&&r.__v83.obs){try{r.__v83.obs.disconnect();}catch(e){}}r.__v83=null;r.classList.remove('v83-ready');}
+    return prev.apply(this,arguments);
+   };
+  }
+ }catch(e){}
+})();
+</script>
+<style id="cms-hide-jump-to-v85">
+#adRoot .fm-rail .fm-jump,#adRoot .fm-rail h3.sp:has(+ .fm-jump){display:none!important}
+</style>
 <style id="cms-ksaba-end-v82-css">
 #adRoot .v82-panel{margin:18px 0 6px;background:#fff;border:2px solid #cdd9ee;border-top:6px solid #3979C9;border-radius:16px;overflow:hidden;box-shadow:0 4px 14px rgba(20,40,100,.1);font-family:system-ui,Segoe UI,Arial,sans-serif;color:#1d2b45}
 #adRoot .v82-ph{background:linear-gradient(135deg,#0f2a63,#2756b3);color:#fff;padding:18px 24px;display:flex;justify-content:space-between;align-items:center;gap:20px;flex-wrap:wrap}
@@ -58051,6 +58106,8 @@ function fixOne(el,fs0){
 #adRoot .v82-btn[disabled]{background:#b9c6dc;box-shadow:none;cursor:not-allowed}
 #adRoot .v82-btn.done{background:#15803d}
 #adRoot .v82-panel.v82-flash{outline:5px solid #d92d20;outline-offset:3px;animation:v82pulse 1s ease-in-out 3}
+#adRoot .v82-it.miss{background:#fff1f0;box-shadow:inset 6px 0 0 #d92d20}
+#adRoot .v82-it.miss .v82-b{border-color:#d92d20}
 #adRoot .v82-block{padding:11px 24px;background:#fde8e6;border-bottom:1px solid #f3c1bc;color:#7a1a12;font-weight:700;font-size:14.5px}
 @keyframes v82pulse{0%,100%{outline-color:#d92d20}50%{outline-color:#ff8a80}}
 </style>
@@ -58168,10 +58225,12 @@ function fixOne(el,fs0){
   var m=marks(s,sec),mgr=isManager(s),nm=firstName(s),comp=secName(sec),can=!!(s&&s.canSave);
   var nHas=items.filter(function(i){return m.y.indexOf(i.id)>=0;}).length,nNo=items.filter(function(i){return m.n.indexOf(i.id)>=0&&m.y.indexOf(i.id)<0;}).length,nLeft=items.length-nHas-nNo;
   var done=allAnswered(sec),itemsDone=nLeft===0;
+  var pp=q('.v82-panel',sec),showMiss=!!(pp&&pp._v82show)&&!itemsDone;if(pp&&itemsDone)pp._v82show=false;
+  var missNames=[];if(showMiss){GR.forEach(function(g){items.filter(function(i){return i.g===g[0]&&m.y.indexOf(i.id)<0&&m.n.indexOf(i.id)<0;}).forEach(function(i){missNames.push(esc(i.text)+' ('+g[1]+')');});});}
   var h='<div class="v82-ph"><div><b>Final step for this competency</b><strong>'+(mgr?('Confirm what '+esc(nm)+' has for this competency'):'Confirm your knowledge, skills, abilities, behaviours and attributes')+'</strong>'+
-   '<span>'+(mgr?('Confirm which knowledge, skills, abilities, behaviours and attributes '+esc(nm)+' has for '+esc(comp)+'. For every item, press the green tick if '+esc(nm)+' has it, or the red X if not. Every item needs one answer.'):('For every item, press the green tick if you have it, or the red X if you do not. Every item needs one answer.'))+'</span></div>'+
+   '<span>'+(mgr?('Confirm which knowledge, skills, abilities, behaviours and attributes '+esc(nm)+' has for '+esc(comp)+'. For every item, press the green tick if '+esc(nm)+' has it, or the red X if not. Every item needs one answer.'):('For every item, press the green tick if you have it, or the red X if you do not. Every item needs one answer. An X becomes a development area.'))+'</span></div>'+
    '<div class="v82-cnt"><b>'+(nHas+nNo)+' of '+items.length+'</b><em>answered</em></div></div>';
-  if(!done)h+='<div class="v82-wait">Answer every experience above first, then confirm this list.</div>';else if(!itemsDone)h+='<div class="v82-wait">Press a green tick or a red X for every item, then confirm.</div>';
+  if(!done)h+='<div class="v82-wait">Answer every experience above first, then answer this list.</div>';else if(showMiss)h+='<div class="v82-block"><b>You have not answered '+nLeft+(nLeft===1?' item':' items')+' yet:</b> '+missNames.join('; ')+'. Press a green tick or a red X on each one marked in red.</div>';else if(!itemsDone)h+='<div class="v82-wait">Press a green tick or a red X for every item. When every item is answered, the next competency opens by itself.</div>';
   h+='<div class="v82-grid">';
   GR.forEach(function(g){
    var gi=items.filter(function(i){return i.g===g[0];});if(!gi.length)return;
@@ -58179,14 +58238,14 @@ function fixOne(el,fs0){
    h+='<div class="v82-card"><h4 style="background:'+g[2]+'">'+g[1]+'<em>'+tk+' of '+gi.length+'</em></h4>';
    gi.forEach(function(i){
     var yes=m.y.indexOf(i.id)>=0,no=!yes&&m.n.indexOf(i.id)>=0;
-    h+='<div class="v82-it'+(yes?' has':(no?' nope':''))+'"><span class="v82-tx">'+esc(i.text)+(i.sup.length?'<small>Supports Experience'+(i.sup.length>1?'s ':' ')+i.sup.join(', ')+'</small>':'')+'</span><span class="v82-bt">'+
+    h+='<div class="v82-it'+(yes?' has':(no?' nope':(showMiss?' miss':'')))+'"><span class="v82-tx">'+esc(i.text)+(i.sup.length?'<small>Supports Experience'+(i.sup.length>1?'s ':' ')+i.sup.join(', ')+'</small>':'')+'</span><span class="v82-bt">'+
      '<button type="button" class="v82-b v82-yes'+(yes?' on':'')+'" data-v82="'+esc(i.id)+'" data-v82v="y" title="Has it" aria-label="Has it"'+(can?'':' disabled')+'><svg viewBox="0 0 24 24" fill="none" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></button>'+
      '<button type="button" class="v82-b v82-no'+(no?' on':'')+'" data-v82="'+esc(i.id)+'" data-v82v="n" title="Does not have it" aria-label="Does not have it"'+(can?'':' disabled')+'><svg viewBox="0 0 24 24" fill="none" stroke-width="3.4" stroke-linecap="round"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg></button></span></div>';
    });
    h+='</div>';
   });
   h+='</div><div class="v82-foot"><div class="v82-sum"><span class="g"><b>'+nHas+'</b> has it</span><span class="r"><b>'+nNo+'</b> does not have it</span><span class="n"><b>'+nLeft+'</b> not answered</span></div>';
-  h+='<button type="button" class="v82-btn'+(m.c?' done':'')+'" data-v82-confirm="1"'+((!can||!done||!itemsDone)?' disabled':'')+'>'+(m.c?'Confirmed':'Confirm and continue')+'</button></div>';
+  h+='</div>';
   return h;
  }
  var obs=null,timer=null,busy=false;
@@ -58206,43 +58265,55 @@ function fixOne(el,fs0){
     if(!p){p=document.createElement('section');p.className='v82-panel';p.setAttribute('aria-label','Confirm knowledge, skills, abilities, behaviours and attributes');}
     var nx=null;for(k=0;k<sec.children.length;k++){if(sec.children[k].classList&&sec.children[k].classList.contains('px-nx'))nx=sec.children[k];}
     if(nx){if(p.nextSibling!==nx||p.parentNode!==sec)sec.insertBefore(p,nx);}else if(p.parentNode!==sec||p!==sec.lastElementChild)sec.appendChild(p);
-    if(p.getAttribute('data-sig')!==sig){p.setAttribute('data-sig',sig);p.innerHTML=panelHTML(sec,items,s);}
+    p._v82items=items;if(p.getAttribute('data-sig')!==sig){p.setAttribute('data-sig',sig);p.innerHTML=panelHTML(sec,items,s);}
    });
   }catch(e){if(window.console)console.warn('KSA-BA panel:',e&&e.message);}
   finally{busy=false;try{if(!obs)obs=new MutationObserver(function(){sched(250);});obs.observe(root,{childList:true,subtree:true,attributes:true,attributeFilter:['class','hidden']});}catch(x){}}
  }
  function sched(ms){clearTimeout(timer);timer=setTimeout(run,ms||250);}
  function secOf(node){return node.closest?node.closest('.fp-competency'):null;}
+ function listDone(s,sec,items){
+  if(!items||!items.length)return true;
+  var m=marks(s,sec);
+  return items.every(function(i){return m.y.indexOf(i.id)>=0||m.n.indexOf(i.id)>=0;});
+ }
+ function quick(sec,s,btn){
+  var p=null,k;for(k=0;k<sec.children.length;k++){if(sec.children[k].classList&&sec.children[k].classList.contains('v82-panel'))p=sec.children[k];}
+  if(!p||!p._v82items)return false;
+  var items=p._v82items,m=marks(s,sec);
+  p.setAttribute('data-sig',JSON.stringify([items.map(function(i){return i.id+(i.sup.join('.'));}),m.y,m.n,m.c,allAnswered(sec),!!s.canSave,isManager(s)]));
+  p.innerHTML=panelHTML(sec,items,s);
+  var id=btn&&btn.getAttribute('data-v82'),v=btn&&btn.getAttribute('data-v82v');
+  if(id&&v){var nb=p.querySelector('[data-v82="'+id+'"][data-v82v="'+v+'"]');if(nb&&nb.focus)nb.focus({preventScroll:true});}
+  return true;
+ }
  document.addEventListener('click',function(e){
   var t=e.target&&e.target.closest?e.target.closest('[data-v82v]'):null;if(!t||t.disabled)return;
   var s=stateOf(),sec=secOf(t);if(!s||!sec)return;
   var m=marks(s,sec),id=t.getAttribute('data-v82'),v=t.getAttribute('data-v82v'),y=m.y.filter(function(x){return x!==id;}),n=m.n.filter(function(x){return x!==id;});
   var was=v==='y'?m.y.indexOf(id)>=0:m.n.indexOf(id)>=0;
   if(!was){if(v==='y')y.push(id);else n.push(id);}
-  setMarks(s,sec,false,y,n);sched(30);
- },false);
- document.addEventListener('click',function(e){
-  var b=e.target&&e.target.closest?e.target.closest('[data-v82-confirm]'):null;if(!b||b.disabled)return;
-  var s=stateOf(),sec=secOf(b);if(!s||!sec)return;
-  var m=marks(s,sec);setMarks(s,sec,true,m.y,m.n);sched(30);
-  var rb=null;
+  var pp=q('.v82-panel',sec),its=pp&&pp._v82items,full=!!its&&its.every(function(i){return y.indexOf(i.id)>=0||n.indexOf(i.id)>=0;});
+  setMarks(s,sec,full,y,n);
+  if(!quick(sec,s,t))sched(30);
+  /* every item answered and every experience answered: open the next competency by itself */
+  if(full&&allAnswered(sec)){var go=sec.querySelector('.px-next:not(.px-fin)');if(go)setTimeout(function(){go.click();},350);}
  },false);
  /* ---- do not let anyone move on before confirming ---- */
  function flash(p){
   if(!p)return;
-  var old=q('.v82-block',p);if(old)old.remove();
-  var n=document.createElement('div');n.className='v82-block';n.textContent='Please press a green tick or a red X for every item, then press Confirm and continue before moving on.';
-  p.insertBefore(n,p.firstChild);
+  var sec=p.closest?p.closest('.fp-competency'):null,s=stateOf();
+  if(sec&&s&&p._v82items){p._v82show=true;p.innerHTML=panelHTML(sec,p._v82items,s);}
+  var rows=p.querySelectorAll('.v82-it.miss'),first=rows.length?rows[0]:p;
   p.classList.add('v82-flash');
-  try{p.scrollIntoView({block:'center',behavior:'smooth'});}catch(x){p.scrollIntoView();}
+  try{first.scrollIntoView({block:'center',behavior:'smooth'});}catch(x){first.scrollIntoView();}
   setTimeout(function(){p.classList.remove('v82-flash');},3300);
-  setTimeout(function(){if(n.parentNode)n.remove();},9000);
  }
  function firstUnconfirmed(root,upTo){
   var s=stateOf(),secs=qa('.fp-competency',root),i;
   for(i=0;i<upTo&&i<secs.length;i++){
    var p=q('.v82-panel',secs[i]);
-   if(p&&!marks(s,secs[i]).c)return i;
+   if(p&&!listDone(s,secs[i],p._v82items))return i;
   }
   return -1;
  }
@@ -58271,58 +58342,365 @@ function fixOne(el,fs0){
  sched(600);
 })();
 </script>
-<style id="cms-no-flash-v83-css">
-#adRoot:not(.v83-ready){position:relative;min-height:70vh}
-#adRoot:not(.v83-ready) > *{visibility:hidden!important}
-#adRoot:not(.v83-ready)::before{content:"";position:absolute;left:calc(50% - 150px);top:118px;width:22px;height:22px;border:4px solid #cdd9ee;border-top-color:#3979C9;border-radius:50%;animation:v83spin .8s linear infinite;z-index:3}
-#adRoot:not(.v83-ready)::after{content:"Loading your assessment...";position:absolute;left:50%;top:100px;transform:translateX(-50%);width:300px;box-sizing:border-box;padding:14px 20px 14px 56px;background:#fff;border:2px solid #cdd9ee;border-radius:14px;font:700 16px system-ui,Segoe UI,Arial,sans-serif;color:#24558A;box-shadow:0 6px 20px rgba(20,40,100,.12);z-index:2;visibility:visible}
-@keyframes v83spin{to{transform:rotate(360deg)}}
-</style>
-<script id="cms-no-flash-v83-js">
+<script id="cms-employee-role-cards-v95">
 (function(){
  'use strict';
- if(window.__cmsNoFlashV83)return;
- window.__cmsNoFlashV83=true;
- var QUIET=350,MAXWAIT=5000,NOBUILD=2600;
- function arm(root){
-  var st={t0:Date.now(),last:Date.now(),obs:null};
-  root.__v83=st;
+ if(window.__cmsRoleCardsV95)return;
+ window.__cmsRoleCardsV95=true;
+ var PT=['Prospective','Prospective Self'];
+ var override=null;
+ var cache={};
+ var baseLatest=window.latestOnly;
+ var baseFull=window.fullAssessmentHTML;
+ if(typeof baseLatest!=='function'||typeof baseFull!=='function')return;
+
+ function rd(r){return Number(r.assessment_round)||1;}
+ function nm(r){return String(r.prospective_role||'').replace(/\s+/g,' ').trim();}
+ function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+
+ window.latestOnly=function(rows){
+  var out=baseLatest(rows);
+  if(!override)return out;
+  var keep=out.filter(function(r){return PT.indexOf(r.type)<0;});
+  PT.forEach(function(t){
+   var rs=(rows||[]).filter(function(r){return r.type===t&&nm(r)===override;});
+   var m=0;rs.forEach(function(r){if(rd(r)>m)m=rd(r);});
+   rs.forEach(function(r){if(rd(r)===m)keep.push(r);});
+  });
+  return keep;
+ };
+
+ function rolesOf(rows){
+  var map={};
+  (rows||[]).forEach(function(r){
+   if(PT.indexOf(r.type)<0)return;
+   var n=nm(r);if(!n)return;
+   if(!map[n])map[n]={name:n,round:0};
+   if(rd(r)>map[n].round)map[n].round=rd(r);
+  });
+  return Object.keys(map).map(function(k){return map[k];}).sort(function(a,b){return b.round-a.round||(a.name<b.name?-1:1);});
+ }
+
+ async function renderRole(empId,opts,role){
+  override=role;
   try{
-   st.obs=new MutationObserver(function(){st.last=Date.now();});
-   st.obs.observe(root,{childList:true,subtree:true,attributes:true,characterData:true});
-  }catch(e){}
+   var o={};for(var k in opts)o[k]=opts[k];o.__v95=true;
+   return await baseFull.call(null,empId,o);
+  }finally{override=null;}
  }
- function reveal(root){
-  if(root.__v83&&root.__v83.obs){try{root.__v83.obs.disconnect();}catch(e){}}
-  root.__v83=null;
-  root.classList.add('v83-ready');
+
+ function proInner(html){
+  var d=document.createElement('div');d.innerHTML=html;
+  var p=d.querySelector('#empCmpProspective');
+  return p?p.innerHTML:'';
  }
- function tick(){
-  var root=document.getElementById('adRoot');
-  if(!root||root.classList.contains('v83-ready'))return;
-  if(!root.__v83){arm(root);return;}
-  var st=root.__v83,now=Date.now();
-  var strips=root.querySelectorAll('.ar-strip').length,tabs=root.querySelectorAll('.fm-tabs').length,built=root.classList.contains('fp-assessment')&&root.classList.contains('fm-on')&&!!root.querySelector('.px-etab')&&(strips?tabs>=strips:now-st.t0>3000);
-  if(built&&now-st.last>=QUIET){reveal(root);return;}
-  if(!root.classList.contains('fp-assessment')&&now-st.t0>NOBUILD){reveal(root);return;}
-  if(now-st.t0>MAXWAIT){reveal(root);return;}
+ function scores(inner){
+  var d=document.createElement('div');d.innerHTML=inner;
+  var res={emp:null,mgr:null};
+  Array.prototype.forEach.call(d.querySelectorAll('.score-ring'),function(ring){
+   var t=ring.querySelector('text'),l=ring.querySelector('.label');
+   if(!t||!l)return;
+   var lab=(l.textContent||'').trim().toLowerCase();
+   if(lab==='employee')res.emp=(t.textContent||'').trim();
+   if(lab==='manager')res.mgr=(t.textContent||'').trim();
+  });
+  return res;
  }
- setInterval(tick,100);
- /* every time the assessment is drawn again, hide it again until the patches have finished */
- try{
-  if(typeof adRender==='function'){
-   var prev=adRender;
-   adRender=function(){
-    var r=document.getElementById('adRoot');
-    if(r){if(r.__v83&&r.__v83.obs){try{r.__v83.obs.disconnect();}catch(e){}}r.__v83=null;r.classList.remove('v83-ready');}
-    return prev.apply(this,arguments);
-   };
+
+ function pickerHTML(c){
+  var h='<div id="v95-picker" style="margin:4px 0 14px"><div style="font-weight:800;color:#24558A;font-size:14px;margin-bottom:8px">Choose a prospective role</div><div style="display:flex;gap:12px;flex-wrap:wrap">';
+  c.roles.forEach(function(r,i){
+   var on=i===c.sel;
+   h+='<button type="button" data-v95="'+i+'" onclick="window.cmsV95Pick('+i+')" style="flex:1 1 280px;text-align:left;cursor:pointer;border-radius:12px;padding:12px 14px;font-family:inherit;'+(on?'border:3px solid #7c3aed;background:#f3ebff;':'border:1px solid #cbd5e1;background:#fff;')+'">'+
+    '<div style="font-weight:800;font-size:15px;color:'+(on?'#4c1d95':'#24558A')+'">'+esc(r.name)+'</div>'+
+    '<div style="font-size:12px;color:#64748b;margin:3px 0">Round '+r.round+'</div>'+
+    '<div style="display:flex;gap:16px;font-weight:800;font-size:13px"><span style="color:#2563eb">Employee '+(r.emp||'waiting')+'</span><span style="color:#047857">Manager '+(r.mgr||'waiting')+'</span></div>'+
+    '<div style="margin-top:6px;font-size:11px;font-weight:800;color:'+(on?'#7c3aed':'#3979C9')+'">'+(on?'SHOWING BELOW':'CLICK TO VIEW')+'</div></button>';
+  });
+  return h+'</div></div>';
+ }
+
+ window.cmsV95Pick=function(i){
+  var c=cache.cur;if(!c||!c.roles[i])return;
+  c.sel=i;
+  var host=document.getElementById('empCmpProspective');if(!host)return;
+  host.innerHTML=pickerHTML(c)+'<div id="v95-body">'+c.roles[i].html+'</div>';
+ };
+
+ window.fullAssessmentHTML=async function(empId,opts){
+  if(!opts||!opts.employeeView||opts.__v95)return baseFull.apply(this,arguments);
+  try{
+   var q=await _supabase.from('assessments').select('*').eq('employee_id',empId);
+   var roles=rolesOf(q&&q.data);
+   if(roles.length<2)return baseFull.apply(this,arguments);
+   var htmls=[];
+   for(var i=0;i<roles.length;i++){
+    var full=await renderRole(empId,opts,roles[i].name);
+    htmls.push(full);
+   }
+   roles.forEach(function(r,i){
+    var inner=proInner(htmls[i]);
+    var sc=scores(inner);r.emp=sc.emp;r.mgr=sc.mgr;
+    r.html=inner.replace('Prospective role: employee vs manager','Prospective role: employee vs manager - '+esc(r.name)+' (Round '+r.round+')');
+   });
+   var c={roles:roles,sel:0};cache.cur=c;
+   var out=htmls[0];
+   var d=document.createElement('div');d.innerHTML=out;
+   var host=d.querySelector('#empCmpProspective');
+   if(!host)return htmls[0];
+   host.innerHTML=pickerHTML(c)+'<div id="v95-body">'+roles[0].html+'</div>';
+   return d.innerHTML;
+  }catch(e){
+   override=null;
+   return baseFull.apply(this,arguments);
   }
- }catch(e){}
+ };
 })();
 </script>
-<style id="cms-hide-jump-to-v85">
-#adRoot .fm-rail .fm-jump,#adRoot .fm-rail h3.sp:has(+ .fm-jump){display:none!important}
-</style>
+<script id="cms-employee-role-cards-v95">
+(function(){
+ 'use strict';
+ if(window.__cmsRoleCardsV95)return;
+ window.__cmsRoleCardsV95=true;
+ var PT=['Prospective','Prospective Self'];
+ var override=null;
+ var reg={};var seq=0;
+ var baseLatest=window.latestOnly;
+ var baseFull=window.fullAssessmentHTML;
+ if(typeof baseLatest!=='function'||typeof baseFull!=='function')return;
+
+ function rd(r){return Number(r.assessment_round)||1;}
+ function nm(r){return String(r.prospective_role||'').replace(/\s+/g,' ').trim();}
+ function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+
+ window.latestOnly=function(rows){
+  var out=baseLatest(rows);
+  if(!override)return out;
+  var keep=out.filter(function(r){return PT.indexOf(r.type)<0;});
+  PT.forEach(function(t){
+   var rs=(rows||[]).filter(function(r){return r.type===t&&nm(r)===override;});
+   var m=0;rs.forEach(function(r){if(rd(r)>m)m=rd(r);});
+   rs.forEach(function(r){if(rd(r)===m)keep.push(r);});
+  });
+  return keep;
+ };
+
+ function rolesOf(rows){
+  var map={};
+  (rows||[]).forEach(function(r){
+   if(PT.indexOf(r.type)<0)return;
+   var n=nm(r);if(!n)return;
+   if(!map[n])map[n]={name:n,round:0};
+   if(rd(r)>map[n].round)map[n].round=rd(r);
+  });
+  return Object.keys(map).map(function(k){return map[k];}).sort(function(a,b){return b.round-a.round||(a.name<b.name?-1:1);});
+ }
+
+ async function renderRole(empId,opts,role){
+  override=role;
+  try{
+   var o={};for(var k in opts)o[k]=opts[k];o.__v95=true;
+   return await baseFull.call(null,empId,o);
+  }finally{override=null;}
+ }
+
+ function proInner(html){
+  var d=document.createElement('div');d.innerHTML=html;
+  var p=d.querySelector('#empCmpProspective');
+  return p?p.innerHTML:'';
+ }
+ function scores(inner){
+  var d=document.createElement('div');d.innerHTML=inner;
+  var res={emp:null,mgr:null};
+  Array.prototype.forEach.call(d.querySelectorAll('.score-ring'),function(ring){
+   var t=ring.querySelector('text'),l=ring.querySelector('.label');
+   if(!t||!l)return;
+   var lab=(l.textContent||'').trim().toLowerCase();
+   if(lab==='employee')res.emp=(t.textContent||'').trim();
+   if(lab==='manager')res.mgr=(t.textContent||'').trim();
+  });
+  return res;
+ }
+
+ function pickerHTML(c){
+  var h='<div id="v95-picker" style="margin:4px 0 14px"><div style="font-weight:800;color:#24558A;font-size:14px;margin-bottom:8px">Choose a prospective role</div><div style="display:flex;gap:12px;flex-wrap:wrap">';
+  c.roles.forEach(function(r,i){
+   var on=i===c.sel;
+   h+='<button type="button" data-v95="'+i+'" onclick="window.cmsV95Pick(\''+c.key+'\','+i+')" style="flex:1 1 280px;text-align:left;cursor:pointer;border-radius:12px;padding:12px 14px;font-family:inherit;'+(on?'border:3px solid #7c3aed;background:#f3ebff;':'border:1px solid #cbd5e1;background:#fff;')+'">'+
+    '<div style="font-weight:800;font-size:15px;color:'+(on?'#4c1d95':'#24558A')+'">'+esc(r.name)+'</div>'+
+    '<div style="font-size:12px;color:#64748b;margin:3px 0">Round '+r.round+'</div>'+
+    '<div style="display:flex;gap:16px;font-weight:800;font-size:13px"><span style="color:#2563eb">Employee '+(r.emp||'waiting')+'</span><span style="color:#047857">Manager '+(r.mgr||'waiting')+'</span></div>'+
+    '<div style="margin-top:6px;font-size:11px;font-weight:800;color:'+(on?'#7c3aed':'#3979C9')+'">'+(on?'SHOWING BELOW':'CLICK TO VIEW')+'</div></button>';
+  });
+  return h+'</div></div>';
+ }
+
+ window.cmsV95Pick=function(key,i){
+  var c=reg[key];if(!c||!c.roles[i])return;
+  c.sel=i;
+  var host=document.getElementById(c.hostId);if(!host)return;
+  host.innerHTML=pickerHTML(c)+'<div id="v95-body-'+key+'">'+c.roles[i].html+'</div>';
+ };
+
+ function sectionOf(html){
+  var d=document.createElement('div');d.innerHTML=html;
+  var secs=d.querySelectorAll('section.cmp-block');
+  for(var i=0;i<secs.length;i++){
+   var h=secs[i].querySelector('.cmp-title');
+   if(h&&/^Prospective role/i.test((h.textContent||'').trim()))return secs[i].outerHTML;
+  }
+  return '';
+ }
+
+ window.fullAssessmentHTML=async function(empId,opts){
+  if(opts&&opts.__v95)return baseFull.apply(this,arguments);
+  try{
+   var q=await _supabase.from('assessments').select('*').eq('employee_id',empId);
+   var roles=rolesOf(q&&q.data);
+   if(roles.length<2)return baseFull.apply(this,arguments);
+   var emp=!!(opts&&opts.employeeView);
+   var htmls=[];
+   for(var i=0;i<roles.length;i++){
+    htmls.push(await renderRole(empId,opts||{},roles[i].name));
+   }
+   roles.forEach(function(r,i){
+    var inner=emp?proInner(htmls[i]):sectionOf(htmls[i]);
+    var sc=scores(inner);r.emp=sc.emp;r.mgr=sc.mgr;
+    r.html=inner.replace('Prospective role: employee vs manager','Prospective role: employee vs manager - '+esc(r.name)+' (Round '+r.round+')');
+   });
+   var key='k'+(++seq);
+   var c={roles:roles,sel:0,key:key,hostId:emp?'empCmpProspective':'v95h-'+key};
+   reg[key]=c;
+   var d=document.createElement('div');d.innerHTML=htmls[0];
+   var host=null;
+   if(emp){host=d.querySelector('#empCmpProspective');if(!host)return htmls[0];}
+   else{
+    var secs=d.querySelectorAll('section.cmp-block');
+    for(var j=0;j<secs.length;j++){
+     var h=secs[j].querySelector('.cmp-title');
+     if(h&&/^Prospective role/i.test((h.textContent||'').trim())){
+      host=document.createElement('div');host.id=c.hostId;
+      secs[j].parentNode.replaceChild(host,secs[j]);break;
+     }
+    }
+    if(!host)return htmls[0];
+   }
+   host.innerHTML=pickerHTML(c)+'<div id="v95-body-'+key+'">'+roles[0].html+'</div>';
+   return d.innerHTML;
+  }catch(e){
+   override=null;
+   return baseFull.apply(this,arguments);
+  }
+ };
+})();
+</script>
+<script id="cms-employee-gaps-strengths-roles-v96">
+(function(){
+ 'use strict';
+ if(window.__cmsRolesGapsV96)return;
+ window.__cmsRolesGapsV96=true;
+ var PT=['Prospective','Prospective Self'];
+ var override=null;
+ var selected={};
+ var baseLatest=window.latestOnly;
+ if(typeof baseLatest!=='function')return;
+
+ function rd(r){return Number(r.assessment_round)||1;}
+ function nm(r){return String(r.prospective_role||'').replace(/\s+/g,' ').trim();}
+ function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+
+ window.latestOnly=function(rows){
+  var out=baseLatest(rows);
+  if(!override)return out;
+  var keep=out.filter(function(r){return PT.indexOf(r.type)<0;});
+  PT.forEach(function(t){
+   var rs=(rows||[]).filter(function(r){return r.type===t&&nm(r)===override;});
+   var m=0;rs.forEach(function(r){if(rd(r)>m)m=rd(r);});
+   rs.forEach(function(r){if(rd(r)===m)keep.push(r);});
+  });
+  return keep;
+ };
+
+ function rolesOf(rows){
+  var map={};
+  (rows||[]).forEach(function(r){
+   if(PT.indexOf(r.type)<0)return;
+   var n=nm(r);if(!n)return;
+   if(!map[n])map[n]={name:n,round:0,rows:[]};
+   if(rd(r)>map[n].round)map[n].round=rd(r);
+   map[n].rows.push(r);
+  });
+  var list=Object.keys(map).map(function(k){return map[k];});
+  list.forEach(function(r){
+   var s=r.rows.filter(function(x){return x.type==='Prospective Self'&&rd(x)===r.round;});
+   var m=r.rows.filter(function(x){return x.type==='Prospective'&&rd(x)===r.round;});
+   r.emp=!s.length?'not submitted':(cmsReviewComplete(s)?'reviewed':'waiting HR');
+   r.mgr=!m.length?'not submitted':(cmsReviewComplete(m)?'reviewed':'waiting HR');
+  });
+  return list.sort(function(a,b){return b.round-a.round||(a.name<b.name?-1:1);});
+ }
+
+ var PAGES={
+  gaps:{fn:'loadEmployeeGaps',host:'employeeGapProspectivePage',tab:'showEmployeeGapTab'},
+  strengths:{fn:'loadEmployeeStrengths',host:'employeeStrengthProspectivePage',tab:'showEmployeeStrengthTab'}
+ };
+ var bases={};
+
+ function pickerHTML(key,roles,sel){
+  var h='<div id="v96-picker-'+key+'" style="margin:0 0 14px"><div style="font-weight:800;color:#24558A;font-size:14px;margin-bottom:8px">Choose a prospective role</div><div style="display:flex;gap:12px;flex-wrap:wrap">';
+  roles.forEach(function(r,i){
+   var on=r.name===sel;
+   h+='<button type="button" onclick="window.cmsV96Pick(\''+key+'\','+i+')" style="flex:1 1 280px;text-align:left;cursor:pointer;border-radius:12px;padding:12px 14px;font-family:inherit;'+(on?'border:3px solid #7c3aed;background:#f3ebff;':'border:1px solid #cbd5e1;background:#fff;')+'">'+
+    '<div style="font-weight:800;font-size:15px;color:'+(on?'#4c1d95':'#24558A')+'">'+esc(r.name)+'</div>'+
+    '<div style="font-size:12px;color:#64748b;margin:3px 0">Round '+r.round+'</div>'+
+    '<div style="font-size:12px;color:#334155">Employee: '+r.emp+' | Manager: '+r.mgr+'</div>'+
+    '<div style="margin-top:6px;font-size:11px;font-weight:800;color:'+(on?'#7c3aed':'#3979C9')+'">'+(on?'SHOWING BELOW':'CLICK TO VIEW')+'</div></button>';
+  });
+  return h+'</div></div>';
+ }
+
+ var lastRoles={};
+ async function decorate(key){
+  var cfg=PAGES[key];
+  var host=document.getElementById(cfg.host);
+  if(!host)return;
+  var old=document.getElementById('v96-picker-'+key);if(old)old.remove();
+  var emp=(await fpOwnEmployee()).data;
+  if(!emp)return;
+  var q=await _supabase.from('assessments').select('*').eq('employee_id',emp.employee_id);
+  var roles=rolesOf(q&&q.data);
+  lastRoles[key]=roles;
+  if(roles.length<2)return;
+  host=document.getElementById(cfg.host);if(!host)return;
+  var sel=selected[key]||roles[0].name;
+  var div=document.createElement('div');
+  div.innerHTML=pickerHTML(key,roles,sel);
+  host.insertBefore(div.firstChild,host.firstChild);
+ }
+
+ window.cmsV96Pick=async function(key,i){
+  var roles=lastRoles[key],cfg=PAGES[key];
+  if(!roles||!roles[i])return;
+  selected[key]=roles[i].name;
+  override=roles[i].name;
+  try{await bases[key]();}finally{override=null;}
+  try{await decorate(key);}catch(e){}
+  if(typeof window[cfg.tab]==='function')window[cfg.tab]('prospective');
+ };
+
+ Object.keys(PAGES).forEach(function(key){
+  var cfg=PAGES[key];
+  var base=window[cfg.fn];
+  if(typeof base!=='function')return;
+  bases[key]=base;
+  window[cfg.fn]=async function(){
+   selected[key]=null;
+   var r=await base.apply(this,arguments);
+   try{await decorate(key);}catch(e){}
+   return r;
+  };
+ });
+})();
+</script>
 </body>
 </html>
