@@ -24883,7 +24883,7 @@ uaEdit=function(user){
 var FP_COLORS={FC001:'#2856b6',FC002:'#7945b5',FC003:'#087e8b',FC004:'#b95920',FC005:'#318553',PC001:'#b43870',LC001:'#754172',CC001:'#247caa',CC004:'#b64d40',CC003:'#6c7d32',CC002:'#596caf'};
 function fpAnswer(v){return ['yes','no'].includes(v?.demonstrated)?v.demonstrated:v?.ticked===true?'yes':null;}
 var fpStable=adStable;
-adStable=function(items){return JSON.stringify(items.map(function(x){return {id:String(x.id),ticked:fpAnswer(x)==='yes',demonstrated:fpAnswer(x),rating:x.rating?Number(x.rating):null,evidence:String(x.evidence||''),evidence_items:Array.isArray(x.evidence_items)?x.evidence_items:[],attachment_name:String(x.attachment_name||''),attachment_url:String(x.attachment_url||'')};}).sort(function(a,b){return a.id.localeCompare(b.id);}));};
+adStable=function(items){return JSON.stringify(items.map(function(x){return {id:String(x.id),ticked:fpAnswer(x)==='yes',demonstrated:fpAnswer(x),rating:x.rating?Number(x.rating):null,evidence:String(x.evidence||''),evidence_items:Array.isArray(x.evidence_items)?x.evidence_items:[],attachment_name:String(x.attachment_name||''), attachment_url:String(x.attachment_url||''),ksaba:(x.ksaba&&typeof x.ksaba==='object')?{c:!!x.ksaba.c,y:Array.isArray(x.ksaba.y)?x.ksaba.y.slice().sort():[],n:Array.isArray(x.ksaba.n)?x.ksaba.n.slice().sort():[]}:undefined};}).sort(function(a,b){return a.id.localeCompare(b.id);}));};
 var fpBlank=adBlank;adBlank=function(item){return {...fpBlank(item),demonstrated:null};};
 var fpCapture=adCapture;
 adCapture=function(s){if(!adActive(s))return;document.querySelectorAll('#adRoot [data-ad-item]').forEach(el=>{var v=s.values[el.dataset.adItem];if(!v)return;var pick=el.querySelector('[data-fp-answer]:checked');v.demonstrated=pick?pick.value:null;el.querySelector('[data-ad-field="ticked"]').checked=v.demonstrated==='yes';});fpCapture(s);};
@@ -57661,7 +57661,7 @@ body:has(#px71) .hd{display:none!important}
   try{obs=new MutationObserver(sched);obs.observe(root,{childList:true,subtree:true});}catch(x){}
   sched();
  }
- start();
+ start();setInterval(function(){try{run();}catch(e){}},2000);
 })();
 </script>
 <style id="cms-experience-bar-down-v77b-css">
@@ -57718,7 +57718,7 @@ body:has(#px71) .hd{display:none!important}
   document.addEventListener('click',function(){sched();},true);
   sched();
  }
- start();
+ start();setInterval(sched,2000);
 })();
 </script>
 <style id="cms-complete-before-next-v79b-css">
@@ -57916,7 +57916,7 @@ body:has(#px71) .hd{display:none!important}
    return 'Responsibility '+a+more;
   });
  }
- function fixOne(el){
+function fixOne(el,fs0){
   var t=String(el.textContent||'').replace(/\s+/g,' ').trim();
   if(!/\bR0*\d+/.test(t)){
    if(el.classList.contains('v80-rl')){el.classList.remove('v80-rl');el.removeAttribute('data-v80');}
@@ -57924,7 +57924,7 @@ body:has(#px71) .hd{display:none!important}
   }
   var nt=words(t);
   if(!el.classList.contains('v80-rl')){
-   var fs=parseFloat(getComputedStyle(el).fontSize);
+   var fs=fs0;
    if(fs>0)el.style.setProperty('--v80-fs',fs+'px');
    el.classList.add('v80-rl');
   }
@@ -57952,7 +57952,7 @@ body:has(#px71) .hd{display:none!important}
   if(obs)obs.disconnect();
   try{
    dedupe(root);
-   Array.prototype.slice.call(root.querySelectorAll(SEL)).forEach(fixOne);
+   var els=Array.prototype.slice.call(root.querySelectorAll(SEL)),fsz=els.map(function(el){return (!el.classList.contains('v80-rl')&&/\bR0*\d+/.test(el.textContent||''))?parseFloat(getComputedStyle(el).fontSize):0;});els.forEach(function(el,i){fixOne(el,fsz[i]);});
   }catch(e){if(window.console)console.warn('Responsibility words:',e&&e.message);}
   finally{
    try{if(!obs)obs=new MutationObserver(function(){sched(120);});obs.observe(root,{childList:true,subtree:true,characterData:true});}catch(x){}
@@ -57983,7 +57983,7 @@ body:has(#px71) .hd{display:none!important}
   });
   return out;
  }
- function fix(el){
+ function fix(el,c0){
   var t=q('.px-etab .px-ttl',el);if(!t)return;
   var raw=String(t.textContent||'').replace(/\s+/g,' ').trim();
   var m=/Experience\s+(\d+)\s+of\s+\d+/i.exec(raw);
@@ -58003,7 +58003,7 @@ body:has(#px71) .hd{display:none!important}
  function run(){
   var root=document.getElementById('adRoot');if(!root)return;
   if(obs)obs.disconnect();
-  try{qa('[data-ad-item]',root).forEach(fix);}catch(e){if(window.console)console.warn('Experience linked label:',e&&e.message);}
+   try{var its=qa('[data-ad-item]',root),cs0=its.map(function(el){var tt=q('.px-etab .px-ttl',el);if(!tt||tt.classList.contains('v81-rl'))return null;var cc=getComputedStyle(tt);return {fs:parseFloat(cc.fontSize),ls:cc.letterSpacing};});its.forEach(function(el,i){fix(el,cs0[i]);});}catch(e){if(window.console)console.warn('Experience linked label:',e&&e.message);}
   finally{try{if(!obs)obs=new MutationObserver(function(){sched(150);});obs.observe(root,{childList:true,subtree:true,characterData:true});}catch(x){}}
  }
  function sched(ms){clearTimeout(timer);timer=setTimeout(run,ms||150);}
@@ -58025,11 +58025,26 @@ body:has(#px71) .hd{display:none!important}
 #adRoot .v82-card{border:1.5px solid #d4def0;border-radius:12px;overflow:hidden;background:#fff}
 #adRoot .v82-card h4{margin:0;padding:10px 12px;font-size:14.5px;color:#fff;display:flex;justify-content:space-between;gap:8px}
 #adRoot .v82-card h4 em{font-style:normal;font-weight:600;font-size:12.5px;opacity:.92}
-#adRoot .v82-it{display:flex;gap:10px;padding:10px 12px;border-top:1px solid #edf1f8;font-size:14px;line-height:1.4;cursor:pointer;align-items:flex-start}
-#adRoot .v82-it input{flex:0 0 auto;width:18px;height:18px;margin:1px 0 0;accent-color:#3979C9;cursor:pointer}
+#adRoot .v82-it{display:flex;gap:10px;padding:10px 12px;border-top:1px solid #edf1f8;font-size:14px;line-height:1.4;align-items:center;justify-content:space-between}
+#adRoot .v82-it .v82-tx{flex:1;min-width:0}
 #adRoot .v82-it small{display:block;color:#7a88a3;font-size:12px;margin-top:2px}
-#adRoot .v82-it.off{background:#fff5f4}
-#adRoot .v82-foot{display:flex;justify-content:flex-end;align-items:center;gap:20px;padding:14px 22px 18px;border-top:1px solid #e3e9f5;background:#fafcff;flex-wrap:wrap}
+#adRoot .v82-it.has{background:#f1fbf4}
+#adRoot .v82-it.nope{background:#fef3f2}
+#adRoot .v82-bt{display:flex;gap:6px;flex:0 0 auto}
+#adRoot .v82-b{width:34px;height:34px;border-radius:50%;border:2px solid #cbd5e6;background:#fff;display:flex;align-items:center;justify-content:center;padding:0;cursor:pointer}
+#adRoot .v82-b svg{width:18px;height:18px}
+#adRoot .v82-yes svg{stroke:#9ab5a3}
+#adRoot .v82-no svg{stroke:#c9a3a0}
+#adRoot .v82-yes.on{background:#16a34a;border-color:#16a34a}
+#adRoot .v82-no.on{background:#d92d20;border-color:#d92d20}
+#adRoot .v82-b.on svg{stroke:#fff}
+#adRoot .v82-b[disabled]{opacity:.55;cursor:not-allowed}
+#adRoot .v82-sum{display:flex;gap:20px;font-size:14px;font-weight:700;flex-wrap:wrap}
+#adRoot .v82-sum b{font-size:18px}
+#adRoot .v82-sum .g{color:#16a34a}
+#adRoot .v82-sum .r{color:#d92d20}
+#adRoot .v82-sum .n{color:#7a869c}
+#adRoot .v82-foot{display:flex;justify-content:space-between;align-items:center;gap:20px;padding:14px 22px 18px;border-top:1px solid #e3e9f5;background:#fafcff;flex-wrap:wrap}
 #adRoot .v82-gaps{font-size:14px;color:#7a1a12;background:#fde8e6;border:1.5px solid #f3c1bc;border-radius:10px;padding:10px 14px;flex:1 1 360px;line-height:1.45}
 #adRoot .v82-gaps.ok{color:#14532d;background:#e7f7ec;border-color:#a8dfba}
 #adRoot .v82-btn{background:#3979C9;color:#fff;border:0;border-radius:10px;padding:12px 26px;font-weight:800;font-size:15px;box-shadow:0 4px 10px rgba(57,121,201,.4);cursor:pointer}
@@ -58045,7 +58060,7 @@ body:has(#px71) .hd{display:none!important}
  if(window.__cmsKsabaEndV82)return;
  window.__cmsKsabaEndV82=true;
  var GR=[['know','Knowledge','#2756b3'],['skills','Skills','#0e7c86'],['abil','Abilities','#6d3fc0'],['beh','Behaviours','#c2610c'],['attr','Attributes','#15803d']];
- var MAXN=7;
+ var MAXN=5;
  function q(s,r){return (r||document).querySelector(s);}
  function qa(s,r){return Array.prototype.slice.call((r||document).querySelectorAll(s));}
  function norm(s){return String(s==null?'':s).replace(/\s+/g,' ').trim();}
@@ -58095,7 +58110,7 @@ body:has(#px71) .hd{display:none!important}
    items.forEach(function(el,k){
     var id=el.getAttribute('data-ad-item'),strip=q('.ar-strip',el);
     var p=q('.fp-experience-text p',el),text=norm(p?p.textContent:'');txt+=' '+text;
-    var sm=q('.fp-experience-text small',el),cls=norm(sm?sm.textContent:'');var wt=/critical|must/i.test(cls)?3:(/important/i.test(cls)?2:1);
+    var sm=q('.fp-experience-text small',el),cls=norm(sm?sm.textContent:'');var wt=/critical|must/i.test(cls)?9:(/important/i.test(cls)?3:1);
     if(!strip)return;
     var it=s&&s.items?(s.items.filter(function(x){return String(x.id)===String(id);})[0]||null):null;
     var refs=qa('.ar-r',el).map(function(c){return norm(c.textContent).toUpperCase();}).filter(Boolean);
@@ -58135,14 +58150,14 @@ body:has(#px71) .hd{display:none!important}
  /* ---- marks live on the last experience of the competency ---- */
  function lastItem(sec){var its=qa('[data-ad-item]',sec);return its.length?its[its.length-1]:null;}
  function marks(s,sec){
-  var el=lastItem(sec);if(!el||!s||!s.values)return {c:false,y:[],ref:null};
-  var v=s.values[el.getAttribute('data-ad-item')];if(!v)return {c:false,y:[],ref:null};
+  var el=lastItem(sec);if(!el||!s||!s.values)return {c:false,y:[],n:[],ref:null};
+  var v=s.values[el.getAttribute('data-ad-item')];if(!v)return {c:false,y:[],n:[],ref:null};
   var k=v.ksaba;if(!k||typeof k!=='object')k=null;
-  return {c:!!(k&&k.c),y:(k&&Array.isArray(k.y))?k.y:[],ref:v};
+  return {c:!!(k&&k.c),y:(k&&Array.isArray(k.y))?k.y:[],n:(k&&Array.isArray(k.n))?k.n:[],ref:v};
  }
- function setMarks(s,sec,c,y){
+ function setMarks(s,sec,c,y,n){
   var m=marks(s,sec);if(!m.ref)return;
-  m.ref.ksaba={c:!!c,y:y.slice()};
+  m.ref.ksaba={c:!!c,y:y.slice(),n:(n||[]).slice()};
   try{if(typeof adQueue==='function')adQueue(s);}catch(e){}
  }
  function allAnswered(sec){return qa('[data-ad-item]',sec).every(function(el){return !!ans(el);});}
@@ -58151,25 +58166,27 @@ body:has(#px71) .hd{display:none!important}
  /* ---- the panel ---- */
  function panelHTML(sec,items,s){
   var m=marks(s,sec),mgr=isManager(s),nm=firstName(s),comp=secName(sec),can=!!(s&&s.canSave);
-  var ticked=items.filter(function(i){return m.y.indexOf(i.id)>=0;}),un=items.filter(function(i){return m.y.indexOf(i.id)<0;});
-  var done=allAnswered(sec);
+  var nHas=items.filter(function(i){return m.y.indexOf(i.id)>=0;}).length,nNo=items.filter(function(i){return m.n.indexOf(i.id)>=0&&m.y.indexOf(i.id)<0;}).length,nLeft=items.length-nHas-nNo;
+  var done=allAnswered(sec),itemsDone=nLeft===0;
   var h='<div class="v82-ph"><div><b>Final step for this competency</b><strong>'+(mgr?('Confirm what '+esc(nm)+' has for this competency'):'Confirm your knowledge, skills, abilities, behaviours and attributes')+'</strong>'+
-   '<span>'+(mgr?('Confirm which knowledge, skills, abilities, behaviours and attributes '+esc(nm)+' has for '+esc(comp)+'. Tick each one you have seen. Leave blank any not yet shown.'):('Tick each one that you have for '+esc(comp)+'. Leave blank any you do not yet have. Unticked items become development areas.'))+'</span></div>'+
-   '<div class="v82-cnt"><b>'+ticked.length+' of '+items.length+'</b><em>ticked</em></div></div>';
-  if(!done)h+='<div class="v82-wait">Answer every experience above first, then confirm this list.</div>';
+   '<span>'+(mgr?('Confirm which knowledge, skills, abilities, behaviours and attributes '+esc(nm)+' has for '+esc(comp)+'. For every item, press the green tick if '+esc(nm)+' has it, or the red X if not. Every item needs one answer.'):('For every item, press the green tick if you have it, or the red X if you do not. Every item needs one answer.'))+'</span></div>'+
+   '<div class="v82-cnt"><b>'+(nHas+nNo)+' of '+items.length+'</b><em>answered</em></div></div>';
+  if(!done)h+='<div class="v82-wait">Answer every experience above first, then confirm this list.</div>';else if(!itemsDone)h+='<div class="v82-wait">Press a green tick or a red X for every item, then confirm.</div>';
   h+='<div class="v82-grid">';
   GR.forEach(function(g){
    var gi=items.filter(function(i){return i.g===g[0];});if(!gi.length)return;
-   var tk=gi.filter(function(i){return m.y.indexOf(i.id)>=0;}).length;
+   var tk=gi.filter(function(i){return m.y.indexOf(i.id)>=0||m.n.indexOf(i.id)>=0;}).length;
    h+='<div class="v82-card"><h4 style="background:'+g[2]+'">'+g[1]+'<em>'+tk+' of '+gi.length+'</em></h4>';
    gi.forEach(function(i){
-    var on=m.y.indexOf(i.id)>=0;
-    h+='<label class="v82-it'+(on||!m.c?'':' off')+'"><input type="checkbox" data-v82="'+esc(i.id)+'"'+(on?' checked':'')+(can?'':' disabled')+'><span>'+esc(i.text)+(i.sup.length?'<small>Supports Experience'+(i.sup.length>1?'s ':' ')+i.sup.join(', ')+'</small>':'')+'</span></label>';
+    var yes=m.y.indexOf(i.id)>=0,no=!yes&&m.n.indexOf(i.id)>=0;
+    h+='<div class="v82-it'+(yes?' has':(no?' nope':''))+'"><span class="v82-tx">'+esc(i.text)+(i.sup.length?'<small>Supports Experience'+(i.sup.length>1?'s ':' ')+i.sup.join(', ')+'</small>':'')+'</span><span class="v82-bt">'+
+     '<button type="button" class="v82-b v82-yes'+(yes?' on':'')+'" data-v82="'+esc(i.id)+'" data-v82v="y" title="Has it" aria-label="Has it"'+(can?'':' disabled')+'><svg viewBox="0 0 24 24" fill="none" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></button>'+
+     '<button type="button" class="v82-b v82-no'+(no?' on':'')+'" data-v82="'+esc(i.id)+'" data-v82v="n" title="Does not have it" aria-label="Does not have it"'+(can?'':' disabled')+'><svg viewBox="0 0 24 24" fill="none" stroke-width="3.4" stroke-linecap="round"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg></button></span></div>';
    });
    h+='</div>';
   });
-  h+='</div><div class="v82-foot">';
-  h+='<button type="button" class="v82-btn'+(m.c?' done':'')+'" data-v82-confirm="1"'+((!can||!done)?' disabled':'')+'>'+(m.c?'Confirmed':'Confirm and continue')+'</button></div>';
+  h+='</div><div class="v82-foot"><div class="v82-sum"><span class="g"><b>'+nHas+'</b> has it</span><span class="r"><b>'+nNo+'</b> does not have it</span><span class="n"><b>'+nLeft+'</b> not answered</span></div>';
+  h+='<button type="button" class="v82-btn'+(m.c?' done':'')+'" data-v82-confirm="1"'+((!can||!done||!itemsDone)?' disabled':'')+'>'+(m.c?'Confirmed':'Confirm and continue')+'</button></div>';
   return h;
  }
  var obs=null,timer=null,busy=false;
@@ -58185,7 +58202,7 @@ body:has(#px71) .hd{display:none!important}
     for(k=0;k<sec.children.length;k++){if(sec.children[k].classList&&sec.children[k].classList.contains('v82-panel'))p=sec.children[k];}
     if(!items.length){if(p)p.remove();return;}
     var m=marks(s,sec);
-    var sig=JSON.stringify([items.map(function(i){return i.id+(i.sup.join('.'));}),m.y,m.c,allAnswered(sec),!!s.canSave,isManager(s)]);
+    var sig=JSON.stringify([items.map(function(i){return i.id+(i.sup.join('.'));}),m.y,m.n,m.c,allAnswered(sec),!!s.canSave,isManager(s)]);
     if(!p){p=document.createElement('section');p.className='v82-panel';p.setAttribute('aria-label','Confirm knowledge, skills, abilities, behaviours and attributes');}
     var nx=null;for(k=0;k<sec.children.length;k++){if(sec.children[k].classList&&sec.children[k].classList.contains('px-nx'))nx=sec.children[k];}
     if(nx){if(p.nextSibling!==nx||p.parentNode!==sec)sec.insertBefore(p,nx);}else if(p.parentNode!==sec||p!==sec.lastElementChild)sec.appendChild(p);
@@ -58196,24 +58213,25 @@ body:has(#px71) .hd{display:none!important}
  }
  function sched(ms){clearTimeout(timer);timer=setTimeout(run,ms||250);}
  function secOf(node){return node.closest?node.closest('.fp-competency'):null;}
- document.addEventListener('change',function(e){
-  var t=e.target;if(!t||!t.getAttribute||t.getAttribute('data-v82')==null)return;
+ document.addEventListener('click',function(e){
+  var t=e.target&&e.target.closest?e.target.closest('[data-v82v]'):null;if(!t||t.disabled)return;
   var s=stateOf(),sec=secOf(t);if(!s||!sec)return;
-  var m=marks(s,sec),id=t.getAttribute('data-v82'),y=m.y.slice(),i=y.indexOf(id);
-  if(t.checked&&i<0)y.push(id);if(!t.checked&&i>=0)y.splice(i,1);
-  setMarks(s,sec,false,y);sched(30);
+  var m=marks(s,sec),id=t.getAttribute('data-v82'),v=t.getAttribute('data-v82v'),y=m.y.filter(function(x){return x!==id;}),n=m.n.filter(function(x){return x!==id;});
+  var was=v==='y'?m.y.indexOf(id)>=0:m.n.indexOf(id)>=0;
+  if(!was){if(v==='y')y.push(id);else n.push(id);}
+  setMarks(s,sec,false,y,n);sched(30);
  },false);
  document.addEventListener('click',function(e){
   var b=e.target&&e.target.closest?e.target.closest('[data-v82-confirm]'):null;if(!b||b.disabled)return;
   var s=stateOf(),sec=secOf(b);if(!s||!sec)return;
-  var m=marks(s,sec);setMarks(s,sec,true,m.y);sched(30);
+  var m=marks(s,sec);setMarks(s,sec,true,m.y,m.n);sched(30);
   var rb=null;
  },false);
  /* ---- do not let anyone move on before confirming ---- */
  function flash(p){
   if(!p)return;
   var old=q('.v82-block',p);if(old)old.remove();
-  var n=document.createElement('div');n.className='v82-block';n.textContent='Please tick what you have, then press Confirm and continue before moving on.';
+  var n=document.createElement('div');n.className='v82-block';n.textContent='Please press a green tick or a red X for every item, then press Confirm and continue before moving on.';
   p.insertBefore(n,p.firstChild);
   p.classList.add('v82-flash');
   try{p.scrollIntoView({block:'center',behavior:'smooth'});}catch(x){p.scrollIntoView();}
@@ -58284,7 +58302,7 @@ body:has(#px71) .hd{display:none!important}
   if(!root||root.classList.contains('v83-ready'))return;
   if(!root.__v83){arm(root);return;}
   var st=root.__v83,now=Date.now();
-  var built=root.classList.contains('fp-assessment')&&root.classList.contains('fm-on')&&!!root.querySelector('.px-etab');
+  var strips=root.querySelectorAll('.ar-strip').length,tabs=root.querySelectorAll('.fm-tabs').length,built=root.classList.contains('fp-assessment')&&root.classList.contains('fm-on')&&!!root.querySelector('.px-etab')&&(strips?tabs>=strips:now-st.t0>3000);
   if(built&&now-st.last>=QUIET){reveal(root);return;}
   if(!root.classList.contains('fp-assessment')&&now-st.t0>NOBUILD){reveal(root);return;}
   if(now-st.t0>MAXWAIT){reveal(root);return;}
