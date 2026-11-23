@@ -6903,9 +6903,9 @@ return {};
 }
 /* Rating policy v1: terminology supplements, never replaces, behavioral anchors.
    Existing finalized/decided records keep their legacy scoring policy. */
-function cmsRatingLabel(v){return {1:'Unsatisfactory',2:'Below Average',3:'Average',4:'Above Average',5:'Exceptional'}[Number(v)]||'Not rated';}
-function cmsRatingDescription(v){return {1:'Not demonstrated',2:'Limited exposure, needs significant support',3:'Demonstrates independently at expected level',4:'Demonstrates consistently and handles complexity',5:'Demonstrates exceptionally and can coach others'}[Number(v)]||'';}
-function cmsRatingLegendHTML(){return '<div class="cms-rating-legend" style="padding:12px;background:#eef2ff;border:1px solid #c7d2fe;border-radius:9px;margin:12px 0"><strong>Level of Competencies (1-5)</strong><p style="margin-top:6px">5 - Exceptional | 4 - Above Average | 3 - Average | 2 - Below Average | 1 - Unsatisfactory</p></div>';}
+function cmsRatingDescription(v){return {1:'Demonstrates minimal understanding or practical application. Requires significant guidance, supervision and structured development to perform the competency.',2:'Demonstrates basic understanding but requires guidance and support to apply the competency effectively. Application is inconsistent, particularly in challenging situations.',3:'Demonstrates the required level of competence. Applies knowledge and skills independently in normal role situations and consistently delivers expected results.',4:'Demonstrates strong proficiency. Applies the competency independently in complex situations, resolves challenges effectively and can guide others.',5:'Demonstrates exceptional mastery. Can apply the competency in highly complex situations, develop best practices, coach others and provide expert guidance.'}[Number(v)]||'';}
+function cmsRatingLabel(v){return {1:'Basic',2:'Developing',3:'Proficient',4:'Advanced',5:'Expert'}[Number(v)]||'Not rated';}
+function cmsRatingLegendHTML(){return '<div class="cms-rating-legend" style="padding:12px;background:#eef2ff;border:1px solid #c7d2fe;border-radius:9px;margin:12px 0"><strong>Level of Competencies (1-5)</strong><p style="margin-top:6px">5 - Expert | 4 - Advanced | 3 - Proficient | 2 - Developing | 1 - Basic</p></div>';}
 function cmsAssessmentInstructionsHTML(mode){
  var correction=mode==='correction';
  var rules=[
@@ -6922,7 +6922,7 @@ function cmsAssessmentInstructionsHTML(mode){
  [5,4,3,2,1].forEach(function(v){h+='<div class="cms-guide-level cms-guide-level-'+v+'"><span class="cms-guide-number">'+v+'</span><div><strong>'+escapeHtml(cmsRatingLabel(v))+'</strong><p>'+escapeHtml(cmsRatingDescription(v))+'</p></div></div>';});
  h+='</div></div><div class="cms-guide-steps"><h4>How to complete it</h4><ol><li><strong>Review every experience.</strong> Tick only those actually demonstrated; leave the rest unticked as Not Yet Demonstrated.</li><li><strong>Provide evidence.</strong> Describe the action, context and result. Use specific projects, dates, numbers or deliverables, and attach supporting proof where available.</li><li><strong>Select one rating.</strong> Use the scale above for each demonstrated experience. Review the weighted score as you fill in.</li>';
  h+=mode==='invited'?'<li><strong>Save and submit your invitation.</strong> Use Save Draft before leaving this invited form. This form saves manually in this browser, separately from login. Submit once for this invitation; only HR can issue another invitation.</li>':correction?'<li><strong>Correct and resubmit.</strong> Use HR\u2019s feedback to update only returned evidence and its rating. Existing attachments are retained. Resubmit each returned item for HR review; approved experiences remain locked.</li>':'<li><strong>Save, review and submit.</strong> Drafts auto-save every 20 seconds while the form is open; you can also press Save Draft. Submit once per authorized round. Reassessment requires approval through the request process.</li>';
- h+='</ol></div><div class="cms-guide-scoring"><strong>No evidence = rating 1 out of 5 (Unsatisfactory).</strong><p>The same minimum applies to experiences not demonstrated, missing ratings, and HR-disapproved or unverifiable evidence under the new rule. It is weighted normally, not added as a bonus point.</p><details><summary>How scoring and historical results work</summary><p>Each effective rating is divided by 5 and weighted within its experience tier and competency. Critical experiences carry more weight than Important and Value-Add experiences. A missing whole assessment remains \u201cAwaiting assessment\u201d; it does not receive a score. Existing finalized results retain their original scoring policy.</p></details></div></div></section>';
+ h+='</ol></div><div class="cms-guide-scoring"><strong>No evidence = rating 1 out of 5 (Basic).</strong><p>The same minimum applies to experiences not demonstrated, missing ratings, and HR-disapproved or unverifiable evidence under the new rule. It is weighted normally, not added as a bonus point.</p><details><summary>How scoring and historical results work</summary><p>Each effective rating is divided by 5 and weighted within its experience tier and competency. Critical experiences carry more weight than Important and Value-Add experiences. A missing whole assessment remains \u201cAwaiting assessment\u201d; it does not receive a score. Existing finalized results retain their original scoring policy.</p></details></div></div></section>';
  return h+cmsWeightGuideHTML();
 }
 
@@ -17438,7 +17438,7 @@ async function rcCorrections(){
  if(r.attachment_url){var a=rcNode('a','Existing supporting file',c);if(/^https:\/\//i.test(r.attachment_url)){a.href=r.attachment_url;a.target='_blank';a.rel='noopener noreferrer';}rcNode('p','Existing attachment is retained. This correction form edits evidence and rating only.',c);}
  var tick=rcText('I have demonstrated this experience',c);tick.type='checkbox';tick.style.width='auto';tick.checked=!!r.ticked;
  var ev=rcText('Corrected evidence',c,'textarea');ev.rows=5;ev.maxLength=20000;ev.value=r.evidence||'';
- var rating=rcText('Rating',c,'select');['Select a rating','1 - Unsatisfactory: Not demonstrated','2 - Below Average: Limited exposure, needs support','3 - Average: Independent at expected level','4 - Above Average: Consistent, handles complexity','5 - Exceptional: Can coach others'].forEach((s,i)=>rating.add(new Option(s,i?String(i):'')));rating.value=r.proficiency_rating?String(r.proficiency_rating):'';
+ var rating=rcText('Rating',c,'select');['Select a rating'].concat([1,2,3,4,5].map(function(v){return v+' - '+cmsRatingLabel(v);})).forEach((s,i)=>rating.add(new Option(s,i?String(i):'')));rating.value=r.proficiency_rating?String(r.proficiency_rating):'';
  rcButton('Resubmit this returned experience',async()=>{
   if(tick.checked&&(!ev.value.trim()||!rating.value))throw new Error('Add evidence and a rating first.');
   if(!confirm('Send this corrected experience back to HR for review?'))return;
@@ -18128,7 +18128,7 @@ async function loadManagerDashboard(){
 h+='<div class="md-v2-kpis">'+mdV2Kpi(d.people.length,'Direct Reports','Open My Team','mgr-team','teal','people')+mdV2Kpi(assessmentPending,'Pending Assessments','Invited current and prospective work','mgr-pending','amber','calendar')+mdV2Kpi(d.complete.length,'Completed Assessments','Current role this cycle','mgr-completed','green','check')+mdV2Kpi(v.currentAvg===null?'--':v.currentAvg+'%','Current Role Team Average','Final score','mgr-score-details','purple','chart')+mdV2Kpi(v.prospectiveAvg===null?'--':v.prospectiveAvg+'%','Prospective Role Team Average','Final score','mgr-prompool','purple','chart')+mdV2Kpi('--','Development Plans','Open plan workspace','mgr-devplans','rose','calendar')+'</div>';
 
 h+='<section class="md-v2-card"><div class="md-v2-card-head"><div><h3>Action Queue</h3><p>Prioritized work for current and prospective assessments.</p></div><span class="md-v2-badge high">'+assessmentPending+' priorities</span></div><div class="md-v2-actions">';
-h+=mdV2Action('Pending Assessments','Invited current and prospective Manager assessments not yet submitted.',overdue,today,week,'mgr-pending','high','View pending assessments');
+h+=mdV2Action('Pending Assessments','Invited Current Role and Prospective Role (Manager Assessment) items not yet submitted.',overdue,today,week,'mgr-pending','high','View pending assessments');
   h+=mdV2ReturnedCard(d);
   h+=mdV2Action('Setup Deadlines','Framework and competency setup deadlines.','--','--','--','mgr-setup-alerts','medium','View setup deadlines');
   h+=mdV2Action('Development Reports','Reports and development follow-up awaiting review.','--','--','--','mgr-repappr','low','Review reports');
@@ -18208,12 +18208,12 @@ function mdRow(e,mode){
  var submitted=rows.length>0;
  var score=rows.length?calculateOverallScore(e.employee_id,prospective?'Prospective':'Manager',mdFormat(rows)):null;
  var status=submitted?'<span class="md-status md-status-submitted">Submitted</span>':'<span class="md-status md-status-pending">Not submitted</span>';
- var explanation=prospective?(submitted?escapeHtml(e.prospective.state||'Prospective Manager assessment submitted'):'No prospective Manager submission'):(e.complete?'Current-role Manager assessment submitted':'No current-role Manager submission');
+ var explanation=prospective?(submitted?escapeHtml(e.prospective.state||'Prospective Role (Manager Assessment) submitted'):'No Prospective Role (Manager Assessment) submission'):(e.complete?'Current-role Manager assessment submitted':'No current-role Manager submission');
  return '<tr><td><strong>'+escapeHtml(e.employee_name)+'</strong><br>'+escapeHtml(e.position||'')+'<br><small>'+escapeHtml(e.company||'')+'</small></td><td>'+(prospective?escapeHtml(e.prospective.target||'Target role not selected'):status)+'</td><td>'+(prospective?(score===null?'Not assessed':score+'%'):(e.manager===null?'Not assessed':e.manager+'%'))+'</td><td>'+explanation+'</td><td><button class="btn btn-outline" type="button" onclick="mdOpenPerson('+rcArg(e.employee_id)+','+rcArg(mode)+')">View details</button></td></tr>';
 }
 function mdPendingTable(list,mode){
  var prospective=mode==='prospective';
- return '<section class="md-card md-assessment-list"><div class="md-tab-summary"><strong>'+list.length+'</strong><span>'+(prospective?'direct report(s) without a Prospective Manager submission':'direct report(s) without a Current Manager submission')+'</span></div><div class="table-wrap"><table><thead><tr><th>Employee</th><th>'+(prospective?'Target role':'Manager submission')+'</th><th>Manager score</th><th>Explanation</th><th>Open</th></tr></thead><tbody>'+list.map(function(e){return mdRow(e,mode);}).join('')+'</tbody></table></div>'+(list.length?'':'<p class="md-empty">No pending '+(prospective?'prospective':'current')+' Manager assessments.</p>')+'</section>';
+ return '<section class="md-card md-assessment-list"><div class="md-tab-summary"><strong>'+list.length+'</strong><span>'+(prospective?'direct report(s) without a Prospective Role (Manager Assessment) submission':'direct report(s) without a Current Manager submission')+'</span></div><div class="table-wrap"><table><thead><tr><th>Employee</th><th>'+(prospective?'Target role':'Manager submission')+'</th><th>Manager score</th><th>Explanation</th><th>Open</th></tr></thead><tbody>'+list.map(function(e){return mdRow(e,mode);}).join('')+'</tbody></table></div>'+(list.length?'':'<p class="md-empty">No pending '+(prospective?'prospective':'current')+' Manager assessments.</p>')+'</section>';
 }
 async function mdDetailPage(kind){
  if(!mdAllowed())return;
@@ -18222,7 +18222,7 @@ async function mdDetailPage(kind){
  setContent('<div class="card">Loading details...</div>');
  try{
   var d=await mdGet();if(epoch!==CN.epoch)return;MD.data=d;
-  var explain={team:'Only your direct reports are listed.',complete:'Complete means a current-role Manager assessment was submitted. It does not mean HR approval is complete.',pending:'Current and Prospective Manager assessments are tracked separately. A current submission is not required before starting a prospective submission.',score:fsCopy('Team Manager Score is the arithmetic mean of submitted current-role Manager scores, not the 70/30 decision score. Missing submissions are excluded; genuine zero scores are included.',"current"),pool:fsCopy('Prospective readiness requires both assessments, matching role/framework/experiences, final HR review and a Critical-experience average of at least 70%, with 70% Manager + 30% Self per experience. Protected historical assessments retain their prior gate. This is not a promotion commitment.',"current"),gaps:'Manager-rated competencies below 75%. The displayed mean covers only affected reports, not the whole team.',returned:'Your latest returned Manager or Prospective evidence for current direct reports. Use Assessment Details to review the HR comment and the existing redo process where required.'};
+  var explain={team:'Only your direct reports are listed.',complete:'Complete means a current-role Manager assessment was submitted. It does not mean HR approval is complete.',pending:'Current Role (Manager Assessment) and Prospective Role (Manager Assessment) are tracked separately. A current submission is not required before starting a prospective submission.',score:fsCopy('Team Manager Score is the arithmetic mean of submitted current-role Manager scores, not the 70/30 decision score. Missing submissions are excluded; genuine zero scores are included.',"current"),pool:fsCopy('Prospective readiness requires both assessments, matching role/framework/experiences, final HR review and a Critical-experience average of at least 70%, with 70% Manager + 30% Self per experience. Protected historical assessments retain their prior gate. This is not a promotion commitment.',"current"),gaps:'Manager-rated competencies below 75%. The displayed mean covers only affected reports, not the whole team.',returned:'Your latest returned Manager or Prospective evidence for current direct reports. Use Assessment Details to review the HR comment and the existing redo process where required.'};
   var h='<div class="md">'+(kind==='team'?mdTeamHero(d):mdHero(titles[kind],explain[kind],true));
   if(kind==='team') h+=mdTeamPage(d);
   else if(kind==='pending'){
@@ -21087,7 +21087,7 @@ function dkTellExecutive(p){
  }catch(e){}
 }
 async function dkRPCBase(action,data={}){
-	if(!APP.user)throw Error('Sign in first.');
+    if(!APP.user)throw Error('Sign in first.');
  var r=await _supabase.rpc('cms_executive_docket',{p_action:action,p_data:{...data,view_role:APP.currentRole}});
  if(r.error)throw Error(r.error.message);return r.data;
 }
@@ -23305,7 +23305,7 @@ function ihRender(){
  root.innerHTML=h;if(['sent','mine'].includes(IH.view))ihRegister();
 }
 function ihDays(v){return v===null||v===undefined?'Running':Number(v).toFixed(2)+'d';}
-function ihWork(r){return({self_current:'Current Self assessment',self_target:'Prospective Self assessment',manager_current:'Current Manager assessment',manager_target:'Prospective Manager assessment',framework:'Set competencies'})[r.kind]||r.kind;}
+function ihWork(r){return({self_current:'Current Self assessment',self_target:'Prospective Self assessment',manager_current:'Current Manager assessment',manager_target:'Prospective Role (Manager Assessment)',framework:'Set competencies'})[r.kind]||r.kind;}
 function ihCountdown(r){return r.state==='Cancelled'?'Cancelled':r.submitted_at?'Completed':r.days_remaining===0?'Due today':r.days_remaining>0?r.days_remaining+' days left':Math.abs(r.days_remaining)+' days overdue';}
 function ihRegister(){
  var search=(document.getElementById('ihFind')?.value||'').toLowerCase(),status=document.getElementById('ihFilter')?.value||'';
@@ -26162,7 +26162,7 @@ document.addEventListener('click',e=>{var b=e.target.closest('[data-hd-delete-in
   if(typeof adCapture!=='function'||typeof fpAnswer!=='function')return;
   window.cmsNotDemonstratedRatingOne=true;
 
-  // Not demonstrated (No): rating is set to 1 (Unsatisfactory) and the whole evidence area is locked.
+  // Not demonstrated (No): rating is set to 1 (Basic) and the whole evidence area is locked.
   // Yes again: the evidence area unlocks and the rating that was there before comes back.
   var style=document.createElement('style');
   style.textContent='#adRoot.fp-assessment .fp-evidence.fp-evidence-off{opacity:.45;pointer-events:none;user-select:none;filter:grayscale(.6)}'+
@@ -27682,7 +27682,7 @@ hdDeleteOpen=async function(kind,id){await fvDelete.apply(this,arguments);if(kin
 <script id="cms-bulk-invitations">
 /* Bulk is separate from the existing Single form; all writes use server preview/confirm. */
 var BI={identity:'',epoch:0,kind:'self_current',due:'',instructions:'',rows:[],people:[],authors:[],managers:[],targets:[],search:'',batch:null,running:false,stop:false,tab:'create'};
-var BI_KINDS={self_current:'Employee: current assessment',manager_current:'Manager: current assessment',self_target:'Employee: prospective assessment',manager_target:'Manager: prospective assessment'};
+var BI_KINDS={self_current:'Employee: current assessment',manager_current:'Manager: current assessment',self_target:'Employee: prospective assessment',manager_target:'Prospective Role (Manager Assessment)'};
 function biE(x){return escapeHtml(x==null?'':String(x));}
 function biKey(x){return String(x||'').trim().toUpperCase();}
 function biID(){return APP.user?APP.user.email+'|'+APP.currentRole:'';}
@@ -34026,7 +34026,7 @@ template=bodyEnd<0?template+viewerPatch+liveReturnedPatch:template.slice(0,bodyE
   return APP.currentRole==='manager'?r.kind==='framework'||String(r.kind).startsWith('manager_'):String(r.kind).startsWith('self_');
  }
  function e(v){return escapeHtml(v==null?'':String(v));}
- function label(r){return r.kind==='framework'?'Set competencies':({self_current:'Self assessment: current',self_target:'Self assessment: prospective',manager_current:'Manager assessment: current',manager_target:'Manager assessment: prospective'})[r.kind]||r.kind;}
+ function label(r){return r.kind==='framework'?'Set competencies':({self_current:'Self assessment: current',self_target:'Self assessment: prospective',manager_current:'Manager assessment: current',manager_target:'Prospective Role (Manager Assessment)'})[r.kind]||r.kind;}
  function button(a,l,disabled){
  var cls=(a==='refresh'||a==='edit')?'btn':'btn btn-primary';
  return '<button type="button" class="'+cls+'" data-uw="'+a+'" '+(disabled?'disabled':'')+'>'+e(l)+'</button>';
@@ -44876,7 +44876,7 @@ body.cms-focus-editor-v1 #mainContent #fwScreen.cfu-screen #fwBody .cfe-footer {
  function open(r){var s=String(r.hr_status||'').trim();return s===''||s==='Pending';}
 
 
- var RL={1:'Unsatisfactory',2:'Developing',3:'Competent',4:'Proficient',5:'Exceptional'};
+ var RL={1:'Basic',2:'Developing',3:'Proficient',4:'Advanced',5:'Expert'};
  /* Checks ONE submitted side on its own, against the experience wording. */
  function sideCheck(r,expText,req){
   var t=plain(r.evidence),c=checksOf(r),n=sum(c),rt=rating(r),tk=isTicked(r);
@@ -57617,6 +57617,397 @@ body:has(#px71) .hd{display:none!important}
  function sched(){clearTimeout(timer);timer=setTimeout(run,150);}
  function watch(){try{if(!mo)mo=new MutationObserver(sched);mo.disconnect();mo.observe(document.getElementById('mainContent')||document.body,{childList:true,subtree:true});}catch(e){}}
  watch();setInterval(run,2000);sched();
+})();
+</script>
+<style id="cms-band-title-v76-css">
+/* V76: competency title on the first experience only. Other experiences keep a slim bar with the show/hide button. */
+#adRoot#adRoot#adRoot.fm-on.fp-assessment .ad-experience.v76-first .fm-band .fm-bt{font-size:0!important;display:block!important}
+#adRoot#adRoot#adRoot.fm-on.fp-assessment .ad-experience.v76-first .fm-band .fm-bt::before{display:none!important;content:none!important}
+#adRoot#adRoot#adRoot.fm-on.fp-assessment .ad-experience.v76-first .fm-band .fm-bt::after{content:attr(data-v76-title)!important;display:block;font:800 26px/1.3 system-ui,Segoe UI,Arial,sans-serif;color:#fff;text-transform:none;letter-spacing:0}
+#adRoot#adRoot#adRoot.fm-on.fp-assessment .ad-experience.v76-rest .fm-band .fm-bt,#adRoot#adRoot#adRoot.fm-on.fp-assessment .ad-experience.v76-rest .fm-band .px-meta{display:none!important}
+#adRoot#adRoot#adRoot.fm-on.fp-assessment .ad-experience.v76-rest .fm-band{display:flex!important;justify-content:flex-end!important;align-items:center!important;padding:8px 24px!important;min-height:0!important}
+</style>
+<script id="cms-band-title-v76-js">
+(function(){
+ 'use strict';
+ if(window.__cmsBandTitleV76)return;
+ window.__cmsBandTitleV76=true;
+ var timer=null,obs=null;
+ function run(){
+  var root=document.getElementById('adRoot');
+  if(!root||!root.classList.contains('fp-assessment'))return;
+  var secs=root.querySelectorAll('.fp-competency');
+  Array.prototype.forEach.call(secs,function(sec){
+   var h=sec.querySelector('h2');
+   var title=h?String(h.textContent||'').replace(/\s+/g,' ').trim():'';
+   var items=sec.querySelectorAll('[data-ad-item]');
+   Array.prototype.forEach.call(items,function(el,i){
+    var first=i===0;
+    if(el.classList.contains('v76-first')!==first)el.classList.toggle('v76-first',first);
+    if(el.classList.contains('v76-rest')===first)el.classList.toggle('v76-rest',!first);
+    var bt=el.querySelector('.fm-band .fm-bt');
+    if(bt){
+     if(first){if(bt.getAttribute('data-v76-title')!==title)bt.setAttribute('data-v76-title',title);}
+     else if(bt.hasAttribute('data-v76-title'))bt.removeAttribute('data-v76-title');
+    }
+   });
+  });
+ }
+ function sched(){clearTimeout(timer);timer=setTimeout(function(){try{run();}catch(e){}},150);}
+ function start(){
+  var root=document.getElementById('adRoot');
+  if(!root){setTimeout(start,500);return;}
+  try{obs=new MutationObserver(sched);obs.observe(root,{childList:true,subtree:true});}catch(x){}
+  sched();
+ }
+ start();
+})();
+</script>
+<style id="cms-experience-bar-down-v77b-css">
+/* V77b: the "Experience n of N" bar moves down: title bar, JD / manager's tool box, Experience bar, then the answer boxes. Nothing else changes. */
+#adRoot#adRoot#adRoot.fm-on.fp-assessment .px-etab{order:-2!important}
+#adRoot#adRoot#adRoot.fm-on.fp-assessment .px-ccode{display:none!important}
+</style>
+<style id="cms-toggle-in-tabs-v78-css">
+/* V78: the Hide/Show JD and manager's tool button leaves the title bar and sits on the same line as the two tabs. */
+#adRoot#adRoot#adRoot.fm-on.fp-assessment .ad-experience:not(.px-same):has(.ar-strip:not([hidden])) .fm-band .fm-bb,
+#adRoot#adRoot#adRoot.fm-on.fp-assessment .ad-experience.px-same.px-open .fm-band .px-show{display:none!important}
+#adRoot#adRoot#adRoot.fm-on.fp-assessment .ad-experience.v76-rest:not(.px-same):has(.ar-strip:not([hidden])) .fm-band,
+#adRoot#adRoot#adRoot.fm-on.fp-assessment .ad-experience.v76-rest.px-same.px-open .fm-band{display:none!important}
+#adRoot#adRoot#adRoot.fm-on.fp-assessment .fm-tabs{align-items:flex-end}
+#adRoot#adRoot#adRoot.fm-on.fp-assessment .fm-tabs .v78-toggle{margin-left:auto;margin-bottom:6px;position:relative;padding:9px 16px 9px 40px;border:1.5px solid #b9c7ea;border-radius:10px;background:#fff;color:#14275a;font:700 15px/1.2 system-ui,Segoe UI,Arial,sans-serif;cursor:pointer;box-shadow:0 2px 6px rgba(20,40,100,.12)}
+#adRoot#adRoot#adRoot.fm-on.fp-assessment .fm-tabs .v78-toggle::before{content:"";position:absolute;left:13px;top:50%;width:18px;height:18px;margin-top:-9px;background:var(--px-eye) center/18px no-repeat}
+</style>
+<script id="cms-toggle-in-tabs-v78-js">
+(function(){
+ 'use strict';
+ if(window.__cmsToggleTabsV78)return;
+ window.__cmsToggleTabsV78=true;
+ var timer=null;
+ function run(){
+  var root=document.getElementById('adRoot');
+  if(!root||!root.classList.contains('fp-assessment'))return;
+  Array.prototype.forEach.call(root.querySelectorAll('[data-ad-item]'),function(el){
+   var tabs=el.querySelector('.fm-tabs'),band=el.querySelector('.fm-band');
+   if(!tabs||!band)return;
+   var same=el.classList.contains('px-same');
+   var src=same?(band.querySelector('.px-show')||band.querySelector('.fm-bb')):(band.querySelector('.fm-bb')||band.querySelector('.px-show'));
+   var mine=tabs.querySelector('.v78-toggle');
+   if(!src){if(mine)mine.hidden=true;return;}
+   if(!mine){
+    mine=document.createElement('button');mine.type='button';mine.className='v78-toggle';
+    mine.addEventListener('click',function(e){
+     e.preventDefault();e.stopPropagation();
+     var b=el.querySelector('.fm-band');
+     var s=el.classList.contains('px-same')?(b.querySelector('.px-show')||b.querySelector('.fm-bb')):(b.querySelector('.fm-bb')||b.querySelector('.px-show'));
+     if(s)s.click();
+    });
+    tabs.appendChild(mine);
+   }
+   mine.hidden=false;
+   var t=String(src.textContent||'').trim();
+   if(t&&mine.textContent!==t)mine.textContent=t;
+  });
+ }
+ function sched(){clearTimeout(timer);timer=setTimeout(function(){try{run();}catch(e){}},160);}
+ function start(){
+  var root=document.getElementById('adRoot');
+  if(!root){setTimeout(start,500);return;}
+  try{new MutationObserver(sched).observe(root,{childList:true,subtree:true,characterData:true});}catch(x){}
+  document.addEventListener('click',function(){sched();},true);
+  sched();
+ }
+ start();
+})();
+</script>
+<style id="cms-complete-before-next-v79b-css">
+#v79-guide{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);z-index:2147483000;width:min(860px,calc(100vw - 28px));background:#14275a;color:#fff;border-radius:16px;box-shadow:0 12px 40px rgba(0,0,0,.4);padding:14px 18px;font-family:system-ui,Segoe UI,Arial,sans-serif;display:none;align-items:center;gap:16px;flex-wrap:wrap;border-top:5px solid #f5b301}
+#v79-guide.on{display:flex}
+#v79-guide .v79-t{flex:1 1 300px;min-width:0}
+#v79-guide .v79-t b{display:block;font-size:12px;letter-spacing:.8px;text-transform:uppercase;color:#f5b301;margin-bottom:3px}
+#v79-guide .v79-t strong{display:block;font-size:16px;font-weight:800;line-height:1.3}
+#v79-guide .v79-t span{display:block;font-size:13.5px;opacity:.9;margin-top:3px;line-height:1.35}
+#v79-guide button{border:0;border-radius:10px;font-size:14.5px;font-weight:800;padding:10px 18px;cursor:pointer;line-height:1.2}
+#v79-guide .v79-p{background:rgba(255,255,255,.14);color:#fff}
+#v79-guide .v79-n{background:#3979c9;color:#fff;box-shadow:0 4px 10px rgba(57,121,201,.45)}
+#v79-guide .v79-x{background:transparent;color:#cdd8f3;padding:10px 8px;font-weight:600}
+#v79-guide.done{background:#14532d;border-top-color:#22c55e}
+#v79-guide.done .v79-t b{color:#86efac}
+#v79-guide.done .v79-n{background:#16a34a}
+#adRoot .v79-todo{box-shadow:inset 6px 0 0 #d92d20,0 0 0 2px #f3a8a1!important}
+#adRoot .v79-now{box-shadow:inset 8px 0 0 #d92d20,0 0 0 3px #d92d20!important}
+#adRoot .v79-hl{outline:4px solid #f5b301!important;outline-offset:3px;border-radius:10px;animation:v79pulse 1s ease-in-out 3}
+@keyframes v79pulse{0%,100%{outline-color:#f5b301}50%{outline-color:#d92d20}}
+</style>
+<script id="cms-complete-before-next-v79b-js">
+(function(){
+ 'use strict';
+ if(window.__cmsCompleteV79b)return;
+ window.__cmsCompleteV79b=true;
+ function q(s,r){return (r||document).querySelector(s);}
+ function qa(s,r){return Array.prototype.slice.call((r||document).querySelectorAll(s));}
+ function norm(s){return String(s==null?'':s).replace(/\s+/g,' ').trim();}
+ function mk(t,c,x){var e=document.createElement(t);if(c)e.className=c;if(x!=null)e.textContent=x;return e;}
+ function ans(el){var n=q('[data-fp-answer="no"]',el),y=q('[data-fp-answer="yes"]',el);if(n&&n.checked)return 'no';if(y&&y.checked)return 'yes';return null;}
+ function rated(el){return !!q('[data-sx-rating]:checked',el);}
+ function hasEv(el){
+  var t=q('[data-ad-field="evidence"]',el);if(t&&String(t.value||'').replace(/<[^>]*>/g,'').trim())return true;
+  var re=q('.cms-rich-editor',el);if(re&&String(re.textContent||'').trim())return true;
+  if(qa('[data-evidence-links] input',el).some(function(i){return String(i.value||'').trim();}))return true;
+  var f=q('[data-ad-file]',el);if(f){var x=String(f.textContent||'').trim();if(x&&!/^no uploaded/i.test(x))return true;}
+  return false;
+ }
+ function missing(el){
+  var a=ans(el),m=[];
+  if(a==='no')return m;
+  if(a!=='yes'){m.push({k:'ans',t:'Demonstrated? not answered'});return m;}
+  if(!hasEv(el))m.push({k:'ev',t:'Evidence missing'});
+  if(!rated(el))m.push({k:'rt',t:'Proficiency rating missing'});
+  return m;
+ }
+ function fieldFor(el,k){
+  if(k==='ev')return q('.fp-evidence',el)||q('[data-ad-field="evidence"]',el)||q('.cms-rich-editor',el)||el;
+  if(k==='rt')return q('.sx-ratings',el)||q('[data-sx-rating]',el)||el;
+  return q('.fp-demonstrated',el)||q('[data-fp-answer]',el)||el;
+ }
+ function secs(root){return qa('.fp-competency',root);}
+ function secName(sec){var h=q('h2',sec);return h?norm(h.textContent):'this competency';}
+ function todo(sec){
+  var out=[],items=qa('[data-ad-item]',sec);
+  items.forEach(function(el,i){var m=missing(el);if(m.length){var p=q('.fp-experience-text p',el);out.push({el:el,n:i+1,total:items.length,text:p?norm(p.textContent):'',why:m});}});
+  return out;
+ }
+ function firstIncomplete(root,upTo){
+  var s=secs(root),i;
+  for(i=0;i<upTo&&i<s.length;i++){if(todo(s[i]).length)return i;}
+  return -1;
+ }
+ function curIndex(root){
+  var s=secs(root),i;
+  for(i=0;i<s.length;i++){if(!s[i].classList.contains('fm-off'))return i;}
+  return 0;
+ }
+ var G={sec:null,idx:0,pending:null,key:'',timer:null,panel:null};
+ function panel(){
+  if(G.panel)return G.panel;
+  var d=document.createElement('div');d.id='v79-guide';d.setAttribute('role','status');
+  d.innerHTML='<div class="v79-t"><b></b><strong></strong><span></span></div><button type="button" class="v79-p">Previous</button><button type="button" class="v79-n">Next</button><button type="button" class="v79-x">Close</button>';
+  document.body.appendChild(d);
+  q('.v79-p',d).addEventListener('click',function(){G.idx=Math.max(0,G.idx-1);focus(true);});
+  q('.v79-n',d).addEventListener('click',function(){
+   if(d.classList.contains('done')){var p=G.pending;stop();if(p&&p.click)p.click();return;}
+   var list=todo(G.sec);G.idx=(G.idx+1)%Math.max(1,list.length);focus(true);
+  });
+  q('.v79-x',d).addEventListener('click',function(){stop();});
+  G.panel=d;return d;
+ }
+ function clearMarks(){qa('#adRoot .v79-todo,#adRoot .v79-now,#adRoot .v79-hl').forEach(function(e){e.classList.remove('v79-todo','v79-now','v79-hl');});}
+ function stop(){clearMarks();if(G.panel)G.panel.classList.remove('on','done');G.sec=null;G.pending=null;G.key='';}
+ function flash(f){
+  if(!f)return;
+  f.classList.add('v79-hl');
+  try{f.scrollIntoView({block:'center',behavior:'smooth'});}catch(e){f.scrollIntoView();}
+  setTimeout(function(){f.classList.remove('v79-hl');},3200);
+ }
+ function focus(scroll){
+  if(!G.sec)return;
+  var d=panel(),list=todo(G.sec);
+  clearMarks();
+  if(!list.length){
+   d.classList.add('on','done');
+   q('.v79-t b',d).textContent='All done';
+   q('.v79-t strong',d).textContent=secName(G.sec)+' is complete.';
+   q('.v79-t span',d).textContent=G.pending?'You can now move on.':'';
+   q('.v79-n',d).textContent=G.pending?'Continue':'OK';
+   q('.v79-p',d).style.display='none';
+   if(!G.pending)q('.v79-n',d).onclick=function(){stop();};
+   return;
+  }
+  if(G.idx>=list.length)G.idx=0;
+  var cur=list[G.idx];
+  list.forEach(function(x){x.el.classList.add('v79-todo');});
+  cur.el.classList.add('v79-now');
+  d.classList.remove('done');d.classList.add('on');
+  q('.v79-t b',d).textContent='Not completed: step '+(G.idx+1)+' of '+list.length;
+  q('.v79-t strong',d).textContent='Experience '+cur.n+' of '+cur.total+': '+cur.why.map(function(w){return w.t;}).join(', ');
+  q('.v79-t span',d).textContent=cur.text?(cur.text.length>140?cur.text.slice(0,137)+'...':cur.text):'';
+  q('.v79-n',d).textContent=list.length>1?'Next not completed':'Next';
+  q('.v79-p',d).style.display=list.length>1?'':'none';
+  G.key=cur.n+':'+cur.why[0].k;
+  if(scroll)flash(fieldFor(cur.el,cur.why[0].k));
+ }
+ function start(sec,pending){
+  G.sec=sec;G.idx=0;G.pending=pending||null;
+  focus(true);
+ }
+ function after(scrollOk){
+  if(!G.sec)return;
+  var list=todo(G.sec),oldKey=G.key,cur=list[G.idx];
+  var newKey=cur?(cur.n+':'+cur.why[0].k):'';
+  var expChanged=!cur||String(oldKey).split(':')[0]!==String(cur.n);
+  if(expChanged)G.pendingScroll=true;
+  var doScroll=!!(scrollOk&&list.length&&(G.pendingScroll||newKey!==oldKey));
+  focus(doScroll);
+  if(doScroll)G.pendingScroll=false;
+ }
+ function sched(scrollOk){clearTimeout(G.timer);G.timer=setTimeout(function(){after(scrollOk);},350);}
+ function check(e,targetIdx,pendingEl){
+  var root=document.getElementById('adRoot');
+  if(!root||!root.classList.contains('fp-assessment'))return false;
+  var s=secs(root),cur=curIndex(root);
+  if(targetIdx<=cur||targetIdx>s.length)return false;
+  var bad=firstIncomplete(root,targetIdx);
+  if(bad<0)return false;
+  e.preventDefault();e.stopPropagation();if(e.stopImmediatePropagation)e.stopImmediatePropagation();
+  if(bad<cur){
+   var rb=q('.fm-rail [data-fm-comp="'+bad+'"]',root);
+   if(rb){G.sec=null;rb.click();}
+  }
+  start(s[bad],pendingEl);
+  return true;
+ }
+ window.addEventListener('click',function(e){
+  var t=e.target;if(!t||!t.closest)return;
+  if(t.closest('#v79-guide'))return;
+  var root=document.getElementById('adRoot');
+  if(!root||!root.contains(t)||!root.classList.contains('fm-on'))return;
+  var s=secs(root),b,sec,ci;
+  if((b=t.closest('.px-next'))){
+   sec=b.closest('.fp-competency');ci=s.indexOf(sec);
+   if(ci<0||ci===s.length-1)return;
+   check(e,ci+1,b);return;
+  }
+  if((b=t.closest('[data-fm-comp]'))){check(e,parseInt(b.getAttribute('data-fm-comp'),10),b);return;}
+  if((b=t.closest('[data-fp-jump]'))){
+   var id=b.getAttribute('data-fp-jump'),el=q('#adRoot [data-ad-item="'+(window.CSS&&CSS.escape?CSS.escape(id):id)+'"]');
+   sec=el?el.closest('.fp-competency'):null;ci=s.indexOf(sec);
+   if(ci>=0)check(e,ci,b);return;
+  }
+  if((b=t.closest('[data-fm-find]'))){
+   var cur=curIndex(root);
+   if(s[cur]&&todo(s[cur]).length){e.preventDefault();e.stopPropagation();if(e.stopImmediatePropagation)e.stopImmediatePropagation();start(s[cur],null);}
+   return;
+  }
+  if(t.closest('.fm-sw')&&!root.classList.contains('fm-all')){check(e,curIndex(root)+1,t.closest('.fm-sw'));return;}
+ },true);
+ document.addEventListener('input',function(e){if(G.sec)sched(false);},true);
+ document.addEventListener('change',function(e){
+  if(!G.sec)return;
+  sched(true);
+ },true);
+})();
+</script>
+<style id="cms-responsibility-words-v80-css">
+#adRoot#adRoot#adRoot .v80-rl{font-size:0!important;letter-spacing:0!important}
+#adRoot#adRoot .v80-rl::after{content:attr(data-v80);font-size:var(--v80-fs,14px);letter-spacing:normal;text-transform:none;white-space:normal}
+#adRoot .v80-dup{display:none!important}
+#adRoot .ar-r.v80-rl,#adRoot .ar-ref.v80-rl{max-width:none}
+</style>
+<script id="cms-responsibility-words-v80-js">
+(function(){
+ 'use strict';
+ if(window.__cmsRespWordsV80)return;
+ window.__cmsRespWordsV80=true;
+ var SEL='.ar-jd > div > b,.ar-r,.ar-ref,.ar-toggle,.fm-bb,.px-show,.v78-toggle';
+ function words(t){
+  return String(t).replace(/\bR0*(\d+)((?:\s*,\s*R0*\d+)*)/g,function(m,a,rest){
+   var more=rest?rest.replace(/\s*,\s*R0*(\d+)/g,', $1'):'';
+   return 'Responsibility '+a+more;
+  });
+ }
+ function fixOne(el){
+  var t=String(el.textContent||'').replace(/\s+/g,' ').trim();
+  if(!/\bR0*\d+/.test(t)){
+   if(el.classList.contains('v80-rl')){el.classList.remove('v80-rl');el.removeAttribute('data-v80');}
+   return;
+  }
+  var nt=words(t);
+  if(!el.classList.contains('v80-rl')){
+   var fs=parseFloat(getComputedStyle(el).fontSize);
+   if(fs>0)el.style.setProperty('--v80-fs',fs+'px');
+   el.classList.add('v80-rl');
+  }
+  var cf=el.style.getPropertyValue('font-size');
+  if(cf!=='0px'&&cf!=='0')el.style.setProperty('font-size','0','important');
+  if(el.getAttribute('data-v80')!==nt)el.setAttribute('data-v80',nt);
+ }
+ function dedupe(root){
+  Array.prototype.slice.call(root.querySelectorAll('.ar-jd > div')).forEach(function(d){
+   var b=d.querySelector('b');if(!b)return;
+   var m=/^R0*(\d+)/.exec(String(b.textContent||'').trim());if(!m)return;
+   var n=b.nextSibling;
+   if(!n||n.nodeType!==3)return;
+   var mm=/^(\s*)0*(\d+)\.\s*/.exec(n.nodeValue);
+   if(!mm||mm[2]!==m[1])return;
+   var span=document.createElement('span');span.className='v80-dup';span.textContent=mm[0].slice(mm[1].length);
+   var ws=document.createTextNode(mm[1]||' ');
+   n.nodeValue=n.nodeValue.slice(mm[0].length);
+   d.insertBefore(ws,n);d.insertBefore(span,n);
+  });
+ }
+ var timer=null,obs=null;
+ function run(){
+  var root=document.getElementById('adRoot');if(!root)return;
+  if(obs)obs.disconnect();
+  try{
+   dedupe(root);
+   Array.prototype.slice.call(root.querySelectorAll(SEL)).forEach(fixOne);
+  }catch(e){if(window.console)console.warn('Responsibility words:',e&&e.message);}
+  finally{
+   try{if(!obs)obs=new MutationObserver(function(){sched(120);});obs.observe(root,{childList:true,subtree:true,characterData:true});}catch(x){}
+  }
+ }
+ function sched(ms){clearTimeout(timer);timer=setTimeout(run,ms||120);}
+ document.addEventListener('click',function(){sched(250);},true);
+ setInterval(run,2500);
+ sched(400);
+})();
+</script>
+<style id="cms-experience-linked-v81-css">
+#adRoot#adRoot#adRoot.fm-on.fp-assessment .px-ttl.v81-rl,#adRoot#adRoot#adRoot .px-ttl.v81-rl{font-size:0!important;letter-spacing:0!important}
+#adRoot .px-ttl.v81-rl::after{content:attr(data-v81);font-size:var(--v81-fs,20px);letter-spacing:var(--v81-ls,0);text-transform:inherit;white-space:normal;line-height:1.25}
+</style>
+<script id="cms-experience-linked-v81-js">
+(function(){
+ 'use strict';
+ if(window.__cmsExpLinkedV81)return;
+ window.__cmsExpLinkedV81=true;
+ function q(s,r){return (r||document).querySelector(s);}
+ function qa(s,r){return Array.prototype.slice.call((r||document).querySelectorAll(s));}
+ function refsOf(el){
+  var out=[];
+  qa('.ar-r',el).forEach(function(c){
+   var m=/R0*(\d+)/i.exec(String(c.textContent||''));
+   if(m&&out.indexOf(m[1])<0)out.push(m[1]);
+  });
+  return out;
+ }
+ function fix(el){
+  var t=q('.px-etab .px-ttl',el);if(!t)return;
+  var raw=String(t.textContent||'').replace(/\s+/g,' ').trim();
+  var m=/Experience\s+(\d+)\s+of\s+\d+/i.exec(raw);
+  if(!m){return;}
+  var refs=refsOf(el);
+  var label=refs.length?('Experience '+m[1]+' linked to Responsibility '+refs.join(', ')):('Experience '+m[1]);
+  if(!t.classList.contains('v81-rl')){
+   var cs=getComputedStyle(t),fs=parseFloat(cs.fontSize);
+   if(fs>0)t.style.setProperty('--v81-fs',fs+'px');
+   if(cs.letterSpacing&&cs.letterSpacing!=='normal')t.style.setProperty('--v81-ls',cs.letterSpacing);
+   t.classList.add('v81-rl');
+  }
+  if(t.style.getPropertyValue('font-size')!=='0px'&&t.style.getPropertyValue('font-size')!=='0')t.style.setProperty('font-size','0','important');
+  if(t.getAttribute('data-v81')!==label)t.setAttribute('data-v81',label);
+ }
+ var timer=null,obs=null;
+ function run(){
+  var root=document.getElementById('adRoot');if(!root)return;
+  if(obs)obs.disconnect();
+  try{qa('[data-ad-item]',root).forEach(fix);}catch(e){if(window.console)console.warn('Experience linked label:',e&&e.message);}
+  finally{try{if(!obs)obs=new MutationObserver(function(){sched(150);});obs.observe(root,{childList:true,subtree:true,characterData:true});}catch(x){}}
+ }
+ function sched(ms){clearTimeout(timer);timer=setTimeout(run,ms||150);}
+ setInterval(run,2500);
+ sched(500);
 })();
 </script>
 </body>
