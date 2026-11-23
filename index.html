@@ -24704,7 +24704,7 @@ loadHRRevEmp=async function(id){id=id||window._hrRevLast;if(!id)return;window._h
  var epoch=++SR.epoch,identity=adOwner();host.innerHTML='<p>Opening submitted evidence and review history...</p>';
  try{var d=await sxRPC('cms_experience_review','get',{employee_id:id});if(epoch!==SR.epoch||identity!==adOwner()||!host.isConnected)return;
  var groups=srGroups(d.rows||[]),s={id,identity,name:d.employee?.employee_name||d.rows?.[0]?.employee_name||id,position:d.employee?.position||'',rows:d.rows||[],invitations:d.invitations||[],history:d.history||[],groups,selection:{},edits:{},kind:'current',busy:false};
- ['Self','Manager','Prospective Self','Prospective'].forEach(type=>s.selection[type]=groups.find(g=>g.type===type)?.key||'');
+ ['Self','Manager','Prospective Self','Prospective'].forEach(type=>{var kind={Self:'self_current',Manager:'manager_current','Prospective Self':'self_target',Prospective:'manager_target'}[type],invs=(d.invitations||[]).filter(x=>x.kind===kind).sort((a,b)=>String(b.issued_at).localeCompare(String(a.issued_at))),inv=invs[0],g=null;if(!inv)g=groups.find(x=>x.type===type);else if(inv.state==='Submitted')g=groups.find(x=>x.type===type&&(!/_target$/.test(kind)||x.target===inv.target_position));s.selection[type]=g?g.key:'';});
  s.redo=(window._hrRevRedoId===id);window._hrRevRedoId='';SR.state=s;host.innerHTML='<section id="srRoot"></section>';await srLoadSavedEvidenceLinks(s);srRender(s);
  }catch(e){if(host.isConnected)host.innerHTML='<p>'+sxE(e.message)+'</p><p>Install the matching assessment/review setup before opening this review.</p>';}
 };
