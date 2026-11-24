@@ -6523,7 +6523,13 @@ async function cmsNotifyFrameworkPublished(pos, setter) {
     var emps = await _supabase.from('employees').select('email,employee_name,department,position,manager_email');
     var all = emps.data || [];
     var staff = isCore ? [] : all.filter(function (e) { return sameText(e.department, dept) && sameText(e.position, role); });
-    var seen = {}, sent = 0;
+   var seen = {}, sent = 0;
+    var signed = null;
+    try {
+      var lo = await _supabase.rpc('cms_login_overview');
+      if (!lo.error) { signed = {}; (lo.data || []).forEach(function (u) { if (u.u_last_sign_in) signed[String(u.u_email || '').trim().toLowerCase()] = 1; }); }
+    } catch (x) { signed = null; }
+    function loggedIn(e) { e = String(e || '').trim().toLowerCase(); return !!(signed && signed[e]); }
     function once(e) {
       e = String(e || '').trim().toLowerCase();
       if (!e || e.indexOf('@') < 1 || e === me || seen[e]) return '';
@@ -6545,10 +6551,23 @@ async function cmsNotifyFrameworkPublished(pos, setter) {
     });
     var managers = isCore ? all.map(function (x) { return x.manager_email; }) : staff.map(function (x) { return x.manager_email; });
     managers.forEach(function (m) {
+      if (!loggedIn(m)) return;
       var e = once(m);
       if (e) { sendCMSemail(e, subject, 'The competencies for ' + label + ' have been approved and published. Your team members in this role will be assessed on this approved set. You can view them in the Competency Library. Log in: ' + APP_LINK, { page: 'mgr-comp' }); sent++; }
     });
+    /* 3. The employees in the role. */
+    staff.forEach(function (x) {
+      var e = once(x.email);
+      if (e) { sendCMSemail(e, 'Competencies Approved: ' + role, 'The competencies for your role, ' + label + ', have been approved and published by ' + by + '. You will be assessed on this approved set. You can view them in the Competency Library. Log in: ' + APP_LINK, { page: 'emp-complib' }); sent++; }
+    });
+    /* 3. The employees in the role, only those who have signed in to the CMS. */
+    staff.forEach(function (x) {
+      if (!loggedIn(x.email)) return;
+      var e = once(x.email);
+      if (e) { sendCMSemail(e, subject, 'The competencies for your role, ' + label + ', have been approved and published by ' + by + '. You will be assessed on this approved set. You can view them in the Competency Library. Log in: ' + APP_LINK, { page: 'emp-complib' }); sent++; }
+    });
     if (sent) showToast('Approval notifications sent to ' + sent + ' people');
+
   } catch (e) {
     console.error('Framework approval notification problem', e);
   }
