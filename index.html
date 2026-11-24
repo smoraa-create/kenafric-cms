@@ -6544,7 +6544,7 @@ async function cmsNotifyFrameworkPublished(pos, setter) {
       if (s) { sendCMSemail(s, 'Your Competencies Were Approved: ' + (isCore ? 'Core competencies' : role), 'The competencies you set for ' + label + ' have been approved by HR and published by ' + by + '. They are now live in all libraries. Thank you. Log in: ' + APP_LINK, { page: 'mgr-comp' }); sent++; }
     }
     /* 2. HR Admins, then line managers of the people in the role. */
-    var hr = await _supabase.from('user_profiles').select('email').eq('role', 'HR_ADMIN');
+    var hr = await _supabase.from('user_profiles').select('email').in('role', ['HR_ADMIN', 'HEAD_HR']);
     (hr.data || []).forEach(function (u) {
       var e = once(u.email);
       if (e) { sendCMSemail(e, subject, 'The competency framework for ' + label + ' was approved and published by ' + by + '. It is now live in all libraries. Log in: ' + APP_LINK, { page: 'hr-comp' }); sent++; }
@@ -6555,8 +6555,9 @@ async function cmsNotifyFrameworkPublished(pos, setter) {
       var e = once(m);
       if (e) { sendCMSemail(e, subject, 'The competencies for ' + label + ' have been approved and published. Your team members in this role will be assessed on this approved set. You can view them in the Competency Library. Log in: ' + APP_LINK, { page: 'mgr-comp' }); sent++; }
     });
-    /* 3. The employees in the role. */
+     /* 3. The employees in the role, only those who have logged in. */
     staff.forEach(function (x) {
+      if (!loggedIn(x.email)) return;
       var e = once(x.email);
       if (e) { sendCMSemail(e, 'Competencies Approved: ' + role, 'The competencies for your role, ' + label + ', have been approved and published by ' + by + '. You will be assessed on this approved set. You can view them in the Competency Library. Log in: ' + APP_LINK, { page: 'emp-complib' }); sent++; }
     });
@@ -55770,8 +55771,9 @@ fwInput(t.getAttribute('data-id'),'classification',v==='C'?CR:v==='I'?IM:VA);ren
  function wrap(){
   var prev=window.sendCMSemail;
   if(typeof prev!=='function'||prev.__cmsHeld)return;
-  var fn=function(to,subject,message,action){
+   var fn=function(to,subject,message,action){
    var self=this,args=arguments;
+   if(/^your cms login is ready/i.test(String(subject||'')))return prev.apply(self,args);
    return mustHold(to).then(function(hold){
     if(hold){
      try{console.info('Email held: '+em(to)+' has not been invited to log in yet. Subject: '+subject);}catch(e){}
