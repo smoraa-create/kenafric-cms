@@ -6,6 +6,27 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Kenafric CMS</title>
+<script id="cms-fast-unpack-v1">
+(function(){
+ 'use strict';
+ if(window.__cmsFastUnpackV1)return;window.__cmsFastUnpackV1=true;
+ var orig=Uint8Array.from;
+ var plain=/^\s*(?:function\s*\(\s*(\w+)\s*\)\s*\{\s*return\s+\1\.charCodeAt\(0\)\s*;?\s*\}|\(?\s*(\w+)\s*\)?\s*=>\s*\2\.charCodeAt\(0\))\s*$/;
+ var seen=new WeakMap();
+ Uint8Array.from=function(src,fn,thisArg){
+  if(typeof src==='string'&&typeof fn==='function'){
+   var ok=seen.get(fn);
+   if(ok===undefined){ok=plain.test(Function.prototype.toString.call(fn));seen.set(fn,ok);}
+   if(ok){
+    var n=src.length,out=new Uint8Array(n);
+    for(var i=0;i<n;i++)out[i]=src.charCodeAt(i);
+    return out;
+   }
+  }
+  return orig.call(this,src,fn,thisArg);
+ };
+})();
+</script>
 <script id="cms-scale-fix-v1">
 (function(){
  'use strict';
@@ -5057,6 +5078,58 @@ const CMS_CLIENT_BUILD='CMS-20260912-LOGIN24-03';
 const CMS_AUTH_STORAGE_KEY='cms-auth-24h-v1';
 const CMS_LOGIN_WINDOW_KEY='cms-login-window-24h-v1';
 const CMS_LOGIN_WINDOW_MS=24*60*60*1000;
+(function(){
+ if(window.__cmsQuotaGuard)return;window.__cmsQuotaGuard=true;
+ var rawSet=Storage.prototype.setItem,rawRemove=Storage.prototype.removeItem,rawGet=Storage.prototype.getItem;
+ function isQuota(e){return !!e&&(e.name==='QuotaExceededError'||e.name==='NS_ERROR_DOM_QUOTA_REACHED'||e.code===22||e.code===1014||/quota/i.test(String(e.message||'')));}
+ function readJson(k){try{return JSON.parse(rawGet.call(localStorage,k));}catch(x){return null;}}
+ function drop(k){var n=(rawGet.call(localStorage,k)||'').length;rawRemove.call(localStorage,k);return n;}
+ function makeRoom(level){
+  var freed=0,now=Date.now(),day=86400000;
+  try{
+   var keys=[];for(var i=0;i<localStorage.length;i++)keys.push(localStorage.key(i));
+   var safety=[];
+   keys.forEach(function(k){
+    if(!k)return;
+    if(k.indexOf('kcache_')===0){freed+=drop(k);return;}
+    if(k.indexOf('cms_safety_v1:')===0){
+     var d=readJson(k),t=d&&Date.parse(d.saved_at)||0;safety.push({k:k,t:t});return;
+    }
+    if(k.indexOf('cms-work-checkpoint:')===0){
+     var c=readJson(k),lt=c&&Date.parse(c.local_at)||0;
+     if(!c||c.dirty!==true||lt<now-3*day||level>=2&&lt<now-day)freed+=drop(k);
+     return;
+    }
+    if(k.indexOf('cms_set_aside_')===0){
+     var st=Number(k.slice('cms_set_aside_'.length))||0;
+     if(st<now-3*day||level>=2)freed+=drop(k);
+     return;
+    }
+    if(k.indexOf('cms-framework-autosave:')===0&&level>=1){
+     var f=readJson(k),ft=f&&Date.parse(f.local_at)||0;
+     if(!f||ft<now-14*day||level>=3&&ft<now-3*day)freed+=drop(k);
+    }
+   });
+   safety.sort(function(a,b){return b.t-a.t;});
+   var keep=level>=2?0:2;
+   safety.forEach(function(s,idx){if(idx>=keep||s.t<now-day)freed+=drop(s.k);});
+  }catch(e){}
+  return freed;
+ }
+ Storage.prototype.setItem=function(k,v){
+  try{return rawSet.call(this,k,v);}
+  catch(e){
+   if(this!==localStorage||!isQuota(e))throw e;
+   var level=0,last=e;
+   while(level<=3){
+    makeRoom(level);
+    try{return rawSet.call(this,k,v);}catch(e2){if(!isQuota(e2))throw e2;last=e2;}
+    level++;
+   }
+   throw last;
+  }
+ };
+})();
 var CMS_TAB_STORAGE_OK=true;
 try{localStorage.setItem('cms-storage-probe','1');localStorage.removeItem('cms-storage-probe');}catch(e){CMS_TAB_STORAGE_OK=false;}
 const CMS_TAB_AUTH_STORAGE={
@@ -57210,7 +57283,7 @@ html body #sideNav#sideNav.nv3-sidebar .px62-quick{position:relative;z-index:1}
 html body #sideNav#sideNav.nv3-sidebar .nv3-section>h2{white-space:normal!important;word-break:normal!important;overflow-wrap:break-word!important;padding-right:92px!important;line-height:1.25!important}
 html body #sideNav#sideNav.nv3-sidebar .nv3-section>h2 .px62-n{white-space:nowrap!important}
 </style>
-<<style id="cms-menu-font-v67-css">
+<style id="cms-menu-font-v67-css">
 @import url("https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap");
 html body #sideNav#sideNav.nv3-sidebar,html body #sideNav#sideNav.nv3-sidebar *{font-family:"Plus Jakarta Sans",Inter,"Segoe UI",system-ui,-apple-system,Arial,sans-serif!important;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
 html body #sideNav#sideNav.nv3-sidebar .nv3-section>h2{font-size:14.5px!important;font-weight:600!important;line-height:1.3!important;letter-spacing:-.005em!important;text-transform:capitalize!important;text-shadow:none!important}
