@@ -24417,6 +24417,10 @@ async function wcSave(s){
 }
 function wcSchedule(){
  if(WC.restoring)return;
+ clearTimeout(WC.typeTimer);WC.typeTimer=setTimeout(wcScheduleNow,700);
+}
+function wcScheduleNow(){
+ if(WC.restoring)return;
  var s=WC.active;if(!s||!wcSame(s)){wcAttach();return;}
  var cur=wcRead();s.body=cur.body;s.signature=cur.signature;wcWriteLocal(s);
  if(s.offer)return;
