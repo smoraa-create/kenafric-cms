@@ -58310,9 +58310,9 @@ function fixOne(el,fs0){
   var k=v.ksaba;if(!k||typeof k!=='object')k=null;
   return {c:!!(k&&k.c),y:(k&&Array.isArray(k.y))?k.y:[],n:(k&&Array.isArray(k.n))?k.n:[],ref:v};
  }
- function setMarks(s,sec,c,y,n){
+  function setMarks(s,sec,c,y,n,its){
   var m=marks(s,sec);if(!m.ref)return;
-  m.ref.ksaba={c:!!c,y:y.slice(),n:(n||[]).slice()};
+  m.ref.ksaba={c:!!c,y:y.slice(),n:(n||[]).slice(),l:(its||[]).map(function(i){return {i:i.id,g:i.g,t:String(i.text||'').slice(0,300)};})};
   try{if(typeof adQueue==='function')adQueue(s);}catch(e){}
  }
  function allAnswered(sec){return qa('[data-ad-item]',sec).every(function(el){return !!ans(el);});}
@@ -58392,7 +58392,7 @@ function fixOne(el,fs0){
   var was=v==='y'?m.y.indexOf(id)>=0:m.n.indexOf(id)>=0;
   if(!was){if(v==='y')y.push(id);else n.push(id);}
   var pp=q('.v82-panel',sec),its=pp&&pp._v82items,full=!!its&&its.every(function(i){return y.indexOf(i.id)>=0||n.indexOf(i.id)>=0;});
-  setMarks(s,sec,full,y,n);
+  setMarks(s,sec,full,y,n,its);
   if(!quick(sec,s,t))sched(30);
   /* every item answered and every experience answered: open the next competency by itself */
   if(full&&allAnswered(sec)){var go=sec.querySelector('.px-next:not(.px-fin)');if(go)setTimeout(function(){go.click();},350);}
@@ -58798,6 +58798,258 @@ function fixOne(el,fs0){
    return r;
   };
  });
+})();
+</script>
+<style id="cms-ksaba-review-v1-css">
+.kbr{margin:14px 0 22px;border:1px solid #c7d2fe;border-radius:16px;background:#fff;overflow:hidden;box-shadow:0 6px 18px rgba(67,56,202,.08)}
+.kbr-h{background:linear-gradient(135deg,#4338ca,#6366f1);color:#fff;padding:14px 18px;display:flex;justify-content:space-between;gap:14px;align-items:flex-start;flex-wrap:wrap}
+.kbr-h b{display:block;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:#c7d2fe}
+.kbr-h strong{display:block;font-size:17px;margin-top:2px}
+.kbr-h span{display:block;font-size:12.5px;color:#e0e7ff;margin-top:3px;max-width:640px}
+.kbr-chips{display:flex;gap:6px;flex-wrap:wrap}
+.kbr-chips i{font-style:normal;background:rgba(255,255,255,.18);border-radius:999px;padding:4px 10px;font-size:12px;font-weight:700}
+.kbr-chips i.d{background:#fef3c7;color:#92400e}
+.kbr-body{padding:14px 18px}
+.kbr-note{background:#f5f3ff;border:1px solid #ddd6fe;border-radius:10px;padding:10px 12px;font-size:13px;color:#4c1d95;margin-bottom:10px}
+.kbr-grp{margin:0 0 12px;border:1px solid #e2e8f0;border-radius:12px;overflow:hidden}
+.kbr-grp h4{margin:0;padding:7px 12px;color:#fff;font-size:13px;display:flex;justify-content:space-between}
+.kbr-row{display:grid;grid-template-columns:minmax(0,1fr) 150px 150px;gap:8px;align-items:center;padding:7px 12px;border-top:1px solid #eef2f7;font-size:13px}
+.kbr-row.diff{background:#fffbeb}
+.kbr-row.head{background:#f8fafc;font-weight:800;color:#475569;font-size:12px;border-top:0}
+.kbr-m{display:inline-block;border-radius:999px;padding:3px 9px;font-size:12px;font-weight:800;text-align:center}
+.kbr-m.y{background:#dcfce7;color:#166534}.kbr-m.n{background:#fee2e2;color:#991b1b}.kbr-m.u{background:#f1f5f9;color:#64748b}.kbr-m.x{background:#fff;border:1px dashed #cbd5e1;color:#94a3b8}
+.kbr-dec{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:6px}
+.kbr-box{border:1px solid #e2e8f0;border-radius:12px;padding:10px 12px}
+.kbr-box h5{margin:0 0 6px;font-size:13px;color:#312e81}
+.kbr-box label{display:block;font-size:12px;font-weight:700;color:#475569;margin-top:6px}
+.kbr-box select,.kbr-box textarea{width:100%;box-sizing:border-box;border:1px solid #cbd5e1;border-radius:8px;padding:6px 8px;font:inherit;font-size:13px}
+.kbr-st{display:inline-block;border-radius:999px;padding:3px 10px;font-size:12px;font-weight:800;background:#e0e7ff;color:#3730a3}
+.kbr-st.a{background:#dcfce7;color:#166534}.kbr-st.r{background:#fef3c7;color:#92400e}.kbr-st.d{background:#fee2e2;color:#991b1b}
+.kbr-foot{display:flex;gap:10px;align-items:center;margin-top:10px;flex-wrap:wrap}
+.kbr-foot button{background:#4338ca;color:#fff;border:0;border-radius:10px;padding:9px 16px;font-weight:800;cursor:pointer;box-shadow:0 4px 10px rgba(67,56,202,.3)}
+.kbr-foot button:disabled{opacity:.55;cursor:default}
+.kbr-msg{font-size:13px;color:#334155}
+@media(max-width:760px){.kbr-row{grid-template-columns:1fr}.kbr-dec{grid-template-columns:1fr}}
+</style>
+<style id="cms-ksaba-review-v1-css">
+.kbr{margin:14px 0 22px;border:1px solid #c7d2fe;border-radius:16px;background:#fff;overflow:hidden;box-shadow:0 6px 18px rgba(67,56,202,.08)}
+.kbr-h{background:linear-gradient(135deg,#4338ca,#6366f1);color:#fff;padding:14px 18px;display:flex;justify-content:space-between;gap:14px;align-items:flex-start;flex-wrap:wrap}
+.kbr-h b{display:block;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:#c7d2fe}
+.kbr-h strong{display:block;font-size:17px;margin-top:2px}
+.kbr-h span{display:block;font-size:12.5px;color:#e0e7ff;margin-top:3px;max-width:640px}
+.kbr-chips{display:flex;gap:6px;flex-wrap:wrap}
+.kbr-chips i{font-style:normal;background:rgba(255,255,255,.18);border-radius:999px;padding:4px 10px;font-size:12px;font-weight:700}
+.kbr-chips i.d{background:#fef3c7;color:#92400e}
+.kbr-body{padding:14px 18px}
+.kbr-note{background:#f5f3ff;border:1px solid #ddd6fe;border-radius:10px;padding:10px 12px;font-size:13px;color:#4c1d95;margin-bottom:10px}
+.kbr-grp{margin:0 0 12px;border:1px solid #e2e8f0;border-radius:12px;overflow:hidden}
+.kbr-grp h4{margin:0;padding:7px 12px;color:#fff;font-size:13px;display:flex;justify-content:space-between}
+.kbr-row{display:grid;grid-template-columns:minmax(0,1fr) 150px 150px;gap:8px;align-items:center;padding:7px 12px;border-top:1px solid #eef2f7;font-size:13px}
+.kbr-row.diff{background:#fffbeb}
+.kbr-row.head{background:#f8fafc;font-weight:800;color:#475569;font-size:12px;border-top:0}
+.kbr-m{display:inline-block;border-radius:999px;padding:3px 9px;font-size:12px;font-weight:800;text-align:center}
+.kbr-m.y{background:#dcfce7;color:#166534}.kbr-m.n{background:#fee2e2;color:#991b1b}.kbr-m.u{background:#f1f5f9;color:#64748b}.kbr-m.x{background:#fff;border:1px dashed #cbd5e1;color:#94a3b8}
+.kbr-dec{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:6px}
+.kbr-box{border:1px solid #e2e8f0;border-radius:12px;padding:10px 12px}
+.kbr-box h5{margin:0 0 6px;font-size:13px;color:#312e81}
+.kbr-box label{display:block;font-size:12px;font-weight:700;color:#475569;margin-top:6px}
+.kbr-box select,.kbr-box textarea{width:100%;box-sizing:border-box;border:1px solid #cbd5e1;border-radius:8px;padding:6px 8px;font:inherit;font-size:13px}
+.kbr-st{display:inline-block;border-radius:999px;padding:3px 10px;font-size:12px;font-weight:800;background:#e0e7ff;color:#3730a3}
+.kbr-st.a{background:#dcfce7;color:#166534}.kbr-st.r{background:#fef3c7;color:#92400e}.kbr-st.d{background:#fee2e2;color:#991b1b}
+.kbr-foot{display:flex;gap:10px;align-items:center;margin-top:10px;flex-wrap:wrap}
+.kbr-foot button{background:#4338ca;color:#fff;border:0;border-radius:10px;padding:9px 16px;font-weight:800;cursor:pointer;box-shadow:0 4px 10px rgba(67,56,202,.3)}
+.kbr-foot button:disabled{opacity:.55;cursor:default}
+.kbr-msg{font-size:13px;color:#334155}
+@media(max-width:760px){.kbr-row{grid-template-columns:1fr}.kbr-dec{grid-template-columns:1fr}}
+</style>
+<script id="cms-ksaba-review-v1">
+(function(){
+ 'use strict';
+ if(window.__cmsKsabaReviewV1)return;
+ window.__cmsKsabaReviewV1=true;
+ if(typeof srRender!=='function'||typeof sxRPC!=='function'||typeof srSelected!=='function')return;
+ var GR=[['know','Knowledge','#2756b3'],['skills','Skills','#0e7c86'],['abil','Abilities','#6d3fc0'],['beh','Behaviours','#c2610c'],['attr','Attributes','#15803d']];
+ var KIND={Self:'self_current',Manager:'manager_current','Prospective Self':'self_target',Prospective:'manager_target'};
+ var CACHE={},LOADING={};
+ function esc(x){return String(x==null?'':x).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+ function who(t){return t.indexOf('Self')>=0?'Employee':'Manager';}
+ function load(s,force){
+  if(!force&&CACHE[s.id])return Promise.resolve(CACHE[s.id]);
+  if(!force&&LOADING[s.id])return LOADING[s.id];
+  LOADING[s.id]=sxRPC('cms_ksaba_review','get',{employee_id:s.id}).then(function(d){CACHE[s.id]=d;delete LOADING[s.id];return d;},function(e){delete LOADING[s.id];throw e;});
+  return LOADING[s.id];
+ }
+ function subFor(d,type,g){
+  if(!g||!g.rows||!g.rows.length)return null;
+  var list=(d.subs||[]).filter(function(x){return x.kind===KIND[type];});
+  var ref=g.rows[0].assessment_id;
+  if(ref!=null){var hit=list.filter(function(x){return String(x.submission_ref)===String(ref);})[0];if(hit)return hit;}
+  if(!list.length)return null;
+  var idx=Math.max(0,Math.min(list.length-1,(Number(g.round)||1)-1));
+  return list[idx];
+ }
+ function decFor(d,sub,code){
+  if(!sub)return null;
+  return (d.decisions||[]).filter(function(x){return x.invitation_id===sub.invitation_id&&x.comp_code===code;})[0]||null;
+ }
+ function articleCodes(s,types){
+  var map=new Map();
+  types.forEach(function(t,side){var g=srSelected(s,t);if(!g)return;g.rows.forEach(function(r){
+   var key=JSON.stringify([r.comp_code,r.experience_text,r.classification,r.framework_version,r.core_framework_version]);
+   if(!map.has(key))map.set(key,{code:r.comp_code,name:r.comp_name});
+  });});
+  var rows=Array.from(map.values());
+  rows.sort(function(a,b){return compareCompetencyDisplay(a.code,b.code);});
+  return rows;
+ }
+ function mark(k,id){
+  if(!k)return 'x';
+  if((k.y||[]).indexOf(id)>=0)return 'y';
+  if((k.n||[]).indexOf(id)>=0)return 'n';
+  return 'u';
+ }
+ var LAB={y:'Has it',n:'Does not have it',u:'Not answered',x:'Not available'};
+ function panel(s,d,types,code,name){
+  var subs=types.map(function(t){return subFor(d,t,srSelected(s,t));});
+  var ks=subs.map(function(sb){return sb&&sb.ksaba?sb.ksaba[code]||null:null;});
+  var items={},order=[];
+  ks.forEach(function(k){if(k&&Array.isArray(k.l))k.l.forEach(function(it){if(it&&it.i&&!items[it.i]){items[it.i]=it;order.push(it.i);}});});
+  var both=0,diff=0,onlyA=0,onlyB=0,none=0,open=0;
+  order.forEach(function(id){var a=mark(ks[0],id),b=mark(ks[1],id);
+   if(a==='u'||b==='u'||a==='x'||b==='x'){open++;return;}
+   if(a==='y'&&b==='y')both++;else if(a==='n'&&b==='n')none++;else{diff++;if(a==='y')onlyA++;else onlyB++;}
+  });
+  var h='<section class="kbr" data-kbr="'+esc(code)+'"><div class="kbr-h"><div><b>KSA-BA ticks</b><strong>'+esc(name||code)+'</strong><span>What the employee and the manager each confirmed for knowledge, skills, abilities, behaviours and attributes. Review here does not change the original answers.</span></div><div class="kbr-chips"><i>Both have it: '+both+'</i><i class="d">Differ: '+diff+'</i><i>Neither has it: '+none+'</i><i>Not answered: '+open+'</i></div></div><div class="kbr-body">';
+  if(!order.length){
+   var any=ks.some(function(k){return k&&((k.y||[]).length||(k.n||[]).length);});
+   h+='<div class="kbr-note">'+(any?'The ticks were saved without their wording, so the item names cannot be shown. Ask the assessor to open and save the assessment again.':'No KSA-BA ticks are saved for this competency. They were either not answered, or the assessment was submitted before ticks were being kept. Nothing is treated as zero.')+'</div>';
+  }else{
+   GR.forEach(function(g){
+    var gi=order.filter(function(id){return items[id].g===g[0];});if(!gi.length)return;
+    h+='<div class="kbr-grp"><h4 style="background:'+g[2]+'"><span>'+g[1]+'</span><em style="font-style:normal">'+gi.length+' items</em></h4>';
+    h+='<div class="kbr-row head"><span>Item</span><span>'+who(types[0])+'</span><span>'+who(types[1])+'</span></div>';
+    gi.forEach(function(id){
+     var a=mark(ks[0],id),b=mark(ks[1],id),df=(a==='y'&&b==='n')||(a==='n'&&b==='y');
+     h+='<div class="kbr-row'+(df?' diff':'')+'"><span>'+esc(items[id].t||'Wording not available for this item')+(df?' <b style="color:#92400e">(differs)</b>':'')+'</span><span><i class="kbr-m '+a+'">'+LAB[a]+'</i></span><span><i class="kbr-m '+b+'">'+LAB[b]+'</i></span></div>';
+    });
+    h+='</div>';
+   });
+  }
+  h+='<div class="kbr-dec">';
+  var editable=false;
+  types.forEach(function(t,i){
+   var sb=subs[i],dc=decFor(d,sb,code),has=!!(ks[i]&&(((ks[i].y||[]).length)||((ks[i].n||[]).length)));
+   var cls=dc?(dc.status==='Approved'?'a':(dc.status==='Returned'?'r':'d')):'';
+   var locked=dc&&['Approved','Disapproved'].indexOf(dc.status)>=0&&!s.redo;
+   h+='<div class="kbr-box"><h5>'+who(t)+' KSA-BA <span class="kbr-st '+cls+'">'+esc(dc?dc.status:'Pending')+'</span></h5>';
+   if(dc&&dc.comment)h+='<p style="margin:4px 0;font-size:13px">'+esc(dc.comment)+'</p>';
+   if(!sb)h+='<p class="kbr-msg">Not submitted yet.</p>';
+   else if(!has)h+='<p class="kbr-msg">No ticks to review.</p>';
+   else if(locked)h+='<p class="kbr-msg">Saved final decision: read-only. Use Redo review to change it.</p>';
+   else{editable=true;h+='<label>HR decision<select data-kbr-dec="'+i+'"><option value="">Choose a decision</option><option value="Approved">Approve</option><option value="Returned">Return</option><option value="Disapproved">Disapprove</option></select></label><label>HR comment<textarea data-kbr-com="'+i+'" rows="2" maxlength="2000" placeholder="Required for Return or Disapprove"></textarea></label>';}
+   h+='</div>';
+  });
+  h+='</div>';
+  if(editable)h+='<div class="kbr-foot"><button type="button" data-kbr-save="'+esc(code)+'">Save KSA-BA decision</button><span class="kbr-msg" data-kbr-msg></span></div>';
+  h+='</div></section>';
+  return h;
+ }
+ function paint(s,d){
+  if(!srAlive(s))return;
+  var root=document.getElementById('srRoot');if(!root)return;
+  Array.prototype.slice.call(root.querySelectorAll('.kbr,.kbr-err')).forEach(function(n){n.remove();});
+  var types=s.kind==='current'?['Self','Manager']:['Prospective Self','Prospective'];
+  var rows=articleCodes(s,types),arts=Array.prototype.slice.call(root.querySelectorAll('#srHistory ~ article.sr-experience, article.sr-experience'));
+  if(!rows.length||arts.length!==rows.length)return;
+  var last={};rows.forEach(function(r,i){last[r.code]=i;});
+  Object.keys(last).forEach(function(code){
+   var i=last[code],html=panel(s,d,types,code,rows[i].name),box=document.createElement('div');
+   box.innerHTML=html;arts[i].after(box.firstChild);
+  });
+ }
+ function showErr(s,e){
+  var root=document.getElementById('srRoot');if(!root||!srAlive(s))return;
+  var n=document.createElement('div');n.className='kbr-err kbr-note';
+  n.textContent='KSA-BA ticks could not be loaded: '+(e&&e.message?e.message:e)+'. Run the Step 97 SQL if you have not yet.';
+  var h=root.querySelector('.sx-guidelines');if(h)h.after(n);else root.prepend(n);
+ }
+ var orig=srRender;
+ srRender=function(s){
+  var r=orig.apply(this,arguments);
+  try{
+   if(CACHE[s.id])paint(s,CACHE[s.id]);
+   else load(s).then(function(d){if(SR.state===s)paint(s,d);},function(e){showErr(s,e);});
+  }catch(e){if(window.console)console.warn('KSA-BA review:',e&&e.message);}
+  return r;
+ };
+ document.addEventListener('click',async function(e){
+  var b=e.target&&e.target.closest?e.target.closest('[data-kbr-save]'):null;if(!b||b.disabled)return;
+  var s=SR.state;if(!s||!srAlive(s))return;
+  var box=b.closest('.kbr'),code=b.getAttribute('data-kbr-save'),msg=box.querySelector('[data-kbr-msg]');
+  var types=s.kind==='current'?['Self','Manager']:['Prospective Self','Prospective'],d=CACHE[s.id]||{};
+  var todo=[];
+  types.forEach(function(t,i){
+   var sel=box.querySelector('[data-kbr-dec="'+i+'"]');if(!sel||!sel.value)return;
+   var com=box.querySelector('[data-kbr-com="'+i+'"]'),sb=subFor(d,t,srSelected(s,t));if(!sb)return;
+   todo.push({type:t,status:sel.value,comment:com?com.value.trim():'',sub:sb});
+  });
+  if(!todo.length){msg.textContent='Choose a decision first.';return;}
+  if(todo.some(function(x){return x.status!=='Approved'&&x.comment.length<5;})){msg.textContent='Add a clear comment of at least five characters for every Return or Disapprove.';return;}
+  if(!confirm('Save '+todo.length+' KSA-BA decision(s) for this competency? The original ticks stay unchanged.'))return;
+  b.disabled=true;msg.textContent='Saving...';
+  try{
+   for(var i=0;i<todo.length;i++){var x=todo[i];
+    await sxRPC('cms_ksaba_review','decide',{employee_id:s.id,invitation_id:x.sub.invitation_id,comp_code:code,status:x.status,comment:x.comment,redo:!!s.redo});}
+   var fresh=await load(s,true);if(SR.state===s)paint(s,fresh);
+  }catch(err){b.disabled=false;msg.textContent='Not saved: '+err.message;}
+ });
+})();
+</script>
+<script id="cms-ksaba-recover-v1">
+(function(){
+ 'use strict';
+ if(window.__cmsKsabaRecoverV1)return;
+ window.__cmsKsabaRecoverV1=true;
+ var GRP=['know','skills','abil','beh','attr'];
+ function norm(s){return String(s==null?'':s).replace(/\s+/g,' ').trim();}
+ function hash(t){var h=5381,s=norm(t).toLowerCase();for(var i=0;i<s.length;i++)h=((h<<5)+h+s.charCodeAt(i))>>>0;return h.toString(36);}
+ function nums(v){var o=[];String(v==null?'':v).split(/[\s,;]+/).forEach(function(t){var n=parseInt(String(t).replace(/^A/i,''),10);if(n>0&&o.indexOf(n)<0)o.push(n);});return o;}
+ function lines(t){return String(t||'').replace(/\r/g,'').split(/\n|\u2022/).map(function(x){return x.replace(/^\s*(?:[\u25cf\u25aa*\-]|\d{1,2}[.)])\s*/,'').trim();}).filter(function(x){return x.length>1;});}
+ function tagSplit(t){var m=String(t||'').match(/^(.*?)\s*\[\s*(A?\d+(?:\s*,\s*A?\d+)*)\s*\]\s*$/i);if(!m)return {text:String(t||'').trim(),tags:[]};return {text:m[1].trim(),tags:nums(m[2])};}
+ function wordingMap(ref){
+  var map={};
+  ((ref&&ref.duties)||[]).forEach(function(d){
+   GRP.forEach(function(g){lines(d&&d[g]).forEach(function(l){var o=tagSplit(l);if(o.text)map[g+':'+hash(o.text)]={g:g,t:o.text.slice(0,300)};});});
+  });
+  return map;
+ }
+ function run(){
+  try{
+   if(typeof APP==='undefined'||!APP.user||!APP.user.email||typeof _supabase==='undefined')return;
+   var email=String(APP.user.email).trim().toLowerCase(),pre='cms-invite-durable:v1:'+email+':';
+   var keys=[];for(var i=0;i<localStorage.length;i++){var k=localStorage.key(i);if(k&&k.indexOf(pre)===0&&k.slice(pre.length).indexOf(':')<0)keys.push(k);}
+   keys.reduce(function(chain,k){return chain.then(function(){return one(k,pre);});},Promise.resolve());
+  }catch(e){}
+ }
+ function one(k,pre){
+  var id=k.slice(pre.length),flag='cms-ksaba-recovered:v1:'+id;
+  try{if(localStorage.getItem(flag))return Promise.resolve();}catch(e){}
+  var o;try{o=JSON.parse(localStorage.getItem(k));}catch(e){return Promise.resolve();}
+  var items=((o&&o.content&&o.content.items)||[]).filter(function(x){return x&&x.ksaba&&typeof x.ksaba==='object'&&(((x.ksaba.y||[]).length)||((x.ksaba.n||[]).length));});
+  if(!items.length)return Promise.resolve();
+  return _supabase.rpc('cms_assessment_reference',{p_request_id:id}).then(function(r){
+   var map=wordingMap(r&&r.data);
+   var out=items.map(function(x){
+    var ks=x.ksaba,ids=[].concat(ks.y||[],ks.n||[]);
+    var l=(ks.l&&ks.l.length)?ks.l:ids.map(function(i){var m=map[i];return {i:i,g:m?m.g:String(i).split(':')[0],t:m?m.t:''};});
+    return {id:String(x.id),ksaba:{c:!!ks.c,y:ks.y||[],n:ks.n||[],l:l}};
+   });
+   return _supabase.rpc('cms_ksaba_recover',{p_data:{invitation_id:id,items:out}});
+  }).then(function(r){
+   if(r&&!r.error&&r.data&&typeof r.data.recovered==='number'){try{localStorage.setItem(flag,String(r.data.recovered));}catch(e){}try{console.log('[KSA-BA recovery] uploaded '+r.data.recovered+' competencies for one submission');}catch(e){}}
+  }).catch(function(){});
+ }
+ var tries=0,t=setInterval(function(){tries++;if(typeof APP!=='undefined'&&APP.user&&APP.user.email){clearInterval(t);setTimeout(run,5000);}else if(tries>120)clearInterval(t);},2000);
 })();
 </script>
 </body>
