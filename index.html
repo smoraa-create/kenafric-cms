@@ -59052,5 +59052,610 @@ function fixOne(el,fs0){
  var tries=0,t=setInterval(function(){tries++;if(typeof APP!=='undefined'&&APP.user&&APP.user.email){clearInterval(t);setTimeout(run,5000);}else if(tries>120)clearInterval(t);},2000);
 })();
 </script>
+<style id="cms-evidence-backing-v1-css">
+#ebBox{background:#fff;border:1px solid #dbe2f2;border-radius:16px;padding:18px;margin-top:18px;box-shadow:0 3px 10px rgba(49,46,129,.07)}
+#ebBox h3{margin:0 0 4px;font-size:18px;color:#312e81}#ebBox .eb-s{font-size:13px;color:#64748b;margin:0 0 10px}
+#ebBox .eb-chips{display:flex;gap:6px;margin:6px 0 10px}#ebBox .eb-chips button{border:1.5px solid #c7d2fe;border-radius:20px;padding:5px 14px;font-weight:700;font-size:12.5px;background:#fff;color:#475569;cursor:pointer}
+#ebBox .eb-chips button.on{background:#4338ca;border-color:#4338ca;color:#fff}
+#ebBox table{width:100%;border-collapse:collapse;font-size:13.5px}#ebBox th{background:#eef2ff;text-align:left;padding:8px 10px;font-size:11.5px;text-transform:uppercase;color:#3730a3}
+#ebBox td{padding:9px 10px;border-bottom:1px solid #eef2ff;vertical-align:middle}
+#ebBox .eb-bar{display:flex;height:12px;border-radius:7px;overflow:hidden;background:#e2e8f0;min-width:200px}#ebBox .eb-bar i{display:block}
+#ebBox .g{background:#16a34a}#ebBox .b{background:#3b82f6}#ebBox .r{background:#ef4444}
+#ebBox .eb-tag{font-size:10.5px;font-weight:800;border-radius:6px;padding:2px 7px;margin-left:6px;background:#dc2626;color:#fff}
+#ebBox .eb-note{margin-top:10px;background:#fff7ed;border:1px solid #fed7aa;border-radius:10px;padding:10px;font-size:12.5px;color:#9a3412}
+</style>
+<script id="cms-evidence-backing-v1">
+(function(){
+ 'use strict';
+ if(window.__cmsEvBackV1)return;window.__cmsEvBackV1=true;
+ if(typeof _supabase==='undefined')return;
+ var DATA=null,loading=false,err='',SIDE='Manager',tm=null;
+ function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+ function load(){
+  if(loading)return;loading=true;
+  _supabase.rpc('cms_evidence_backing').then(function(r){loading=false;if(r.error){err=r.error.message;}else{DATA=r.data;err='';}paint();},function(e){loading=false;err=String(e&&e.message||e);paint();});
+ }
+ function html(){
+  var h='<div id="ebBox"><h3>How well each score is backed by evidence</h3><p class="eb-s">Each answer is Complete (measured result and proof), Supported (one of the two) or Claimed only. Scores are not changed. Read this next to the competency ranking above.</p>';
+  if(err)return h+'<div class="eb-note">Could not load this section: '+esc(err)+'</div></div>';
+  if(!DATA)return h+'<div class="eb-s">Loading...</div></div>';
+  h+='<div class="eb-chips"><button type="button" data-eb="Manager" class="'+(SIDE==='Manager'?'on':'')+'">Manager answers</button><button type="button" data-eb="Self" class="'+(SIDE==='Self'?'on':'')+'">Employee answers</button></div>';
+  var names=DATA.names||{},rows=(DATA.rows||[]).filter(function(r){return r.side===SIDE;}).map(function(r){var n=Number(r.n)||0;return {code:r.code,name:names[r.code]||r.code,n:n,v:Number(r.verified)||0,s:Number(r.supported)||0,c:Number(r.claimed)||0};});
+  if(!rows.length)return h+'<div class="eb-s">No submitted answers to show yet.</div></div>';
+  rows.sort(function(a,b){return (b.c/b.n)-(a.c/a.n)||b.n-a.n;});
+  var top=rows.filter(function(r){return r.n>=5;})[0];
+  h+='<table><tr><th>Competency</th><th>Answers</th><th>How well it is backed</th><th>Complete</th><th>Claimed only</th></tr>';
+  rows.forEach(function(r){
+   var pv=Math.round(100*r.v/r.n),ps=Math.round(100*r.s/r.n),pc=Math.max(0,100-pv-ps),few=r.n<5;
+   h+='<tr><td>'+esc(r.name)+(top&&top.code===r.code&&r.c>0?'<span class="eb-tag">Most claimed only</span>':'')+'</td><td>'+r.n+(few?' (few)':'')+'</td><td><div class="eb-bar"><i class="g" style="width:'+pv+'%"></i><i class="b" style="width:'+ps+'%"></i><i class="r" style="width:'+pc+'%"></i></div></td><td>'+pv+'%</td><td style="'+(pc>=30&&!few?'color:#b91c1c;font-weight:800':'')+'">'+pc+'%</td></tr>';
+  });
+  h+='</table><div class="eb-note">Competencies are ordered with the largest share of claimed-only answers first. Rows with fewer than 5 answers are marked (few) and are not flagged.</div></div>';
+  return h;
+ }
+ function paint(){
+  var root=document.getElementById('rrRoot');if(!root)return;
+  var old=document.getElementById('ebBox');if(old)old.remove();
+  if(!DATA&&!err&&!loading){load();}
+  root.insertAdjacentHTML('beforeend',html());
+ }
+ function check(){
+  var root=document.getElementById('rrRoot');if(!root)return;
+  if(root.querySelector('#ebBox'))return;
+  paint();
+ }
+ function sched(){clearTimeout(tm);tm=setTimeout(check,150);}
+ try{new MutationObserver(function(recs){
+  if(recs.every(function(r){var t=r.target;var el=t&&t.nodeType===1?t:(t&&t.parentElement);return el&&el.closest&&el.closest('#ebBox');}))return;
+  sched();}).observe(document.body,{childList:true,subtree:true});}catch(e){}
+ document.addEventListener('click',function(e){
+  var b=e.target.closest&&e.target.closest('[data-eb]');if(!b)return;SIDE=b.getAttribute('data-eb');paint();
+ });
+})();
+</script>
+<style id="cms-evidence-ai-check-v1-css">
+.eai{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:8px 0 4px;padding:8px 10px;border:1px dashed #cbd5e1;border-radius:10px;background:#f8fafc}
+.eai .eai-btn{border:1.5px solid #2563eb;background:#fff;color:#1d4ed8;font-weight:700;font-size:12px;border-radius:8px;padding:5px 11px;cursor:pointer}
+.eai .eai-btn[disabled]{opacity:.6;cursor:wait}
+.eai .eai-b{font-size:11.5px;font-weight:800;border-radius:20px;padding:3px 11px}
+.eai .eai-b.m{background:#dcfce7;color:#166534}.eai .eai-b.p{background:#fef3c7;color:#92400e}.eai .eai-b.n{background:#fee2e2;color:#991b1b}.eai .eai-b.u{background:#e2e8f0;color:#334155}
+.eai .eai-r{flex-basis:100%;font-size:12px;color:#475569;line-height:1.4}
+.eai .eai-s{flex-basis:100%;font-size:11px;color:#94a3b8}
+</style>
+<script id="cms-evidence-ai-check-v1">
+(function(){
+ 'use strict';
+ if(window.__cmsEvAiCheckV1)return;window.__cmsEvAiCheckV1=true;
+ var CACHE={},LOADED={},BUSY={};
+ var BADGE={matches:['m','File and links support the claim'],partly:['p','Partly supports the claim'],does_not_match:['n','Does not match the claim'],unreadable:['u','Could not be read'],no_proof:['u','No file or link to check']};
+ var VIEW={supports:'The proof appears to support the rating given.',higher_than_shown:'The proof appears to show more than the rating given.',lower_than_shown:'The proof appears to show less than the rating given.',cannot_tell:''};
+ function allowed(){try{return APP&&(APP.currentRole==='hr'||APP.currentRole==='hohr');}catch(e){return false;}}
+ function toast(m){try{showToast(m);}catch(e){}}
+ function box(id){
+  var d=document.createElement('div');d.className='eai';d.setAttribute('data-eai',id);
+  d.innerHTML='<button type="button" class="eai-btn">Check file and links</button><span class="eai-b" hidden></span><span class="eai-r"></span><span class="eai-s">Advisory only. HR decides.</span>';
+  return d;
+ }
+ function paint(d){
+  var id=d.getAttribute('data-eai'),r=CACHE[id],b=d.querySelector('.eai-b'),t=d.querySelector('.eai-r'),btn=d.querySelector('.eai-btn');
+  if(BUSY[id]){btn.disabled=true;btn.textContent='Checking...';return;}
+  btn.disabled=false;btn.textContent=r?'Check again':'Check file and links';
+  if(!r){b.hidden=true;t.textContent='';return;}
+  var bd=BADGE[r.verdict]||BADGE.unreadable;
+  b.hidden=false;b.className='eai-b '+bd[0];b.textContent=bd[1];
+  var txt=String(r.reason||'');var v=VIEW[r.rating_view]||'';
+  t.textContent=(txt+(v?' '+v:'')).trim();
+ }
+ function paintAll(){[].forEach.call(document.querySelectorAll('.eai[data-eai]'),paint);}
+ function plant(){
+  [].forEach.call(document.querySelectorAll('#srRoot section[data-sr-row]'),function(sec){
+   if(sec.querySelector('.eai'))return;
+   var id=sec.getAttribute('data-sr-row');if(!id)return;
+   var host=sec.querySelector('.sr-evidence')||sec.querySelector('.sr-original');if(!host)return;
+   host.insertAdjacentElement('afterend',box(id));
+  });
+  [].forEach.call(document.querySelectorAll('button[onclick^="aiValidateOne("]'),function(btn){
+   var m=/aiValidateOne\(\s*['"]?([^'")\s]+)['"]?\s*\)/.exec(btn.getAttribute('onclick')||'');if(!m)return;
+   var wrap=btn.parentElement;if(!wrap||wrap.nextElementSibling&&wrap.nextElementSibling.classList.contains('eai'))return;
+   wrap.insertAdjacentElement('afterend',box(m[1]));
+  });
+ }
+ async function call(body){
+  var r=await _supabase.functions.invoke('cms-evidence-check',{body:body});
+  if(r.error){var msg=r.error.message||'The check failed.';try{if(r.error.context&&r.error.context.json){var j=await r.error.context.json();if(j&&j.error)msg=j.error;}}catch(e){}throw new Error(msg);}
+  if(r.data&&r.data.error)throw new Error(r.data.error);
+  return r.data;
+ }
+ async function loadKnown(){
+  var ids=[];[].forEach.call(document.querySelectorAll('.eai[data-eai]'),function(d){var id=d.getAttribute('data-eai');if(!LOADED[id]){LOADED[id]=1;ids.push(id);}});
+  if(!ids.length)return;
+  try{var d=await call({action:'get',ids:ids});Object.keys(d.results||{}).forEach(function(k){CACHE[k]=d.results[k];});paintAll();}catch(e){ids.forEach(function(i){delete LOADED[i];});}
+ }
+ document.addEventListener('click',async function(e){
+  var btn=e.target.closest&&e.target.closest('.eai .eai-btn');if(!btn)return;
+  var d=btn.closest('.eai'),id=d.getAttribute('data-eai');if(BUSY[id])return;
+  BUSY[id]=true;paint(d);
+  try{var out=await call({action:'check',id:id});CACHE[id]=out.result;}
+  catch(err){toast('Evidence check: '+err.message);}
+  BUSY[id]=false;paintAll();
+ });
+ var busyScan=false;
+ setInterval(async function(){
+  if(busyScan||!allowed())return;
+  if(!document.getElementById('srRoot')&&!document.querySelector('button[onclick^="aiValidateOne("]'))return;
+  busyScan=true;try{plant();await loadKnown();paintAll();}catch(e){}busyScan=false;
+ },2000);
+})();
+</script>
+<style id="cms-assessment-wide-v1-css">
+/* Only the width changes: the assessment page starts at the first tab and stops near the right edge. */
+@media(min-width:1101px){
+ body:not(.sb-mode):has(#adRoot.fp-assessment) .content{margin-left:32px!important;margin-right:32px!important}
+}
+</style>
+<style id="cms-evidence-guided-v5-css">
+#adRoot .eg-hide{display:none!important}
+#adRoot .eg-stat{display:block;margin:4px 0}
+#adRoot .eg-st{display:flex;gap:9px;align-items:flex-start;border:1.5px solid #d6dcf0;border-radius:12px;background:#fff;padding:9px 10px;margin-bottom:7px;cursor:pointer;text-align:left;width:100%;font:inherit}
+#adRoot .eg-st i{width:18px;height:18px;border-radius:50%;border:2px solid #94a3b8;flex:none;margin-top:2px;color:#fff;font-size:11px;font-style:normal;text-align:center;line-height:14px}
+#adRoot .eg-st b{display:block;font-size:13px;color:#12204f;line-height:1.25}
+#adRoot .eg-st small{display:block;font-size:11.5px;color:#64748b;margin-top:2px;line-height:1.3;font-weight:400}
+#adRoot .eg-st.on{border:2px solid #2349b8;background:#eaf0fe}
+#adRoot .eg-st.on i{background:#2349b8;border-color:#2349b8}
+#adRoot .eg-st:disabled{opacity:.6;cursor:not-allowed}
+#adRoot .eg-panel{border:1.5px solid #d6dcf0;border-radius:14px;background:#fff;padding:14px;margin:8px 0}
+#adRoot .eg-panel h4{margin:0 0 3px;font-size:16px;color:#12204f}
+#adRoot .eg-sub{font-size:12.5px;color:#475569;margin:0 0 8px}
+#adRoot .eg-box{border:1px solid #d6dcf0;border-radius:11px;padding:9px 10px;margin-bottom:8px;background:#fff}
+#adRoot .eg-box>b{display:block;font-size:13.5px;color:#12204f;margin-bottom:5px}
+#adRoot .eg-box textarea{width:100%;box-sizing:border-box;border:1.5px solid #cbd5e1;border-radius:9px;padding:8px 10px;font:inherit;font-size:13.5px;min-height:56px;resize:vertical;background:#fff}
+#adRoot .eg-drop{border:2px dashed #93c5fd;background:#eff6ff;border-radius:10px;padding:14px;text-align:center;font-size:13px;color:#1e293b;cursor:pointer}
+#adRoot .eg-drop.hov{background:#dbeafe}
+#adRoot .eg-drop a{color:#1d4ed8;font-weight:800;text-decoration:none}
+#adRoot .eg-drop small{display:block;color:#64748b;font-size:11.5px;margin-top:3px}
+#adRoot .eg-box4 .ad-file{font-size:12.5px;margin:6px 0 0}
+#adRoot .eg-type{display:inline-block;font-size:11.5px;font-weight:800;border-radius:20px;padding:3px 11px;margin-top:8px}
+#adRoot .eg-type.v{background:#dcfce7;color:#166534}#adRoot .eg-type.p{background:#dbeafe;color:#1e40af}#adRoot .eg-type.c{background:#fee2e2;color:#991b1b}
+#adRoot .eg-miss{font-size:12px;color:#92400e;margin-top:6px}
+#adRoot .eg-note{margin-top:8px;border-radius:9px;padding:8px 10px;font-size:12.5px}
+#adRoot .eg-warn{background:#fff7ed;border:1px solid #fed7aa;color:#9a3412}
+#adRoot .eg-ok{background:#ecfdf5;border:1px solid #a7f3d0;color:#065f46}
+#adRoot .eg-rnote{grid-column:1 / -1;flex-basis:100%;width:100%;font-size:11.5px;font-weight:700;color:#9a3412;background:#fff7ed;border:1px solid #fed7aa;border-radius:8px;padding:5px 8px;margin:0 0 6px;box-sizing:border-box}
+#adRoot .eg-off .eg-box,#adRoot .eg-off .eg-sub,#adRoot .eg-off .eg-miss{display:none!important}
+#adRoot .sx-rating.eg-lock{opacity:.55;border-style:dashed!important}
+#adRoot .eg-desc{font-size:11.5px;line-height:1.35;color:#475569;margin:-2px 4px 8px 6px;white-space:normal;font-weight:400}
+#adRoot .sx-rating.eg-lock+.eg-desc{opacity:.55}
+#adRoot.fm-on.fp-assessment .fp-ratings .sx-rating{padding-bottom:7px!important;row-gap:2px!important}
+#adRoot.fm-on.fp-assessment .fp-ratings .sx-rating small,#adRoot.fp-assessment .fp-ratings .sx-rating small{display:block!important;grid-column:1 / -1!important;width:auto!important;font-size:11px!important;line-height:1.3!important;color:#475569!important;font-weight:400!important;padding:0 6px 0 38px;white-space:normal;text-align:left;writing-mode:horizontal-tb!important}
+#adRoot .eg-box4 .eg-tag{display:inline-block;font-size:10.5px;font-weight:800;border-radius:20px;padding:2px 9px;margin-left:6px;vertical-align:middle}
+#adRoot .eg-box4 .eg-tag.req{background:#fee2e2;color:#991b1b}
+#adRoot .eg-box4 .eg-tag.opt{background:#e2e8f0;color:#475569}
+#adRoot .eg-box4 .eg-need{display:block;font-size:12px;color:#475569;margin:0 0 6px;font-weight:400}
+#adRoot .eg-meter{margin:10px 0 2px}#adRoot .eg-mh{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px;font-size:13.5px}
+#adRoot .eg-mh span{font-weight:800;font-size:13px}#adRoot .eg-bars{display:flex;gap:5px}#adRoot .eg-bars div{height:11px;flex:1;border-radius:6px}
+#adRoot .eg-bl{display:flex;gap:5px;margin-top:3px;font-size:11px;color:#64748b}#adRoot .eg-bl span{flex:1;text-align:center}
+#adRoot .eg-up{margin-top:6px;font-size:13px;font-weight:700;color:#1e293b}#adRoot .eg-ai{margin-top:5px;font-size:12.5px;line-height:1.4;color:#475569}
+#adRoot .eg-ai.bad{color:#b91c1c}#adRoot .eg-ai.ok{color:#166534}
+</style>
+<script id="cms-evidence-guided-v5">
+(function(){
+ 'use strict';
+ if(window.__cmsEvidenceGuidedV5)return;
+ window.__cmsEvidenceGuidedV5=true;
+ if(typeof AD==='undefined'||typeof adRender!=='function')return;
+ var STAT=[
+  {t:'Demonstrated independently',d:'Performed the experience on your own.',dm:'Performed the experience on their own.',yes:true,max:5},
+  {t:'Demonstrated with support',d:'Performed with guidance or occasional support.',yes:true,max:2},
+  {t:'Partially demonstrated',d:'Performed some parts of the experience.',yes:true,max:2},
+  {t:'Not yet demonstrated',d:'Has not yet performed this experience.',yes:false,max:0}];
+ var SHORT={1:'Minimal understanding. Needs significant guidance and supervision.',2:'Basic understanding. Needs support; inconsistent in challenging situations.',3:'Required level. Works independently and delivers expected results.',4:'Strong. Handles complex situations and can guide others.',5:'Mastery. Develops best practices and coaches others.'};
+ var PEND=new Map();
+ var PTS={c:3,i:2,v:1};
+ function tierOf(c){c=String(c||'');return /critical|must-have/i.test(c)?'c':/important|performance/i.test(c)?'i':'v';}
+ function shares(s){
+  if(s.__egShareFor===s.items)return s.__egShare;
+  var tot=0,by={};
+  s.items.forEach(function(it){var p=PTS[tierOf(it.classification)];tot+=p;by[it.code]=(by[it.code]||0)+p;});
+  var keys=Object.keys(by),out={avg:keys.length?100/keys.length:100,by:{}};
+  keys.forEach(function(k){out.by[k]=tot?100*by[k]/tot:0;});
+  s.__egShareFor=s.items;s.__egShare=out;return out;
+ }
+ function rule(s,item){
+  var t=tierOf(item&&item.classification);
+  if(t==='c')return {req:true,why:'Critical'};
+  if(t==='i'){var m=shares(s);if((m.by[item.code]||0)>=m.avg)return {req:true,why:'Important with high weight'};return {req:false,why:'Important'};}
+  return {req:false,why:'Value-Add'};
+ }
+ function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+ function plain(h){var d=document.createElement('div');d.innerHTML=String(h||'');return String(d.textContent||'').replace(/\u00a0/g,' ').trim();}
+ function nl(t){return esc(t).replace(/\n/g,'<br>');}
+ function isMgr(s){return String(s&&s.invitation&&s.invitation.kind||'').indexOf('manager')===0;}
+ function compose(p,mgr){
+  var h='';
+  if(p.st>=0)h+='<p><b>Status:</b> '+esc(STAT[p.st].t)+'</p>';
+  if(p.what)h+='<p><b>'+(mgr?'What the employee did':'What I did')+':</b> '+nl(p.what)+'</p>';
+  if(p.how)h+='<p><b>How often and for how long:</b> '+nl(p.how)+'</p>';
+  if(p.result)h+='<p><b>Result / Outcome:</b> '+nl(p.result)+'</p>';
+  return h;
+ }
+ function parse(html,radioYes,radioNo){
+  var p={st:-1,what:'',how:'',result:''};
+  var d=document.createElement('div');d.innerHTML=String(html||'');var found=false;
+  [].forEach.call(d.querySelectorAll('p'),function(x){
+   var b=x.querySelector('b');if(!b)return;var lab=b.textContent.trim().replace(/:$/,'');
+   var rest=x.innerHTML.replace(/^[\s\S]*?<\/b>/i,'').replace(/<br\s*\/?>/gi,'||N||');var t=plain(rest).replace(/\|\|N\|\|/g,'\n').trim();
+   if(/^Status$/i.test(lab)){found=true;STAT.forEach(function(s,i){if(s.t.toLowerCase()===t.toLowerCase())p.st=i;});if(/^no opportunity to demonstrate$/i.test(t))p.st=3;}
+   else if(/^What (I did|I do|the employee (did|does))$/i.test(lab)){found=true;p.what=t;}
+   else if(/^How often/i.test(lab)){found=true;p.how=t;}
+   else if(/^Result/i.test(lab)){found=true;p.result=t;}
+  });
+  if(!found){var t0=plain(html);if(t0)p.what=t0;}
+  if(p.st<0){if(radioYes&&radioYes.checked)p.st=0;else if(radioNo&&radioNo.checked)p.st=3;}
+  return p;
+ }
+ var WORDNUM={a:1,an:1,one:1,two:2,three:3,four:4,five:5,six:6,seven:7,eight:8,nine:9,ten:10,twelve:12};
+ function howInfo(t){
+  t=String(t||'').toLowerCase();
+  var once=/\bonce\b|one[- ]?off|one time|single (time|occasion|instance)/.test(t);
+  var freq=/daily|weekly|monthly|quarterly|yearly|annually|fortnight|every|each|per (day|week|month|year)|regularly|twice|times a|bi-?weekly/.test(t);
+  var months=null,m;
+  if((m=/(\d+(?:\.\d+)?)\s*(year|yr|month|mo\b|week|wk)/.exec(t))){var n=Number(m[1]),u=m[2];months=u.indexOf('y')===0?n*12:u.indexOf('mo')===0?n:n/4.3;}
+  else if((m=/\b(a|an|one|two|three|four|five|six|seven|eight|nine|ten|twelve)\s+(year|month)s?/.exec(t))){months=WORDNUM[m[1]]*(m[2]==='year'?12:1);}
+  else if((m=/since\s+(?:[a-z]+\s+)?((?:19|20)\d\d)/.exec(t))){var now=new Date();months=Math.max(0,(now.getFullYear()-Number(m[1]))*12);}
+  return {once:once&&!(months>=2),freq:freq,months:months,hasDur:months!=null};
+ }
+ function proofOf(v){
+  if(!v)return false;
+  if(String(v.attachment_url||'').trim()||String(v.attachment_name||'').trim())return true;
+  var it=v.evidence_items;if(typeof it==='string'){try{it=JSON.parse(it);}catch(e){it=[];}}
+  return Array.isArray(it)&&it.some(function(x){return x&&(String(x.url||x.href||'').trim()||x.type==='file');});
+ }
+ function evalP(p,proof,req){
+  var whatOk=String(p.what||'').trim().length>=15;
+  var hi=howInfo(p.how),howOk=hi.once||(hi.freq&&hi.hasDur);
+  var rs=String(p.result||'').trim();
+  var measured=(/\d/.test(rs)&&rs.length>=8)||(rs.length>=25&&/feedback|praised|commended|appreciat|signed off|approved by|rated|recogni/i.test(rs));
+  var n=(whatOk?1:0)+(howOk?1:0)+(measured?1:0)+(proof?1:0);
+  var type=(measured&&proof)?'v':((measured||(proof&&whatOk))?'p':'c');
+  var miss=[];if(!whatOk)miss.push('what you did');if(!howOk)miss.push(hi.freq&&!hi.hasDur?'how long you have done it':'how often and for how long');if(!measured)miss.push('a result with a number, date or named feedback');if(!proof&&req)miss.push('a file or link as proof');
+  var st=p.st,max;
+  if(st<0)max=0;
+  else if(!STAT[st].yes)max=0;
+  else if(STAT[st].max<5)max=STAT[st].max;
+  else max=(whatOk&&howOk&&measured&&(proof||!req)&&!hi.once)?5:(((whatOk?1:0)+(howOk?1:0)+(measured?1:0))>=2?3:2);
+  if(req&&!proof&&st===0&&max>2)max=2;
+  var min=1;
+  return {min:min,req:!!req,n:n,type:type,miss:miss,max:max,once:hi.once,whatOk:whatOk,howOk:howOk,measured:measured,proof:proof};
+ }
+ function ctx(t){var el=t.closest('[data-ad-item]');var s=AD.state;if(!el||!s)return null;var idx=[].indexOf.call(document.querySelectorAll('#adRoot [data-ad-item]'),el);return {el:el,s:s,item:s.items[idx]};}
+ function boxToHide(el,yes,no,src){
+  var node=yes,best=null;
+  while(node&&node!==el){var par=node.parentElement;if(!par||par===el)break;if(par.contains(src)||par.querySelector('[data-sx-rating]'))break;if(par.contains(no))best=par;node=par;}
+  return best||yes.closest('label')||yes.parentElement;
+ }
+ function panelHTML(mgr){
+  var who=mgr?'the employee':'you';
+  return '<div class="eg-panel"><h4>Evidence &amp; Proof of experience</h4><p class="eg-sub">Provide clear and specific evidence of how '+(mgr?'the employee has':'you have')+' demonstrated this experience.</p>'+
+   '<div class="eg-box"><b>1. '+(mgr?'What the employee did':'What I did')+'</b><textarea data-eg="what" maxlength="2000" placeholder="'+(mgr?'Describe the task the employee personally performed...':'Describe the task you personally performed...')+'"></textarea></div>'+
+   '<div class="eg-box"><b>2. How often and for how long</b><textarea data-eg="how" maxlength="500" rows="2" placeholder="e.g. Daily for 2 years..."></textarea></div>'+
+   '<div class="eg-box"><b>3. Result / Outcome</b><textarea data-eg="result" maxlength="2000" placeholder="What was the result or impact?..."></textarea></div>'+
+   '<div class="eg-box eg-box4"><b>4. Supporting Proof <span class="eg-tag"></span></b><small class="eg-need"></small></div>'+
+   '<div class="eg-chip"></div><div class="eg-miss"></div><div class="eg-msg"></div></div>';
+ }
+ function build(el,s,item){
+  var src=el.querySelector('textarea[data-ad-field="evidence"]');if(!src)return;
+  var mgr=String(s.invitation&&s.invitation.kind||'').indexOf('manager')===0;
+  var yes=el.querySelector('[data-fp-answer="yes"]'),no=el.querySelector('[data-fp-answer="no"]');
+  var host=src.closest('label')||src.parentElement;host.classList.add('eg-hide');var wrap=src.closest('.cms-rich-wrap');if(wrap)wrap.classList.add('eg-hide');
+  if(yes&&no){
+   var box=boxToHide(el,yes,no,src);box.classList.add('eg-hide');
+   var st=document.createElement('div');st.className='eg-stat';
+   st.innerHTML=STAT.map(function(x,i){return '<button type="button" class="eg-st" data-eg-st="'+i+'"><i></i><span><b>'+esc(x.t)+'</b><small>'+esc(mgr&&x.dm?x.dm:x.d)+'</small></span></button>';}).reverse().join('');
+   box.parentElement.insertBefore(st,box);
+  }
+  var d=document.createElement('div');d.innerHTML=panelHTML(mgr);var panel=d.firstChild;host.after(panel);
+  var b4=panel.querySelector('.eg-box4');
+  var fi=el.querySelector('[data-ad-field="file"]'),fl=fi&&fi.closest('label'),fp=el.querySelector('[data-ad-file]'),lk=el.querySelector('[data-evidence-links]');
+  var addBtn=lk&&lk.nextElementSibling&&lk.nextElementSibling.tagName==='BUTTON'?lk.nextElementSibling:null;
+  if(fi){
+   if(fl)fl.classList.add('eg-hide');
+   var dz=document.createElement('div');dz.className='eg-drop';dz.innerHTML='Drag and drop files here or <a>Choose File</a><small>Supported: PDF, XLS, PNG, JPG (Max 10MB)</small>';
+   dz.addEventListener('click',function(){if(!fi.disabled)fi.click();});
+   dz.addEventListener('dragover',function(e){e.preventDefault();dz.classList.add('hov');});
+   dz.addEventListener('dragleave',function(){dz.classList.remove('hov');});
+   dz.addEventListener('drop',function(e){e.preventDefault();dz.classList.remove('hov');if(fi.disabled||!e.dataTransfer||!e.dataTransfer.files.length)return;try{fi.files=e.dataTransfer.files;fi.dispatchEvent(new Event('change',{bubbles:true}));}catch(x){}});
+   b4.appendChild(dz);
+  }
+  if(fp)b4.appendChild(fp);if(lk)b4.appendChild(lk);if(addBtn)b4.appendChild(addBtn);
+  var p=parse(src.value,yes,no);el.__eg={p:p,last:src.value};
+  panel.querySelector('[data-eg=what]').value=p.what;panel.querySelector('[data-eg=how]').value=p.how;panel.querySelector('[data-eg=result]').value=p.result;
+ }
+ function descs(el){
+  [].forEach.call(el.querySelectorAll('.sx-rating'),function(lab){var inp=lab.querySelector('[data-sx-rating]');if(!inp)return;var n=Number(inp.dataset.sxRating);if(!SHORT[n])return;
+   var full=(typeof cmsRatingDescription==='function'?cmsRatingDescription(n):'')||SHORT[n];var sm=lab.querySelector('small');
+   if(sm){sm.textContent=SHORT[n];sm.title=full;return;}
+   var nx=lab.nextElementSibling;if(nx&&nx.classList.contains('eg-desc'))return;
+   var dd=document.createElement('div');dd.className='eg-desc';dd.textContent=SHORT[n];dd.title=full;lab.insertAdjacentElement('afterend',dd);
+  });
+ }
+ function clearRating(el,s){
+  [].forEach.call(el.querySelectorAll('[data-sx-rating]'),function(x){x.checked=false;});
+  var f=el.querySelector('[data-ad-field="rating"]');if(f)f.value='';
+  if(typeof adQueue==='function'){try{adQueue(s);}catch(e){}}
+ }
+ var LABEL={1:'Basic',2:'Developing',3:'Proficient',4:'Advanced',5:'Expert'};
+ var BARC=['','#ef4444','#f97316','#eab308','#22c55e'],BARL=['','Weak','Fair','Good','Strong'];
+ var AICACHE={};try{AICACHE=JSON.parse(sessionStorage.getItem('cmsEgAi1')||'{}')||{};}catch(e){AICACHE={};}
+ function aiSave(){try{var k=Object.keys(AICACHE);if(k.length>120)delete AICACHE[k[0]];sessionStorage.setItem('cmsEgAi1',JSON.stringify(AICACHE));}catch(e){}}
+ function aiRes(g){return g&&g.ai&&g.ai.done&&g.ai.res&&!g.ai.err?g.ai.res:null;}
+ function fillOf(ev,g){
+  var base=(ev.whatOk?1:0)+(ev.howOk?1:0)+(ev.measured?1:0),f;
+  if(ev.req){var pts=base+(ev.proof?1:0);f=pts>=4?4:pts===3?3:pts===2?2:1;}
+  else f=base>=3?4:base===2?3:base===1?2:1;
+  if(ev.once&&f>3)f=3;
+  var ai=aiRes(g);
+  if(ai){if(ai.verdict==='does_not_match')f=1;else if(ai.verdict==='partly'&&f>2)f=2;}
+  return f;
+ }
+ function srcList(v){
+  var out=[];if(!v)return out;
+  if(v.attachment_url)out.push({url:String(v.attachment_url),label:'Uploaded file',name:String(v.attachment_name||'')});
+  var it=v.evidence_items;if(typeof it==='string'){try{it=JSON.parse(it);}catch(e){it=[];}}
+  if(Array.isArray(it))it.forEach(function(x){var u=x&&String(x.url||x.href||'').trim();if(u&&!out.some(function(o){return o.url===u;}))out.push({url:u,label:x.type==='file'?'Uploaded file':'Link',name:String(x.name||'')});});
+  return out.slice(0,4);
+ }
+ function schedAI(el,s,item,g,v,ev){
+  if(!s.canSave||g.p.st<0||g.p.st>=3||!ev.whatOk){return;}
+  var urls=srcList(v);
+  if(!urls.length){if(g.ai){clearTimeout(g.aiT);g.ai=null;}return;}
+  var key=urls.map(function(u){return u.url;}).join('|')+'#'+String(g.p.what||'')+'|'+String(g.p.how||'')+'|'+String(g.p.result||'');
+  if(g.ai&&g.ai.key===key)return;
+  clearTimeout(g.aiT);
+  if(AICACHE[key]){g.ai={key:key,done:true,res:AICACHE[key]};return;}
+  g.ai={key:key,done:false,run:false};
+  g.aiT=setTimeout(function(){runAI(el,s,item,g,key,urls,v);},4000);
+ }
+ function runAI(el,s,item,g,key,urls,v){
+  if(!g.ai||g.ai.key!==key||AD.state!==s||typeof _supabase==='undefined')return;
+  if((g.aiN||0)>=6){g.ai={key:key,done:true,err:true,res:null};refresh(el,s,item);return;}
+  g.aiN=(g.aiN||0)+1;g.ai.run=true;refresh(el,s,item);
+  var body={action:'check_draft',experience:String(item.text||''),comp:String(item.name||item.comp_name||item.code||''),classification:String(item.classification||''),rating:Number(v&&v.rating)||null,evidence:plain(compose(g.p,isMgr(s))),sources:urls};
+  _supabase.functions.invoke('cms-evidence-check',{body:body}).then(function(r){
+   if(!g.ai||g.ai.key!==key)return;
+   if(r.error||!r.data||!r.data.result){g.ai={key:key,done:true,err:true,res:null};}
+   else{g.ai={key:key,done:true,res:r.data.result};AICACHE[key]=r.data.result;aiSave();}
+   refresh(el,s,item);
+  }).catch(function(){if(g.ai&&g.ai.key===key){g.ai={key:key,done:true,err:true,res:null};refresh(el,s,item);}});
+ }
+ function meterHTML(ev,g){
+  var f=fillOf(ev,g),ai=aiRes(g),bad=ai&&ai.verdict==='does_not_match';
+  var h='<div class="eg-meter"><div class="eg-mh"><b>Evidence strength</b><span style="color:'+BARC[f]+'">'+BARL[f]+(bad?' after file check':'')+'</span></div><div class="eg-bars">';
+  for(var i=1;i<=4;i++)h+='<div style="background:'+(i<=f?BARC[f]:'#e2e8f0')+'"></div>';
+  h+='</div><div class="eg-bl"><span>Weak</span><span>Fair</span><span>Good</span><span>Strong</span></div>';
+  var up=(g.p.st===1||g.p.st===2)?2:ev.max;
+  if(up>0)h+='<div class="eg-up">Supports up to rating '+up+' ('+LABEL[up]+').</div>';
+  if(g.ai){
+   if(!g.ai.done)h+='<div class="eg-ai">'+(g.ai.run?'Reading your file...':'Your file will be read in a moment...')+'</div>';
+   else if(g.ai.err)h+='<div class="eg-ai">The file check is not available right now. It is not counted for or against.</div>';
+   else if(ai){
+    var rs=esc(String(ai.reason||''));
+    if(ai.verdict==='matches')h+='<div class="eg-ai ok">File matches what is written.</div>';
+    else if(ai.verdict==='partly')h+='<div class="eg-ai">File only partly matches what is written. '+rs+'</div>';
+    else if(ai.verdict==='does_not_match')h+='<div class="eg-ai bad">The file does not seem to match what is written. '+rs+' It is not counted as proof until it matches.</div>';
+    else if(ai.verdict==='unreadable')h+='<div class="eg-ai">The file could not be read, so it is not counted for or against.</div>';
+   }
+  }
+  return h+'</div>';
+ }
+ function refresh(el,s,item){
+  var panel=el.querySelector('.eg-panel'),g=el.__eg;if(!panel||!g)return;
+  try{descs(el);}catch(e){}
+  var v=s.values[item.id]||{};var rl=rule(s,item);var rs0=aiRes(g);var proofEff=proofOf(v)&&!(rs0&&rs0.verdict==='does_not_match');var ev=evalP(g.p,proofEff,rl.req);
+  var tg=panel.querySelector('.eg-tag'),nd=panel.querySelector('.eg-need');
+  if(tg){tg.className='eg-tag '+(rl.req?'req':'opt');tg.textContent=rl.req?'Required':'Optional';}
+  if(nd)nd.textContent=rl.req?('Required because this experience is '+rl.why+'. A file or link is needed to rate 3 (Proficient) or higher.'):('Optional because this experience is '+rl.why+'. A file or link is not needed.');
+  [].forEach.call(el.querySelectorAll('.eg-st'),function(b){var on=Number(b.getAttribute('data-eg-st'))===g.p.st;b.classList.toggle('on',on);b.querySelector('i').textContent=on?'\u2713':'';b.disabled=!s.canSave;});
+  [].forEach.call(panel.querySelectorAll('[data-eg]'),function(t){t.disabled=!s.canSave;});
+  var chip=panel.querySelector('.eg-chip');chip.innerHTML=(g.p.st<0||g.p.st>=3)?'':meterHTML(ev,g);
+  var notDemo=g.p.st>=3;
+  panel.querySelector('.eg-miss').textContent=(!notDemo&&ev.miss.length)?'Still needed for the strongest rating: '+(isMgr(s)?ev.miss.join('; ').replace('what you did','what the employee did').replace('how long you have done it','how long the employee has done it'):ev.miss.join('; '))+'.':'';
+  try{schedAI(el,s,item,g,v,ev);}catch(e){}
+  var rating=Number(v.rating)||0;var checked=el.querySelector('[data-sx-rating]:checked');if(checked)rating=Number(checked.dataset.sxRating)||rating;
+  var cleared=false;
+  if((rating>ev.max||(rating>0&&rating<ev.min))&&s.canSave){clearRating(el,s);cleared=true;g.clearedFrom=rating;}
+  [].forEach.call(el.querySelectorAll('[data-sx-rating]'),function(inp){
+   var n=Number(inp.dataset.sxRating),lab=inp.closest('.sx-rating'),lock=n>ev.max||n<ev.min;
+   inp.disabled=lock||!s.canSave;if(lab)lab.classList.toggle('eg-lock',lock);
+  });
+  panel.classList.toggle('eg-off',notDemo);
+  var first=el.querySelector('.sx-rating');
+  if(first&&first.parentElement){
+   var rn=first.parentElement.querySelector('.eg-rnote');
+   if(!rn){rn=document.createElement('div');rn.className='eg-rnote';first.parentElement.insertBefore(rn,first);}
+   var gst=g.p.st,nt;
+   if(gst<0)nt='Choose a Demonstrated option to unlock the ratings.';
+   else if(gst>=3)nt='No rating is needed for this answer.';
+   else if(gst===0)nt=(rl.req&&!ev.proof)?'Ratings 3 to 5 need a file or link. Required for this experience.':(ev.max===2?'Ratings 3 to 5 unlock with more evidence below.':(ev.max<5?'Ratings 4 and 5 unlock with the evidence below.':'All ratings are open.'));
+   else nt='Ratings 3 to 5 are available only when Demonstrated independently.';
+   rn.textContent=nt;
+  }
+  var msg=panel.querySelector('.eg-msg');
+  if(notDemo)msg.innerHTML='<div class="eg-note eg-ok">No rating or proof is needed for this answer. It counts as 1 (20%) in the score.</div>';
+  else if(g.p.st<0)msg.innerHTML='<div class="eg-note eg-warn">Choose one of the Demonstrated options first.</div>';
+  else{
+   var m='';
+   if(g.clearedFrom&&g.clearedFrom>ev.max)m='Rating '+g.clearedFrom+' ('+LABEL[g.clearedFrom]+') was removed because it is higher than this answer and evidence support. ';
+   if(g.p.st===1||g.p.st===2)m+='With support or partly demonstrated, choose 1 (Basic) or 2 (Developing).';
+   else if(rl.req&&!ev.proof)m+='Supporting proof is required because this experience is '+rl.why+'. Add a file or link to rate 3 (Proficient) or higher. Until then the highest rating is 2 (Developing).';
+   else if(g.p.st===0&&ev.max===2)m+='Rating 3 and above needs what you did plus either how often and for how long, or a measured result.';
+   else if(ev.max<5)m+=(ev.once?'Done once: the highest rating is 3 (Proficient). Show how often and for how long to go higher.':(rl.req?'Ratings 4 and 5 stay locked until how often and for how long, a measured result and proof are all filled in.':'Ratings 4 and 5 stay locked until what you did, how often and for how long, and a measured result are filled in.'));
+   else{g.clearedFrom=0;m=rl.req?'Proof attached. Ratings 4 and 5 are open.':'Ratings 4 and 5 are open.';}
+   msg.innerHTML='<div class="eg-note '+(ev.max<5?'eg-warn':'eg-ok')+'">'+esc(m)+'</div>';
+  }
+ }
+ function setup(s){
+  if(!s||!document.getElementById('adRoot'))return;
+  [].forEach.call(document.querySelectorAll('#adRoot [data-ad-item]'),function(el,idx){
+   if(el.hidden)return;var item=s.items[idx];if(!item)return;
+   if(!el.querySelector('.eg-panel')){try{build(el,s,item);}catch(e){console.warn('Evidence panel unavailable',e);return;}}
+   refresh(el,s,item);
+  });
+ }
+ function commit(el){
+  var rec=PEND.get(el);if(!rec)return;PEND.delete(el);clearTimeout(rec.t);
+  var s=rec.s,item=rec.item,g=el.__eg,src=el.querySelector('textarea[data-ad-field="evidence"]');if(!g||!src||!s||AD.state!==s)return;
+  var h=compose(g.p,String(s.invitation&&s.invitation.kind||'').indexOf('manager')===0);
+  if(src.value!==h){src.value=h;g.last=h;if(src.cmsRichEditor)src.cmsRichEditor.innerHTML=h;if(typeof adQueue==='function'){try{adQueue(s);}catch(e){}}}
+  refresh(el,s,item);
+  if(typeof adUpdateButtons==='function'){try{adUpdateButtons(s);}catch(e){}}
+ }
+ function flushAll(){PEND.forEach(function(rec,el){commit(el);});}
+ function write(el,s,item,now){
+  var rec=PEND.get(el);if(rec)clearTimeout(rec.t);
+  PEND.set(el,{s:s,item:item,t:setTimeout(function(){commit(el);},900)});
+  if(now){commit(el);return;}
+  if(!el.__lt){el.__lt=setTimeout(function(){el.__lt=null;try{refresh(el,s,item);}catch(e){}},300);}
+ }
+ document.addEventListener('input',function(e){
+  var t=e.target;if(!t.matches||!t.matches('[data-eg]'))return;var c=ctx(t);if(!c||!c.item)return;c.el.__eg.p[t.getAttribute('data-eg')]=t.value;write(c.el,c.s,c.item,false);
+ });
+ document.addEventListener('focusout',function(e){var t=e.target;if(!t.matches||!t.matches('[data-eg]'))return;var c=ctx(t);if(c&&c.el)commit(c.el);});
+ document.addEventListener('click',function(e){
+  var b=e.target.closest&&e.target.closest('[data-eg-st]');
+  if(b){var c=ctx(b);if(!c||!c.item||!c.s.canSave)return;var i=Number(b.getAttribute('data-eg-st'));c.el.__eg.p.st=i;
+   var r=c.el.querySelector('[data-fp-answer="'+(STAT[i].yes?'yes':'no')+'"]');
+   if(r&&!r.checked){r.checked=true;r.dispatchEvent(new Event('change',{bubbles:true}));}
+   write(c.el,c.s,c.item,true);return;}
+  if(e.target.closest&&e.target.closest('[data-sx],[data-ad]'))flushAll();
+ },true);
+ document.addEventListener('change',function(e){
+  var t=e.target;if(!t.matches||!t.matches('[data-sx-rating]'))return;var c=ctx(t);if(!c||!c.el.__eg||!c.item)return;
+  var n=Number(t.dataset.sxRating),v=c.s.values[c.item.id]||{};var ev=evalP(c.el.__eg.p,proofOf(v),rule(c.s,c.item).req);
+  if(t.checked&&(n>ev.max||n<ev.min)){t.checked=false;e.stopImmediatePropagation();refresh(c.el,c.s,c.item);}
+ },true);
+ if(typeof adCapture==='function'){var oldCap=adCapture;adCapture=function(){flushAll();return oldCap.apply(this,arguments);};}
+ var oldRender=adRender;
+ adRender=function(s){var r=oldRender.apply(this,arguments);try{setup(s);}catch(e){console.warn('Guided evidence unavailable',e);}return r;};
+ if(typeof adUpdateButtons==='function'){
+  var oldBtn=adUpdateButtons;
+  adUpdateButtons=function(s){
+   var r=oldBtn.apply(this,arguments);
+   try{if(s&&AD.state===s){[].forEach.call(document.querySelectorAll('#adRoot [data-ad-item]'),function(el,idx){if(el.__eg&&!el.hidden&&s.items[idx])refresh(el,s,s.items[idx]);});}}catch(e){}
+   return r;
+  };
+ }
+ setInterval(function(){
+  try{
+   if(PEND.size)return;var ae=document.activeElement;if(ae&&ae.closest&&ae.closest('.eg-panel'))return;
+   var s=AD.state;if(!s||!document.getElementById('adRoot')||(typeof adActive==='function'&&!adActive(s)))return;
+   setup(s);
+  }catch(e){}
+ },2500);
+})();
+</script>
+<style id="cms-evidence-type-review-v1-css">
+#srRoot .egt{display:inline-block;font-size:11.5px;font-weight:800;border-radius:20px;padding:3px 11px;margin:6px 0 2px}
+#srRoot .egt.v{background:#dcfce7;color:#166534}#srRoot .egt.p{background:#dbeafe;color:#1e40af}#srRoot .egt.c{background:#fee2e2;color:#991b1b}
+#srRoot .egt-w{display:block;font-size:11.5px;color:#64748b;margin:0 0 6px}
+#srRoot .egb{margin:8px 0 4px;max-width:420px}#srRoot .egb-h{display:flex;justify-content:space-between;font-size:12.5px;margin-bottom:3px}
+#srRoot .egb-h b{color:#0f172a}#srRoot .egb-b{display:flex;gap:4px}#srRoot .egb-b i{display:block;height:9px;flex:1;border-radius:5px;background:#e2e8f0}
+#srRoot .egs{display:flex;gap:10px;flex-wrap:wrap;margin:10px 0 6px}#srRoot .egs div{flex:1;min-width:150px;background:#fff;border:1.5px solid #cbd5e1;border-radius:12px;padding:9px 13px}
+#srRoot .egs b{display:block;font-size:22px}#srRoot .egs span{font-size:12.5px;color:#475569}
+#srRoot .egf{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:6px 0 12px}
+#srRoot .egf button{border:1.5px solid #94a3b8;border-radius:999px;padding:5px 13px;background:#fff;font:600 13px/1.3 system-ui;cursor:pointer;color:#0f172a}
+#srRoot .egf button.on{background:#1e3a8a;border-color:#1e3a8a;color:#fff}
+#srRoot .egf small{margin-left:auto;color:#64748b;font-size:12px}
+</style>
+<script id="cms-evidence-type-review-v1">
+(function(){
+ 'use strict';
+ if(window.__cmsEvTypeReviewV1)return;window.__cmsEvTypeReviewV1=true;
+ if(typeof srRender!=='function'||typeof SR==='undefined')return;
+ function plain(h){var d=document.createElement('div');d.innerHTML=String(h||'');return String(d.textContent||'').replace(/\u00a0/g,' ').replace(/\s+/g,' ').trim();}
+ function hasProof(r){
+  if(String(r.attachment_url||'').trim()||String(r.attachment_name||'').trim()||String(r.evidence_link||'').trim())return true;
+  var it=r.evidence_items;if(typeof it==='string'){try{it=JSON.parse(it);}catch(e){it=[];}}
+  return Array.isArray(it)&&it.some(function(x){return x&&(x.url||x.href||x.type==='file'||x.type==='link');});
+ }
+ function classify(r){
+  var pt=plain(r.evidence),measured,mm=/Result \/ Outcome:([\s\S]*)$/i.exec(pt);
+  if(mm){var rs=mm[1].trim();measured=(/\d/.test(rs)&&rs.length>=8)||(rs.length>=25&&/feedback|praised|commended|appreciat|signed off|approved by|rated|recogni/i.test(rs));}
+  else measured=/Result \((Number|Date)\):[\s\S]*\d/i.test(pt)||/Result \(Feedback or review\):[\s\S]{20,}/i.test(pt)||(!/Result \(/i.test(pt)&&/\d/.test(pt));
+  var proof=hasProof(r),ok=pt.length>=15;
+  var type=(measured&&proof)?'v':((measured||(proof&&ok))?'p':'c');
+  var why=type==='v'?'Measured result and proof attached.':type==='p'?(measured?'Measured result, but no proof attached.':'Proof attached, but the result is only described.'):'No measured result and no proof.';
+  return {type:type,why:why,measured:!!measured,proof:proof};
+ }
+ var PTS={c:3,i:2,v:1};
+ function tierOf(c){c=String(c||'');return /critical|must-have/i.test(c)?'c':/important|performance/i.test(c)?'i':'v';}
+ function rule(g,row){
+  var t=tierOf(row.classification);
+  if(t==='c')return {req:true,why:'Critical'};
+  if(t==='v')return {req:false,why:'Value-Add'};
+  var tot=0,by={};
+  (g&&g.rows||[]).forEach(function(r){var p=PTS[tierOf(r.classification)];tot+=p;by[r.comp_code]=(by[r.comp_code]||0)+p;});
+  var keys=Object.keys(by);if(!keys.length||!tot)return {req:false,why:'Important'};
+  return (100*(by[row.comp_code]||0)/tot>=100/keys.length)?{req:true,why:'Important with high weight'}:{req:false,why:'Important'};
+ }
+ var BC=['','#ef4444','#f97316','#eab308','#22c55e'],BL=['','Weak','Fair','Good','Strong'];
+ function parts(r){
+  var pt=plain(r.evidence);
+  var w=/(?:What I did|What the employee did):\s*([\s\S]*?)(?=How often and for how long:|Result \/ Outcome:|$)/i.exec(pt);
+  var h=/How often and for how long:\s*([\s\S]*?)(?=Result \/ Outcome:|$)/i.exec(pt);
+  return {labelled:!!(w||h),what:w?w[1].trim():'',how:h?h[1].trim():''};
+ }
+ function fillOf(r,rl,c){
+  var p=parts(r);
+  if(!p.labelled)return c.type==='v'?4:c.type==='p'?3:1;
+  var base=(p.what.length>=15?1:0)+(p.how.length>=6?1:0)+(c.measured?1:0);
+  if(rl.req){var pts=base+(c.proof?1:0);return pts>=4?4:pts===3?3:pts===2?2:1;}
+  return base>=3?4:base===2?3:base===1?2:1;
+ }
+ function status(r){var h=String(r.hr_status||'');return h==='Approved'?'approved':h==='Returned'?'returned':h==='Disapproved'?'disapproved':'waiting';}
+ var FLT=window.__egRevFilter||'all';
+ function applyFilter(){
+  var root=document.getElementById('srRoot');if(!root)return;
+  [].forEach.call(root.querySelectorAll('article.sr-experience'),function(a){
+   var secs=[].slice.call(a.querySelectorAll('section[data-sr-row]')),show=true;
+   if(FLT==='waiting')show=secs.some(function(x){return x.dataset.egStat==='waiting';});
+   else if(FLT==='weak')show=secs.some(function(x){return Number(x.dataset.egFill||9)<=2;});
+   else if(FLT==='returned')show=secs.some(function(x){return x.dataset.egStat==='returned';});
+   a.style.display=show?'':'none';
+  });
+  [].forEach.call(root.querySelectorAll('.egf button'),function(b){b.classList.toggle('on',b.getAttribute('data-egf')===FLT);});
+ }
+ function strip(){
+  var root=document.getElementById('srRoot');if(!root||root.querySelector('.egs'))return;
+  var first=root.querySelector('article.sr-experience');if(!first)return;
+  var n={approved:0,waiting:0,returned:0,weak:0,total:0};
+  [].forEach.call(root.querySelectorAll('section[data-sr-row]'),function(x){
+   if(!x.dataset.egStat)return;n.total++;n[x.dataset.egStat==='disapproved'?'approved':x.dataset.egStat]++;if(Number(x.dataset.egFill||9)<=2)n.weak++;
+  });
+  var d=document.createElement('div');d.innerHTML='<div class="egs"><div><b>'+n.approved+' of '+n.total+'</b><span>answers reviewed by HR</span></div><div><b style="color:#1d4ed8">'+n.waiting+'</b><span>waiting for HR</span></div><div><b style="color:#b91c1c">'+n.returned+'</b><span>returned, score paused</span></div><div><b style="color:#b45309">'+n.weak+'</b><span>with Weak or Fair evidence</span></div></div>'+
+   '<div class="egf"><button type="button" data-egf="all">All</button><button type="button" data-egf="waiting">Waiting for HR</button><button type="button" data-egf="weak">Weak or Fair only</button><button type="button" data-egf="returned">Returned</button><small>Decide on each answer below: Approve, Return or Disapprove.</small></div>';
+  while(d.firstChild)first.parentNode.insertBefore(d.firstChild,first);
+  applyFilter();
+ }
+ document.addEventListener('click',function(e){var b=e.target.closest&&e.target.closest('#srRoot [data-egf]');if(!b)return;FLT=b.getAttribute('data-egf');window.__egRevFilter=FLT;applyFilter();});
+ function decorate(s){
+  if(!srAlive(s))return;
+  [].forEach.call(document.querySelectorAll('#srRoot section[data-sr-row]'),function(sec){
+   if(sec.querySelector('.egt'))return;var id=sec.getAttribute('data-sr-row'),row=null,grp=null;
+   (s.groups||[]).forEach(function(g){g.rows.forEach(function(r){if(String(r.id)===id){row=r;grp=g;}});});
+   if(row)sec.dataset.egStat=status(row);
+   if(!row||!(row.ticked===true||row.ticked===1||row.ticked==='true'||row.ticked==='TRUE'))return;
+   var c=classify(row),host=sec.querySelector('.sr-original');if(!host)return;
+   var chip=document.createElement('span');chip.className='egt '+c.type;chip.textContent='Evidence type: '+(c.type==='v'?'Complete':c.type==='p'?'Supported':'Claimed only');
+   var w=document.createElement('span');w.className='egt-w';var rl=rule(grp,row);w.textContent=c.why+' Proof is '+(rl.req?'required':'optional')+' for this experience ('+rl.why+').';
+   var fl=fillOf(row,rl,c);sec.dataset.egFill=String(fl);
+   var bar=document.createElement('div');bar.className='egb';
+   bar.innerHTML='<div class="egb-h"><b>Evidence strength</b><span style="color:'+BC[fl]+';font-weight:700">'+BL[fl]+'</span></div><div class="egb-b">'+[1,2,3,4].map(function(i){return '<i style="background:'+(i<=fl?BC[fl]:'#e2e8f0')+'"></i>';}).join('')+'</div>';
+   host.after(bar);bar.after(chip);chip.after(w);
+  });
+  strip();
+ }
+ var old=srRender;
+ srRender=function(s){var r=old.apply(this,arguments);try{decorate(s);}catch(e){}return r;};
+})();
+</script>
 </body>
 </html>
